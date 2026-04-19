@@ -1684,35 +1684,54 @@ function showCinematic(title, subtitle) {
 
 // ===== CORE POTION LOGIC =====
 
-function usePotion(trait, sourceEl) {
-  if (state.inv[trait] <= 0) return;
+async function usePotion(trait, sourceEl) {
+  if (!state.championId) return;
+  const potion = findPotion({ trait });
+  if (!potion) return; // deriveInv guards the button count, this is extra safety
   const i = TRAITS.indexOf(trait);
   const cap = STAGE_CAPS[state.stageIdx][i];
   if (state.stats[trait] >= cap) return;
 
-  const floor = STAGE_FLOORS[state.stageIdx][i];
-  const invested = Math.max(0, state.stats[trait] - floor);
-  let gain = invested < 10 ? 5 : invested < 25 ? 3 : invested < 50 ? 1.5 : 1;
   const oldVal = state.stats[trait];
-  state.stats[trait] = Math.min(cap, state.stats[trait] + gain);
-  const actualGain = state.stats[trait] - oldVal;
-  state.inv[trait]--;
-
-  const fillAmount = randFill(2, 6);
   const oldPct = state.evoPct;
-  tickEvo(fillAmount);
-  const newPct = state.evoPct;
+  const oldLevel = state.level;
+
+  let resp;
+  try {
+    resp = await apiFeedPotion({ champion_id: state.championId, potion_id: potion.id });
+  } catch (e) {
+    alert('Feed failed: ' + e.message);
+    return;
+  }
+  // Pull the authoritative state from the server response.
+  const c = mapChampion(resp.champion);
+  state.stats = { ...c.stats };
+  state.evoPct = c.evoPct;
+  state.level = c.level;
+  state.stageIdx = c.stageIdx;
+  // Sync back to myChampions cache.
+  const cached = myChampions.find(m => m.id === c.id);
+  if (cached) Object.assign(cached, c);
+
+  // Potion qty decremented server-side — refresh inventory.
+  await reloadPotions();
+
+  const actualGain = state.stats[trait] - oldVal;
+  const didLevelUp = state.level > oldLevel;
 
   // animate: fly → burst → float text + bar pulse + stat count-up
   potionFlyAndBurst(sourceEl || document.body, (tx, ty) => {
     floatText(`+${Math.round(actualGain)} ${trait}`, tx, ty - 20);
     pulseBar();
-    // animate bar fill
     const fill = document.getElementById('evoFill');
-    fill.style.width = newPct + '%';
-    // count up the evo % label
+    fill.style.width = state.evoPct + '%';
+    // count-up: if we level-ruped, the bar reset so animate from 0 to current
+    const fromPct = didLevelUp ? 0 : oldPct;
     countUpText(document.getElementById('evoPct'),
-      Math.round(oldPct), Math.round(newPct), 700);
+      Math.round(fromPct), Math.round(state.evoPct), 700);
+    if (didLevelUp) {
+      floatText(`LEVEL ${state.level}`, tx, ty - 60, '#ffd98a');
+    }
   });
 
   // re-render side panel inventory after a small delay so animation is visible
@@ -1743,19 +1762,36 @@ function canEvolve() {
     state.stageIdx < STAGES.length - 1;
 }
 
-function evolve() {
-  if (!canEvolve()) return;
-  state.inv.evo--;
-  state.stageIdx++;
-  state.level = STAGES[state.stageIdx].minLevel;
-  state.evoPct = 0;
-  state.evoMaxLevel = GATE_LEVELS[state.stageIdx] || 50;
-  initStats();
+async function evolve() {
+  if (!canEvolve() || !state.championId) return;
+  const evoPotion = findPotion({ kind: 'evolution' });
+  if (!evoPotion) return;
+
+  let resp;
+  try {
+    resp = await apiEvolveChampion({
+      champion_id: state.championId,
+      evolution_potion_id: evoPotion.id,
+    });
+  } catch (e) {
+    alert('Evolve failed: ' + e.message);
+    return;
+  }
+
+  const c = mapChampion(resp.champion);
+  state.stats = { ...c.stats };
+  state.evoPct = c.evoPct;
+  state.level = c.level;
+  state.stageIdx = c.stageIdx;
+  state.evoMaxLevel = GATE_LEVELS[state.stageIdx + 1] || 50;
+  const cached = myChampions.find(m => m.id === c.id);
+  if (cached) Object.assign(cached, c);
+
+  await reloadPotions();
 
   const newStage = STAGES[state.stageIdx];
   showCinematic('EVOLVED', `${newStage.name.toUpperCase()} · ${newStage.zone.toUpperCase()}`);
 
-  // wait until cinematic peak before swapping image
   setTimeout(() => render(), 400);
 }
 
@@ -2289,6 +2325,62 @@ async function apiCreateChampion({ species_id, bloodline_id, name }) {
   return mapChampion(data.champion);
 }
 
+async function apiListPotions(species_id) {
+  const wallet = getWallet();
+  let url = `${FN_BASE}/potion_list?wallet=${wallet}`;
+  if (species_id) url += `&species_id=${species_id}`;
+  const res = await apiFetch(url, { headers: AUTH_HEADERS });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    console.warn('[apiListPotions]', res.status, txt);
+    return [];
+  }
+  const data = await res.json();
+  return data.potions || [];
+}
+
+async function apiGrantPotion({ species_id, kind, trait, quantity = 1 }) {
+  const res = await apiFetch(`${FN_BASE}/potion_grant`, {
+    method: 'POST',
+    headers: AUTH_HEADERS,
+    body: JSON.stringify({ wallet: getWallet(), species_id, kind, trait, quantity }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const code = data.error || `http_${res.status}`;
+    throw new Error(`${code}: ${data.message || ''}`.trim());
+  }
+  return data.potion;
+}
+
+async function apiFeedPotion({ champion_id, potion_id }) {
+  const res = await apiFetch(`${FN_BASE}/champion_feed_potion`, {
+    method: 'POST',
+    headers: AUTH_HEADERS,
+    body: JSON.stringify({ wallet: getWallet(), champion_id, potion_id }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const code = data.error || `http_${res.status}`;
+    throw new Error(`${code}: ${data.message || ''}`.trim());
+  }
+  return data;  // { champion, result, potionRemaining }
+}
+
+async function apiEvolveChampion({ champion_id, evolution_potion_id }) {
+  const res = await apiFetch(`${FN_BASE}/champion_evolve`, {
+    method: 'POST',
+    headers: AUTH_HEADERS,
+    body: JSON.stringify({ wallet: getWallet(), champion_id, evolution_potion_id }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const code = data.error || `http_${res.status}`;
+    throw new Error(`${code}: ${data.message || ''}`.trim());
+  }
+  return data;  // { champion, newStageIdx, newStageName, levelAfter, potionRemaining }
+}
+
 async function loadMyChampions() {
   try {
     myChampions = await apiListChampions();
@@ -2681,7 +2773,7 @@ async function confirmAdopt() {
   }
 }
 
-function openChampion(championId) {
+async function openChampion(championId) {
   const champ = myChampions.find(c => c.id === championId);
   if (!champ) { alert('Champion not found.'); return; }
   // hydrate the single-champion state from this champion's record
@@ -2693,8 +2785,44 @@ function openChampion(championId) {
   state.evoPct = champ.evoPct;
   state.stats = { ...champ.stats };
   state.rank = { ...champ.rank };
+  state.championId = championId;
+  state.evoMaxLevel = GATE_LEVELS[state.stageIdx + 1] || 50;
   activeChampionId = championId;
+  // Fetch potions for this champion's species — powers the feed UI.
+  state.potions = await apiListPotions(champ.species_id);
+  deriveInv();
   navTo('champion');
+}
+
+// ---- Derive state.inv from backend potion rows ----
+function deriveInv() {
+  const inv = { evo: 0, alloc: 0, STR: 0, VIT: 0, AGI: 0, FER: 0, INT: 0, LCK: 0 };
+  (state.potions || []).forEach(p => {
+    if (p.kind === 'evolution') inv.evo += p.quantity;
+    else if (p.kind === 'allocation') inv.alloc += p.quantity;
+    else if (p.trait && inv[p.trait] !== undefined) inv[p.trait] += p.quantity;
+  });
+  state.inv = inv;
+}
+
+// Find the first potion row matching (kind, trait). Preference: minor → major → epic.
+function findPotion({ trait, kind } = {}) {
+  const rows = (state.potions || []).filter(p => p.quantity > 0);
+  if (kind === 'evolution') return rows.find(p => p.kind === 'evolution');
+  if (kind === 'allocation') return rows.find(p => p.kind === 'allocation');
+  // trait potion — prefer minor so player sees gradual progress
+  const byKindOrder = ['minor', 'major', 'epic'];
+  for (const k of byKindOrder) {
+    const hit = rows.find(p => p.kind === k && p.trait === trait);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+async function reloadPotions() {
+  if (!currentSpecies) return;
+  state.potions = await apiListPotions(currentSpecies);
+  deriveInv();
 }
 
 function renderChampionDetail() {
@@ -2849,25 +2977,70 @@ boot();
 // ============================================================
 // DEBUG PANEL
 // ============================================================
-function dbgGrant(key, n) {
-  if (!state.inv) state.inv = {};
-  state.inv[key] = (state.inv[key] || 0) + n;
+// Which species the debug panel grants potions for. Defaults to the
+// current champion's species, else the first owned champion, else 'orc'.
+function dbgSpecies() {
+  if (currentSpecies) return currentSpecies;
+  if (myChampions && myChampions[0]) return myChampions[0].species_id;
+  return 'orc';
+}
+
+async function dbgGrant(key, n = 1) {
+  const sp = dbgSpecies();
+  let args;
+  if (key === 'evo')          args = { species_id: sp, kind: 'evolution', quantity: n };
+  else if (key === 'alloc')   args = { species_id: sp, kind: 'allocation', quantity: n };
+  else                        args = { species_id: sp, kind: 'minor', trait: key, quantity: n };
+  try {
+    await apiGrantPotion(args);
+  } catch (e) {
+    alert('Grant failed: ' + e.message);
+    return;
+  }
+  await reloadPotions();
   if (typeof render === 'function') render();
   dbgRefreshCounts();
 }
-function dbgGrantAll() {
-  ['STR','VIT','AGI','FER','INT','LCK','alloc','evo'].forEach(k => dbgGrant(k, 5));
+async function dbgGrantAll() {
+  const sp = dbgSpecies();
+  try {
+    await Promise.all([
+      ...['STR','VIT','AGI','FER','INT','LCK'].map(t =>
+        apiGrantPotion({ species_id: sp, kind: 'minor', trait: t, quantity: 5 })),
+      apiGrantPotion({ species_id: sp, kind: 'allocation', quantity: 2 }),
+      apiGrantPotion({ species_id: sp, kind: 'evolution', quantity: 2 }),
+    ]);
+  } catch (e) { alert('Grant-all failed: ' + e.message); return; }
+  await reloadPotions();
+  if (typeof render === 'function') render();
+  dbgRefreshCounts();
 }
+// Local-only evo bar bump (no backend endpoint for this — debug convenience).
 function dbgAddEvoPct(n) {
   state.evoPct = Math.min(100, (state.evoPct || 0) + n);
   if (typeof render === 'function') render();
   dbgRefreshCounts();
 }
-function dbgForceEvolve() {
-  state.inv.evo = Math.max(1, state.inv.evo || 0);
-  state.evoPct = 100;
-  state.level = (typeof GATE_LEVELS !== 'undefined' && GATE_LEVELS[state.stageIdx]) || state.level;
-  if (typeof evolve === 'function') evolve();
+// Force evolve — grant an evo potion, then call evolve()
+async function dbgForceEvolve() {
+  if (!state.championId) {
+    alert('Open a champion first (from Stable).');
+    return;
+  }
+  // Make sure champion is at 100% at a gate
+  if (state.evoPct < 100 || !atGate()) {
+    alert('Champion must be at 100% and at a stage gate to evolve.\n' +
+          'Tip: hit "Grant +5 ALL" a bunch first, then feed potions to fill the bar, ' +
+          'then retry when you reach level 5/10/15/20/30/40/45.');
+    return;
+  }
+  // Make sure an evo potion exists
+  if (!findPotion({ kind: 'evolution' })) {
+    try { await apiGrantPotion({ species_id: dbgSpecies(), kind: 'evolution', quantity: 1 }); }
+    catch (e) { alert('Grant evo failed: ' + e.message); return; }
+    await reloadPotions();
+  }
+  await evolve();
   dbgRefreshCounts();
 }
 function dbgFakePay5PYR() {
