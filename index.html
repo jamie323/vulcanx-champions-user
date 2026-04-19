@@ -1,0 +1,2085 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>VulcanX Champion — MVP</title>
+<style>
+  :root {
+    --bg-deep: #0a0608;
+    --panel: #1a141e;
+    --panel2: #241a26;
+    --border: #3a2a30;
+    --border-glow: #5a3820;
+    --text: #f6efe0;
+    --muted: #9a8a80;
+    --accent: #ffcd6b;
+    --accent-dim: #b8915a;
+    --ok: #7dff9a;
+    --legend: #ff8e6b;
+    --ember: #ff6b2e;
+    --epic: #c084fc;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; min-height: 100vh;
+    color: var(--text); overflow-x: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+                 system-ui, sans-serif;
+    background:
+      radial-gradient(ellipse at top, #20101a 0%, #0a0608 60%),
+      #050305;
+  }
+  body { min-height: 100vh; }
+
+  /* =========== VIEW SYSTEM =========== */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* champion view keeps the 3-column grid */
+  body.view-champion .view-champion { display: grid;
+    grid-template-columns: 300px 1fr 400px; min-height: 100vh; }
+
+  /* nav bar */
+  .main-nav {
+    position: fixed; top: 52px; left: 0; right: 0;
+    height: 44px; padding: 0 20px;
+    background: linear-gradient(180deg, rgba(20,12,20,0.95), rgba(20,12,20,0.75));
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 6px;
+    z-index: 96; backdrop-filter: blur(8px);
+  }
+  .nav-btn { padding: 7px 14px; background: transparent;
+    border: 1px solid transparent; border-radius: 8px;
+    font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; cursor: pointer; color: var(--muted); }
+  .nav-btn:hover { color: var(--text); }
+  .nav-btn.active { background: rgba(255,205,107,0.12);
+    border-color: var(--accent); color: var(--accent); }
+  .nav-admin {
+    margin-left: auto; display: flex; align-items: center; gap: 8px;
+    font-size: 11px; color: var(--muted); letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .nav-admin input { accent-color: var(--accent); cursor: pointer; }
+
+  /* =========== STABLE VIEW =========== */
+  .stable-wrap {
+    max-width: 1200px; margin: 0 auto;
+    padding: 120px 24px 60px;
+  }
+  .page-hd {
+    margin-bottom: 24px; display: flex; justify-content: space-between;
+    align-items: baseline; gap: 16px;
+  }
+  .page-hd h2 { margin: 0; font-size: 28px; font-weight: 700;
+    letter-spacing: 0.3px; }
+  .page-hd .sub { color: var(--muted); font-size: 13px; }
+
+  .stable-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .champ-card {
+    background: linear-gradient(135deg, rgba(40,20,10,0.5), rgba(20,12,20,0.85));
+    border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+    position: relative;
+  }
+  .champ-card:hover { transform: translateY(-4px);
+    border-color: var(--accent); }
+  .champ-card .art { aspect-ratio: 2/3; overflow: hidden;
+    background: #0a0608; }
+  .champ-card .art img { width: 100%; height: 100%; object-fit: cover;
+    object-position: center 25%; }
+  .champ-card .meta { padding: 12px 14px; }
+  .champ-card .name { font-size: 15px; font-weight: 700;
+    color: var(--text); margin-bottom: 3px; }
+  .champ-card .subname { font-size: 11px; color: var(--muted);
+    letter-spacing: 0.5px; text-transform: uppercase; }
+  .champ-card .lvl-pill {
+    position: absolute; top: 10px; right: 10px;
+    background: rgba(10,6,8,0.9); border: 1px solid rgba(255,205,107,0.4);
+    padding: 4px 10px; border-radius: 6px;
+    font-size: 13px; font-weight: 800; color: var(--accent);
+    letter-spacing: 1px;
+  }
+  .champ-card .stage-pill {
+    position: absolute; top: 10px; left: 10px;
+    background: rgba(10,6,8,0.9); border: 1px solid var(--border);
+    padding: 3px 8px; border-radius: 10px;
+    font-size: 9px; font-weight: 700; color: var(--accent-dim);
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .champ-card.legend { border-color: var(--legend);
+    box-shadow: 0 0 20px rgba(255,142,107,0.2); }
+  .champ-card.legend .lvl-pill { color: var(--legend); }
+
+  .adopt-card {
+    background: linear-gradient(135deg, rgba(255,205,107,0.08), rgba(40,20,10,0.5));
+    border: 2px dashed var(--border-glow);
+    border-radius: 12px;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; aspect-ratio: 2/3.5; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    color: var(--accent-dim);
+  }
+  .adopt-card:hover { border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(255,205,107,0.15), rgba(40,20,10,0.7));
+    color: var(--accent); }
+  .adopt-card .big-icon {
+    font-size: 48px; line-height: 1; margin-bottom: 10px;
+  }
+  .adopt-card .adopt-label {
+    font-size: 13px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .empty-stable {
+    text-align: center; padding: 60px 20px;
+    background: linear-gradient(135deg, rgba(40,20,10,0.3), rgba(20,12,20,0.6));
+    border: 1px dashed var(--border); border-radius: 16px;
+  }
+  .empty-stable h3 { font-size: 22px; margin: 0 0 10px; }
+  .empty-stable p { color: var(--muted); font-size: 13px;
+    margin-bottom: 24px; line-height: 1.6; }
+  .empty-stable .big-cta {
+    display: inline-block; padding: 14px 32px;
+    background: linear-gradient(90deg, #ffcd6b, #ff8e2e);
+    color: #1a0a05; border: none; border-radius: 10px;
+    font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+    cursor: pointer; font-size: 13px;
+  }
+
+  /* =========== ADOPT VIEW =========== */
+  .adopt-wrap {
+    max-width: 1200px; margin: 0 auto;
+    padding: 120px 24px 60px;
+  }
+  .adopt-step {
+    display: flex; justify-content: center; gap: 8px;
+    margin-bottom: 28px;
+  }
+  .step-pill {
+    padding: 6px 16px; border-radius: 16px;
+    background: rgba(40,20,10,0.5); border: 1px solid var(--border);
+    font-size: 11px; color: var(--muted); letter-spacing: 1.5px;
+    text-transform: uppercase; font-weight: 700;
+  }
+  .step-pill.done { color: var(--ok); border-color: #2a5a30; }
+  .step-pill.current { color: var(--accent); border-color: var(--accent);
+    background: rgba(255,205,107,0.1); }
+
+  .species-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .species-card {
+    background: linear-gradient(135deg, rgba(40,20,10,0.5), rgba(20,12,20,0.85));
+    border: 1px solid var(--border); border-radius: 14px;
+    padding: 22px 18px; cursor: pointer; text-align: center;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .species-card:hover { transform: translateY(-4px);
+    border-color: var(--accent); }
+  .species-card .species-emoji { font-size: 48px; margin-bottom: 10px; }
+  .species-card h3 { margin: 0; font-size: 20px; letter-spacing: 0.3px; }
+  .species-card .arch { color: var(--accent); font-size: 11px;
+    letter-spacing: 1.5px; text-transform: uppercase; margin: 6px 0; font-weight: 700; }
+  .species-card .primary-traits { color: var(--muted); font-size: 12px;
+    margin-top: 8px; }
+
+  .bloodline-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+  }
+  .bloodline-card {
+    background: linear-gradient(135deg, rgba(40,20,10,0.5), rgba(20,12,20,0.85));
+    border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .bloodline-card:hover { transform: translateY(-4px); border-color: var(--accent); }
+  .bloodline-card .bl-art { aspect-ratio: 2/3; overflow: hidden;
+    background: #0a0608; }
+  .bloodline-card .bl-art img { width: 100%; height: 100%;
+    object-fit: cover; object-position: center 15%; }
+  .bloodline-card .bl-meta { padding: 14px 16px; }
+  .bloodline-card .bl-name { font-size: 16px; font-weight: 700;
+    margin-bottom: 3px; color: var(--text); }
+  .bloodline-card .bl-lore { font-size: 12px; color: var(--muted);
+    line-height: 1.45; margin-top: 6px; }
+
+  .buy-wrap {
+    max-width: 620px; margin: 0 auto;
+    background: linear-gradient(135deg, rgba(40,20,10,0.5), rgba(20,12,20,0.85));
+    border: 1px solid var(--border-glow); border-radius: 16px;
+    padding: 24px;
+  }
+  .buy-art { aspect-ratio: 1/1.2; max-height: 420px;
+    margin: 0 auto 20px; background: #0a0608;
+    border-radius: 10px; overflow: hidden; display: flex;
+    align-items: center; justify-content: center; }
+  .buy-art img { width: 100%; height: 100%; object-fit: cover;
+    object-position: center 15%; }
+  .buy-summary { text-align: center; margin-bottom: 20px; }
+  .buy-summary h3 { margin: 0 0 4px; font-size: 24px; }
+  .buy-summary .species { color: var(--accent); font-size: 12px;
+    letter-spacing: 2px; text-transform: uppercase; }
+  .buy-summary .bloodline-lore {
+    color: var(--muted); font-size: 13px; line-height: 1.5;
+    margin-top: 16px; padding: 0 20px;
+  }
+  .buy-form { display: flex; flex-direction: column; gap: 12px; }
+  .buy-form label { font-size: 11px; color: var(--accent-dim);
+    letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; }
+  .buy-form input { padding: 12px 14px; background: rgba(10,6,8,0.8);
+    border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-size: 14px; font-family: inherit; }
+  .buy-form input:focus { outline: none; border-color: var(--accent); }
+  .buy-price {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 16px; background: rgba(10,6,8,0.5);
+    border: 1px solid var(--border); border-radius: 8px;
+    font-weight: 700;
+  }
+  .buy-price .label { font-size: 11px; color: var(--muted);
+    letter-spacing: 1.5px; text-transform: uppercase; }
+  .buy-price .value { font-size: 18px; color: var(--legend); }
+  .btn-big { padding: 14px; background: linear-gradient(90deg, #ffcd6b, #ff8e2e);
+    color: #1a0a05; border: none; border-radius: 10px;
+    font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+    cursor: pointer; font-size: 14px; }
+  .btn-secondary { padding: 10px 18px; background: transparent;
+    color: var(--muted); border: 1px solid var(--border); border-radius: 8px;
+    font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    cursor: pointer; font-size: 11px; }
+  .btn-secondary:hover { color: var(--text); border-color: var(--accent); }
+  .back-row { margin-bottom: 16px; }
+
+  /* =========== EXPLORE VIEW =========== */
+  .explore-wrap {
+    max-width: 1200px; margin: 0 auto;
+    padding: 120px 24px 60px;
+  }
+  .explore-filters {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;
+  }
+
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0; height: 52px;
+    background: linear-gradient(180deg, rgba(20,12,20,0.95) 0%,
+      rgba(20,12,20,0.7) 100%);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 18px;
+    z-index: 100; backdrop-filter: blur(8px);
+  }
+  .brand { font-size: 13px; font-weight: 700; letter-spacing: 3px;
+    color: var(--accent); text-transform: uppercase; }
+  .brand .dot { color: var(--ember); margin: 0 8px; }
+  .champ-title { flex: 1; text-align: center; font-size: 15px;
+    font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .currency { display: flex; gap: 10px; align-items: center; }
+  .coin { display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 10px 5px 8px;
+    background: rgba(40,20,10,0.8); border: 1px solid var(--border);
+    border-radius: 16px; font-size: 12px; font-weight: 700; }
+  .coin .icon { width: 18px; height: 18px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800; }
+  .coin.gold .icon { background: linear-gradient(135deg,#ffcd6b,#ff8e2e); color:#2a1810; }
+  .coin.gem  .icon { background: linear-gradient(135deg,#6bd5ff,#4a8ad5); color:#08202a; }
+  .coin.ess  .icon { background: linear-gradient(135deg,#a8ff6b,#56a830); color:#10281a; }
+  .shop-btn { padding: 5px 14px; background: rgba(40,20,10,0.8);
+    border: 1px solid var(--border); border-radius: 16px;
+    font-size: 11px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; cursor: pointer; color: var(--text); }
+  .sp-btn { padding: 5px 10px; background: rgba(40,20,10,0.5);
+    border: 1px solid var(--border); border-radius: 14px;
+    font-size: 11px; font-weight: 700; cursor: pointer;
+    color: var(--muted); }
+  .sp-btn.active { background: rgba(255,205,107,0.15);
+    border-color: var(--accent); color: var(--accent); }
+
+  /* USER-FIRST APP — admin UI hidden */
+  .species-picker { display: none !important; }
+  .bloodline-bar { display: none !important; }
+  .nav-admin { display: none !important; }
+  .main-nav { display: flex; }
+
+  /* bloodline sub-picker */
+  .bloodline-bar {
+    position: fixed; top: 96px; left: 300px; right: 400px;
+    height: 38px; padding: 6px 16px;
+    background: linear-gradient(180deg, rgba(20,14,20,0.95), rgba(20,14,20,0.7));
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    z-index: 98; font-size: 11px; color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+  .bloodline-bar .lbl {
+    text-transform: uppercase; font-weight: 700; margin-right: 6px;
+  }
+  .bl-btn {
+    padding: 4px 10px; background: rgba(40,20,10,0.5);
+    border: 1px solid var(--border); border-radius: 10px;
+    font-size: 11px; font-weight: 700; cursor: pointer;
+    color: var(--muted); letter-spacing: 0.5px;
+  }
+  .bl-btn:hover { color: var(--text); }
+  .bl-btn.active { background: rgba(255,142,107,0.15);
+    border-color: var(--legend); color: var(--legend); }
+
+  /* left info panel */
+  .info-panel {
+    padding: 150px 18px 180px;
+    background: linear-gradient(180deg, rgba(20,14,20,0.5), rgba(10,6,8,0.3));
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    height: 100vh;
+    scrollbar-width: none;
+  }
+  .info-panel::-webkit-scrollbar { display: none; }
+  .info-panel .info-card {
+    background: linear-gradient(135deg, rgba(40,20,10,0.4), rgba(20,12,20,0.7));
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;
+  }
+  .info-panel .label {
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--accent-dim); font-weight: 700; margin-bottom: 6px;
+  }
+  .info-panel .big-value {
+    font-size: 20px; font-weight: 700; color: var(--accent);
+    letter-spacing: 0.3px; margin-bottom: 3px;
+  }
+  .info-panel .zone-pill {
+    display: inline-block;
+    padding: 3px 10px; border-radius: 12px;
+    background: rgba(255,205,107,0.1);
+    border: 1px solid var(--border-glow);
+    font-size: 10px; letter-spacing: 1.5px;
+    color: var(--accent); text-transform: uppercase;
+    font-weight: 700;
+  }
+  .info-panel .stage-lore {
+    font-size: 12px; line-height: 1.55;
+    color: var(--muted); margin-top: 8px;
+  }
+  .info-panel .lvl-big {
+    font-size: 44px; font-weight: 800; line-height: 1;
+    color: var(--accent); letter-spacing: 1px;
+  }
+  .info-panel .lvl-of {
+    font-size: 12px; color: var(--muted);
+    margin-top: 4px; letter-spacing: 1px;
+  }
+
+  main { display: flex; flex-direction: column; align-items: center;
+    padding: 150px 20px 0px; position: relative; min-height: 100vh; }
+
+  .stage-frame { position: relative;
+    width: min(460px, 60vh * (1024/1536));
+    aspect-ratio: 1024 / 1536;
+    border-radius: 14px; overflow: hidden;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.8),
+      0 0 0 1px rgba(255,205,107,0.15) inset; }
+  .stage-frame img { width: 100%; height: 100%; object-fit: cover;
+    transition: opacity 0.5s; }
+  .stage-frame .aura { position: absolute; inset: 0; pointer-events: none;
+    mix-blend-mode: screen; opacity: 0; transition: opacity 0.8s;
+    background: radial-gradient(ellipse at 50% 65%,
+      rgba(255,140,60,0.35) 0%, transparent 55%); }
+  .stage-frame.legend .aura { opacity: 1; }
+  .stage-frame .level-badge { position: absolute; top: 14px; right: 14px;
+    background: rgba(10,6,8,0.9); border: 1px solid rgba(255,205,107,0.5);
+    padding: 7px 14px; border-radius: 6px;
+    font-size: 22px; font-weight: 800; letter-spacing: 2px; color: var(--accent); }
+  .stage-frame .rank-pill { position: absolute; top: 14px; left: 14px;
+    background: rgba(10,6,8,0.9); border: 1px solid var(--border);
+    padding: 5px 10px; border-radius: 14px;
+    font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--accent-dim); }
+
+  .stage-name { margin-top: 16px; color: var(--muted);
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase; }
+  .stage-name b { color: var(--accent); font-weight: 700; }
+
+  .stage-strip { margin: 16px 0 10px; width: min(680px, 100%);
+    display: grid; grid-template-columns: repeat(9,1fr); gap: 4px; }
+  .stage-slot { aspect-ratio: 0.7;
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 4px; display: flex; align-items: center;
+    justify-content: center; position: relative; overflow: hidden;
+    cursor: pointer; transition: transform 0.15s, border-color 0.15s; }
+  .stage-slot:hover { transform: translateY(-2px);
+    border-color: var(--accent-dim); }
+  .stage-slot img { width: 100%; height: 100%;
+    object-fit: cover; object-position: center 20%; }
+  .stage-slot.current { border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(255,205,107,0.3); }
+  .stage-slot .num { position: absolute; top: 3px; left: 4px;
+    font-size: 9px; background: rgba(10,6,8,0.85);
+    padding: 1px 4px; border-radius: 2px; color: var(--muted); z-index: 3; }
+  .stage-slot.current .num { color: var(--accent); }
+  .stage-slot .stagelabel { position: absolute; bottom: 2px; left: 3px;
+    right: 3px; font-size: 8px; color: var(--text);
+    background: rgba(10,6,8,0.85); padding: 1px 3px; border-radius: 2px;
+    text-align: center; text-transform: uppercase; letter-spacing: 0.5px;
+    font-weight: 700; z-index: 3; }
+
+  aside { background: linear-gradient(180deg,#15101a,#0a0608);
+    border-left: 1px solid var(--border);
+    padding: 110px 22px 120px; overflow-y: auto; height: 100vh; }
+
+  .card { background: linear-gradient(135deg,rgba(40,20,10,0.5),rgba(20,12,20,0.8));
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px; margin-bottom: 16px; }
+  .card-title { font-size: 11px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--accent-dim);
+    margin-bottom: 8px; font-weight: 700; }
+  .champion-name { font-size: 22px; font-weight: 700; margin-bottom: 2px; }
+  .rank-label { font-size: 12px; color: var(--accent);
+    letter-spacing: 1px; text-transform: uppercase; }
+
+  .evo-label { display: flex; justify-content: space-between;
+    font-size: 11px; margin: 14px 0 6px; color: var(--muted);
+    letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
+  .evo-label b { color: var(--text); }
+  .evo-bar { height: 10px; background: #1a0e10; border-radius: 5px;
+    overflow: hidden; box-shadow: 0 0 0 1px #2a1620 inset; }
+  .evo-fill { height: 100%;
+    background: linear-gradient(90deg,#ff8e2e,#ffcd6b);
+    box-shadow: 0 0 12px rgba(255,205,107,0.5);
+    transition: width 0.5s cubic-bezier(.4,.6,.4,1); }
+  .evo-next { font-size: 11px; color: var(--muted);
+    margin-top: 10px; line-height: 1.5; }
+  .evo-next .bold { color: var(--text); font-weight: 600; }
+
+  .evolve-btn { margin-top: 10px; width: 100%; padding: 11px;
+    background: #2a1a1f; color: var(--muted);
+    border: 1px solid var(--border); border-radius: 8px;
+    font-weight: 700; letter-spacing: 1px; cursor: not-allowed;
+    font-size: 12px; text-transform: uppercase; }
+  .evolve-btn.ready {
+    background: linear-gradient(90deg,#ffcd6b,#ff8e2e);
+    color: #1a0a05; border-color: var(--accent);
+    box-shadow: 0 0 16px rgba(255,205,107,0.4);
+    cursor: pointer; animation: pulse 2s infinite; }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 16px rgba(255,205,107,0.4); }
+    50%     { box-shadow: 0 0 24px rgba(255,205,107,0.9); }
+  }
+
+  .trait-row { display: grid;
+    grid-template-columns: 28px 1fr auto auto;
+    align-items: center; gap: 8px;
+    padding: 6px 0; border-bottom: 1px dashed var(--border); }
+  .trait-row:last-child { border: none; }
+  .trait-icon { width: 26px; height: 26px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800; }
+  .icon-STR { background: #6a2020; color: #ff8080; }
+  .icon-VIT { background: #205a20; color: #80ff80; }
+  .icon-AGI { background: #205a5a; color: #80ffff; }
+  .icon-FER { background: #7a4010; color: #ffaa40; }
+  .icon-INT { background: #2a205a; color: #9090ff; }
+  .icon-LCK { background: #5a2050; color: #ff80df; }
+  .trait-info { min-width: 0; }
+  .trait-name { font-size: 11px; color: var(--muted);
+    letter-spacing: 0.5px; text-transform: uppercase;
+    display: inline-flex; align-items: center; gap: 4px; }
+  .info-dot { display: inline-flex; align-items: center;
+    justify-content: center;
+    width: 13px; height: 13px; border-radius: 50%;
+    background: #3a2a30; color: var(--muted);
+    font-size: 9px; font-weight: 700; cursor: help;
+    font-family: serif; }
+  .info-dot:hover { background: var(--accent); color: #1a0a05; }
+
+  /* global-rank row */
+  .rank-bar { display: flex; justify-content: space-between;
+    margin-top: 10px; padding: 8px 10px;
+    background: rgba(40,20,10,0.4); border: 1px solid var(--border);
+    border-radius: 6px; font-size: 11px; cursor: pointer; }
+  .rank-bar:hover { border-color: var(--accent); }
+  .rank-bar .label { color: var(--muted); letter-spacing: 0.5px;
+    text-transform: uppercase; font-weight: 600; }
+  .rank-bar .value { color: var(--accent); font-weight: 700; }
+  .rank-bar .arrow { color: var(--muted); margin-left: 6px; }
+
+  /* help tooltip */
+  .tooltip {
+    position: absolute;
+    bottom: 100%; left: 50%; transform: translate(-50%, -6px);
+    background: #2a1a22; border: 1px solid var(--border-glow);
+    color: var(--text); padding: 8px 10px; border-radius: 6px;
+    font-size: 11px; letter-spacing: 0; text-transform: none;
+    font-weight: 400; white-space: nowrap; z-index: 500;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+    pointer-events: none;
+    max-width: 260px; white-space: normal;
+  }
+
+  /* ============================================================
+     ANIMATION LAYER — potion-fly, burst, float-text, cinematic
+  ============================================================ */
+
+  /* flying potion from inventory to champion */
+  .potion-fly {
+    position: fixed; z-index: 600; pointer-events: none;
+    font-size: 28px; filter: drop-shadow(0 0 8px rgba(255,205,107,0.8));
+    transition: transform 0.9s cubic-bezier(.4, 0.8, .6, 1),
+                opacity 0.9s ease;
+  }
+
+  /* impact burst at champion */
+  .impact-burst {
+    position: fixed; z-index: 601; pointer-events: none;
+    width: 60px; height: 60px; border-radius: 50%;
+    background: radial-gradient(circle,
+      rgba(255,205,107,0.9), rgba(255,140,60,0.3) 50%, transparent 75%);
+    opacity: 0;
+  }
+  .impact-burst.fire { animation: impactBurst 0.9s ease-out; }
+  @keyframes impactBurst {
+    0%   { opacity: 0; transform: scale(0.3); }
+    30%  { opacity: 1; transform: scale(1.5); }
+    100% { opacity: 0; transform: scale(3.5); }
+  }
+
+  /* little particle dots sprayed on impact */
+  .spark {
+    position: fixed; z-index: 602; pointer-events: none;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #ffcd6b; opacity: 0;
+  }
+  .spark.fire { animation: sparkFire 0.9s ease-out; }
+  @keyframes sparkFire {
+    0%   { opacity: 1; transform: translate(0,0) scale(1); }
+    100% { opacity: 0;
+      transform: translate(var(--dx), var(--dy)) scale(0.2); }
+  }
+
+  /* floating "+5 STR" text */
+  .float-text {
+    position: fixed; z-index: 603; pointer-events: none;
+    font-size: 18px; font-weight: 800; letter-spacing: 1px;
+    color: var(--accent);
+    text-shadow: 0 0 10px rgba(255,205,107,0.9),
+                 0 2px 4px rgba(0,0,0,0.8);
+    opacity: 0;
+  }
+  .float-text.rising {
+    animation: riseFade 1.2s ease-out;
+  }
+  @keyframes riseFade {
+    0%   { opacity: 0; transform: translate(-50%, 0); }
+    15%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -80px); }
+  }
+
+  /* bar-glow pulse when filling */
+  .evo-fill.pulse {
+    animation: fillPulse 0.6s ease-out;
+  }
+  @keyframes fillPulse {
+    0%,100% { box-shadow: 0 0 12px rgba(255,205,107,0.5); }
+    50%     { box-shadow: 0 0 28px rgba(255,205,107,1); }
+  }
+  .evo-fill.gate-ready {
+    animation: gateReady 1.8s infinite;
+  }
+  @keyframes gateReady {
+    0%,100% { box-shadow: 0 0 12px rgba(255,205,107,0.5); }
+    50%     { box-shadow: 0 0 36px rgba(255,142,107,1),
+                          0 0 64px rgba(255,205,107,0.6); }
+  }
+
+  /* champion frame shake on potion-land */
+  .stage-frame.hit {
+    animation: frameHit 0.5s ease-out;
+  }
+  @keyframes frameHit {
+    0%,100% { transform: translate(0,0); }
+    20%     { transform: translate(-2px, 1px); }
+    40%     { transform: translate(3px, -2px); }
+    60%     { transform: translate(-2px, 2px); }
+    80%     { transform: translate(2px, -1px); }
+  }
+
+  /* EVOLVE CINEMATIC — full-screen flash + stage cross-fade */
+  .cine-overlay {
+    position: fixed; inset: 0; z-index: 700;
+    background: radial-gradient(ellipse at center,
+      rgba(255,205,107,0.9), rgba(255,140,60,0.7) 40%, rgba(10,6,8,0.9) 80%);
+    opacity: 0; pointer-events: none;
+  }
+  .cine-overlay.active {
+    animation: cineFlash 2.2s forwards;
+  }
+  @keyframes cineFlash {
+    0%   { opacity: 0; }
+    15%  { opacity: 1; }
+    50%  { opacity: 0.8; }
+    100% { opacity: 0; }
+  }
+  .cine-banner {
+    position: fixed; left: 50%; top: 40%;
+    transform: translate(-50%, -50%) scale(0.5);
+    z-index: 701; font-size: 56px; font-weight: 900;
+    letter-spacing: 4px; text-transform: uppercase;
+    color: #fff; text-shadow:
+      0 0 20px rgba(255,205,107,1),
+      0 0 40px rgba(255,140,60,0.8),
+      0 0 80px rgba(255,100,40,0.6);
+    opacity: 0; pointer-events: none;
+  }
+  .cine-banner.active {
+    animation: bannerBurst 2.2s cubic-bezier(.3,0.2,.4,1) forwards;
+  }
+  @keyframes bannerBurst {
+    0%   { opacity: 0; transform: translate(-50%,-50%) scale(0.3); }
+    25%  { opacity: 1; transform: translate(-50%,-50%) scale(1.2); }
+    50%  { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+    85%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%,-50%) scale(1.1); }
+  }
+  .cine-subtext {
+    position: fixed; left: 50%; top: 52%;
+    transform: translate(-50%, 0);
+    z-index: 701; font-size: 16px; letter-spacing: 2px;
+    color: var(--accent); opacity: 0;
+    text-transform: uppercase; font-weight: 700;
+  }
+  .cine-subtext.active {
+    animation: subtextFade 2.2s forwards;
+  }
+  @keyframes subtextFade {
+    0%, 30% { opacity: 0; }
+    50%     { opacity: 1; }
+    80%     { opacity: 1; }
+    100%    { opacity: 0; }
+  }
+
+  /* allocation potion modal */
+  .alloc-row {
+    display: grid; grid-template-columns: 40px 1fr 40px;
+    align-items: center; gap: 10px; margin-bottom: 10px;
+  }
+  .alloc-row .alloc-label {
+    font-size: 11px; color: var(--muted);
+    text-transform: uppercase; font-weight: 700;
+  }
+  .alloc-row input[type=range] {
+    width: 100%; accent-color: var(--accent);
+  }
+  .alloc-row .alloc-val {
+    color: var(--accent); font-weight: 700; font-size: 14px;
+    text-align: right;
+  }
+  .alloc-remaining {
+    text-align: center; padding: 10px;
+    background: rgba(40,20,10,0.4);
+    border: 1px solid var(--border); border-radius: 6px;
+    margin-bottom: 14px; font-size: 12px;
+    text-transform: uppercase; color: var(--muted);
+    letter-spacing: 1px;
+  }
+  .alloc-remaining b {
+    color: var(--accent); font-size: 22px; font-weight: 800; }
+  .trait-bar { height: 4px; background: #1a0e10;
+    border-radius: 2px; overflow: hidden; margin-top: 3px; }
+  .trait-fill { height: 100%;
+    background: linear-gradient(90deg,#6a4820,var(--accent));
+    transition: width 0.4s; }
+  .trait-fill.cap { background: var(--epic); }
+  .trait-value { font-size: 14px; font-weight: 700; text-align: right; }
+  .trait-value small { color: var(--muted); font-weight: 400; font-size: 9px; }
+  .trait-use { padding: 4px 8px; background: #2a1a20; color: var(--muted);
+    border: 1px solid var(--border); border-radius: 4px;
+    font-size: 11px; font-weight: 700; cursor: pointer; }
+  .trait-use:hover:not(:disabled) { background: var(--accent);
+    color: #1a0a05; border-color: var(--accent); }
+  .trait-use:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .potion-row { display: flex; justify-content: space-between;
+    padding: 6px 0; font-size: 12px;
+    border-bottom: 1px dashed var(--border); }
+  .potion-row:last-child { border: none; }
+  .potion-row .name { color: var(--muted); }
+  .potion-row .count { color: var(--text); font-weight: 700; }
+  .potion-row.hot .count { color: var(--legend); }
+
+  .actions { position: fixed; bottom: 0; left: 300px;
+    width: calc(100% - 300px - 400px);
+    background: linear-gradient(180deg,transparent,rgba(10,6,8,0.98) 30%);
+    padding: 20px 16px 18px; display: flex; gap: 10px; flex-wrap: wrap;
+    justify-content: center; z-index: 50;
+    border-top: 1px solid var(--border); }
+  .action-btn { padding: 12px 22px; background: rgba(40,22,12,0.85);
+    border: 1px solid var(--border); border-radius: 26px;
+    font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; cursor: pointer; color: var(--text);
+    display: inline-flex; align-items: center; gap: 8px; }
+  .action-btn:hover:not(.locked) { border-color: var(--accent);
+    color: var(--accent); }
+  .action-btn.primary {
+    background: linear-gradient(90deg,#ffcd6b,#ff8e2e);
+    color: #1a0a05; border-color: var(--accent); }
+  .action-btn.locked { opacity: 0.5; cursor: not-allowed; }
+
+  .modal-backdrop { position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85); display: none;
+    align-items: center; justify-content: center; z-index: 200; }
+  .modal-backdrop.open { display: flex; }
+  .modal { background: linear-gradient(135deg,#1f1418,#0a0608);
+    border: 1px solid var(--border-glow); border-radius: 14px;
+    padding: 24px; width: 400px;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.9); }
+  .modal h3 { margin: 0 0 4px; font-size: 18px; }
+  .modal .sub { color: var(--muted); font-size: 12px; margin-bottom: 18px; }
+
+  .chest-anim { width: 200px; height: 200px; margin: 10px auto;
+    background: linear-gradient(135deg,#3a2a1a,#1a0e08);
+    border: 2px solid var(--accent); border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 64px; position: relative; overflow: hidden; }
+  .chest-anim.opening { animation: shake 0.3s 5; }
+  @keyframes shake { 0%,100%{transform:rotate(0);}
+    25%{transform:rotate(-3deg);} 75%{transform:rotate(3deg);} }
+  .chest-anim .burst { position: absolute; inset: 0; opacity: 0;
+    background: radial-gradient(circle,rgba(255,205,107,0.8),transparent 70%); }
+  .chest-anim.burst .burst { animation: burst 0.8s forwards; }
+  @keyframes burst {
+    0% { opacity: 0; transform: scale(0.5); }
+    60% { opacity: 1; transform: scale(1.5); }
+    100% { opacity: 0; transform: scale(2); }
+  }
+  .chest-result { text-align: center; }
+  .chest-result .item { font-size: 16px; font-weight: 700;
+    color: var(--accent); margin: 4px 0; }
+  .chest-result .item.evo { color: var(--legend); }
+
+  .btn-primary { width: 100%; padding: 12px;
+    background: linear-gradient(90deg,#ffcd6b,#ff8e2e);
+    color: #1a0a05; font-weight: 700; letter-spacing: 1px;
+    border: none; border-radius: 8px; cursor: pointer;
+    font-size: 13px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">VulcanX <span class="dot">·</span> Champions</div>
+  <div class="champ-title" id="topChampTitle">Orc Champion</div>
+  <div class="species-picker" style="display:flex;gap:4px;margin-right:14px;">
+    <button class="sp-btn active" data-sp="orc">🟢 Orc</button>
+    <button class="sp-btn" data-sp="elf">🌙 Elf</button>
+    <button class="sp-btn" data-sp="goblin">👺 Goblin</button>
+    <button class="sp-btn" data-sp="demon">🔥 Hellknight</button>
+    <button class="sp-btn" data-sp="drakkin">🐉 Drakkin</button>
+    <span style="color:var(--muted);font-size:10px;margin-left:6px;opacity:0.6;">admin</span>
+  </div>
+  <div class="currency">
+    <div class="coin gold"><span class="icon">G</span><span id="curGold">1,540</span></div>
+    <div class="coin gem"><span class="icon">V</span><span id="curGem">15,320</span></div>
+    <div class="coin ess"><span class="icon">E</span><span id="curEss">420</span></div>
+    <button class="shop-btn" onclick="alert('Shop: coming soon.')">Shop ▾</button>
+  </div>
+</div>
+
+<!-- main nav bar -->
+<nav class="main-nav" id="mainNav">
+  <button class="nav-btn" data-view="stable">🏛 My Stable</button>
+  <button class="nav-btn" data-view="adopt">✨ Adopt New</button>
+  <button class="nav-btn" data-view="explore">🔎 Explore</button>
+  <label class="nav-admin">
+    <input type="checkbox" id="adminToggle"/> 🛠 Admin Mode
+  </label>
+</nav>
+
+<!-- ======== VIEW: MY STABLE ======== -->
+<div class="view view-stable">
+  <div class="stable-wrap">
+    <div class="page-hd">
+      <div>
+        <h2>My Stable</h2>
+        <div class="sub">All champions you own, ranked by power. Click to manage.</div>
+      </div>
+      <button class="btn-big" onclick="navTo('adopt')">+ Adopt New</button>
+    </div>
+    <div id="stableContent"></div>
+  </div>
+</div>
+
+<!-- ======== VIEW: ADOPT — PICK SPECIES ======== -->
+<div class="view view-adopt-species">
+  <div class="adopt-wrap">
+    <div class="adopt-step">
+      <span class="step-pill current">1. Choose Species</span>
+      <span class="step-pill">2. Bloodline</span>
+      <span class="step-pill">3. Adopt</span>
+    </div>
+    <div class="page-hd">
+      <div>
+        <h2>Choose Your Species</h2>
+        <div class="sub">Each species has its own archetype and trait affinities. You can own up to 10 champions.</div>
+      </div>
+    </div>
+    <div class="species-grid" id="speciesGrid"></div>
+  </div>
+</div>
+
+<!-- ======== VIEW: ADOPT — PICK BLOODLINE ======== -->
+<div class="view view-adopt-bloodline">
+  <div class="adopt-wrap">
+    <div class="adopt-step">
+      <span class="step-pill done">✓ Species</span>
+      <span class="step-pill current">2. Choose Bloodline</span>
+      <span class="step-pill">3. Adopt</span>
+    </div>
+    <div class="back-row">
+      <button class="btn-secondary" onclick="navTo('adopt')">← back to species</button>
+    </div>
+    <div class="page-hd">
+      <div>
+        <h2 id="bloodlineHeading">Choose Bloodline</h2>
+        <div class="sub">Three distinct visual paths within the species. The bloodline is permanent — it shapes your champion across all 50 levels.</div>
+      </div>
+    </div>
+    <div class="bloodline-grid" id="bloodlineGrid"></div>
+  </div>
+</div>
+
+<!-- ======== VIEW: ADOPT — CONFIRM & BUY ======== -->
+<div class="view view-adopt-buy">
+  <div class="adopt-wrap">
+    <div class="adopt-step">
+      <span class="step-pill done">✓ Species</span>
+      <span class="step-pill done">✓ Bloodline</span>
+      <span class="step-pill current">3. Adopt</span>
+    </div>
+    <div class="back-row">
+      <button class="btn-secondary" onclick="navTo('adopt-bloodline')">← back to bloodlines</button>
+    </div>
+    <div class="buy-wrap" id="buyWrap"></div>
+  </div>
+</div>
+
+<!-- ======== VIEW: EXPLORE ======== -->
+<div class="view view-explore">
+  <div class="explore-wrap">
+    <div class="page-hd">
+      <div>
+        <h2>Explore the Realm</h2>
+        <div class="sub">Top-ranked champions across all species. See what others are building.</div>
+      </div>
+    </div>
+    <div class="explore-filters" id="exploreFilters"></div>
+    <div id="exploreList"></div>
+  </div>
+</div>
+
+<!-- ======== VIEW: CHAMPION DETAIL (wraps all existing UI) ======== -->
+<div class="view view-champion">
+<!-- bloodline sub-picker -->
+<div class="bloodline-bar" id="bloodlineBar">
+  <span class="lbl">Bloodline:</span>
+  <span id="bloodlineBtns"></span>
+</div>
+
+<!-- LEFT INFO PANEL -->
+<div class="info-panel" id="infoPanel">
+  <div class="info-card">
+    <div class="label">Current Stage</div>
+    <div class="big-value" id="infoStageName">Whelp</div>
+    <span class="zone-pill" id="infoZone">Nursery</span>
+    <div class="stage-lore" id="infoLore">
+      A newly-hatched whelp — tiny, fragile, with eyes already carrying the spark of their bloodline.
+    </div>
+  </div>
+
+  <div class="info-card">
+    <div class="label">Level Progress</div>
+    <div class="lvl-big" id="infoLevel">L01</div>
+    <div class="lvl-of">of L50 <span id="infoGateHint" style="color:var(--accent);"></span></div>
+  </div>
+
+  <div class="info-card">
+    <div class="label">Bloodline Story</div>
+    <div class="stage-lore" id="infoBloodlineLore">
+      Every champion is uniquely owned. Your bloodline determines both the visual path and trait affinities. Same species, different souls.
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="stage-frame" id="stageFrame">
+    <img id="stageImg" src="evolution/L01_whelp_final.jpg" />
+    <div class="aura"></div>
+    <div class="level-badge" id="levelBadge">L 01</div>
+    <div class="rank-pill" id="rankPill">Iron III</div>
+  </div>
+  <div class="stage-strip" id="stageStrip"></div>
+</main>
+
+<aside>
+  <div class="card" style="padding:12px 14px;">
+    <div style="font-size:11px; color:var(--muted); line-height:1.5;">
+      <b style="color:var(--accent-dim); letter-spacing:1.5px; text-transform:uppercase; font-size:10px;">How this works</b><br/>
+      Feed species-matched potions to your champion to fill the Evolution bar and raise traits. Chests come from the <b style="color:var(--text)">Quests hub</b> elsewhere in VulcanX — you just bring the potions here.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Your Champion</div>
+    <div class="champion-name" id="champName">Grokk the Whelp</div>
+    <div class="rank-label">Orc · Brute · <span id="rankText">Iron III</span></div>
+
+    <div class="evo-label">
+      <span>EVOLUTION <b id="evoPct">0</b>%</span>
+      <span id="evoToLabel">→ Pup (L5)</span>
+    </div>
+    <div class="evo-bar"><div class="evo-fill" id="evoFill" style="width:0%"></div></div>
+
+    <div class="evo-next">
+      <span class="bold" id="nextStageInfo">Next stage: Pup at Level 5</span><br/>
+      <span id="evoGateInfo">Fill bar to 100% + spend 1 Orc Evolution Potion.</span>
+    </div>
+
+    <button class="evolve-btn" id="evolveBtn" disabled>⚡ Evolve (locked)</button>
+
+    <div class="rank-bar" id="globalRankBar">
+      <span class="label">Global Power Rank</span>
+      <span class="value">#<span id="globalRankNum">147</span> of <span id="globalRankTotal">1,482</span><span class="arrow">→</span></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Traits</div>
+    <div id="traits"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Potion Inventory (Orc-locked NFTs)</div>
+    <div class="potion-row hot"><span class="name">Evolution Potion</span><span class="count" id="invEvo">2</span></div>
+    <div class="potion-row" id="allocPotionRow" style="cursor:pointer;"
+         title="Click to open allocation modal">
+      <span class="name">✨ Allocation Potion (40pts)</span>
+      <span class="count" id="invAlloc">1</span></div>
+    <div class="potion-row"><span class="name">STR · Minor (+5)</span><span class="count" id="invSTR">6</span></div>
+    <div class="potion-row"><span class="name">VIT · Minor (+5)</span><span class="count" id="invVIT">4</span></div>
+    <div class="potion-row"><span class="name">AGI · Minor (+5)</span><span class="count" id="invAGI">2</span></div>
+    <div class="potion-row"><span class="name">FER · Minor (+5)</span><span class="count" id="invFER">3</span></div>
+    <div class="potion-row"><span class="name">INT · Minor (+5)</span><span class="count" id="invINT">2</span></div>
+    <div class="potion-row"><span class="name">LCK · Minor (+5)</span><span class="count" id="invLCK">5</span></div>
+  </div>
+</aside>
+
+<div class="actions">
+  <button class="action-btn" onclick="navTo('stable')">🏛 Stable</button>
+  <button class="action-btn" onclick="alert('🎯 Quests hub — opens in the main VulcanX ecosystem. Complete quests there to earn chests, which you open elsewhere. Chests drop potions that you bring back here to feed your champion.')">🎯 Quests</button>
+  <button class="action-btn" onclick="navTo('explore')">🏆 Leaderboard</button>
+  <button class="action-btn" onclick="alert('⚔️ Arena — async stat battles coming soon. Two champions enter, deterministic winner based on stats + species affinity.')">⚔️ Arena</button>
+  <button class="action-btn primary" id="animateBtn">✨ Animate Champion</button>
+</div>
+</div><!-- /view-champion -->
+
+<!-- evolve cinematic overlay -->
+<div class="cine-overlay" id="cineOverlay"></div>
+<div class="cine-banner" id="cineBanner">EVOLVED</div>
+<div class="cine-subtext" id="cineSubtext"></div>
+
+<!-- allocation potion modal -->
+<div class="modal-backdrop" id="allocModal">
+  <div class="modal" style="width: 420px;">
+    <h3>✨ Allocation Potion</h3>
+    <div class="sub">Distribute 40 points across your traits. Caps still
+      apply — surplus returns to essence.</div>
+    <div class="alloc-remaining">
+      Points left: <b id="allocLeft">40</b>
+    </div>
+    <div id="allocRows"></div>
+    <div style="display:flex; gap:8px;">
+      <button class="btn-primary" id="allocApply" style="flex:1;">Apply</button>
+      <button class="btn-primary" id="allocCancel"
+        style="flex:0.3; background:#2a1a22; color:var(--muted); border:1px solid var(--border);">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="leaderboardModal">
+  <div class="modal" style="width: 480px;">
+    <h3>🏆 Champion Leaderboard</h3>
+    <div class="sub">Ranked by Power Score: stage × stage-multiplier + total stats + rank ELO</div>
+    <div style="display:flex; gap:4px; margin-bottom:14px;">
+      <button class="sp-btn lb-filter active" data-sp="all">All Species</button>
+      <button class="sp-btn lb-filter" data-sp="orc">🟢 Orc</button>
+      <button class="sp-btn lb-filter" data-sp="elf">🌙 Elf</button>
+      <button class="sp-btn lb-filter" data-sp="goblin">👺 Goblin</button>
+    </div>
+    <div id="lbList" style="max-height: 380px; overflow-y: auto;
+         font-size: 12px;"></div>
+    <button class="btn-primary" id="lbCloseBtn" style="margin-top:14px;">Close</button>
+  </div>
+</div>
+<style>
+  .lb-row { display: grid; grid-template-columns: 40px 40px 1fr auto;
+    gap: 10px; padding: 8px 4px; border-bottom: 1px dashed var(--border);
+    align-items: center; }
+  .lb-row:last-child { border: none; }
+  .lb-rank { color: var(--accent); font-weight: 700; text-align: center; }
+  .lb-rank.top3 { color: var(--legend); }
+  .lb-icon { font-size: 22px; text-align: center; }
+  .lb-info { min-width: 0; }
+  .lb-name { font-weight: 700; font-size: 13px; }
+  .lb-detail { color: var(--muted); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.5px; }
+  .lb-score { color: var(--accent); font-weight: 700; font-size: 13px; }
+  .lb-score .e { color: var(--muted); font-size: 10px; font-weight: 400; }
+  .lb-row.me { background: rgba(255,205,107,0.08); border-radius: 4px; }
+  .lb-row.me .lb-name { color: var(--accent); }
+</style>
+
+<script>
+// SPECIES is loaded from bloodlines.json at boot
+let SPECIES = {};  // populated after fetch
+let currentSpecies = 'orc';
+let currentBloodline = 'ironfang';
+let STAGES = [];
+let activeChampionId = null;
+const GATE_LEVELS = [5,10,15,20,30,40,45,50];
+const TRAITS = ['STR','VIT','AGI','FER','INT','LCK'];
+const TRAIT_NAMES = { STR:'Strength',VIT:'Vitality',AGI:'Agility',
+  FER:'Ferocity',INT:'Intelligence',LCK:'Luck' };
+
+const STAGE_CAPS = [
+  [25,30,35,15,20,40],
+  [55,65,75,35,45,90],
+  [120,140,165,75,100,200],
+  [265,310,365,165,220,440],
+  [580,680,805,365,485,970],
+  [1275,1495,1775,805,1070,2130],
+  [2805,3290,3900,1775,2350,4685],
+  [6170,7240,8580,3900,5170,10305],
+  [13575,15925,18875,8575,11375,22670],
+];
+const STAGE_FLOORS = [
+  [5,10,8,3,6,10],
+  [15,20,18,10,12,24],
+  [35,40,45,22,28,55],
+  [75,85,100,48,60,120],
+  [160,185,220,100,135,265],
+  [350,410,485,220,295,580],
+  [770,900,1065,485,645,1280],
+  [1685,1975,2340,1065,1410,2810],
+  [3700,4345,5150,2340,3100,6185],
+];
+
+let state = {
+  level: 1, stageIdx: 0, evoPct: 0, evoMaxLevel: 5,
+  stats: {},
+  inv: { evo:3, alloc:2, STR:10, VIT:8, AGI:6, FER:6, INT:5, LCK:8 },
+  rank: { tier:'Iron', division:'III' },
+};
+
+function initStats() {
+  const floors = STAGE_FLOORS[state.stageIdx];
+  TRAITS.forEach((t,i) => {
+    if (!state.stats[t] || state.stats[t] < floors[i]) state.stats[t] = floors[i];
+  });
+}
+
+function nextGate() {
+  for (const g of GATE_LEVELS) if (state.level < g) return g;
+  return null;
+}
+
+function atGate() {
+  return GATE_LEVELS.includes(state.level);
+}
+
+function randFill(lo, hi) { return lo + Math.random()*(hi-lo); }
+
+// ===== ANIMATION HELPERS =====
+
+function potionFlyAndBurst(sourceEl, onImpact) {
+  const source = sourceEl.getBoundingClientRect();
+  const target = document.getElementById('stageFrame').getBoundingClientRect();
+  const tx = target.left + target.width / 2;
+  const ty = target.top + target.height * 0.45;
+
+  // flying potion emoji
+  const potion = document.createElement('div');
+  potion.className = 'potion-fly';
+  potion.textContent = '🧪';
+  potion.style.left = (source.left + source.width/2) + 'px';
+  potion.style.top = (source.top + source.height/2) + 'px';
+  potion.style.transform = 'translate(-50%,-50%)';
+  document.body.appendChild(potion);
+
+  requestAnimationFrame(() => {
+    const dx = tx - (source.left + source.width/2);
+    const dy = ty - (source.top + source.height/2);
+    potion.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(1.4) rotate(360deg)`;
+  });
+
+  setTimeout(() => {
+    potion.remove();
+    // burst
+    const burst = document.createElement('div');
+    burst.className = 'impact-burst fire';
+    burst.style.left = (tx - 30) + 'px';
+    burst.style.top = (ty - 30) + 'px';
+    document.body.appendChild(burst);
+    setTimeout(() => burst.remove(), 900);
+
+    // sparks
+    for (let k = 0; k < 10; k++) {
+      const s = document.createElement('div');
+      s.className = 'spark fire';
+      s.style.left = tx + 'px';
+      s.style.top = ty + 'px';
+      const ang = (k / 10) * Math.PI * 2;
+      const dist = 60 + Math.random() * 40;
+      s.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
+      s.style.setProperty('--dy', Math.sin(ang) * dist + 'px');
+      document.body.appendChild(s);
+      setTimeout(() => s.remove(), 900);
+    }
+
+    // frame shake
+    const f = document.getElementById('stageFrame');
+    f.classList.remove('hit'); void f.offsetWidth; f.classList.add('hit');
+
+    if (onImpact) onImpact(tx, ty);
+  }, 800);
+}
+
+function floatText(text, x, y, color) {
+  const el = document.createElement('div');
+  el.className = 'float-text rising';
+  el.textContent = text;
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  if (color) el.style.color = color;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1200);
+}
+
+function pulseBar() {
+  const fill = document.getElementById('evoFill');
+  fill.classList.remove('pulse'); void fill.offsetWidth;
+  fill.classList.add('pulse');
+}
+
+function countUpText(el, from, to, dur = 500) {
+  const start = performance.now();
+  (function tick(now) {
+    const t = Math.min(1, (now - start) / dur);
+    const eased = 1 - Math.pow(1 - t, 3);
+    const val = from + (to - from) * eased;
+    el.textContent = Math.round(val);
+    if (t < 1) requestAnimationFrame(tick);
+  })(performance.now());
+}
+
+function showCinematic(title, subtitle) {
+  const o = document.getElementById('cineOverlay');
+  const b = document.getElementById('cineBanner');
+  const s = document.getElementById('cineSubtext');
+  b.textContent = title;
+  s.textContent = subtitle;
+  [o, b, s].forEach(el => {
+    el.classList.remove('active'); void el.offsetWidth;
+    el.classList.add('active');
+  });
+  setTimeout(() => [o, b, s].forEach(el => el.classList.remove('active')), 2300);
+}
+
+// ===== CORE POTION LOGIC =====
+
+function usePotion(trait, sourceEl) {
+  if (state.inv[trait] <= 0) return;
+  const i = TRAITS.indexOf(trait);
+  const cap = STAGE_CAPS[state.stageIdx][i];
+  if (state.stats[trait] >= cap) return;
+
+  const floor = STAGE_FLOORS[state.stageIdx][i];
+  const invested = Math.max(0, state.stats[trait] - floor);
+  let gain = invested < 10 ? 5 : invested < 25 ? 3 : invested < 50 ? 1.5 : 1;
+  const oldVal = state.stats[trait];
+  state.stats[trait] = Math.min(cap, state.stats[trait] + gain);
+  const actualGain = state.stats[trait] - oldVal;
+  state.inv[trait]--;
+
+  const fillAmount = randFill(2, 6);
+  const oldPct = state.evoPct;
+  tickEvo(fillAmount);
+  const newPct = state.evoPct;
+
+  // animate: fly → burst → float text + bar pulse + stat count-up
+  potionFlyAndBurst(sourceEl || document.body, (tx, ty) => {
+    floatText(`+${Math.round(actualGain)} ${trait}`, tx, ty - 20);
+    pulseBar();
+    // animate bar fill
+    const fill = document.getElementById('evoFill');
+    fill.style.width = newPct + '%';
+    // count up the evo % label
+    countUpText(document.getElementById('evoPct'),
+      Math.round(oldPct), Math.round(newPct), 700);
+  });
+
+  // re-render side panel inventory after a small delay so animation is visible
+  setTimeout(() => render(), 300);
+}
+
+function useAllocationPotion(sourceEl) {
+  if (state.inv.alloc <= 0) return;
+  openAllocModal(sourceEl);
+}
+
+function tickEvo(amount) {
+  state.evoPct += amount;
+  const gate = nextGate();
+  // level-ups happen within current stage band; each 100% fill = 1 level
+  // but we also cap at the gate (can't advance past without evo potion)
+  while (state.evoPct >= 100 && state.level < state.evoMaxLevel) {
+    state.evoPct -= 100;
+    state.level++;
+  }
+  if (state.level >= state.evoMaxLevel) {
+    state.evoPct = Math.min(100, state.evoPct);
+  }
+}
+
+function canEvolve() {
+  return atGate() && state.evoPct >= 100 && state.inv.evo > 0 &&
+    state.stageIdx < STAGES.length - 1;
+}
+
+function evolve() {
+  if (!canEvolve()) return;
+  state.inv.evo--;
+  state.stageIdx++;
+  state.level = STAGES[state.stageIdx].minLevel;
+  state.evoPct = 0;
+  state.evoMaxLevel = GATE_LEVELS[state.stageIdx] || 50;
+  initStats();
+
+  const newStage = STAGES[state.stageIdx];
+  showCinematic('EVOLVED', `${newStage.name.toUpperCase()} · ${newStage.zone.toUpperCase()}`);
+
+  // wait until cinematic peak before swapping image
+  setTimeout(() => render(), 400);
+}
+
+// ===== ALLOCATION MODAL =====
+let allocState = null;
+function openAllocModal(sourceEl) {
+  if (state.inv.alloc <= 0) return;
+  allocState = { values: {}, remaining: 40, sourceEl };
+  TRAITS.forEach(t => allocState.values[t] = 0);
+  const rows = document.getElementById('allocRows');
+  rows.innerHTML = '';
+  TRAITS.forEach(t => {
+    const idx = TRAITS.indexOf(t);
+    const cur = state.stats[t] || STAGE_FLOORS[state.stageIdx][idx];
+    const cap = STAGE_CAPS[state.stageIdx][idx];
+    const maxAllowed = Math.min(40, cap - cur);
+    rows.insertAdjacentHTML('beforeend',
+      `<div class="alloc-row">
+        <div class="alloc-label" style="color:var(--${t.toLowerCase()}-color,var(--accent));">${t}</div>
+        <input type="range" min="0" max="${maxAllowed}" value="0" data-t="${t}" />
+        <div class="alloc-val" id="av-${t}">0</div>
+      </div>`);
+  });
+  rows.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const trait = inp.dataset.t;
+      allocState.values[trait] = +inp.value;
+      updateAllocRemaining();
+    });
+  });
+  updateAllocRemaining();
+  document.getElementById('allocModal').classList.add('open');
+}
+function updateAllocRemaining() {
+  const sum = Object.values(allocState.values).reduce((a,b)=>a+b, 0);
+  allocState.remaining = 40 - sum;
+  document.getElementById('allocLeft').textContent = allocState.remaining;
+  // update value labels + clamp sliders to what's available
+  TRAITS.forEach(t => {
+    document.getElementById('av-' + t).textContent = allocState.values[t];
+  });
+  document.getElementById('allocApply').disabled = allocState.remaining < 0;
+}
+function applyAllocation() {
+  if (!allocState) return;
+  const src = allocState.sourceEl;
+  state.inv.alloc--;
+  // apply each trait with animation
+  const totalFill = randFill(10, 25);
+  tickEvo(totalFill);
+
+  potionFlyAndBurst(src || document.body, (tx, ty) => {
+    let offset = 0;
+    TRAITS.forEach(t => {
+      const gain = allocState.values[t];
+      if (gain > 0) {
+        const idx = TRAITS.indexOf(t);
+        const cap = STAGE_CAPS[state.stageIdx][idx];
+        state.stats[t] = Math.min(cap, (state.stats[t] || STAGE_FLOORS[state.stageIdx][idx]) + gain);
+        setTimeout(() => floatText(`+${gain} ${t}`, tx, ty - offset), offset * 8);
+        offset += 24;
+      }
+    });
+    pulseBar();
+    document.getElementById('evoFill').style.width = state.evoPct + '%';
+  });
+
+  closeAllocModal();
+  setTimeout(() => render(), 300);
+}
+function closeAllocModal() {
+  document.getElementById('allocModal').classList.remove('open');
+  allocState = null;
+}
+
+// ============================================================
+// TRAIT HELP — info tooltips
+// ============================================================
+const TRAIT_HELP = {
+  STR: 'Strength — raw physical damage. Drives melee attacks, knockback, and weapon swing power. Primary for brute species (Orc, Drakkin). Matters in every combat mode.',
+  VIT: 'Vitality — hit points, damage resistance, and regeneration rate. Tanky champions survive longer in battles. Primary for defenders (Orc, Dwarf).',
+  AGI: 'Agility — evasion chance, movement speed, turn order priority, first-strike. High AGI goes first in combat. Primary for rogues (Elf, Goblin).',
+  FER: 'Ferocity — critical hit chance and rage/berserk trigger. Spikes damage unpredictably. Pairs well with STR or INT for burst builds.',
+  INT: 'Intelligence — arcane damage, cooldown reduction, resource efficiency. Drives magic-based attacks and potion yield bonuses. Primary for casters (Elf, Demon).',
+  LCK: 'Luck — loot drop rate, dodge chance, critical-escape from otherwise-lethal hits, and bonus essence from quests. Primary for tricksters (Elf, Goblin).',
+};
+
+// ============================================================
+// FAKE LEADERBOARD DATA
+// ============================================================
+const LEADERBOARD = [
+  { rank:1, name:'Ashdor the Unbroken', species:'orc', stage:8, level:50, elo:2840, power:98200, owner:'@ashdor.eth' },
+  { rank:2, name:'Velenia Moonsong',    species:'elf', stage:8, level:50, elo:2710, power:95100, owner:'@veleniamoon' },
+  { rank:3, name:'Kragg Oneyed',        species:'orc', stage:8, level:50, elo:2655, power:93700, owner:'@kragg99' },
+  { rank:4, name:'Silvanas Greenbough', species:'elf', stage:7, level:49, elo:2580, power:82400, owner:'@silvanas' },
+  { rank:5, name:'Snikrit the Cruel',   species:'goblin', stage:8, level:50, elo:2510, power:79200, owner:'@snikrit' },
+  { rank:6, name:'Vorhak Ironjaw',      species:'orc', stage:7, level:48, elo:2420, power:73800, owner:'@vorhak' },
+  { rank:7, name:'Illyaris Dawnspire',  species:'elf', stage:7, level:47, elo:2380, power:70100, owner:'@illyaris' },
+  { rank:8, name:'Grizzlemaw',          species:'goblin', stage:7, level:46, elo:2290, power:65700, owner:'@grizz.vx' },
+  { rank:9, name:'Tharok the Red',      species:'orc', stage:6, level:44, elo:2180, power:58200, owner:'@tharokvx' },
+  { rank:10,name:'Thaelrion of the Vale', species:'elf', stage:6, level:43, elo:2150, power:55400, owner:'@thaelrion' },
+  { rank:11,name:'Scutter',             species:'goblin', stage:6, level:42, elo:2090, power:52100, owner:'@scutter' },
+  { rank:12,name:'Mogar Deathfang',     species:'orc', stage:6, level:41, elo:2030, power:49800, owner:'@mogar' },
+  // ... (truncated — just enough for demo)
+];
+
+function renderLeaderboard(filter = 'all') {
+  const list = document.getElementById('lbList');
+  const SPECIES_ICON = { orc:'🟢', elf:'🌙', goblin:'👺' };
+  const currentPower = computePowerScore();
+  const myEntry = {
+    rank: '—',
+    name: SPECIES[currentSpecies].bloodlines[currentBloodline].nameByStage[state.stageIdx],
+    species: currentSpecies, stage: state.stageIdx, level: state.level,
+    elo: 150, power: currentPower, owner: 'YOU', me: true,
+  };
+  const rows = filter === 'all' ? LEADERBOARD : LEADERBOARD.filter(r => r.species === filter);
+  list.innerHTML = '';
+  // Insert user somewhere based on power, for demo
+  const withMe = [...rows];
+  const meRank = withMe.findIndex(r => r.power < currentPower);
+  if (meRank === -1) withMe.push(myEntry); else withMe.splice(meRank, 0, myEntry);
+  withMe.forEach((r, i) => {
+    const rankLabel = r.me ? '—' : (r.rank || i+1);
+    const isTop3 = !r.me && rankLabel <= 3;
+    const icon = SPECIES_ICON[r.species];
+    list.insertAdjacentHTML('beforeend',
+      `<div class="lb-row ${r.me?'me':''}">
+        <div class="lb-rank ${isTop3?'top3':''}">${r.me?'YOU':'#'+rankLabel}</div>
+        <div class="lb-icon">${icon}</div>
+        <div class="lb-info">
+          <div class="lb-name">${r.name}</div>
+          <div class="lb-detail">${r.species} · L${r.level} · ${SPECIES[r.species].bloodlines[Object.keys(SPECIES[r.species].bloodlines)[0]].stages[r.stage].name} · ${r.owner}</div>
+        </div>
+        <div class="lb-score">${r.power.toLocaleString()}<span class="e"> pwr</span></div>
+      </div>`);
+  });
+}
+
+function computePowerScore() {
+  const stage = state.stageIdx;
+  const statSum = Object.values(state.stats).reduce((a,b)=>a+b, 0);
+  return Math.round(stage * 5000 + statSum + state.level * 100);
+}
+
+function showLeaderboard() {
+  renderLeaderboard('all');
+  document.getElementById('leaderboardModal').classList.add('open');
+}
+function closeLeaderboard() {
+  document.getElementById('leaderboardModal').classList.remove('open');
+}
+
+function render() {
+  // if champion is the active view, persist state back to myChampions
+  if (activeChampionId && currentView === 'champion') {
+    persistActiveChampion();
+  }
+  const stage = STAGES[state.stageIdx];
+  document.getElementById('stageImg').src = stage.img;
+  document.getElementById('stageFrame').classList.toggle('legend', !!stage.legend);
+  document.getElementById('levelBadge').textContent =
+    'L ' + String(state.level).padStart(2,'0');
+  document.getElementById('rankPill').textContent =
+    state.rank.tier + ' ' + state.rank.division;
+  document.getElementById('rankText').textContent =
+    state.rank.tier + ' ' + state.rank.division;
+  // Populate left info panel
+  const infoStage = document.getElementById('infoStageName');
+  if (infoStage) {
+    infoStage.textContent = stage.name;
+    document.getElementById('infoZone').textContent = stage.zone;
+    document.getElementById('infoLevel').textContent =
+      'L' + String(state.level).padStart(2, '0');
+    const nextStage = STAGES[state.stageIdx + 1];
+    document.getElementById('infoGateHint').textContent =
+      nextStage ? `· next: ${nextStage.name} (L${nextStage.minLevel})` : '· legendary';
+
+    // build a simple stage-lore line
+    const loreMap = {
+      0: 'A newly-hatched whelp — tiny, fragile, but already carrying the spark of its bloodline in its eyes.',
+      1: 'Small, scrappy, defiant — the first real form. Fists clenched, ready to grow.',
+      2: 'Adolescent growth spurt — lanky limbs, first markings, burning to prove itself.',
+      3: 'A disciplined young warrior. Armor still basic, but the silhouette is unmistakable.',
+      4: 'A champion of the clan. Tested in a hundred fights, respected, feared.',
+      5: 'Elite veteran — scars chart the journey, armor earned through battle.',
+      6: 'Warlord — commands others, feared across the region.',
+      7: 'Ascendant. Almost mythic. Arcane power emerging.',
+      8: 'LEGENDARY. The ultimate evolution. Flex-card tier. One-of-a-kind.',
+    };
+    document.getElementById('infoLore').textContent =
+      loreMap[state.stageIdx] || '';
+    document.getElementById('infoBloodlineLore').textContent =
+      `${SPECIES[currentSpecies].label} — ${SPECIES[currentSpecies].archetype} archetype. ` +
+      `${SPECIES[currentSpecies].bloodlines[currentBloodline].label} bloodline. ` +
+      `Each of your ${SPECIES[currentSpecies].label.toLowerCase()}s has a unique DNA path — face, markings, inherited object — that persists through all 50 levels.`;
+  }
+
+  const speciesCfg = SPECIES[currentSpecies];
+  const bloodlineCfg = speciesCfg.bloodlines[currentBloodline];
+  document.getElementById('champName').textContent =
+    bloodlineCfg.nameByStage[state.stageIdx];
+  document.getElementById('topChampTitle').textContent =
+    `${speciesCfg.label} · ${bloodlineCfg.label}`;
+  document.querySelector('.rank-label').innerHTML =
+    `${speciesCfg.label} · ${speciesCfg.archetype} · ${bloodlineCfg.label} · <span id="rankText">${state.rank.tier} ${state.rank.division}</span>`;
+
+  const next = STAGES[state.stageIdx + 1];
+  document.getElementById('evoPct').textContent = Math.round(state.evoPct);
+  const fill = document.getElementById('evoFill');
+  fill.style.width = state.evoPct + '%';
+  fill.classList.toggle('gate-ready', canEvolve());
+  document.getElementById('evoToLabel').textContent =
+    next ? `→ ${next.name} (L${next.minLevel})` : 'MAX FORM';
+  document.getElementById('nextStageInfo').textContent =
+    next ? `Next stage: ${next.name} at Level ${next.minLevel}` : 'Legendary tier reached';
+  document.getElementById('evoGateInfo').textContent =
+    next ? 'Fill bar to 100% + spend 1 Orc Evolution Potion.'
+         : 'Animate button unlocked below.';
+
+  const evoBtn = document.getElementById('evolveBtn');
+  const ok = canEvolve();
+  evoBtn.disabled = !ok;
+  evoBtn.classList.toggle('ready', ok);
+  evoBtn.textContent = ok ? '⚡ Evolve to ' + next.name
+    : next ? '⚡ Evolve (locked)' : 'Max form reached';
+
+  // traits
+  const tBox = document.getElementById('traits');
+  tBox.innerHTML = '';
+  TRAITS.forEach((t,i) => {
+    const cap = STAGE_CAPS[state.stageIdx][i];
+    const val = state.stats[t] || STAGE_FLOORS[state.stageIdx][i];
+    const atCap = val >= cap;
+    const pct = Math.round((val/cap)*100);
+    tBox.insertAdjacentHTML('beforeend',
+      `<div class="trait-row">
+        <div class="trait-icon icon-${t}">${t}</div>
+        <div class="trait-info">
+          <div class="trait-name">${TRAIT_NAMES[t]}
+            <span class="info-dot" data-help="${t}">?</span></div>
+          <div class="trait-bar"><div class="trait-fill ${atCap?'cap':''}"
+            style="width:${pct}%"></div></div>
+        </div>
+        <div class="trait-value">${Math.round(val)}<small>/${cap}</small></div>
+        <button class="trait-use" data-t="${t}"
+          ${state.inv[t]<=0||atCap?'disabled':''}>+${state.inv[t]}</button>
+      </div>`);
+  });
+  tBox.querySelectorAll('.trait-use').forEach(b =>
+    b.addEventListener('click', () => usePotion(b.dataset.t, b)));
+  // wire help dots
+  tBox.querySelectorAll('.info-dot').forEach(dot => {
+    dot.addEventListener('click', ev => {
+      ev.stopPropagation();
+      showTooltip(dot, TRAIT_HELP[dot.dataset.help]);
+    });
+  });
+
+  // inventory
+  document.getElementById('invEvo').textContent = state.inv.evo;
+  document.getElementById('invAlloc').textContent = state.inv.alloc;
+  TRAITS.forEach(t => {
+    const el = document.getElementById('inv' + t);
+    if (el) el.textContent = state.inv[t];
+  });
+
+  // strip (all clickable - preview mode)
+  const strip = document.getElementById('stageStrip');
+  strip.innerHTML = '';
+  STAGES.forEach((s,i) => {
+    const cur = i === state.stageIdx;
+    strip.insertAdjacentHTML('beforeend',
+      `<div class="stage-slot ${cur?'current':''}" data-stage="${i}"
+            title="Click to preview ${s.name}">
+        <div class="num">L${s.minLevel}</div>
+        <img src="${s.img}" />
+        <div class="stagelabel">${s.name}</div>
+      </div>`);
+  });
+  strip.querySelectorAll('.stage-slot').forEach(slot => {
+    slot.addEventListener('click', () => {
+      const idx = +slot.dataset.stage;
+      state.stageIdx = idx;
+      state.level = STAGES[idx].minLevel;
+      state.evoPct = 0;
+      state.evoMaxLevel = GATE_LEVELS[idx] || 50;
+      initStats();
+      render();
+    });
+  });
+
+  // global rank
+  const pwr = computePowerScore();
+  // fake a rank position based on power
+  const sameSpeciesCount = Math.floor(1200 + Math.random()*600);
+  const globalRank = Math.max(1, Math.floor(sameSpeciesCount * (1 - pwr/100000)));
+  document.getElementById('globalRankNum').textContent = globalRank.toLocaleString();
+  document.getElementById('globalRankTotal').textContent = sameSpeciesCount.toLocaleString();
+
+  // animate button — always clickable for preview, shows info if not legendary yet
+  const animBtn = document.getElementById('animateBtn');
+  animBtn.innerHTML = state.stageIdx >= 8
+    ? '✨ Animate Champion'
+    : '✨ Animate (unlocks at L50)';
+  animBtn.classList.toggle('primary', state.stageIdx >= 8);
+}
+
+document.querySelectorAll('.sp-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentSpecies = btn.dataset.sp;
+    STAGES = SPECIES[currentSpecies].stages;
+    document.querySelectorAll('.sp-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    // keep level and stage but reload images
+    state.stageIdx = Math.min(state.stageIdx, STAGES.length - 1);
+    state.level = Math.max(state.level, STAGES[state.stageIdx].minLevel);
+    initStats();
+    render();
+  });
+});
+document.getElementById('evolveBtn').addEventListener('click', evolve);
+function bindIf(id, event, handler) {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener(event, handler);
+}
+
+bindIf('animateBtn', 'click', () => {
+  if (state.stageIdx >= 8) {
+    alert('✨ Animate flow (demo): would call Kling / Luma image-to-video API on your L50 champion.\n\nCost: 5 PYR.\nResult: unique 5-second looping MP4, cached forever per champion NFT, auto-plays on your profile and social cards.');
+  } else {
+    alert('✨ Animate unlocks at L50 Legendary tier. In this demo you can click any stage in the strip below to preview it — try jumping to the Legendary stage.');
+  }
+});
+bindIf('leaderboardBtn', 'click', showLeaderboard);
+bindIf('adminLeaderboardBtn', 'click', showLeaderboard);
+bindIf('lbCloseBtn', 'click', closeLeaderboard);
+bindIf('allocPotionRow', 'click', (e) => {
+  useAllocationPotion(e.currentTarget);
+});
+bindIf('allocApply', 'click', applyAllocation);
+bindIf('allocCancel', 'click', closeAllocModal);
+bindIf('globalRankBar', 'click', showLeaderboard);
+document.querySelectorAll('.lb-filter').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.lb-filter').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderLeaderboard(btn.dataset.sp);
+  });
+});
+
+// tooltip helper
+let activeTooltip = null;
+function showTooltip(anchor, text) {
+  hideTooltip();
+  const tip = document.createElement('div');
+  tip.className = 'tooltip';
+  tip.textContent = text;
+  document.body.appendChild(tip);
+  const r = anchor.getBoundingClientRect();
+  tip.style.position = 'fixed';
+  tip.style.bottom = 'auto';
+  tip.style.top = (r.top - 10) + 'px';
+  tip.style.left = (r.left + r.width/2) + 'px';
+  tip.style.transform = 'translate(-50%, -100%)';
+  activeTooltip = tip;
+  setTimeout(() => document.addEventListener('click', hideTooltip, { once: true }), 0);
+}
+function hideTooltip() {
+  if (activeTooltip) { activeTooltip.remove(); activeTooltip = null; }
+}
+
+// ============================================================
+// BOOT — fetch bloodlines.json and wire up
+// ============================================================
+function renderSpeciesButtons() {
+  // Re-wire species picker after data load (overwrites static HTML handlers)
+  document.querySelectorAll('.sp-btn').forEach(btn => {
+    // strip any existing handlers by cloning
+    const clone = btn.cloneNode(true);
+    btn.parentNode.replaceChild(clone, btn);
+  });
+  document.querySelectorAll('.sp-btn').forEach(btn => {
+    const sp = btn.dataset.sp;
+    btn.addEventListener('click', () => {
+      if (!SPECIES[sp]) return;
+      currentSpecies = sp;
+      // pick first bloodline by default
+      currentBloodline = Object.keys(SPECIES[sp].bloodlines)[0];
+      STAGES = SPECIES[sp].bloodlines[currentBloodline].stages;
+      state.stageIdx = Math.min(state.stageIdx, STAGES.length - 1);
+      state.level = STAGES[state.stageIdx].minLevel;
+      document.querySelectorAll('.sp-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      initStats();
+      renderBloodlinePicker();
+      render();
+    });
+  });
+}
+
+// ============================================================
+// APP SHELL — views, ownership, routing
+// ============================================================
+
+// My Stable — localStorage-backed until backend lands
+let myChampions = [];
+let adminMode = false;
+
+function loadMyChampions() {
+  try {
+    const raw = localStorage.getItem('myChampions');
+    myChampions = raw ? JSON.parse(raw) : [];
+  } catch { myChampions = []; }
+}
+function saveMyChampions() {
+  localStorage.setItem('myChampions', JSON.stringify(myChampions));
+}
+
+function loadAdmin() {
+  // Default ON — users opt-out via toggle; setting persists once they do.
+  const stored = localStorage.getItem('adminMode');
+  adminMode = stored === null ? true : (stored === 'true');
+  document.getElementById('adminToggle').checked = adminMode;
+  document.body.classList.toggle('admin-on', adminMode);
+}
+
+function makeChampionId() {
+  return 'ch_' + Math.random().toString(36).slice(2, 10);
+}
+
+function addChampion({ species_id, bloodline_id, name }) {
+  const sp = SPECIES[species_id];
+  const bl = sp.bloodlines[bloodline_id];
+  const champion = {
+    id: makeChampionId(),
+    species_id, bloodline_id, name,
+    level: 1, stageIdx: 0, evoPct: 0,
+    stats: { STR: 5, VIT: 10, AGI: 8, FER: 3, INT: 6, LCK: 10 },
+    rank: { tier: 'Iron', division: 'III', elo: 150 },
+    createdAt: new Date().toISOString(),
+  };
+  myChampions.push(champion);
+  saveMyChampions();
+  return champion;
+}
+
+// ============================================================
+// VIEW ROUTER
+// ============================================================
+let currentView = 'stable';
+let adoptFlow = { species_id: null, bloodline_id: null };
+
+const VIEW_MAP = {
+  'stable':            'view-stable',
+  'adopt':             'view-adopt-species',
+  'adopt-bloodline':   'view-adopt-bloodline',
+  'adopt-buy':         'view-adopt-buy',
+  'explore':           'view-explore',
+  'champion':          'view-champion',
+};
+
+function navTo(viewName, payload) {
+  currentView = viewName;
+  // clear ALL views first, activate target
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const cls = VIEW_MAP[viewName];
+  if (cls) document.querySelector('.' + cls)?.classList.add('active');
+  // body class (for css-grid toggling on champion view)
+  document.body.className = document.body.className
+    .replace(/view-\S+/g, '').trim();
+  document.body.classList.add('view-' + viewName);
+  if (adminMode) document.body.classList.add('admin-on');
+  // nav pill
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const navBtnView = { stable: 'stable', adopt: 'adopt',
+    'adopt-bloodline': 'adopt', 'adopt-buy': 'adopt', explore: 'explore' }[viewName];
+  if (navBtnView) {
+    document.querySelector(`.nav-btn[data-view="${navBtnView}"]`)?.classList.add('active');
+  }
+  // show/hide the fixed bloodline-bar (only visible in champion view + admin mode)
+  const blBar = document.getElementById('bloodlineBar');
+  if (blBar) blBar.style.display =
+    (viewName === 'champion' && adminMode) ? 'flex' : 'none';
+  // render target view
+  switch (viewName) {
+    case 'stable': renderStable(); break;
+    case 'adopt': renderSpeciesPicker(); break;
+    case 'adopt-bloodline': renderBloodlinePicker(payload); break;
+    case 'adopt-buy': renderBuy(); break;
+    case 'explore': renderExplore(); break;
+    case 'champion': renderChampionDetail(payload); break;
+  }
+}
+
+// ============================================================
+// VIEW RENDERERS
+// ============================================================
+function renderStable() {
+  const container = document.getElementById('stableContent');
+  if (myChampions.length === 0) {
+    container.innerHTML = `
+      <div class="empty-stable">
+        <h3>Your stable is empty</h3>
+        <p>Adopt your first champion to begin. Each champion is a unique NFT — a single creature you'll raise from whelp to legendary across 50 stages.</p>
+        <button class="big-cta" onclick="navTo('adopt')">✨ Adopt Your First Champion</button>
+      </div>
+    `;
+    return;
+  }
+  container.innerHTML = '<div class="stable-grid">' +
+    myChampions.map(c => {
+      const sp = SPECIES[c.species_id];
+      const bl = sp.bloodlines[c.bloodline_id];
+      const stage = bl.stages[c.stageIdx];
+      const stageName = stage.name;
+      const legend = c.stageIdx >= 8;
+      return `
+        <div class="champ-card ${legend ? 'legend' : ''}" onclick="openChampion('${c.id}')">
+          <div class="stage-pill">${stageName}</div>
+          <div class="lvl-pill">L${String(c.level).padStart(2,'0')}</div>
+          <div class="art"><img src="${stage.img}" /></div>
+          <div class="meta">
+            <div class="name">${c.name}</div>
+            <div class="subname">${sp.label} · ${bl.label}</div>
+          </div>
+        </div>`;
+    }).join('') +
+    `<div class="adopt-card" onclick="navTo('adopt')">
+      <div class="big-icon">+</div>
+      <div class="adopt-label">Adopt New</div>
+    </div>` +
+    '</div>';
+}
+
+function renderSpeciesPicker() {
+  const grid = document.getElementById('speciesGrid');
+  grid.innerHTML = Object.entries(SPECIES).map(([id, sp]) => `
+    <div class="species-card" onclick="pickSpecies('${id}')">
+      <div class="species-emoji">${sp.emoji || '⭐'}</div>
+      <h3>${sp.label}</h3>
+      <div class="arch">${sp.archetype}</div>
+      <div class="primary-traits">${Object.keys(sp.bloodlines).length} bloodlines</div>
+    </div>
+  `).join('');
+}
+function pickSpecies(species_id) {
+  adoptFlow.species_id = species_id;
+  adoptFlow.bloodline_id = null;
+  navTo('adopt-bloodline', species_id);
+}
+
+function renderBloodlinePicker() {
+  const sp_id = adoptFlow.species_id;
+  if (!sp_id) { navTo('adopt'); return; }
+  const sp = SPECIES[sp_id];
+  document.getElementById('bloodlineHeading').textContent =
+    `Choose a ${sp.label} Bloodline`;
+  const grid = document.getElementById('bloodlineGrid');
+  const loreMap = {
+    ironfang: 'The traditional warrior bloodline — green-grey skin, bronze pendant, the classic orc warlord.',
+    ashclan: 'Shamanic ash-grey skin, tribal markings, a necromantic path of ancestor spirits.',
+    bloodfang: 'Rust-red berserker bloodline, scarred and fierce, drives into battle with raw fury.',
+    moonsong: 'Silver-platinum druid with heterochromia eyes, path of the eldertree and moonlight arcana.',
+    sunweaver: 'Golden-bronze warrior-mage, sunburst regalia, radiant solar magic.',
+    nightshade: 'Pale violet-eyed shadow assassin, obsidian daggers, path of shadow.',
+    irontooth: 'Mustard-green warband chief with a cracked tooth and iron boar charm — the classic goblin warlord.',
+    swampskin: 'Swamp-green amphibian goblin with bulging eyes, poison trident, path of the marshes.',
+    emberskin: 'Ash-grey fire-stealing rogue with glowing ember cracks, thief of flames.',
+    infernal: 'Dark-ash horned knight of the pit, molten flame greatsword, infernal arcana.',
+    voidborn: 'Black-skinned starborn with void-crown, obsidian daggers, speaks with constellations.',
+    ichorskin: 'Chalk-white mystic with green crystal staff, glowing plant-root veins, astral nature path.',
+    emberscale: 'Red-orange scaled dragon-hybrid, fire-breath lineage, drakonic warrior path.',
+    frostscale: 'Ice-blue scaled dragon-hybrid, glacier breath, frost-elemental path.',
+    stormscale: 'Slate-silver scaled dragon-hybrid, lightning, storm-elemental path.',
+    ironbeard: 'Brown-bearded master smith, hammer lineage, the classic dwarven forgeking.',
+    stonehammer: 'White-bearded mountain clan, stone runes, the stone-warder path.',
+    goldseeker: 'Red-bearded prospector, gold trinkets, the treasure-hunter bloodline.',
+    wolfkin: 'Silver-grey wolf-kin, pack leader, moon-hunter primal path.',
+    pantherkin: 'Jet-black panther-kin, shadow-stalker assassin of the primal wilds.',
+    bearkin: 'Dark-brown bear-kin, the heavy tank bloodline, earth-bond.',
+    mourner: 'Silver-blue starweaver, astral robes, cosmic constellation magic.',
+    voidstalker: 'Dark-purple void-walker, orbital daggers, shadow-plane master.',
+    sunspire: 'Warm-gold radiant sun-spirit, solar staff, celestial light magic.',
+  };
+  grid.innerHTML = Object.entries(sp.bloodlines).map(([id, bl]) => {
+    const stage0 = bl.stages[0];
+    return `
+      <div class="bloodline-card" onclick="pickBloodline('${id}')">
+        <div class="bl-art"><img src="${stage0.img}" /></div>
+        <div class="bl-meta">
+          <div class="bl-name">${bl.label}</div>
+          <div class="bl-lore">${loreMap[id] || 'A unique bloodline.'}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+function pickBloodline(bloodline_id) {
+  adoptFlow.bloodline_id = bloodline_id;
+  navTo('adopt-buy');
+}
+
+function renderBuy() {
+  const sp_id = adoptFlow.species_id;
+  const bl_id = adoptFlow.bloodline_id;
+  if (!sp_id || !bl_id) { navTo('adopt'); return; }
+  const sp = SPECIES[sp_id];
+  const bl = sp.bloodlines[bl_id];
+  const stage0 = bl.stages[0];
+  const defaultName = `${bl.heroName} the ${stage0.name}`;
+  document.getElementById('buyWrap').innerHTML = `
+    <div class="buy-art"><img src="${stage0.img}" /></div>
+    <div class="buy-summary">
+      <h3 id="previewName">${defaultName}</h3>
+      <div class="species">${sp.label} · ${bl.label} · Stage 1 ${stage0.name}</div>
+    </div>
+    <div class="buy-form">
+      <label>Name your champion</label>
+      <input type="text" id="buyNameInput" value="${defaultName}" maxlength="48" />
+      <div class="buy-price">
+        <span class="label">Adoption fee</span>
+        <span class="value">5 PYR</span>
+      </div>
+      <button class="btn-big" onclick="confirmAdopt()">✨ Adopt this baby</button>
+    </div>
+  `;
+  document.getElementById('buyNameInput').addEventListener('input', e => {
+    document.getElementById('previewName').textContent =
+      e.target.value.trim() || defaultName;
+  });
+}
+function confirmAdopt() {
+  const name = (document.getElementById('buyNameInput').value || '').trim();
+  if (!name) { alert('Please name your champion'); return; }
+  if (myChampions.length >= 10) {
+    alert('You already own 10 champions (the maximum). Retire or evolve existing ones before adopting more.');
+    return;
+  }
+  const c = addChampion({
+    species_id: adoptFlow.species_id,
+    bloodline_id: adoptFlow.bloodline_id,
+    name,
+  });
+  adoptFlow = { species_id: null, bloodline_id: null };
+  openChampion(c.id);
+}
+
+function openChampion(championId) {
+  const champ = myChampions.find(c => c.id === championId);
+  if (!champ) { alert('Champion not found.'); return; }
+  // hydrate the single-champion state from this champion's record
+  currentSpecies = champ.species_id;
+  currentBloodline = champ.bloodline_id;
+  STAGES = SPECIES[currentSpecies].bloodlines[currentBloodline].stages;
+  state.level = champ.level;
+  state.stageIdx = champ.stageIdx;
+  state.evoPct = champ.evoPct;
+  state.stats = { ...champ.stats };
+  state.rank = { ...champ.rank };
+  activeChampionId = championId;
+  navTo('champion');
+}
+
+function renderChampionDetail() {
+  renderBloodlinePicker_inChampion();
+  initStats();
+  render();
+}
+
+// keep state synced back to myChampions on stat changes
+function persistActiveChampion() {
+  if (!activeChampionId) return;
+  const c = myChampions.find(x => x.id === activeChampionId);
+  if (!c) return;
+  c.level = state.level;
+  c.stageIdx = state.stageIdx;
+  c.evoPct = state.evoPct;
+  c.stats = { ...state.stats };
+  c.rank = { ...state.rank };
+  saveMyChampions();
+}
+
+// called when switching bloodlines in admin mode
+function renderBloodlinePicker_inChampion() {
+  // only show the bloodline-bar when admin mode is on
+  const bar = document.getElementById('bloodlineBar');
+  bar.style.display = adminMode ? 'flex' : 'none';
+  if (!adminMode) return;
+  const sp = SPECIES[currentSpecies];
+  const box = document.getElementById('bloodlineBtns');
+  box.innerHTML = Object.entries(sp.bloodlines).map(([bl_id, bl]) => {
+    const active = bl_id === currentBloodline;
+    return `<button class="bl-btn ${active?'active':''}" onclick="adminSwitchBloodline('${bl_id}')">${bl.label}</button>`;
+  }).join('');
+}
+function adminSwitchBloodline(bl_id) {
+  currentBloodline = bl_id;
+  STAGES = SPECIES[currentSpecies].bloodlines[bl_id].stages;
+  renderBloodlinePicker_inChampion();
+  render();
+}
+
+// ============================================================
+// EXPLORE — leaderboard as full view
+// ============================================================
+let activeExploreFilter = 'all';
+function renderExplore() {
+  const filtersEl = document.getElementById('exploreFilters');
+  filtersEl.innerHTML = [
+    { id: 'all', label: 'All Species' },
+    ...Object.entries(SPECIES).map(([id, sp]) => ({ id, label: sp.emoji + ' ' + sp.label })),
+  ].map(f => `<button class="sp-btn ${f.id === activeExploreFilter ? 'active' : ''}" onclick="setExploreFilter('${f.id}')">${f.label}</button>`).join('');
+  renderLeaderboard(activeExploreFilter === 'all' ? 'all' : activeExploreFilter);
+  // redirect the leaderboard into explore list
+  const lb = document.getElementById('lbList');
+  document.getElementById('exploreList').innerHTML = lb ? lb.outerHTML : '';
+  // stupidly simple: just invoke leaderboard modal rendering into the explore list
+  renderLeaderboardInline(activeExploreFilter);
+}
+function setExploreFilter(id) {
+  activeExploreFilter = id;
+  renderExplore();
+}
+function renderLeaderboardInline(filter) {
+  const list = document.getElementById('exploreList');
+  const SPECIES_ICON = { orc:'🟢', elf:'🌙', goblin:'👺', demon:'🔥', drakkin:'🐉', dwarf:'⚒️', beastkin:'🐺', wraith:'👻' };
+  const rows = filter === 'all' ? LEADERBOARD : LEADERBOARD.filter(r => r.species === filter);
+  list.innerHTML = '<div style="max-width:720px; margin:0 auto;">' + rows.map((r,i) => {
+    const isTop3 = i < 3;
+    const icon = SPECIES_ICON[r.species] || '⭐';
+    return `<div class="lb-row">
+      <div class="lb-rank ${isTop3?'top3':''}">#${i+1}</div>
+      <div class="lb-icon">${icon}</div>
+      <div class="lb-info">
+        <div class="lb-name">${r.name}</div>
+        <div class="lb-detail">${r.species} · L${r.level} · ${r.owner}</div>
+      </div>
+      <div class="lb-score">${r.power.toLocaleString()}<span class="e"> pwr</span></div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+// ============================================================
+// ADMIN TOGGLE
+// ============================================================
+document.getElementById('adminToggle').addEventListener('change', (e) => {
+  adminMode = e.target.checked;
+  localStorage.setItem('adminMode', adminMode);
+  document.body.classList.toggle('admin-on', adminMode);
+  // re-render current view so admin features appear/disappear
+  navTo(currentView);
+});
+
+// nav click wiring
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    navTo(btn.dataset.view);
+  });
+});
+
+// ============================================================
+// BOOT
+// ============================================================
+async function boot() {
+  try {
+    const data = await fetch('bloodlines.json').then(r => r.json());
+    // Transform bloodlines.json schema → runtime SPECIES
+    Object.entries(data.species).forEach(([sp_id, sp]) => {
+      SPECIES[sp_id] = {
+        label: sp.label,
+        archetype: sp.archetype,
+        emoji: sp.emoji,
+        bloodlines: {},
+      };
+      Object.entries(sp.bloodlines).forEach(([bl_id, bl]) => {
+        // Build per-stage nameByStage from hero name + stage names
+        const hero = bl.heroName;
+        const nameByStage = sp.stageNames.map((name, idx) => {
+          if (idx === 0) return `${hero} the ${name}`;
+          if (idx === 8) return `${hero}, the ${name}`;
+          return `${hero} ${name}`;
+        });
+        SPECIES[sp_id].bloodlines[bl_id] = {
+          label: bl.label,
+          heroName: hero,
+          nameByStage,
+          stages: bl.stages,
+        };
+      });
+    });
+    // Initial default — for admin mode fallback
+    currentSpecies = 'orc';
+    currentBloodline = 'ironfang';
+    STAGES = SPECIES.orc.bloodlines.ironfang.stages;
+    renderSpeciesButtons();
+
+    // User-first app: land on Stable.
+    loadMyChampions();
+    adminMode = false;
+    document.body.classList.remove('admin-on');
+    navTo('stable');
+  } catch (e) {
+    alert('Failed to load bloodlines.json: ' + e.message);
+    console.error(e);
+  }
+}
+
+// Update anywhere that referenced SPECIES[currentSpecies].nameByStage directly:
+// we now reference SPECIES[currentSpecies].bloodlines[currentBloodline].nameByStage
+boot();
+</script>
+</body>
+</html>
