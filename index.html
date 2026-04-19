@@ -1042,6 +1042,158 @@
     margin-right: 20px; font-weight: 700;
   }
 
+  /* ============================================================
+     "HOW TO" 3-STEP GUIDE CARD
+     ============================================================ */
+  .howto-card {
+    background: linear-gradient(180deg, rgba(40,22,28,0.8), rgba(20,10,14,0.8));
+    border: 1px solid rgba(255,205,107,0.25);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+  .howto-title {
+    font-size: 11px; color: var(--accent);
+    letter-spacing: 2.5px; text-transform: uppercase;
+    font-weight: 800; margin-bottom: 14px;
+  }
+  .howto-steps { display: flex; flex-direction: column; gap: 12px; }
+  .howto-step {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed rgba(255,205,107,0.12);
+  }
+  .howto-step:last-child { border-bottom: none; padding-bottom: 0; }
+  .howto-icon {
+    font-size: 28px; flex-shrink: 0;
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 40% 30%, rgba(255,205,107,0.2), transparent 70%);
+    border-radius: 50%;
+  }
+  .howto-body { flex: 1; }
+  .howto-step-label {
+    font-size: 10px; color: var(--accent);
+    letter-spacing: 2px; text-transform: uppercase;
+    font-weight: 700; margin-bottom: 4px;
+  }
+  .howto-step-text {
+    font-size: 12px; color: var(--text);
+    line-height: 1.55;
+  }
+  .howto-step-text b { color: var(--accent); }
+
+  /* ============================================================
+     SPECIAL POTIONS CARD
+     ============================================================ */
+  .special-potion {
+    display: flex; gap: 12px; align-items: center;
+    padding: 10px 4px;
+    border-bottom: 1px dashed rgba(255,205,107,0.12);
+  }
+  .special-potion:last-child { border-bottom: none; }
+  .special-potion.empty { opacity: 0.4; }
+  .sp-ico {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+    background: radial-gradient(circle at 40% 30%, #2a1a30, #0a0508);
+    border: 1px solid var(--border);
+  }
+  .sp-ico-evo {
+    background: radial-gradient(circle at 40% 30%, #ff6b35, #5a1a00);
+    box-shadow: 0 0 14px rgba(255,120,40,0.45);
+  }
+  .sp-ico-alloc {
+    background: radial-gradient(circle at 40% 30%, #c084fc, #4a1e70);
+    box-shadow: 0 0 14px rgba(192,132,252,0.45);
+  }
+  .sp-body { flex: 1; }
+  .sp-name {
+    font-size: 14px; font-weight: 700; color: var(--text);
+    letter-spacing: 0.5px;
+  }
+  .sp-hint { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .sp-count {
+    font-size: 22px; font-weight: 900; color: var(--accent);
+    min-width: 30px; text-align: right;
+  }
+  .special-potion.empty .sp-count { color: var(--muted); }
+
+  /* ============================================================
+     TREASURE CHEST CARD
+     ============================================================ */
+  .chest-card {
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(255,205,107,0.1), transparent 60%),
+      linear-gradient(180deg, var(--panel), var(--bg-deep));
+  }
+  .chest-visual {
+    width: 120px; height: 100px; margin: 10px auto 14px;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    filter: drop-shadow(0 6px 18px rgba(255,140,40,0.45));
+  }
+  .chest-visual .chest-box {
+    font-size: 72px; line-height: 1;
+    animation: chestIdle 3.2s ease-in-out infinite;
+  }
+  .chest-visual .chest-lid {
+    position: absolute; top: -6px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 24px; opacity: 0.9;
+    animation: chestSparkle 2.4s ease-in-out infinite;
+  }
+  .chest-visual.shaking .chest-box { animation: chestShake 0.3s 6; }
+  .chest-visual.burst::after {
+    content: "";
+    position: absolute; inset: -30px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,205,107,0.9), transparent 60%);
+    animation: chestBurst 0.9s forwards;
+  }
+  @keyframes chestIdle {
+    0%,100% { transform: translateY(0); }
+    50%     { transform: translateY(-4px); }
+  }
+  @keyframes chestSparkle {
+    0%,100% { opacity: 0.4; transform: translateX(-50%) scale(0.9); }
+    50%     { opacity: 1; transform: translateX(-50%) scale(1.1); }
+  }
+  @keyframes chestShake {
+    25% { transform: rotate(-6deg); }
+    75% { transform: rotate(6deg); }
+  }
+  @keyframes chestBurst {
+    0%   { opacity: 0; transform: scale(0.5); }
+    40%  { opacity: 1; transform: scale(1.3); }
+    100% { opacity: 0; transform: scale(2); }
+  }
+  .chest-blurb {
+    font-size: 12px; color: var(--muted);
+    line-height: 1.6; margin-bottom: 14px;
+  }
+  .chest-blurb b { color: var(--accent); }
+  .chest-open-btn {
+    width: 100%;
+    padding: 12px 16px;
+    background: linear-gradient(90deg, #ffcd6b, #ff8e2e);
+    color: #1a0a05;
+    border: none; border-radius: 10px;
+    font-size: 13px; font-weight: 800;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(255,140,40,0.3);
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .chest-open-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .chest-open-btn:disabled { opacity: 0.5; cursor: wait; filter: grayscale(0.4); }
+  .chest-btn-hint {
+    font-size: 10px; font-weight: 600; opacity: 0.7;
+    letter-spacing: 1px;
+  }
+
   /* ---- WALLET CHIP in topbar ---- */
   .wallet-chip {
     display: inline-flex; align-items: center; gap: 6px;
@@ -1396,10 +1548,31 @@
 </main>
 
 <aside>
-  <div class="card" style="padding:12px 14px;">
-    <div style="font-size:11px; color:var(--muted); line-height:1.5;">
-      <b style="color:var(--accent-dim); letter-spacing:1.5px; text-transform:uppercase; font-size:10px;">How this works</b><br/>
-      Feed species-matched potions to your champion to fill the Evolution bar and raise traits. Chests come from the <b style="color:var(--text)">Quests hub</b> elsewhere in VulcanX — you just bring the potions here.
+  <!-- ── How to raise your champion: 3-step guide ── -->
+  <div class="howto-card">
+    <div class="howto-title">✨ How to raise your champion</div>
+    <div class="howto-steps">
+      <div class="howto-step">
+        <div class="howto-icon">🎁</div>
+        <div class="howto-body">
+          <div class="howto-step-label">Step 1 · Get Chests</div>
+          <div class="howto-step-text">Play Vulcan Forged games and complete quests to earn treasure chests. Each chest drops potions.</div>
+        </div>
+      </div>
+      <div class="howto-step">
+        <div class="howto-icon">🧪</div>
+        <div class="howto-body">
+          <div class="howto-step-label">Step 2 · Feed Potions</div>
+          <div class="howto-step-text">Tap the <b>+N</b> button next to any stat to feed a potion. Your champion's stats grow and the evolution bar fills.</div>
+        </div>
+      </div>
+      <div class="howto-step">
+        <div class="howto-icon">⚡</div>
+        <div class="howto-body">
+          <div class="howto-step-label">Step 3 · Evolve</div>
+          <div class="howto-step-text">When the bar hits 100% at a level gate (5, 10, 15…), spend an <b>Evolution Potion</b> to transform your champion into its next stage.</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1446,19 +1619,42 @@
     <div id="traits"></div>
   </div>
 
-  <div class="card">
-    <div class="card-title">Potion Inventory (Orc-locked NFTs)</div>
-    <div class="potion-row hot"><span class="name">Evolution Potion</span><span class="count" id="invEvo">2</span></div>
-    <div class="potion-row" id="allocPotionRow" style="cursor:pointer;"
-         title="Click to open allocation modal">
-      <span class="name">✨ Allocation Potion (40pts)</span>
-      <span class="count" id="invAlloc">1</span></div>
-    <div class="potion-row"><span class="name">STR · Minor (+5)</span><span class="count" id="invSTR">6</span></div>
-    <div class="potion-row"><span class="name">VIT · Minor (+5)</span><span class="count" id="invVIT">4</span></div>
-    <div class="potion-row"><span class="name">AGI · Minor (+5)</span><span class="count" id="invAGI">2</span></div>
-    <div class="potion-row"><span class="name">FER · Minor (+5)</span><span class="count" id="invFER">3</span></div>
-    <div class="potion-row"><span class="name">INT · Minor (+5)</span><span class="count" id="invINT">2</span></div>
-    <div class="potion-row"><span class="name">LCK · Minor (+5)</span><span class="count" id="invLCK">5</span></div>
+  <!-- ── Special potions (rare drops) ── -->
+  <div class="card special-potions-card">
+    <div class="card-title">⚗️ Special Potions</div>
+    <div class="special-potion" id="specEvoRow">
+      <div class="sp-ico sp-ico-evo">⚡</div>
+      <div class="sp-body">
+        <div class="sp-name">Evolution Potion</div>
+        <div class="sp-hint">Unlocks the next life stage</div>
+      </div>
+      <div class="sp-count" id="invEvo">0</div>
+    </div>
+    <div class="special-potion" id="allocPotionRow" style="cursor:pointer;"
+         title="Click to distribute 40 points">
+      <div class="sp-ico sp-ico-alloc">✨</div>
+      <div class="sp-body">
+        <div class="sp-name">Blessing (40 pts)</div>
+        <div class="sp-hint">Split 40 points across any stats</div>
+      </div>
+      <div class="sp-count" id="invAlloc">0</div>
+    </div>
+  </div>
+
+  <!-- ── Treasure Chests ── -->
+  <div class="card chest-card">
+    <div class="card-title">🎁 Treasure Chests</div>
+    <div class="chest-visual" id="chestVisual">
+      <div class="chest-lid">🔶</div>
+      <div class="chest-box">📦</div>
+    </div>
+    <div class="chest-blurb">
+      Chests drop when you play <b>Vulcan Forged</b> games — quests, Runner, Forge Arena, and more. Each chest contains <b>potions</b> that you bring here to feed your champion.
+    </div>
+    <button class="chest-open-btn" id="openTestChestBtn" onclick="openTestChest()">
+      🎁 Open a Test Chest
+      <span class="chest-btn-hint">(free — for testing)</span>
+    </button>
   </div>
 </aside>
 
@@ -2051,13 +2247,14 @@ function render() {
     });
   });
 
-  // inventory
+  // special potions inventory
   document.getElementById('invEvo').textContent = state.inv.evo;
   document.getElementById('invAlloc').textContent = state.inv.alloc;
-  TRAITS.forEach(t => {
-    const el = document.getElementById('inv' + t);
-    if (el) el.textContent = state.inv[t];
-  });
+  // dim the row if count is 0
+  const evoRow = document.getElementById('specEvoRow');
+  if (evoRow) evoRow.classList.toggle('empty', !state.inv.evo);
+  const allocRow = document.getElementById('allocPotionRow');
+  if (allocRow) allocRow.classList.toggle('empty', !state.inv.alloc);
 
   // strip (all clickable - preview mode)
   const strip = document.getElementById('stageStrip');
@@ -2823,6 +3020,86 @@ async function reloadPotions() {
   if (!currentSpecies) return;
   state.potions = await apiListPotions(currentSpecies);
   deriveInv();
+}
+
+// ============================================================
+// TEST CHEST — simulates what a real chest-from-quests drop will feel like
+// ============================================================
+function _rollChestDrops() {
+  // Between 3–5 drops. Weighted rarity.
+  const dropCount = 3 + Math.floor(Math.random() * 3);
+  const drops = [];
+  for (let i = 0; i < dropCount; i++) {
+    const r = Math.random();
+    if (r < 0.08) {
+      // Evolution potion — 8% per drop slot
+      drops.push({ kind: 'evolution' });
+    } else if (r < 0.15) {
+      // Allocation — 7%
+      drops.push({ kind: 'allocation' });
+    } else {
+      // Trait potion — pick random trait, weighted rarity
+      const trait = TRAITS[Math.floor(Math.random() * TRAITS.length)];
+      const k = Math.random();
+      const kind = k < 0.7 ? 'minor' : k < 0.95 ? 'major' : 'epic';
+      drops.push({ kind, trait });
+    }
+  }
+  return drops;
+}
+
+function _formatDrop(d) {
+  if (d.kind === 'evolution')  return '⚡ Evolution Potion';
+  if (d.kind === 'allocation') return '✨ Blessing (40 pts)';
+  const tier = d.kind === 'minor' ? 'Minor' : d.kind === 'major' ? 'Major' : 'Epic';
+  const nm = TRAIT_NAMES[d.trait] || d.trait;
+  return `🧪 ${nm} · ${tier}`;
+}
+
+async function openTestChest() {
+  if (!currentSpecies) {
+    alert('Open a champion from your Stable first, so the chest knows what species to drop for.');
+    return;
+  }
+  const btn = document.getElementById('openTestChestBtn');
+  const visual = document.getElementById('chestVisual');
+  if (btn) { btn.disabled = true; btn.firstChild.textContent = 'Opening…'; }
+  visual?.classList.add('shaking');
+
+  const drops = _rollChestDrops();
+
+  try {
+    await Promise.all(drops.map(d =>
+      apiGrantPotion({
+        species_id: currentSpecies,
+        kind: d.kind,
+        trait: d.trait || null,
+        quantity: 1,
+      })
+    ));
+  } catch (e) {
+    alert('Chest failed to open: ' + e.message);
+    if (btn) { btn.disabled = false; btn.firstChild.textContent = '🎁 Open a Test Chest'; }
+    visual?.classList.remove('shaking');
+    return;
+  }
+
+  // Reveal animation
+  setTimeout(() => {
+    visual?.classList.remove('shaking');
+    visual?.classList.add('burst');
+    setTimeout(() => visual?.classList.remove('burst'), 900);
+  }, 800);
+
+  await reloadPotions();
+  if (typeof render === 'function') render();
+
+  // Present the drops as a friendly summary
+  const summary = drops.map(d => '  · ' + _formatDrop(d)).join('\n');
+  setTimeout(() => {
+    alert(`🎁 Chest opened! Dropped:\n\n${summary}\n\n${currentSpecies.toUpperCase()}-locked — matches your champion.`);
+    if (btn) { btn.disabled = false; btn.firstChild.textContent = '🎁 Open a Test Chest'; }
+  }, 1100);
 }
 
 function renderChampionDetail() {
