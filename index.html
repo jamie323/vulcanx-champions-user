@@ -34,9 +34,9 @@
   .view { display: none; }
   .view.active { display: block; }
 
-  /* champion view keeps the 3-column grid */
+  /* champion view keeps the 3-column grid — wider panels, bigger hero */
   body.view-champion .view-champion { display: grid;
-    grid-template-columns: 300px 1fr 400px; min-height: 100vh; }
+    grid-template-columns: 340px 1fr 460px; min-height: 100vh; }
 
   /* nav bar */
   .main-nav {
@@ -328,9 +328,9 @@
   .bl-btn.active { background: rgba(255,142,107,0.15);
     border-color: var(--legend); color: var(--legend); }
 
-  /* left info panel */
+  /* left info panel — wider, more breathable */
   .info-panel {
-    padding: 150px 18px 180px;
+    padding: 110px 22px 180px;
     background: linear-gradient(180deg, rgba(20,14,20,0.5), rgba(10,6,8,0.3));
     border-right: 1px solid var(--border);
     overflow-y: auto;
@@ -341,40 +341,43 @@
   .info-panel .info-card {
     background: linear-gradient(135deg, rgba(40,20,10,0.4), rgba(20,12,20,0.7));
     border: 1px solid var(--border);
-    border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;
+    border-radius: 12px; padding: 18px 20px; margin-bottom: 16px;
   }
   .info-panel .label {
     font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-    color: var(--accent-dim); font-weight: 700; margin-bottom: 6px;
+    color: var(--accent-dim); font-weight: 700; margin-bottom: 8px;
   }
   .info-panel .big-value {
-    font-size: 20px; font-weight: 700; color: var(--accent);
-    letter-spacing: 0.3px; margin-bottom: 3px;
+    font-size: 24px; font-weight: 700; color: var(--accent);
+    letter-spacing: 0.3px; margin-bottom: 8px; line-height: 1.2;
   }
   .info-panel .zone-pill {
     display: inline-block;
-    padding: 3px 10px; border-radius: 12px;
+    padding: 4px 12px; border-radius: 14px;
     background: rgba(255,205,107,0.1);
     border: 1px solid var(--border-glow);
-    font-size: 10px; letter-spacing: 1.5px;
+    font-size: 11px; letter-spacing: 1.5px;
     color: var(--accent); text-transform: uppercase;
     font-weight: 700;
   }
   .info-panel .stage-lore {
-    font-size: 12px; line-height: 1.55;
-    color: var(--muted); margin-top: 8px;
+    font-size: 13px; line-height: 1.65;
+    color: var(--muted); margin-top: 12px;
   }
   .info-panel .lvl-big {
-    font-size: 44px; font-weight: 800; line-height: 1;
-    color: var(--accent); letter-spacing: 1px;
+    font-size: 52px; font-weight: 800; line-height: 1;
+    color: var(--accent); letter-spacing: 2px;
   }
   .info-panel .lvl-of {
     font-size: 12px; color: var(--muted);
-    margin-top: 4px; letter-spacing: 1px;
+    margin-top: 8px; letter-spacing: 1px; line-height: 1.5;
   }
 
   main { display: flex; flex-direction: column; align-items: center;
-    padding: 150px 20px 0px; position: relative; min-height: 100vh; }
+    padding: 108px 24px 0px; position: relative; min-height: 100vh; }
+
+  /* bigger hero image in user mode */
+  .stage-frame { width: min(560px, 82vh * (1024/1536)) !important; }
 
   .stage-frame { position: relative;
     width: min(460px, 60vh * (1024/1536));
@@ -428,7 +431,10 @@
 
   aside { background: linear-gradient(180deg,#15101a,#0a0608);
     border-left: 1px solid var(--border);
-    padding: 110px 22px 120px; overflow-y: auto; height: 100vh; }
+    padding: 108px 24px 120px; overflow-y: auto; height: 100vh;
+    scrollbar-width: none; }
+  aside::-webkit-scrollbar { display: none; }
+  aside .card { padding: 18px 20px; margin-bottom: 16px; }
 
   .card { background: linear-gradient(135deg,rgba(40,20,10,0.5),rgba(20,12,20,0.8));
     border: 1px solid var(--border); border-radius: 10px;
@@ -469,14 +475,39 @@
     50%     { box-shadow: 0 0 24px rgba(255,205,107,0.9); }
   }
 
+  /* ==== Hero FEED button ==== */
+  .feed-hero {
+    display: flex; align-items: stretch; gap: 10px;
+    margin-bottom: 14px;
+  }
+  .feed-hero-btn {
+    flex: 1; padding: 14px 16px;
+    background: linear-gradient(90deg,#ffcd6b,#ff8e2e);
+    border: none; border-radius: 10px;
+    color: #1a0a05; font-weight: 800; font-size: 14px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    cursor: pointer; display: flex; align-items: center;
+    justify-content: space-between; gap: 10px;
+    box-shadow: 0 0 18px rgba(255,205,107,0.25);
+  }
+  .feed-hero-btn .count {
+    font-size: 11px; opacity: 0.8; letter-spacing: 0.5px;
+  }
+  .feed-hero-btn:hover { filter: brightness(1.08); }
+  .feed-hero-btn:disabled {
+    background: #2a1a20; color: var(--muted);
+    box-shadow: none; cursor: not-allowed;
+  }
+  .feed-hero-btn:disabled .count { color: var(--muted); }
+
   .trait-row { display: grid;
-    grid-template-columns: 28px 1fr auto auto;
-    align-items: center; gap: 8px;
-    padding: 6px 0; border-bottom: 1px dashed var(--border); }
+    grid-template-columns: 30px 1fr auto auto;
+    align-items: center; gap: 10px;
+    padding: 10px 0; border-bottom: 1px dashed var(--border); }
   .trait-row:last-child { border: none; }
-  .trait-icon { width: 26px; height: 26px; border-radius: 4px;
+  .trait-icon { width: 30px; height: 30px; border-radius: 5px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 10px; font-weight: 800; }
+    font-size: 11px; font-weight: 800; }
   .icon-STR { background: #6a2020; color: #ff8080; }
   .icon-VIT { background: #205a20; color: #80ff80; }
   .icon-AGI { background: #205a5a; color: #80ffff; }
@@ -686,17 +717,17 @@
   }
   .alloc-remaining b {
     color: var(--accent); font-size: 22px; font-weight: 800; }
-  .trait-bar { height: 4px; background: #1a0e10;
-    border-radius: 2px; overflow: hidden; margin-top: 3px; }
+  .trait-bar { height: 6px; background: #1a0e10;
+    border-radius: 3px; overflow: hidden; margin-top: 5px; }
   .trait-fill { height: 100%;
     background: linear-gradient(90deg,#6a4820,var(--accent));
     transition: width 0.4s; }
   .trait-fill.cap { background: var(--epic); }
-  .trait-value { font-size: 14px; font-weight: 700; text-align: right; }
-  .trait-value small { color: var(--muted); font-weight: 400; font-size: 9px; }
-  .trait-use { padding: 4px 8px; background: #2a1a20; color: var(--muted);
-    border: 1px solid var(--border); border-radius: 4px;
-    font-size: 11px; font-weight: 700; cursor: pointer; }
+  .trait-value { font-size: 15px; font-weight: 700; text-align: right; }
+  .trait-value small { color: var(--muted); font-weight: 400; font-size: 10px; }
+  .trait-use { padding: 7px 12px; background: #2a1a20; color: var(--text);
+    border: 1px solid var(--border-glow); border-radius: 6px;
+    font-size: 12px; font-weight: 700; cursor: pointer; min-width: 42px; }
   .trait-use:hover:not(:disabled) { background: var(--accent);
     color: #1a0a05; border-color: var(--accent); }
   .trait-use:disabled { opacity: 0.3; cursor: not-allowed; }
@@ -951,6 +982,20 @@
     <div class="rank-bar" id="globalRankBar">
       <span class="label">Global Power Rank</span>
       <span class="value">#<span id="globalRankNum">147</span> of <span id="globalRankTotal">1,482</span><span class="arrow">→</span></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Upgrade</div>
+    <div class="feed-hero">
+      <button class="feed-hero-btn" id="feedHero">
+        <span>🧪 Feed Potion</span>
+        <span class="count" id="feedCount">0 ready</span>
+      </button>
+    </div>
+    <div style="font-size:11px; color:var(--muted); line-height:1.5; margin-top:10px;">
+      Tap the big button to feed any available potion, or use the
+      per-trait <b style="color:var(--text)">+N</b> buttons below.
     </div>
   </div>
 
@@ -1576,6 +1621,21 @@ function render() {
     ? '✨ Animate Champion'
     : '✨ Animate (unlocks at L50)';
   animBtn.classList.toggle('primary', state.stageIdx >= 8);
+
+  // Hero feed button — count potions + toggle disabled
+  const feedBtn = document.getElementById('feedHero');
+  if (feedBtn) {
+    const totalReady = TRAITS.reduce((sum, t) => sum + (state.inv[t] || 0), 0);
+    const anyAtCap = TRAITS.every(t => (state.stats[t] || 0) >= STAGE_CAPS[state.stageIdx][TRAITS.indexOf(t)]);
+    const hasUsable = totalReady > 0 && !anyAtCap;
+    feedBtn.disabled = !hasUsable;
+    document.getElementById('feedCount').textContent =
+      totalReady === 0
+        ? 'No potions — earn in Quests'
+        : hasUsable
+          ? `${totalReady} ready`
+          : 'All traits at cap';
+  }
 }
 
 document.querySelectorAll('.sp-btn').forEach(btn => {
@@ -1596,6 +1656,26 @@ function bindIf(id, event, handler) {
   const el = document.getElementById(id);
   if (el) el.addEventListener(event, handler);
 }
+
+// Hero Feed button — uses first available trait potion that isn't capped
+bindIf('feedHero', 'click', () => {
+  const available = TRAITS.filter(t => {
+    const cap = STAGE_CAPS[state.stageIdx][TRAITS.indexOf(t)];
+    return state.inv[t] > 0 && (state.stats[t] || 0) < cap;
+  });
+  if (available.length === 0) {
+    alert('🧪 No potions available for this stage. Earn chests in the Quests hub and bring potions back here.');
+    return;
+  }
+  // Feed the trait with the lowest ratio (bar furthest from cap)
+  available.sort((a, b) => {
+    const ai = TRAITS.indexOf(a), bi = TRAITS.indexOf(b);
+    const aRat = (state.stats[a] || 0) / STAGE_CAPS[state.stageIdx][ai];
+    const bRat = (state.stats[b] || 0) / STAGE_CAPS[state.stageIdx][bi];
+    return aRat - bRat;
+  });
+  usePotion(available[0], document.getElementById('feedHero'));
+});
 
 bindIf('animateBtn', 'click', () => {
   if (state.stageIdx >= 8) {
