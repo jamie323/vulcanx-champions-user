@@ -1042,6 +1042,25 @@
     margin-right: 20px; font-weight: 700;
   }
 
+  /* ---- WALLET CHIP in topbar ---- */
+  .wallet-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(192,132,252,0.1);
+    border: 1px solid rgba(192,132,252,0.3);
+    color: #e2caf9; font-family: monospace; font-size: 11px;
+    padding: 5px 10px; border-radius: 14px; cursor: pointer;
+    margin-left: 10px; letter-spacing: 0.5px;
+  }
+  .wallet-chip:hover { background: rgba(192,132,252,0.2); color: #fff; }
+  .wallet-chip .dot-live {
+    color: #4ade80; font-size: 10px;
+    animation: walletPulse 2s infinite;
+  }
+  @keyframes walletPulse {
+    0%,100% { opacity: 1; }
+    50%     { opacity: 0.4; }
+  }
+
   /* ============================================================
      DEBUG PANEL (dev only)
      ============================================================ */
@@ -1145,6 +1164,10 @@
     <div class="coin gem"><span class="icon">V</span><span id="curGem">15,320</span></div>
     <div class="coin ess"><span class="icon">E</span><span id="curEss">420</span></div>
     <button class="shop-btn" onclick="alert('Shop: coming soon.')">Shop ▾</button>
+    <div class="wallet-chip" id="walletChip" title="Your test wallet — click to copy" onclick="dbgCopyWallet()">
+      <span class="dot-live">●</span>
+      <span id="walletChipAddr">—</span>
+    </div>
   </div>
 </div>
 
@@ -2177,15 +2200,105 @@ function renderSpeciesButtons() {
 let myChampions = [];
 let adminMode = false;
 
-function loadMyChampions() {
+// ============================================================
+// BACKEND (Supabase edge functions on the shared VulcanX project)
+// ============================================================
+const SUPABASE_URL = 'https://pdhhezseiulsjhvnbrfr.supabase.co';
+const SUPABASE_ANON =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkaGhlenNlaXVsc2podm5icmZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Nzk3NjUsImV4cCI6MjA5MTI1NTc2NX0.SyRUnQFVR17Otkfm1D-gTdZP7-GcUc4XFllrO9u6nkg';
+const FN_BASE = `${SUPABASE_URL}/functions/v1`;
+const AUTH_HEADERS = {
+  'Content-Type': 'application/json',
+  'apikey': SUPABASE_ANON,
+  'Authorization': `Bearer ${SUPABASE_ANON}`,
+};
+
+// Persistent test wallet — stored in localStorage under `vx_wallet`.
+// Shape: 0xtest_<16 hex chars> to satisfy the edge-fn wallet regex.
+// Replaced with a real SIWE flow later.
+function getWallet() {
+  let w = localStorage.getItem('vx_wallet');
+  if (!w) {
+    const r = Array.from({length:16}, () =>
+      '0123456789abcdef'[Math.floor(Math.random()*16)]).join('');
+    w = `0xtest_${r}`;
+    localStorage.setItem('vx_wallet', w);
+  }
+  return w;
+}
+function resetWallet() {
+  localStorage.removeItem('vx_wallet');
+  return getWallet();
+}
+
+// Map backend champion row → frontend shape (historical field names).
+function mapChampion(row) {
+  return {
+    id: row.id,
+    species_id: row.species_id,
+    bloodline_id: row.bloodline_id,
+    name: row.name,
+    level: row.level,
+    stageIdx: row.stage_idx,
+    evoPct: row.evo_pct,
+    stats: row.stats || { STR:5,VIT:10,AGI:8,FER:3,INT:6,LCK:10 },
+    rank: {
+      tier: (row.rank_tier || 'iron').charAt(0).toUpperCase() + (row.rank_tier || 'iron').slice(1),
+      division: row.rank_division || 'III',
+      elo: row.rank_elo || 150,
+    },
+    animated: !!row.animated_url,
+    createdAt: row.created_at,
+    _backend: true,  // flag for debug / migration
+  };
+}
+
+async function apiFetch(url, opts = {}, timeoutMs = 12000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    const raw = localStorage.getItem('myChampions');
-    myChampions = raw ? JSON.parse(raw) : [];
-  } catch { myChampions = []; }
+    return await fetch(url, { ...opts, signal: ctrl.signal });
+  } finally { clearTimeout(t); }
 }
-function saveMyChampions() {
-  localStorage.setItem('myChampions', JSON.stringify(myChampions));
+
+async function apiListChampions() {
+  const wallet = getWallet();
+  const res = await apiFetch(`${FN_BASE}/champion_list?wallet=${wallet}`, {
+    headers: AUTH_HEADERS,
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    console.warn('[apiListChampions]', res.status, txt);
+    return [];
+  }
+  const data = await res.json();
+  return (data.champions || []).map(mapChampion);
 }
+
+async function apiCreateChampion({ species_id, bloodline_id, name }) {
+  const res = await apiFetch(`${FN_BASE}/champion_create`, {
+    method: 'POST',
+    headers: AUTH_HEADERS,
+    body: JSON.stringify({ wallet: getWallet(), species_id, bloodline_id, name }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const code = data.error || `http_${res.status}`;
+    throw new Error(`${code}: ${data.message || ''}`.trim());
+  }
+  return mapChampion(data.champion);
+}
+
+async function loadMyChampions() {
+  try {
+    myChampions = await apiListChampions();
+  } catch (e) {
+    console.error('loadMyChampions failed', e);
+    myChampions = [];
+  }
+}
+// Kept for backward-compat — no-op now (backend is source of truth).
+function saveMyChampions() { /* noop */ }
 
 function loadAdmin() {
   // Default ON — users opt-out via toggle; setting persists once they do.
@@ -2199,19 +2312,9 @@ function makeChampionId() {
   return 'ch_' + Math.random().toString(36).slice(2, 10);
 }
 
-function addChampion({ species_id, bloodline_id, name }) {
-  const sp = SPECIES[species_id];
-  const bl = sp.bloodlines[bloodline_id];
-  const champion = {
-    id: makeChampionId(),
-    species_id, bloodline_id, name,
-    level: 1, stageIdx: 0, evoPct: 0,
-    stats: { STR: 5, VIT: 10, AGI: 8, FER: 3, INT: 6, LCK: 10 },
-    rank: { tier: 'Iron', division: 'III', elo: 150 },
-    createdAt: new Date().toISOString(),
-  };
+async function addChampion({ species_id, bloodline_id, name }) {
+  const champion = await apiCreateChampion({ species_id, bloodline_id, name });
   myChampions.push(champion);
-  saveMyChampions();
   return champion;
 }
 
@@ -2555,20 +2658,27 @@ function renderBuy() {
       e.target.value.trim() || defaultName;
   });
 }
-function confirmAdopt() {
+async function confirmAdopt() {
   const name = (document.getElementById('buyNameInput').value || '').trim();
   if (!name) { alert('Please name your champion'); return; }
   if (myChampions.length >= 10) {
     alert('You already own 10 champions (the maximum). Retire or evolve existing ones before adopting more.');
     return;
   }
-  const c = addChampion({
-    species_id: adoptFlow.species_id,
-    bloodline_id: adoptFlow.bloodline_id,
-    name,
-  });
-  adoptFlow = { species_id: null, bloodline_id: null };
-  openChampion(c.id);
+  const btn = document.getElementById('confirmAdoptBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Minting…'; }
+  try {
+    const c = await addChampion({
+      species_id: adoptFlow.species_id,
+      bloodline_id: adoptFlow.bloodline_id,
+      name,
+    });
+    adoptFlow = { species_id: null, bloodline_id: null };
+    openChampion(c.id);
+  } catch (e) {
+    alert('Adopt failed: ' + e.message);
+    if (btn) { btn.disabled = false; btn.textContent = '✨ Adopt Champion'; }
+  }
 }
 
 function openChampion(championId) {
@@ -2720,11 +2830,12 @@ async function boot() {
     STAGES = SPECIES.orc.bloodlines.ironfang.stages;
     renderSpeciesButtons();
 
-    // User-first app: land on marketing landing page by default.
-    loadMyChampions();
+    // User-first app: fetch champions from backend, land on landing page.
+    await loadMyChampions();
     adminMode = false;
     document.body.classList.remove('admin-on');
     navTo('landing');
+    updateWalletUI();
   } catch (e) {
     alert('Failed to load bloodlines.json: ' + e.message);
     console.error(e);
@@ -2765,27 +2876,27 @@ function dbgFakePay5PYR() {
   const last = myChampions && myChampions[myChampions.length - 1];
   if (last) { last.animated = true; saveMyChampions(); }
 }
-function dbgQuickAdopt() {
+async function dbgQuickAdopt() {
   const speciesIds = Object.keys(SPECIES);
   const sp_id = speciesIds[Math.floor(Math.random() * speciesIds.length)];
   const blIds = Object.keys(SPECIES[sp_id].bloodlines);
   const bl_id = blIds[Math.floor(Math.random() * blIds.length)];
   const hero = SPECIES[sp_id].bloodlines[bl_id].heroName || 'Nameless';
-  addChampion({ species_id: sp_id, bloodline_id: bl_id, name: hero });
-  alert(`🥚 Adopted: ${hero} (${sp_id} · ${bl_id})\nTotal in stable: ${myChampions.length}`);
-  navTo('stable');
-  const stableBtn = document.getElementById('heroStableBtn');
-  if (stableBtn) stableBtn.style.display = 'inline-block';
-  dbgRefreshCounts();
+  try {
+    await addChampion({ species_id: sp_id, bloodline_id: bl_id, name: hero });
+    alert(`🥚 Adopted: ${hero} (${sp_id} · ${bl_id})\nTotal in stable: ${myChampions.length}`);
+    navTo('stable');
+    const stableBtn = document.getElementById('heroStableBtn');
+    if (stableBtn) stableBtn.style.display = 'inline-block';
+    dbgRefreshCounts();
+  } catch (e) {
+    alert('Adopt failed: ' + e.message);
+  }
 }
-function dbgResetStable() {
-  if (!confirm('Delete ALL champions in your stable? This can\'t be undone.')) return;
-  myChampions = [];
-  saveMyChampions();
-  const stableBtn = document.getElementById('heroStableBtn');
-  if (stableBtn) stableBtn.style.display = 'none';
-  if (currentView === 'stable') navTo('stable');
-  alert('🗑 Stable cleared.');
+async function dbgResetStable() {
+  if (!confirm('Reset your stable?\n\nThis generates a new test wallet — your old champions stay on the backend under the old wallet, but this session starts fresh.')) return;
+  await _swapToFreshWallet();
+  alert('🗑 Stable reset. New wallet: ' + getWallet());
 }
 function dbgRefreshCounts() {
   const el = document.getElementById('dbgCounts');
@@ -2810,6 +2921,40 @@ function dbgRefreshCounts() {
 function dbgToggle() {
   document.getElementById('dbgPanel').classList.toggle('open');
   dbgRefreshCounts();
+  updateWalletUI();
+}
+
+// ---- WALLET UI ----
+function shortWallet(w) {
+  if (!w) return '—';
+  return w.length > 14 ? `${w.slice(0, 10)}…${w.slice(-4)}` : w;
+}
+function updateWalletUI() {
+  const w = getWallet();
+  const chip = document.getElementById('walletChipAddr');
+  if (chip) chip.textContent = shortWallet(w);
+  const dbg = document.getElementById('dbgWalletAddr');
+  if (dbg) dbg.textContent = w;
+}
+async function _swapToFreshWallet() {
+  resetWallet();
+  myChampions = [];
+  await loadMyChampions();
+  updateWalletUI();
+  dbgRefreshCounts();
+  const stableBtn = document.getElementById('heroStableBtn');
+  if (stableBtn) stableBtn.style.display = (myChampions.length > 0) ? 'inline-block' : 'none';
+  if (currentView === 'stable') navTo('stable');
+}
+async function dbgNewWallet() {
+  if (!confirm('Generate a NEW test wallet?\n\nYour current stable will become invisible (still on the backend, just not loaded). Useful for testing multi-user flows.')) return;
+  await _swapToFreshWallet();
+  alert(`🔑 New wallet: ${getWallet()}`);
+}
+function dbgCopyWallet() {
+  const w = getWallet();
+  navigator.clipboard?.writeText(w);
+  alert('Copied: ' + w);
 }
 </script>
 
@@ -2854,6 +2999,13 @@ function dbgToggle() {
   <div class="dbg-row">
     <button class="dbg-btn" onclick="dbgQuickAdopt()">🥚 Quick Adopt</button>
     <button class="dbg-btn danger" onclick="dbgResetStable()">🗑 Reset Stable</button>
+  </div>
+
+  <h4>Wallet (test)</h4>
+  <div style="font-family:monospace;font-size:11px;color:var(--muted);word-break:break-all;background:rgba(0,0,0,0.4);padding:8px;border-radius:6px;margin-bottom:8px;" id="dbgWalletAddr">—</div>
+  <div class="dbg-row">
+    <button class="dbg-btn" onclick="dbgCopyWallet()">📋 Copy</button>
+    <button class="dbg-btn danger" onclick="dbgNewWallet()">🔑 New Wallet</button>
   </div>
 
   <div style="margin-top:14px;font-size:10px;color:var(--muted);letter-spacing:1px;">
