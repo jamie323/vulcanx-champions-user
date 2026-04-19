@@ -36,7 +36,8 @@
 
   /* champion view keeps the 3-column grid — wider panels, bigger hero */
   body.view-champion .view-champion { display: grid;
-    grid-template-columns: 480px 1fr 560px; min-height: 100vh; }
+    grid-template-columns: 560px 1fr 560px;
+    align-items: start; }
 
   /* nav bar */
   .main-nav {
@@ -344,27 +345,34 @@
     border-color: var(--legend); color: var(--legend); }
 
   /* ═══════════════════════════════════════════════════
-     LEFT PANEL — ABOUT THIS CHAMPION
+     LEFT PANEL — IDENTITY + INVENTORY
      ═══════════════════════════════════════════════════ */
   .about-panel {
-    padding: 140px 32px 60px;
+    padding: 140px 36px 60px;
     background: linear-gradient(180deg, rgba(20,14,20,0.6), rgba(10,6,8,0.4));
     border-right: 1px solid var(--border);
-    overflow-y: auto; height: 100vh;
-    scrollbar-width: none;
   }
-  .about-panel::-webkit-scrollbar { display: none; }
 
   .about-section-label {
     font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
     color: var(--accent-dim); font-weight: 700; margin-bottom: 10px;
   }
 
-  .about-head { margin-bottom: 32px; }
+  .about-head { margin-bottom: 28px; }
   .about-name {
-    font-size: 38px; font-weight: 800; line-height: 1.1;
+    font-size: 40px; font-weight: 800; line-height: 1.1;
     color: var(--accent); letter-spacing: -0.3px;
     text-shadow: 0 2px 24px rgba(255,140,40,0.3);
+    margin-bottom: 12px;
+  }
+  .about-level-pill {
+    display: inline-block;
+    padding: 7px 16px; border-radius: 16px;
+    background: linear-gradient(90deg, rgba(255,205,107,0.2), rgba(255,140,40,0.12));
+    border: 1px solid var(--border-glow);
+    color: var(--accent); font-weight: 700;
+    font-size: 13px; letter-spacing: 1.5px;
+    text-transform: uppercase;
   }
 
   .about-block {
@@ -397,36 +405,58 @@
   }
 
   /* ═══════════════════════════════════════════════════
-     CENTER — PORTRAIT + FEED + POTIONS + CHEST
+     CENTER — FEED BAR + PORTRAIT
      ═══════════════════════════════════════════════════ */
   main.champion-main {
-    display: flex; flex-direction: column; align-items: stretch;
-    padding: 118px 36px 80px; gap: 18px;
-    min-height: 100vh;
-    overflow-y: auto;
-    scrollbar-width: none;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 130px 36px 60px; gap: 18px;
+    position: sticky; top: 0;
+    align-self: start;
+    max-height: 100vh;
   }
-  main.champion-main::-webkit-scrollbar { display: none; }
-  main.champion-main > .stage-frame { margin: 0 auto; }
-  main.champion-main > .card { margin: 0; }
 
-  /* FEED panel (under picture) */
-  .feed-panel .feed-hero-btn {
-    width: 100%;
-    padding: 18px 24px;
+  /* FEED Me! top bar (above portrait) */
+  .feed-top-bar {
+    width: 100%; max-width: 580px;
+    padding: 18px 28px;
     font-size: 18px; font-weight: 800;
     letter-spacing: 2px; text-transform: uppercase;
     background: linear-gradient(90deg, #ffcd6b, #ff8e2e);
-    color: #1a0a05; border: none; border-radius: 12px;
+    color: #1a0a05; border: none; border-radius: 14px;
     cursor: pointer;
-    box-shadow: 0 10px 30px rgba(255,140,40,0.4);
+    box-shadow: 0 12px 36px rgba(255,140,40,0.4);
     display: flex; justify-content: space-between; align-items: center;
+    font-family: Georgia, serif;
   }
-  .feed-panel .feed-hero-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
-  .feed-panel .feed-hero-btn:disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(0.4); }
-  .feed-panel .feed-hero-btn .count {
+  .feed-top-bar:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+  .feed-top-bar:disabled {
+    opacity: 0.5; cursor: not-allowed;
+    filter: grayscale(0.5);
+  }
+  .feed-top-bar .feed-top-label { display: flex; align-items: center; gap: 10px; }
+  .feed-top-bar .feed-top-count {
     font-size: 13px; letter-spacing: 1.5px;
-    background: rgba(0,0,0,0.15); padding: 6px 12px; border-radius: 16px;
+    background: rgba(0,0,0,0.18); padding: 6px 14px; border-radius: 16px;
+  }
+
+  /* Evolve button in center, only shown when ready */
+  .evolve-btn-center {
+    width: 100%; max-width: 580px;
+    padding: 16px 28px;
+    font-size: 17px; font-weight: 800;
+    letter-spacing: 2.5px; text-transform: uppercase;
+    background: linear-gradient(90deg, #c084fc, #7b2cbf);
+    color: #fff; border: 2px solid #c084fc;
+    border-radius: 14px; cursor: pointer;
+    box-shadow: 0 0 30px rgba(192,132,252,0.6), 0 10px 30px rgba(0,0,0,0.4);
+    font-family: Georgia, serif;
+    display: none;
+  }
+  .evolve-btn-center.ready { display: block; animation: evoPulse 1.8s ease-in-out infinite; }
+  .evolve-btn-center:hover { filter: brightness(1.12); }
+  @keyframes evoPulse {
+    0%,100% { box-shadow: 0 0 30px rgba(192,132,252,0.6), 0 10px 30px rgba(0,0,0,0.4); }
+    50%     { box-shadow: 0 0 50px rgba(192,132,252,0.9), 0 10px 30px rgba(0,0,0,0.4); }
   }
   .feed-potion-grid {
     display: grid; grid-template-columns: repeat(6, 1fr);
@@ -466,7 +496,9 @@
     padding: 108px 24px 0px; position: relative; min-height: 100vh; }
 
   /* bigger hero image in user mode */
-  .stage-frame { width: min(560px, 82vh * (1024/1536)) !important; }
+  main.champion-main .stage-frame {
+    width: min(560px, 68vh * (1024/1536)) !important;
+  }
 
   .stage-frame { position: relative;
     width: min(460px, 60vh * (1024/1536));
@@ -1120,12 +1152,9 @@
      RIGHT PANEL — aside.champion-side
      ═══════════════════════════════════════════════════ */
   aside.champion-side {
-    padding: 118px 30px 80px;
-    overflow-y: auto; height: 100vh;
-    scrollbar-width: none;
+    padding: 140px 32px 80px;
     display: flex; flex-direction: column; gap: 18px;
   }
-  aside.champion-side::-webkit-scrollbar { display: none; }
   aside.champion-side > .card { margin: 0; }
 
   /* HOW-IT-WORKS v2 — bigger, colored-number steps, clickable */
@@ -1203,10 +1232,10 @@
     font-weight: 700;
   }
   .level-card .level-num {
-    font-size: 110px; font-weight: 900;
+    font-size: 64px; font-weight: 900;
     color: var(--accent); line-height: 1;
-    letter-spacing: 2px;
-    text-shadow: 0 4px 40px rgba(255,140,40,0.6);
+    letter-spacing: 1.5px;
+    text-shadow: 0 3px 24px rgba(255,140,40,0.5);
     font-family: Georgia, serif;
     margin-top: 4px;
   }
@@ -1291,43 +1320,6 @@
   }
   .stats-card-v2 .trait-value small {
     color: var(--muted); font-weight: 400; font-size: 11px;
-  }
-
-  /* POTIONS TALLY CARD */
-  .potions-tally-card .tally-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin-bottom: 14px;
-  }
-  .potions-tally-card .tally-item {
-    background: rgba(0,0,0,0.3);
-    border: 1px solid rgba(255,205,107,0.1);
-    border-radius: 8px;
-    padding: 10px 6px;
-    text-align: center;
-  }
-  .potions-tally-card .tally-item.empty { opacity: 0.35; }
-  .potions-tally-card .tally-emoji { font-size: 22px; line-height: 1; }
-  .potions-tally-card .tally-name {
-    font-size: 10px; color: var(--muted);
-    letter-spacing: 1px; text-transform: uppercase;
-    margin-top: 4px; font-weight: 700;
-  }
-  .potions-tally-card .tally-count {
-    font-size: 20px; font-weight: 800; color: var(--accent);
-    margin-top: 2px;
-  }
-  .potions-tally-card .tally-item.empty .tally-count { color: var(--muted); }
-  .potions-tally-card .tally-special {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-    padding-top: 14px;
-    border-top: 1px dashed rgba(255,205,107,0.1);
-  }
-  .potions-tally-card .tally-special .tally-item { padding: 8px 4px; }
-  .potions-tally-card .tally-empty-msg {
-    text-align: center; padding: 16px 10px;
-    color: var(--muted); font-size: 12px;
-    font-style: italic; line-height: 1.6;
   }
 
   /* STAGE LADDER */
@@ -1615,77 +1607,67 @@
   .special-potion.empty .sp-count { color: var(--muted); }
 
   /* ============================================================
-     TREASURE CHEST CARD
+     LEFT PANEL — POTIONS INVENTORY (moved from center)
      ============================================================ */
-  .chest-card {
+  .about-potions {
+    margin-top: 8px;
+  }
+  .about-potions .feed-potion-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 10px; margin: 10px 0 16px;
+  }
+  .about-potions .feed-bottle {
+    padding: 14px 8px;
+  }
+  .about-potions .feed-bottle .fb-emoji { font-size: 30px; margin-bottom: 6px; }
+  .about-potions .feed-bottle .fb-count {
+    font-size: 22px; color: var(--accent);
+  }
+  .about-potions .feed-bottle .fb-name {
+    font-size: 11px; margin-top: 4px;
+  }
+  .special-potions-inline {
+    display: flex; flex-direction: column; gap: 8px;
+    padding-top: 14px;
+    border-top: 1px dashed rgba(255,205,107,0.12);
+  }
+
+  /* Empty state — no potions owned */
+  .potions-empty {
+    text-align: center;
+    padding: 24px 16px;
     background:
-      radial-gradient(ellipse at 50% 30%, rgba(255,205,107,0.1), transparent 60%),
-      linear-gradient(180deg, var(--panel), var(--bg-deep));
+      radial-gradient(ellipse at center, rgba(255,120,40,0.1), transparent 70%);
+    border: 1px dashed rgba(255,205,107,0.25);
+    border-radius: 14px;
+    margin-top: 10px;
   }
-  .chest-visual {
-    width: 120px; height: 100px; margin: 10px auto 14px;
-    position: relative;
-    display: flex; align-items: center; justify-content: center;
-    filter: drop-shadow(0 6px 18px rgba(255,140,40,0.45));
+  .potions-empty .empty-icon {
+    font-size: 42px; margin-bottom: 10px;
+    opacity: 0.7;
   }
-  .chest-visual .chest-box {
-    font-size: 72px; line-height: 1;
-    animation: chestIdle 3.2s ease-in-out infinite;
+  .potions-empty .empty-title {
+    font-size: 16px; font-weight: 800;
+    color: var(--accent); letter-spacing: 0.5px;
+    margin-bottom: 8px;
   }
-  .chest-visual .chest-lid {
-    position: absolute; top: -6px; left: 50%;
-    transform: translateX(-50%);
-    font-size: 24px; opacity: 0.9;
-    animation: chestSparkle 2.4s ease-in-out infinite;
+  .potions-empty .empty-text {
+    font-size: 13px; color: var(--muted);
+    line-height: 1.6; margin-bottom: 16px;
   }
-  .chest-visual.shaking .chest-box { animation: chestShake 0.3s 6; }
-  .chest-visual.burst::after {
-    content: "";
-    position: absolute; inset: -30px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,205,107,0.9), transparent 60%);
-    animation: chestBurst 0.9s forwards;
-  }
-  @keyframes chestIdle {
-    0%,100% { transform: translateY(0); }
-    50%     { transform: translateY(-4px); }
-  }
-  @keyframes chestSparkle {
-    0%,100% { opacity: 0.4; transform: translateX(-50%) scale(0.9); }
-    50%     { opacity: 1; transform: translateX(-50%) scale(1.1); }
-  }
-  @keyframes chestShake {
-    25% { transform: rotate(-6deg); }
-    75% { transform: rotate(6deg); }
-  }
-  @keyframes chestBurst {
-    0%   { opacity: 0; transform: scale(0.5); }
-    40%  { opacity: 1; transform: scale(1.3); }
-    100% { opacity: 0; transform: scale(2); }
-  }
-  .chest-blurb {
-    font-size: 12px; color: var(--muted);
-    line-height: 1.6; margin-bottom: 14px;
-  }
-  .chest-blurb b { color: var(--accent); }
-  .chest-open-btn {
+  .potions-empty .empty-text b { color: var(--text); }
+  .potions-empty .empty-cta {
     width: 100%;
-    padding: 12px 16px;
+    padding: 12px 20px;
     background: linear-gradient(90deg, #ffcd6b, #ff8e2e);
     color: #1a0a05;
     border: none; border-radius: 10px;
     font-size: 13px; font-weight: 800;
-    letter-spacing: 1.5px; text-transform: uppercase;
+    letter-spacing: 2px; text-transform: uppercase;
     cursor: pointer;
     box-shadow: 0 6px 20px rgba(255,140,40,0.3);
-    display: flex; flex-direction: column; align-items: center; gap: 2px;
   }
-  .chest-open-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
-  .chest-open-btn:disabled { opacity: 0.5; cursor: wait; filter: grayscale(0.4); }
-  .chest-btn-hint {
-    font-size: 10px; font-weight: 600; opacity: 0.7;
-    letter-spacing: 1px;
-  }
+  .potions-empty .empty-cta:hover { filter: brightness(1.08); transform: translateY(-1px); }
 
   /* ---- WALLET CHIP in topbar ---- */
   .wallet-chip {
@@ -2091,12 +2073,13 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════
-     LEFT PANEL — ABOUT THIS CHAMPION (no mechanics)
+     LEFT PANEL — IDENTITY + INVENTORY
      ═══════════════════════════════════════════════════ -->
 <div class="about-panel" id="aboutPanel">
   <div class="about-head">
     <div class="about-section-label">Champion</div>
     <div class="about-name" id="aboutName">Grokk the Whelp</div>
+    <div class="about-level-pill" id="aboutLevelPill">Lvl 01 · Whelp · 0%</div>
   </div>
 
   <div class="about-block">
@@ -2122,12 +2105,55 @@
       Born beneath the twin moons of Elysium, every champion carries a story only their keeper will uncover. As they grow, chapter by chapter, their legend unfolds.
     </div>
   </div>
+
+  <!-- ── YOUR POTIONS (feed bottles) ── -->
+  <div class="about-block about-potions">
+    <div class="about-section-label">🧪 Your Potions</div>
+    <div id="potionsSection">
+      <div class="feed-potion-grid" id="feedPotionGrid"></div>
+      <div class="special-potions-inline">
+        <div class="special-potion" id="specEvoRow">
+          <div class="sp-ico sp-ico-evo">⚡</div>
+          <div class="sp-body">
+            <div class="sp-name">Evolution Potion</div>
+            <div class="sp-hint">Unlocks the next life stage</div>
+          </div>
+          <div class="sp-count" id="invEvo">0</div>
+        </div>
+        <div class="special-potion" id="allocPotionRow" style="cursor:pointer;"
+             title="Click to distribute 40 points">
+          <div class="sp-ico sp-ico-alloc">✨</div>
+          <div class="sp-body">
+            <div class="sp-name">Blessing (40 pts)</div>
+            <div class="sp-hint">Split 40 points across any stats</div>
+          </div>
+          <div class="sp-count" id="invAlloc">0</div>
+        </div>
+      </div>
+    </div>
+    <!-- Empty state — rendered by JS when no potions -->
+    <div class="potions-empty" id="potionsEmpty" style="display:none;">
+      <div class="empty-icon">🍽️</div>
+      <div class="empty-title">Your champion's hungry</div>
+      <div class="empty-text">
+        You don't have any potions yet. Earn chests by playing the rest of the <b>Vulcan Forged</b> ecosystem.
+      </div>
+      <button class="empty-cta" onclick="alert('⚔️ Quests — coming soon.\n\nComplete dungeon runs, daily tasks, and PvP matches across VulcanVerse, Runner, and Forge Arena to earn treasure chests. Each chest drops potions for your champion.')">
+        ⚔️ Go to Quests
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════
-     CENTER — PORTRAIT + FEEDING + POTIONS + CHEST
+     CENTER — FEED BAR + PORTRAIT (only)
      ═══════════════════════════════════════════════════ -->
 <main class="champion-main">
+  <button class="feed-top-bar" id="feedHero">
+    <span class="feed-top-label">🧪 Feed Me!</span>
+    <span class="feed-top-count" id="feedCount">0 ready</span>
+  </button>
+
   <div class="stage-frame" id="stageFrame">
     <img id="stageImg" src="evolution/L01_whelp_final.jpg" />
     <div class="aura"></div>
@@ -2135,56 +2161,8 @@
     <div class="rank-pill" id="rankPill">Iron III</div>
   </div>
 
-  <!-- FEED -->
-  <div class="card feed-panel">
-    <div class="card-title">🧪 Feed your champion</div>
-    <button class="feed-hero-btn" id="feedHero">
-      <span>Feed Me!</span>
-      <span class="count" id="feedCount">0 ready</span>
-    </button>
-    <div class="feed-potion-grid" id="feedPotionGrid"></div>
-    <div class="feed-hint">
-      Tap a potion bottle to feed it. Your champion's matching stat grows, and the evolution bar fills.
-    </div>
-  </div>
-
-  <!-- SPECIAL POTIONS -->
-  <div class="card special-potions-card">
-    <div class="card-title">⚗️ Special Potions</div>
-    <div class="special-potion" id="specEvoRow">
-      <div class="sp-ico sp-ico-evo">⚡</div>
-      <div class="sp-body">
-        <div class="sp-name">Evolution Potion</div>
-        <div class="sp-hint">Unlocks the next life stage</div>
-      </div>
-      <div class="sp-count" id="invEvo">0</div>
-    </div>
-    <div class="special-potion" id="allocPotionRow" style="cursor:pointer;"
-         title="Click to distribute 40 points">
-      <div class="sp-ico sp-ico-alloc">✨</div>
-      <div class="sp-body">
-        <div class="sp-name">Blessing (40 pts)</div>
-        <div class="sp-hint">Split 40 points across any stats</div>
-      </div>
-      <div class="sp-count" id="invAlloc">0</div>
-    </div>
-  </div>
-
-  <!-- CHEST -->
-  <div class="card chest-card">
-    <div class="card-title">🎁 Treasure Chests</div>
-    <div class="chest-visual" id="chestVisual">
-      <div class="chest-lid">🔶</div>
-      <div class="chest-box">📦</div>
-    </div>
-    <div class="chest-blurb">
-      Chests drop when you play <b>Vulcan Forged</b> games — quests, Runner, Forge Arena, and more. Each chest contains <b>potions</b> that you bring here to feed your champion.
-    </div>
-    <button class="chest-open-btn" id="openTestChestBtn" onclick="openTestChest()">
-      🎁 Open a Test Chest
-      <span class="chest-btn-hint">(free — for testing)</span>
-    </button>
-  </div>
+  <!-- Evolve button appears only when ready -->
+  <button class="evolve-btn-center" id="evolveBtn" disabled>⚡ Evolve (locked)</button>
 </main>
 
 <!-- ═══════════════════════════════════════════════════
@@ -2218,20 +2196,12 @@
         <span class="stage-meta-value" id="nextStageMeta">Pup at L5</span>
       </div>
     </div>
-
-    <button class="evolve-btn" id="evolveBtn" disabled>⚡ Evolve (locked)</button>
   </div>
 
   <!-- STATS (bigger) -->
   <div class="card stats-card-v2">
     <div class="card-title">💪 Stats</div>
     <div id="traits"></div>
-  </div>
-
-  <!-- POTIONS YOU OWN (at-a-glance tally) -->
-  <div class="card potions-tally-card">
-    <div class="card-title">🧪 Potions You Own</div>
-    <div id="potionsTally"></div>
   </div>
 
   <!-- STAGE LADDER -->
@@ -2776,7 +2746,7 @@ function render() {
   document.getElementById('topChampTitle').textContent =
     `${speciesCfg.label} · ${bloodlineCfg.label}`;
 
-  // ── LEFT PANEL: About
+  // ── LEFT PANEL: Identity
   const aboutName = document.getElementById('aboutName');
   if (aboutName) {
     aboutName.textContent = bloodlineCfg.nameByStage[state.stageIdx];
@@ -2787,6 +2757,9 @@ function render() {
     document.getElementById('aboutBloodlineHint').textContent =
       BLOODLINE_HINT[currentBloodline] || 'A unique bloodline with its own story.';
     document.getElementById('aboutStory').textContent = STAGE_LORE_MAP[state.stageIdx] || '';
+    const pill = document.getElementById('aboutLevelPill');
+    if (pill) pill.textContent =
+      `Lvl ${String(state.level).padStart(2,'0')} · ${stage.name} · ${Math.round(state.evoPct)}%`;
   }
 
   // ── RIGHT PANEL: Level & Progress
@@ -2810,7 +2783,7 @@ function render() {
   const ok = canEvolve();
   evoBtn.disabled = !ok;
   evoBtn.classList.toggle('ready', ok);
-  evoBtn.textContent = ok ? '⚡ Evolve to ' + next.name
+  evoBtn.textContent = ok && next ? '⚡ Evolve to ' + next.name
     : next ? '⚡ Evolve (locked)' : 'Max form reached';
 
   // ── TRAITS (in right panel stats card)
@@ -2889,41 +2862,17 @@ function render() {
   const allocRow = document.getElementById('allocPotionRow');
   if (allocRow) allocRow.classList.toggle('empty', !state.inv.alloc);
 
-  // ── POTIONS YOU OWN (right-panel tally)
-  const tally = document.getElementById('potionsTally');
-  if (tally) {
-    const totalTrait = TRAITS.reduce((s, t) => s + (state.inv[t] || 0), 0);
-    const totalSpec = (state.inv.evo || 0) + (state.inv.alloc || 0);
-    if (totalTrait === 0 && totalSpec === 0) {
-      tally.innerHTML = `
-        <div class="tally-empty-msg">
-          You don't own any potions yet. Open a chest or play Vulcan Forged games to earn some.
-        </div>`;
-    } else {
-      const traitCells = TRAITS.map(t => {
-        const n = state.inv[t] || 0;
-        return `<div class="tally-item ${n===0?'empty':''}">
-          <div class="tally-emoji">${TRAIT_EMOJI[t]}</div>
-          <div class="tally-count">${n}</div>
-          <div class="tally-name">${TRAIT_NAMES[t]}</div>
-        </div>`;
-      }).join('');
-      tally.innerHTML = `
-        <div class="tally-grid">${traitCells}</div>
-        <div class="tally-special">
-          <div class="tally-item ${state.inv.evo===0?'empty':''}">
-            <div class="tally-emoji">⚡</div>
-            <div class="tally-count">${state.inv.evo||0}</div>
-            <div class="tally-name">Evolution</div>
-          </div>
-          <div class="tally-item ${state.inv.alloc===0?'empty':''}">
-            <div class="tally-emoji">✨</div>
-            <div class="tally-count">${state.inv.alloc||0}</div>
-            <div class="tally-name">Blessing</div>
-          </div>
-        </div>`;
-    }
+  // ── POTIONS card — toggle empty state vs full inventory (LEFT panel)
+  const totalPotions =
+    TRAITS.reduce((s, t) => s + (state.inv[t] || 0), 0)
+    + (state.inv.evo || 0) + (state.inv.alloc || 0);
+  const inv = document.getElementById('potionsSection');
+  const empty = document.getElementById('potionsEmpty');
+  if (inv && empty) {
+    inv.style.display   = totalPotions > 0 ? '' : 'none';
+    empty.style.display = totalPotions > 0 ? 'none' : '';
   }
+
 
   // ── FEED hero button (still in the feed panel)
   const feedBtn = document.getElementById('feedHero');
@@ -3651,85 +3600,6 @@ async function reloadPotions() {
   deriveInv();
 }
 
-// ============================================================
-// TEST CHEST — simulates what a real chest-from-quests drop will feel like
-// ============================================================
-function _rollChestDrops() {
-  // Between 3–5 drops. Weighted rarity.
-  const dropCount = 3 + Math.floor(Math.random() * 3);
-  const drops = [];
-  for (let i = 0; i < dropCount; i++) {
-    const r = Math.random();
-    if (r < 0.08) {
-      // Evolution potion — 8% per drop slot
-      drops.push({ kind: 'evolution' });
-    } else if (r < 0.15) {
-      // Allocation — 7%
-      drops.push({ kind: 'allocation' });
-    } else {
-      // Trait potion — pick random trait, weighted rarity
-      const trait = TRAITS[Math.floor(Math.random() * TRAITS.length)];
-      const k = Math.random();
-      const kind = k < 0.7 ? 'minor' : k < 0.95 ? 'major' : 'epic';
-      drops.push({ kind, trait });
-    }
-  }
-  return drops;
-}
-
-function _formatDrop(d) {
-  if (d.kind === 'evolution')  return '⚡ Evolution Potion';
-  if (d.kind === 'allocation') return '✨ Blessing (40 pts)';
-  const tier = d.kind === 'minor' ? 'Minor' : d.kind === 'major' ? 'Major' : 'Epic';
-  const nm = TRAIT_NAMES[d.trait] || d.trait;
-  return `🧪 ${nm} · ${tier}`;
-}
-
-async function openTestChest() {
-  if (!currentSpecies) {
-    alert('Open a champion from your Stable first, so the chest knows what species to drop for.');
-    return;
-  }
-  const btn = document.getElementById('openTestChestBtn');
-  const visual = document.getElementById('chestVisual');
-  if (btn) { btn.disabled = true; btn.firstChild.textContent = 'Opening…'; }
-  visual?.classList.add('shaking');
-
-  const drops = _rollChestDrops();
-
-  try {
-    await Promise.all(drops.map(d =>
-      apiGrantPotion({
-        species_id: currentSpecies,
-        kind: d.kind,
-        trait: d.trait || null,
-        quantity: 1,
-      })
-    ));
-  } catch (e) {
-    alert('Chest failed to open: ' + e.message);
-    if (btn) { btn.disabled = false; btn.firstChild.textContent = '🎁 Open a Test Chest'; }
-    visual?.classList.remove('shaking');
-    return;
-  }
-
-  // Reveal animation
-  setTimeout(() => {
-    visual?.classList.remove('shaking');
-    visual?.classList.add('burst');
-    setTimeout(() => visual?.classList.remove('burst'), 900);
-  }, 800);
-
-  await reloadPotions();
-  if (typeof render === 'function') render();
-
-  // Present the drops as a friendly summary
-  const summary = drops.map(d => '  · ' + _formatDrop(d)).join('\n');
-  setTimeout(() => {
-    alert(`🎁 Chest opened! Dropped:\n\n${summary}\n\n${currentSpecies.toUpperCase()}-locked — matches your champion.`);
-    if (btn) { btn.disabled = false; btn.firstChild.textContent = '🎁 Open a Test Chest'; }
-  }, 1100);
-}
 
 function renderChampionDetail() {
   renderBloodlinePicker_inChampion();
