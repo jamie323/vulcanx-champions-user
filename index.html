@@ -36,7 +36,7 @@
 
   /* champion view keeps the 3-column grid — wider panels, bigger hero */
   body.view-champion .view-champion { display: grid;
-    grid-template-columns: 480px 1fr 480px; min-height: 100vh; }
+    grid-template-columns: 480px 1fr 560px; min-height: 100vh; }
 
   /* nav bar */
   .main-nav {
@@ -1192,48 +1192,142 @@
     margin-top: 14px; text-transform: uppercase;
   }
 
-  /* STATS & LEVEL card */
-  .stats-card .level-display {
+  /* LEVEL & PROGRESS CARD */
+  .level-card .level-display {
     text-align: center;
-    padding: 18px 0 22px;
-    border-bottom: 1px dashed rgba(255,205,107,0.15);
-    margin-bottom: 16px;
+    padding: 22px 0 18px;
   }
-  .stats-card .level-label {
-    font-size: 11px; letter-spacing: 3px;
+  .level-card .level-label {
+    font-size: 12px; letter-spacing: 3px;
     color: var(--accent-dim); text-transform: uppercase;
     font-weight: 700;
   }
-  .stats-card .level-num {
-    font-size: 72px; font-weight: 900;
+  .level-card .level-num {
+    font-size: 110px; font-weight: 900;
     color: var(--accent); line-height: 1;
     letter-spacing: 2px;
-    text-shadow: 0 4px 30px rgba(255,140,40,0.5);
+    text-shadow: 0 4px 40px rgba(255,140,40,0.6);
     font-family: Georgia, serif;
+    margin-top: 4px;
   }
-  .stats-card .stage-meta { margin-bottom: 18px; }
-  .stats-card .stage-meta-row {
+  .level-card .level-progress-block {
+    margin: 10px 0 22px;
+    padding: 0 6px;
+  }
+  .level-card .level-progress-label {
+    font-size: 14px; color: var(--text);
+    text-align: center; margin-bottom: 10px;
+    font-weight: 600; letter-spacing: 0.3px;
+  }
+  .level-card .level-progress-label b {
+    color: var(--accent); font-size: 17px;
+    font-weight: 800;
+  }
+  .level-card .evo-bar {
+    height: 16px; border-radius: 10px;
+  }
+  .level-card .stage-meta { margin-bottom: 18px; }
+  .level-card .stage-meta-row {
     display: flex; justify-content: space-between;
-    padding: 8px 0;
+    padding: 10px 0;
     border-bottom: 1px dashed rgba(255,205,107,0.08);
+    font-size: 14px;
   }
-  .stats-card .stage-meta-row:last-child { border-bottom: none; }
-  .stats-card .stage-meta-label {
-    font-size: 12px; color: var(--muted);
-    letter-spacing: 1px; text-transform: uppercase;
+  .level-card .stage-meta-row:last-child { border-bottom: none; }
+  .level-card .stage-meta-label {
+    color: var(--muted);
+    letter-spacing: 1.5px; text-transform: uppercase;
+    font-size: 11px; font-weight: 700;
   }
-  .stats-card .stage-meta-value {
-    font-size: 14px; color: var(--text); font-weight: 700;
+  .level-card .stage-meta-value {
+    font-size: 15px; color: var(--text); font-weight: 700;
   }
 
-  .stats-card .traits-box {
-    margin-top: 20px; padding-top: 18px;
-    border-top: 1px dashed rgba(255,205,107,0.15);
+  /* STATS CARD v2 — bigger trait rows */
+  .stats-card-v2 .trait-row {
+    display: grid; grid-template-columns: 42px 1fr auto;
+    gap: 14px; align-items: center;
+    padding: 14px 4px;
+    border-bottom: 1px dashed rgba(255,205,107,0.1);
   }
-  .stats-card .traits-title {
-    font-size: 11px; letter-spacing: 3px;
-    color: var(--accent-dim); text-transform: uppercase;
-    font-weight: 700; margin-bottom: 12px;
+  .stats-card-v2 .trait-row:last-child { border-bottom: none; }
+  .stats-card-v2 .trait-icon {
+    width: 42px; height: 42px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900;
+    background: rgba(255,205,107,0.12);
+    border: 1px solid var(--border-glow);
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+  .stats-card-v2 .trait-info { flex: 1; }
+  .stats-card-v2 .trait-name {
+    font-size: 15px; font-weight: 700; color: var(--text);
+    margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+  }
+  .stats-card-v2 .info-dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: rgba(255,255,255,0.08); border: 1px solid var(--border);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; color: var(--muted); cursor: pointer;
+  }
+  .stats-card-v2 .info-dot:hover { background: rgba(255,255,255,0.16); color: var(--text); }
+  .stats-card-v2 .trait-bar {
+    height: 10px; border-radius: 5px;
+    background: rgba(255,255,255,0.06); overflow: hidden;
+  }
+  .stats-card-v2 .trait-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ffcd6b, #ff8e2e);
+    transition: width 0.4s ease;
+  }
+  .stats-card-v2 .trait-fill.cap {
+    background: linear-gradient(90deg, #3aff8a, #2ac770);
+  }
+  .stats-card-v2 .trait-value {
+    font-size: 18px; font-weight: 800; color: var(--accent);
+    font-family: Georgia, serif; text-align: right;
+    min-width: 70px;
+  }
+  .stats-card-v2 .trait-value small {
+    color: var(--muted); font-weight: 400; font-size: 11px;
+  }
+
+  /* POTIONS TALLY CARD */
+  .potions-tally-card .tally-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .potions-tally-card .tally-item {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,205,107,0.1);
+    border-radius: 8px;
+    padding: 10px 6px;
+    text-align: center;
+  }
+  .potions-tally-card .tally-item.empty { opacity: 0.35; }
+  .potions-tally-card .tally-emoji { font-size: 22px; line-height: 1; }
+  .potions-tally-card .tally-name {
+    font-size: 10px; color: var(--muted);
+    letter-spacing: 1px; text-transform: uppercase;
+    margin-top: 4px; font-weight: 700;
+  }
+  .potions-tally-card .tally-count {
+    font-size: 20px; font-weight: 800; color: var(--accent);
+    margin-top: 2px;
+  }
+  .potions-tally-card .tally-item.empty .tally-count { color: var(--muted); }
+  .potions-tally-card .tally-special {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    padding-top: 14px;
+    border-top: 1px dashed rgba(255,205,107,0.1);
+  }
+  .potions-tally-card .tally-special .tally-item { padding: 8px 4px; }
+  .potions-tally-card .tally-empty-msg {
+    text-align: center; padding: 16px 10px;
+    color: var(--muted); font-size: 12px;
+    font-style: italic; line-height: 1.6;
   }
 
   /* STAGE LADDER */
@@ -1291,45 +1385,155 @@
     text-transform: uppercase;
   }
 
-  /* How-to detail modal */
-  .howto-modal {
-    width: 520px; max-width: 92vw;
-    padding: 30px 34px;
+  /* ============================================================
+     HOW IT WORKS — dedicated page
+     ============================================================ */
+  .howto-page {
+    max-width: 900px; margin: 0 auto;
+    padding: 140px 28px 80px;
+  }
+  .howto-page-hero {
+    text-align: center; margin-bottom: 60px;
+  }
+  .howto-page-eyebrow {
+    color: var(--accent); font-size: 13px; letter-spacing: 6px;
+    text-transform: uppercase; font-weight: 700;
+    margin-bottom: 16px;
+  }
+  .howto-page-title {
+    font-size: 56px; font-weight: 900; line-height: 1.05;
+    background: linear-gradient(180deg, #fff4d2 0%, #ffcd6b 60%, #b8915a 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0 0 18px; letter-spacing: -0.5px;
+  }
+  .howto-page-sub {
+    font-size: 18px; color: var(--muted);
+    max-width: 640px; margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  .howto-page-step {
+    display: flex; gap: 30px;
+    margin-bottom: 60px;
+    padding: 36px 40px;
+    background: linear-gradient(180deg, rgba(40,22,28,0.5), rgba(20,10,14,0.3));
+    border: 1px solid var(--border);
+    border-radius: 20px;
     position: relative;
   }
-  .howto-modal-close {
-    position: absolute; top: 14px; right: 14px;
-    width: 32px; height: 32px; border-radius: 50%;
-    background: rgba(255,255,255,0.08); border: none;
-    color: var(--text); font-size: 20px; cursor: pointer;
+  .howto-page-step::before {
+    content: ""; position: absolute; left: 0; top: 20px; bottom: 20px;
+    width: 4px; border-radius: 2px;
   }
-  .howto-modal-close:hover { background: rgba(255,255,255,0.16); }
-  .howto-modal h3 {
-    display: flex; align-items: center; gap: 14px;
-    margin: 0 0 16px; font-size: 22px;
-  }
-  .howto-modal h3 .howto-modal-num {
-    width: 44px; height: 44px; border-radius: 50%;
+  .howto-step-1::before { background: linear-gradient(180deg, #ffcd6b, #ff8e2e); }
+  .howto-step-2::before { background: linear-gradient(180deg, #6bc5ff, #2e6dff); }
+  .howto-step-3::before { background: linear-gradient(180deg, #c084fc, #7b2cbf); }
+
+  .howto-page-num {
+    width: 84px; height: 84px; flex-shrink: 0;
+    border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 22px; font-weight: 900; color: #fff;
+    font-size: 42px; font-weight: 900; color: #fff;
     font-family: Georgia, serif;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
   }
-  .howto-modal h3 .howto-modal-num.step-1 {
+  .howto-step-1 .howto-page-num {
     background: linear-gradient(135deg, #ffcd6b, #ff8e2e); color: #1a0a05;
   }
-  .howto-modal h3 .howto-modal-num.step-2 {
+  .howto-step-2 .howto-page-num {
     background: linear-gradient(135deg, #6bc5ff, #2e6dff);
   }
-  .howto-modal h3 .howto-modal-num.step-3 {
+  .howto-step-3 .howto-page-num {
     background: linear-gradient(135deg, #c084fc, #7b2cbf);
   }
-  .howto-modal-body {
-    font-size: 15px; line-height: 1.7; color: var(--text);
+
+  .howto-page-body { flex: 1; }
+  .howto-page-step-label {
+    font-size: 12px; letter-spacing: 4px;
+    color: var(--accent); text-transform: uppercase;
+    font-weight: 700; margin-bottom: 4px;
   }
-  .howto-modal-body p { margin: 0 0 14px; }
-  .howto-modal-body b { color: var(--accent); }
-  .howto-modal-body ul { padding-left: 22px; margin: 10px 0 16px; }
-  .howto-modal-body li { margin-bottom: 6px; }
+  .howto-page-body h2 {
+    font-size: 32px; font-weight: 800;
+    color: var(--text); margin: 0 0 18px;
+    letter-spacing: -0.3px;
+  }
+  .howto-page-body p {
+    font-size: 16px; line-height: 1.75;
+    color: var(--text); margin: 0 0 14px;
+  }
+  .howto-page-body b { color: var(--accent); }
+  .howto-page-body ul, .howto-page-body ol {
+    padding-left: 24px; margin: 8px 0 16px;
+    font-size: 16px; line-height: 1.8;
+    color: var(--text);
+  }
+  .howto-page-body li { margin-bottom: 6px; }
+  .howto-page-tip {
+    padding: 14px 18px;
+    background: rgba(255,205,107,0.08);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    font-size: 14px !important; line-height: 1.6 !important;
+    color: var(--text);
+  }
+
+  .howto-trait-list {
+    list-style: none !important;
+    padding: 0 !important;
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 10px; margin: 12px 0 18px !important;
+  }
+  .howto-trait-list li {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(0,0,0,0.3); padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .howto-trait-list .t-emoji { font-size: 22px; }
+  .howto-trait-list .t-name {
+    font-weight: 800; color: var(--accent);
+    font-size: 14px; min-width: 90px;
+  }
+  .howto-trait-list .t-what {
+    color: var(--muted); font-size: 13px;
+  }
+
+  .howto-stages {
+    display: flex; flex-wrap: wrap; gap: 8px 10px;
+    align-items: center; margin: 10px 0 18px;
+    font-size: 13px;
+  }
+  .howto-stages span {
+    padding: 6px 12px; border-radius: 14px;
+    background: rgba(255,205,107,0.08);
+    border: 1px solid var(--border-glow);
+    color: var(--text); font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .howto-stages span:nth-child(even) {
+    background: transparent; border: none;
+    color: var(--accent-dim); font-weight: 400;
+    padding: 0; letter-spacing: 0;
+  }
+  .howto-stages .legendary {
+    background: linear-gradient(90deg, #ffcd6b, #ff8e2e);
+    color: #1a0a05; border: none;
+  }
+
+  .howto-page-cta {
+    text-align: center; padding: 60px 40px;
+    background:
+      radial-gradient(ellipse at center, rgba(255,120,40,0.18), transparent 70%),
+      linear-gradient(180deg, var(--panel), var(--bg-deep));
+    border: 1px solid var(--border-glow);
+    border-radius: 20px;
+  }
+  .howto-page-cta h3 {
+    font-size: 28px; margin: 0 0 20px;
+    color: var(--text); font-weight: 800;
+  }
 
   /* ============================================================
      "HOW TO" 3-STEP GUIDE CARD
@@ -1617,7 +1821,9 @@
   <button class="nav-btn" data-view="landing">🏠 Home</button>
   <button class="nav-btn" data-view="stable">🏛 My Stable</button>
   <button class="nav-btn" data-view="adopt">✨ Adopt New</button>
+  <button class="nav-btn" data-view="howto">📖 How it Works</button>
   <button class="nav-btn" data-view="explore">🔎 Explore</button>
+  <button class="nav-btn" id="arenaNavBtn">⚔️ Arena</button>
   <label class="nav-admin">
     <input type="checkbox" id="adminToggle"/> 🛠 Admin Mode
   </label>
@@ -1708,6 +1914,89 @@
       <button class="cta-big" onclick="navTo('adopt')">✨ Adopt Your Champion</button>
     </section>
 
+  </div>
+</div>
+
+<!-- ======== VIEW: HOW IT WORKS (full page) ======== -->
+<div class="view view-howto">
+  <div class="howto-page">
+    <div class="howto-page-hero">
+      <div class="howto-page-eyebrow">✦ THE GAME ✦</div>
+      <h1 class="howto-page-title">How to raise your Champion</h1>
+      <p class="howto-page-sub">
+        Three simple steps. No spreadsheets, no guides needed. Fantasy creatures, potions, and a bar that fills up. That's the whole loop.
+      </p>
+    </div>
+
+    <section class="howto-page-step howto-step-1">
+      <div class="howto-page-num">1</div>
+      <div class="howto-page-body">
+        <div class="howto-page-step-label">Step One</div>
+        <h2>Get Chests</h2>
+        <p>Treasure chests are where all your potions come from. You earn them by playing the rest of the <b>Vulcan Forged</b> ecosystem:</p>
+        <ul>
+          <li><b>Quests</b> in VulcanVerse — dungeon runs, daily tasks, PvP wins.</li>
+          <li><b>Vulcan Runner</b> — distance milestones, campaign stages.</li>
+          <li><b>Forge Arena</b> — ranked matches and tournaments.</li>
+          <li>Events, airdrops, seasonal chest giveaways.</li>
+        </ul>
+        <p>Each chest drops 3–5 random potions, matched to a <b>species</b>. An orc chest drops orc-only potions, an elf chest drops elf-only. Your potions always match your champion.</p>
+        <p class="howto-page-tip">💡 <b>Try now:</b> open any champion and hit <b>"Open a Test Chest"</b> under their portrait.</p>
+      </div>
+    </section>
+
+    <section class="howto-page-step howto-step-2">
+      <div class="howto-page-num">2</div>
+      <div class="howto-page-body">
+        <div class="howto-page-step-label">Step Two</div>
+        <h2>Feed Potions</h2>
+        <p>Potions are how your champion grows. Each one lifts one of <b>six traits</b>:</p>
+        <ul class="howto-trait-list">
+          <li><span class="t-emoji">💪</span><span class="t-name">Strength</span><span class="t-what">Raw damage output</span></li>
+          <li><span class="t-emoji">❤️</span><span class="t-name">Vitality</span><span class="t-what">Health &amp; survivability</span></li>
+          <li><span class="t-emoji">🏃</span><span class="t-name">Agility</span><span class="t-what">Speed &amp; dodge</span></li>
+          <li><span class="t-emoji">⚔️</span><span class="t-name">Ferocity</span><span class="t-what">Critical power</span></li>
+          <li><span class="t-emoji">🧠</span><span class="t-name">Intelligence</span><span class="t-what">Magic &amp; cunning</span></li>
+          <li><span class="t-emoji">🍀</span><span class="t-name">Luck</span><span class="t-what">Loot &amp; crit chance</span></li>
+        </ul>
+        <p>Tap any bottle in the feed grid to feed one. Your champion's matching stat rises, and the <b>Evolution Bar</b> fills by a few percent each time.</p>
+        <p><b>Potion tiers:</b> Minor (common) → Major (uncommon) → Epic (rare). Stronger tiers give bigger boosts. Most chests drop Minor; Epics are special.</p>
+        <p><b>Diminishing returns:</b> early potions in a stage give +5 stat, later ones +3, +1.5, +1. Spread your stats — don't pour them all into one.</p>
+      </div>
+    </section>
+
+    <section class="howto-page-step howto-step-3">
+      <div class="howto-page-num">3</div>
+      <div class="howto-page-body">
+        <div class="howto-page-step-label">Step Three</div>
+        <h2>Evolve</h2>
+        <p>Your champion grows through <b>9 life stages</b>:</p>
+        <div class="howto-stages">
+          <span>Whelp</span><span>→</span>
+          <span>Pup</span><span>→</span>
+          <span>Adolescent</span><span>→</span>
+          <span>Warrior</span><span>→</span>
+          <span>Champion</span><span>→</span>
+          <span>Elite</span><span>→</span>
+          <span>Warlord</span><span>→</span>
+          <span>Ascendant</span><span>→</span>
+          <span class="legendary">Legendary</span>
+        </div>
+        <p>Each stage unlocks at a <b>level gate</b>: L5, L10, L15, L20, L30, L40, L45, L50. To evolve:</p>
+        <ol>
+          <li>Reach the level gate (bar fills as you feed potions).</li>
+          <li>Fill the Evolution Bar to <b>100%</b>.</li>
+          <li>Spend <b>1 Evolution Potion</b> (rare drop from chests).</li>
+          <li>Click <b>Evolve</b> — your champion transforms.</li>
+        </ol>
+        <p>At <b>Legendary (L50)</b> your champion unlocks its final, animated form — a one-of-a-kind living NFT, bound forever to your wallet.</p>
+      </div>
+    </section>
+
+    <div class="howto-page-cta">
+      <h3>Ready to raise your first champion?</h3>
+      <button class="cta-big" onclick="navTo('adopt')">🥚 Adopt a Baby Champion</button>
+    </div>
   </div>
 </div>
 
@@ -1903,69 +2192,46 @@
      ═══════════════════════════════════════════════════ -->
 <aside class="champion-side">
 
-  <!-- HOW IT WORKS (bigger, clickable, opens popup) -->
-  <div class="howto-card howto-card-v2">
-    <div class="howto-title">✨ How it Works</div>
-    <div class="howto-steps">
-      <button class="howto-step-btn" onclick="openHowtoModal(1)">
-        <div class="howto-num step-1">1</div>
-        <div class="howto-body">
-          <div class="howto-step-label">Get Chests</div>
-          <div class="howto-step-text">Earn them from Vulcan Forged games &amp; quests</div>
-        </div>
-        <div class="howto-chev">›</div>
-      </button>
-      <button class="howto-step-btn" onclick="openHowtoModal(2)">
-        <div class="howto-num step-2">2</div>
-        <div class="howto-body">
-          <div class="howto-step-label">Feed Potions</div>
-          <div class="howto-step-text">Tap bottles to raise stats &amp; fill the bar</div>
-        </div>
-        <div class="howto-chev">›</div>
-      </button>
-      <button class="howto-step-btn" onclick="openHowtoModal(3)">
-        <div class="howto-num step-3">3</div>
-        <div class="howto-body">
-          <div class="howto-step-label">Evolve</div>
-          <div class="howto-step-text">At level gates, unlock the next life stage</div>
-        </div>
-        <div class="howto-chev">›</div>
-      </button>
-    </div>
-    <div class="howto-footer">Tap any step for details.</div>
-  </div>
-
-  <!-- STATS & LEVEL -->
-  <div class="card stats-card">
-    <div class="card-title">📊 Stats &amp; Level</div>
+  <!-- LEVEL & PROGRESS -->
+  <div class="card level-card">
+    <div class="card-title">📊 Level &amp; Progress</div>
 
     <div class="level-display">
-      <div class="level-label">Level</div>
+      <div class="level-label">Current Level</div>
       <div class="level-num" id="levelBig">01</div>
+    </div>
+
+    <div class="level-progress-block">
+      <div class="level-progress-label">
+        <span><b id="evoPct">0</b>% to Level <span id="nextLevelNum">02</span></span>
+      </div>
+      <div class="evo-bar"><div class="evo-fill" id="evoFill" style="width:0%"></div></div>
     </div>
 
     <div class="stage-meta">
       <div class="stage-meta-row">
-        <span class="stage-meta-label">Current stage</span>
+        <span class="stage-meta-label">Stage</span>
         <span class="stage-meta-value" id="currentStageName">Whelp</span>
       </div>
       <div class="stage-meta-row">
-        <span class="stage-meta-label">Next stage</span>
+        <span class="stage-meta-label">Next</span>
         <span class="stage-meta-value" id="nextStageMeta">Pup at L5</span>
       </div>
     </div>
 
-    <div class="evo-label">
-      <span>Evolution Bar <b id="evoPct">0</b>%</span>
-    </div>
-    <div class="evo-bar"><div class="evo-fill" id="evoFill" style="width:0%"></div></div>
-
     <button class="evolve-btn" id="evolveBtn" disabled>⚡ Evolve (locked)</button>
+  </div>
 
-    <div class="traits-box">
-      <div class="traits-title">Traits</div>
-      <div id="traits"></div>
-    </div>
+  <!-- STATS (bigger) -->
+  <div class="card stats-card-v2">
+    <div class="card-title">💪 Stats</div>
+    <div id="traits"></div>
+  </div>
+
+  <!-- POTIONS YOU OWN (at-a-glance tally) -->
+  <div class="card potions-tally-card">
+    <div class="card-title">🧪 Potions You Own</div>
+    <div id="potionsTally"></div>
   </div>
 
   <!-- STAGE LADDER -->
@@ -1976,14 +2242,6 @@
 
 </aside>
 </div><!-- /view-champion -->
-
-<!-- How-it-works detail modal -->
-<div class="modal-backdrop" id="howtoModal">
-  <div class="modal howto-modal">
-    <button class="howto-modal-close" onclick="closeHowtoModal()">×</button>
-    <div id="howtoModalBody"></div>
-  </div>
-</div>
 
 <!-- evolve cinematic overlay -->
 <div class="cine-overlay" id="cineOverlay"></div>
@@ -2531,11 +2789,17 @@ function render() {
     document.getElementById('aboutStory').textContent = STAGE_LORE_MAP[state.stageIdx] || '';
   }
 
-  // ── RIGHT PANEL: Stats & Level
+  // ── RIGHT PANEL: Level & Progress
   document.getElementById('levelBig').textContent = String(state.level).padStart(2, '0');
   document.getElementById('currentStageName').textContent = stage.name;
   document.getElementById('nextStageMeta').textContent =
     next ? `${next.name} at L${next.minLevel}` : 'Max form reached';
+
+  const nextLevelEl = document.getElementById('nextLevelNum');
+  if (nextLevelEl) {
+    // At the gate, the next "level" is the first level of the next stage.
+    nextLevelEl.textContent = String(Math.min(50, state.level + 1)).padStart(2, '0');
+  }
 
   document.getElementById('evoPct').textContent = Math.round(state.evoPct);
   const fill = document.getElementById('evoFill');
@@ -2624,6 +2888,42 @@ function render() {
   if (evoRow) evoRow.classList.toggle('empty', !state.inv.evo);
   const allocRow = document.getElementById('allocPotionRow');
   if (allocRow) allocRow.classList.toggle('empty', !state.inv.alloc);
+
+  // ── POTIONS YOU OWN (right-panel tally)
+  const tally = document.getElementById('potionsTally');
+  if (tally) {
+    const totalTrait = TRAITS.reduce((s, t) => s + (state.inv[t] || 0), 0);
+    const totalSpec = (state.inv.evo || 0) + (state.inv.alloc || 0);
+    if (totalTrait === 0 && totalSpec === 0) {
+      tally.innerHTML = `
+        <div class="tally-empty-msg">
+          You don't own any potions yet. Open a chest or play Vulcan Forged games to earn some.
+        </div>`;
+    } else {
+      const traitCells = TRAITS.map(t => {
+        const n = state.inv[t] || 0;
+        return `<div class="tally-item ${n===0?'empty':''}">
+          <div class="tally-emoji">${TRAIT_EMOJI[t]}</div>
+          <div class="tally-count">${n}</div>
+          <div class="tally-name">${TRAIT_NAMES[t]}</div>
+        </div>`;
+      }).join('');
+      tally.innerHTML = `
+        <div class="tally-grid">${traitCells}</div>
+        <div class="tally-special">
+          <div class="tally-item ${state.inv.evo===0?'empty':''}">
+            <div class="tally-emoji">⚡</div>
+            <div class="tally-count">${state.inv.evo||0}</div>
+            <div class="tally-name">Evolution</div>
+          </div>
+          <div class="tally-item ${state.inv.alloc===0?'empty':''}">
+            <div class="tally-emoji">✨</div>
+            <div class="tally-count">${state.inv.alloc||0}</div>
+            <div class="tally-name">Blessing</div>
+          </div>
+        </div>`;
+    }
+  }
 
   // ── FEED hero button (still in the feed panel)
   const feedBtn = document.getElementById('feedHero');
@@ -2948,6 +3248,7 @@ const VIEW_MAP = {
   'adopt-buy':         'view-adopt-buy',
   'explore':           'view-explore',
   'champion':          'view-champion',
+  'howto':             'view-howto',
 };
 
 function navTo(viewName, payload) {
@@ -2964,7 +3265,8 @@ function navTo(viewName, payload) {
   // nav pill
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const navBtnView = { landing: 'landing', stable: 'stable', adopt: 'adopt',
-    'adopt-bloodline': 'adopt', 'adopt-buy': 'adopt', explore: 'explore' }[viewName];
+    'adopt-bloodline': 'adopt', 'adopt-buy': 'adopt', explore: 'explore',
+    howto: 'howto' }[viewName];
   if (navBtnView) {
     document.querySelector(`.nav-btn[data-view="${navBtnView}"]`)?.classList.add('active');
   }
@@ -3350,82 +3652,6 @@ async function reloadPotions() {
 }
 
 // ============================================================
-// HOW-IT-WORKS DETAIL MODAL
-// ============================================================
-const HOWTO_CONTENT = {
-  1: {
-    num: 1,
-    title: 'Get Chests',
-    body: `
-      <p>Treasure chests are the source of every potion. You earn them by playing the rest of the <b>Vulcan Forged</b> ecosystem:</p>
-      <ul>
-        <li><b>Quests</b> in VulcanVerse — dungeon runs, daily tasks, PvP wins.</li>
-        <li><b>Vulcan Runner</b> — distance milestones and campaign stages.</li>
-        <li><b>Forge Arena</b> — ranked matches and tournaments.</li>
-        <li>Events, airdrops, and special chest giveaways.</li>
-      </ul>
-      <p>Each chest holds 3–5 random potions, matched to a species. <b>Orc chests</b> drop orc-only potions, <b>elf chests</b> drop elf-only, and so on — your potions always match your champion.</p>
-      <p>For now, you can click <b>Open a Test Chest</b> to try the flow. Later, real chests arrive from your adventures elsewhere.</p>
-    `,
-  },
-  2: {
-    num: 2,
-    title: 'Feed Potions',
-    body: `
-      <p>Potions are how your champion grows. Each bottle lifts one of six <b>traits</b>:</p>
-      <ul>
-        <li>💪 <b>Strength</b> — raw damage output</li>
-        <li>❤️ <b>Vitality</b> — health &amp; survivability</li>
-        <li>🏃 <b>Agility</b> — speed &amp; dodge</li>
-        <li>⚔️ <b>Ferocity</b> — critical power</li>
-        <li>🧠 <b>Intelligence</b> — magic &amp; cunning</li>
-        <li>🍀 <b>Luck</b> — loot &amp; crit chance</li>
-      </ul>
-      <p>Tap any bottle in the feed grid to feed one potion. Your champion's stat rises, and the <b>Evolution Bar</b> fills by a few percent each time.</p>
-      <p><b>Weak / Strong / Mighty tiers</b>: most potions are weak (common). Stronger tiers are rarer and give bigger boosts. The debug panel lets you test them all.</p>
-      <p><b>Diminishing returns</b>: early potions in a stage give +5 stat, later ones +3, +1.5, +1. Balance your stats — don't pour them all into one.</p>
-    `,
-  },
-  3: {
-    num: 3,
-    title: 'Evolve',
-    body: `
-      <p>Your champion grows through <b>9 life stages</b>: Whelp → Pup → Adolescent → Warrior → Champion → Elite → Warlord → Ascendant → <b>Legendary</b>.</p>
-      <p>Each stage is unlocked at a <b>level gate</b>: L5, L10, L15, L20, L30, L40, L45, L50. To evolve:</p>
-      <ul>
-        <li>Reach the level gate (the Evolution Bar fills as you feed potions).</li>
-        <li>Fill the bar to <b>100%</b>.</li>
-        <li>Spend <b>1 Evolution Potion</b> (special drop from chests).</li>
-        <li>Click the <b>Evolve</b> button — your champion transforms.</li>
-      </ul>
-      <p>At <b>Legendary (L50)</b> your champion unlocks its final, animated form — a living NFT, bound forever to your wallet.</p>
-    `,
-  },
-};
-function openHowtoModal(n) {
-  const c = HOWTO_CONTENT[n];
-  if (!c) return;
-  const body = document.getElementById('howtoModalBody');
-  body.innerHTML = `
-    <h3><span class="howto-modal-num step-${c.num}">${c.num}</span> ${c.title}</h3>
-    <div class="howto-modal-body">${c.body}</div>
-  `;
-  document.getElementById('howtoModal').classList.add('open');
-}
-function closeHowtoModal() {
-  document.getElementById('howtoModal').classList.remove('open');
-}
-// Close on backdrop click
-document.addEventListener('click', (e) => {
-  const m = document.getElementById('howtoModal');
-  if (e.target === m) closeHowtoModal();
-});
-// Close on Escape
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeHowtoModal();
-});
-
-// ============================================================
 // TEST CHEST — simulates what a real chest-from-quests drop will feel like
 // ============================================================
 function _rollChestDrops() {
@@ -3598,6 +3824,10 @@ document.getElementById('adminToggle').addEventListener('change', (e) => {
 // nav click wiring
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
+    if (btn.id === 'arenaNavBtn') {
+      alert('⚔️ Arena — coming soon.\n\nAsync stat battles where your champions fight each other. Deterministic winners based on stats, species affinity, and rank.');
+      return;
+    }
     navTo(btn.dataset.view);
   });
 });
