@@ -859,17 +859,33 @@
   }
   .cta-ghost:hover { background: rgba(255,205,107,0.12); }
 
-  /* ---- HERO VIDEO ---- */
-  .hero-video {
-    position: relative; margin: 20px auto 0;
-    max-width: 1100px; border-radius: 16px;
-    border: 1px solid rgba(255,205,107,0.25);
-    box-shadow: 0 30px 80px rgba(0,0,0,0.6),
-                0 0 60px rgba(255,120,40,0.18);
-    overflow: hidden; aspect-ratio: 16/9;
-    background: #000;
+  /* ---- SCATTERED BG CREATURES (low-opacity, drifting) ---- */
+  .view-landing { position: relative; }
+  .bg-creatures {
+    position: absolute; inset: 0;
+    pointer-events: none; overflow: hidden; z-index: 0;
   }
-  .hero-video video { width: 100%; height: 100%; display: block; }
+  .bg-creatures .bc {
+    position: absolute;
+    border-radius: 50%;
+    background-size: cover; background-position: center;
+    filter: grayscale(0.3) saturate(0.7);
+    mix-blend-mode: screen;
+    animation: bcFloat 14s ease-in-out infinite;
+  }
+  .bg-creatures .bc.egg {
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    background: radial-gradient(ellipse at 35% 30%, #fff4d2 0%, #ffb347 40%, #8a4100 100%);
+    filter: none;
+    mix-blend-mode: normal;
+  }
+  @keyframes bcFloat {
+    0%, 100% { transform: translateY(0) rotate(0); }
+    50%      { transform: translateY(-14px) rotate(2deg); }
+  }
+  .landing-wrap > section,
+  .landing-wrap > .landing-hero,
+  .landing-wrap > .final-cta { position: relative; z-index: 1; }
 
   /* ---- SECTION HEADINGS ---- */
   .ls-section { margin-top: 100px; position: relative; z-index: 1; }
@@ -1090,6 +1106,9 @@
 <div class="view view-landing">
   <div class="landing-wrap">
 
+    <!-- SCATTERED BACKGROUND CREATURES (low-opacity) -->
+    <div class="bg-creatures" aria-hidden="true" id="bgCreatures"></div>
+
     <!-- HERO -->
     <div class="landing-hero">
       <div class="hero-inner">
@@ -1101,15 +1120,21 @@
           animated masterpiece. Eight species. Twenty-four ancient bloodlines. Every
           champion born with a unique face, story, and destiny only you will uncover.
         </p>
-        <div class="hero-cta-row">
-          <button class="cta-big" onclick="navTo('adopt')">✨ Adopt Your Champion</button>
+        <div class="hero-cta-row" id="heroCtaRow">
+          <button class="cta-big" onclick="navTo('adopt')">🥚 Adopt a Baby Champion</button>
+          <button class="cta-ghost" id="heroStableBtn" style="display:none;" onclick="navTo('stable')">🏛 Go to My Stable</button>
           <button class="cta-ghost" onclick="document.getElementById('howSection').scrollIntoView({behavior:'smooth'})">How It Works</button>
         </div>
       </div>
-      <div class="hero-video">
-        <video src="hype.mp4" controls playsinline preload="metadata" poster=""></video>
-      </div>
     </div>
+
+    <!-- ACTIVITY TICKER (moved up — real-time pulse right after hero) -->
+    <section class="ls-section" id="activitySection" style="margin-top: 60px;">
+      <div class="ls-eyebrow">✦ LIVE ACROSS THE REALM ✦</div>
+      <h2 class="ls-title">The Realm Stirs</h2>
+      <p class="ls-sub">Champions are hatching, feeding, and ascending right now. Watch the realm come alive.</p>
+      <div class="activity" id="activityFeed"></div>
+    </section>
 
     <!-- SPECIES GRID -->
     <section class="ls-section" id="speciesSection">
@@ -1154,14 +1179,6 @@
           <p>At the Legendary tier your champion awakens — transformed into an animated masterpiece. Then enter the arena in the Trading Card Game, coming Q3.</p>
         </div>
       </div>
-    </section>
-
-    <!-- ACTIVITY TICKER -->
-    <section class="ls-section" id="activitySection">
-      <div class="ls-eyebrow">✦ LIVE ACROSS THE REALM ✦</div>
-      <h2 class="ls-title">The Realm Stirs</h2>
-      <p class="ls-sub">Champions are hatching, feeding, and ascending right now.</p>
-      <div class="activity" id="activityFeed"></div>
     </section>
 
     <!-- FAQ -->
@@ -2205,11 +2222,55 @@ function navTo(viewName, payload) {
 // ============================================================
 let _landingInitialized = false;
 function renderLanding() {
+  // Always refresh the stable button visibility — user state may have changed
+  const stableBtn = document.getElementById('heroStableBtn');
+  if (stableBtn) {
+    stableBtn.style.display = (myChampions && myChampions.length > 0) ? 'inline-block' : 'none';
+  }
   if (_landingInitialized) return;
   _landingInitialized = true;
   renderLandingSpecies();
   renderFAQ();
   startActivityFeed();
+  renderBgCreatures();
+}
+
+function renderBgCreatures() {
+  const host = document.getElementById('bgCreatures');
+  if (!host) return;
+  // mix of eggs + babies (L01) + adults (L20/L40/L50)
+  const IMAGES = [
+    { type: 'baby',  src: 'evolution/L01_whelp_final.jpg',      size: 140, op: 0.08 },
+    { type: 'baby',  src: 'evolution/L05_pup_final.jpg',        size: 150, op: 0.08 },
+    { type: 'baby',  src: 'evolution/orc_ashclan_L01_whelp_final.jpg', size: 130, op: 0.08 },
+    { type: 'adult', src: 'evolution/L20_champion_final.jpg',   size: 180, op: 0.07 },
+    { type: 'adult', src: 'evolution/L40_warlord_final.jpg',    size: 200, op: 0.07 },
+    { type: 'adult', src: 'evolution/L50_legendary_final.jpg',  size: 220, op: 0.06 },
+    { type: 'adult', src: 'evolution/orc_ashclan_L40_warlord_final.jpg', size: 190, op: 0.06 },
+  ];
+  // Scatter them vertically down the page with varied x-positions so they
+  // don't cluster. 18 placements, alternating left/right, some eggs mixed in.
+  const PLACEMENTS = 18;
+  const frags = [];
+  for (let i = 0; i < PLACEMENTS; i++) {
+    const yPct = (i / PLACEMENTS) * 100 + (Math.random() * 3);
+    const xPct = i % 2 === 0 ? (3 + Math.random() * 18) : (78 - Math.random() * 18);
+    const delay = (Math.random() * 6).toFixed(2);
+    // 1 in 4 = pure CSS egg (no image), rest = creature image
+    if (i % 4 === 0) {
+      const sz = 60 + Math.floor(Math.random() * 30);
+      frags.push(
+        `<div class="bc egg" style="top:${yPct}%;left:${xPct}%;width:${sz}px;height:${Math.round(sz*1.3)}px;opacity:0.1;animation-delay:${delay}s"></div>`
+      );
+    } else {
+      const img = IMAGES[Math.floor(Math.random() * IMAGES.length)];
+      const sz = img.size + Math.floor(Math.random() * 40 - 20);
+      frags.push(
+        `<div class="bc" style="top:${yPct}%;left:${xPct}%;width:${sz}px;height:${sz}px;opacity:${img.op};background-image:url('${img.src}');animation-delay:${delay}s"></div>`
+      );
+    }
+  }
+  host.innerHTML = frags.join('');
 }
 
 const LANDING_SPECIES = [
