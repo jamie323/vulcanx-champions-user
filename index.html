@@ -40,31 +40,46 @@
 
   /* nav bar */
   .main-nav {
-    position: fixed; top: 84px; left: 0; right: 0;
-    height: 44px; padding: 0 20px;
+    position: fixed; top: 52px; left: 0; right: 0;
+    height: 64px; padding: 0 32px;
     background: linear-gradient(180deg, rgba(20,12,20,0.95), rgba(20,12,20,0.75));
     border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 6px;
+    display: flex; align-items: center; gap: 14px;
     z-index: 96; backdrop-filter: blur(8px);
   }
-  .nav-btn { padding: 7px 14px; background: transparent;
-    border: 1px solid transparent; border-radius: 8px;
-    font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
-    text-transform: uppercase; cursor: pointer; color: var(--muted); }
-  .nav-btn:hover { color: var(--text); }
-  .nav-btn.active { background: rgba(255,205,107,0.12);
-    border-color: var(--accent); color: var(--accent); }
-  .nav-admin {
-    margin-left: auto; display: flex; align-items: center; gap: 8px;
-    font-size: 11px; color: var(--muted); letter-spacing: 1px;
-    text-transform: uppercase;
+  .nav-btn {
+    padding: 13px 28px; background: transparent;
+    border: 1px solid rgba(255,205,107,0.18); border-radius: 10px;
+    font-size: 15px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; cursor: pointer;
+    color: var(--muted);
+    transition: color 0.18s, background 0.18s, border-color 0.18s, transform 0.15s;
+    display: inline-flex; align-items: center; gap: 8px;
   }
-  .nav-admin input { accent-color: var(--accent); cursor: pointer; }
+  .nav-btn:hover {
+    color: var(--text);
+    background: rgba(255,205,107,0.08);
+    border-color: rgba(255,205,107,0.4);
+    transform: translateY(-1px);
+  }
+  .nav-btn.active {
+    background: linear-gradient(180deg, rgba(255,205,107,0.18), rgba(255,140,40,0.1));
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 4px 20px rgba(255,140,40,0.2);
+  }
+  .nav-admin {
+    margin-left: auto; display: flex; align-items: center; gap: 10px;
+    font-size: 12px; color: var(--muted); letter-spacing: 1.5px;
+    text-transform: uppercase; font-weight: 700;
+  }
+  .nav-admin input { accent-color: var(--accent); cursor: pointer;
+    width: 18px; height: 18px; }
 
   /* =========== STABLE VIEW =========== */
   .stable-wrap {
     max-width: 1200px; margin: 0 auto;
-    padding: 150px 24px 60px;
+    padding: 140px 24px 60px;
   }
   .page-hd {
     margin-bottom: 24px; display: flex; justify-content: space-between;
@@ -153,7 +168,7 @@
   /* =========== ADOPT VIEW =========== */
   .adopt-wrap {
     max-width: 1200px; margin: 0 auto;
-    padding: 150px 24px 60px;
+    padding: 140px 24px 60px;
   }
   .adopt-step {
     display: flex; justify-content: center; gap: 8px;
@@ -258,14 +273,14 @@
   /* =========== EXPLORE VIEW =========== */
   .explore-wrap {
     max-width: 1200px; margin: 0 auto;
-    padding: 150px 24px 60px;
+    padding: 140px 24px 60px;
   }
   .explore-filters {
     display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;
   }
 
   .topbar {
-    position: fixed; top: 32px; left: 0; right: 0; height: 52px;
+    position: fixed; top: 0; left: 0; right: 0; height: 52px;
     background: linear-gradient(180deg, rgba(20,12,20,0.95) 0%,
       rgba(20,12,20,0.7) 100%);
     border-bottom: 1px solid var(--border);
@@ -307,7 +322,7 @@
 
   /* bloodline sub-picker */
   .bloodline-bar {
-    position: fixed; top: 128px; left: 300px; right: 400px;
+    position: fixed; top: 116px; left: 300px; right: 400px;
     height: 38px; padding: 6px 16px;
     background: linear-gradient(180deg, rgba(20,14,20,0.95), rgba(20,14,20,0.7));
     border-bottom: 1px solid var(--border);
@@ -800,7 +815,7 @@
   /* ============================================================
      LANDING PAGE
      ============================================================ */
-  .view-landing { padding-top: 128px; }
+  .view-landing { padding-top: 140px; }
   .landing-wrap { max-width: 1240px; margin: 0 auto; padding: 0 24px 120px; }
 
   /* ---- HERO ---- */
@@ -858,46 +873,6 @@
     color: var(--accent);
   }
   .cta-ghost:hover { background: rgba(255,205,107,0.12); }
-
-  /* ---- TOP LIVE TICKER ---- */
-  .top-ticker {
-    position: fixed; top: 0; left: 0; right: 0; height: 32px;
-    background: linear-gradient(90deg, #2a0f0f 0%, #1a0808 50%, #2a0f0f 100%);
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; z-index: 110;
-    overflow: hidden; font-size: 12px;
-  }
-  .top-ticker .tt-label {
-    background: linear-gradient(90deg, #ff3a3a, #ff6b35);
-    color: #fff; font-weight: 900; letter-spacing: 3px;
-    padding: 0 14px; height: 100%;
-    display: flex; align-items: center;
-    font-size: 11px; flex-shrink: 0; z-index: 2;
-    box-shadow: 10px 0 15px rgba(0,0,0,0.6);
-  }
-  .top-ticker .tt-track {
-    flex: 1; overflow: hidden; position: relative; height: 100%;
-    mask-image: linear-gradient(90deg, transparent 0, #000 40px, #000 calc(100% - 40px), transparent 100%);
-    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 40px, #000 calc(100% - 40px), transparent 100%);
-  }
-  .top-ticker .tt-inner {
-    display: inline-flex; gap: 40px; align-items: center;
-    height: 100%; white-space: nowrap;
-    animation: tickerScroll 90s linear infinite;
-    padding-left: 40px;
-  }
-  .top-ticker .tt-item {
-    display: inline-flex; align-items: center; gap: 8px;
-    color: var(--text); letter-spacing: 0.3px;
-  }
-  .top-ticker .tt-item .sp { font-size: 14px; }
-  .top-ticker .tt-item .player { color: var(--accent); font-weight: 700; }
-  .top-ticker .tt-item .event { color: var(--muted); }
-  .top-ticker .tt-item .sep { color: var(--border-glow); margin: 0 6px; }
-  @keyframes tickerScroll {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-50%); }
-  }
 
   /* ---- SCATTERED BG CREATURES (prominent) ---- */
   .view-landing { position: relative; }
@@ -1011,41 +986,6 @@
     font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0;
   }
 
-  /* ---- ACTIVITY TICKER ---- */
-  .activity {
-    background: linear-gradient(180deg, rgba(30,18,22,0.7), rgba(10,6,8,0.4));
-    border: 1px solid var(--border); border-radius: 14px;
-    padding: 24px 30px; max-height: 360px; overflow: hidden;
-    position: relative;
-  }
-  .activity::after {
-    content: ""; position: absolute; bottom: 0; left: 0; right: 0;
-    height: 80px; pointer-events: none;
-    background: linear-gradient(to bottom, transparent, var(--bg-deep));
-  }
-  .activity-row {
-    display: flex; align-items: center; gap: 14px;
-    padding: 10px 0; border-bottom: 1px dashed rgba(255,205,107,0.1);
-    font-size: 14px; animation: fadeInUp 0.4s both;
-  }
-  .activity-row:last-child { border-bottom: none; }
-  .activity-row .av {
-    width: 38px; height: 38px; border-radius: 50%;
-    background: linear-gradient(135deg, #ff8e2e, #ffcd6b);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px; flex-shrink: 0;
-  }
-  .activity-row .txt { color: var(--text); flex: 1; }
-  .activity-row .txt .player { color: var(--accent); font-weight: 700; }
-  .activity-row .txt .event { color: var(--muted); }
-  .activity-row .time {
-    color: var(--muted); font-size: 11px; letter-spacing: 1px;
-  }
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
   /* ---- FAQ ---- */
   .faq-list { max-width: 860px; margin: 0 auto; }
   .faq-item {
@@ -1102,6 +1042,82 @@
     margin-right: 20px; font-weight: 700;
   }
 
+  /* ============================================================
+     DEBUG PANEL (dev only)
+     ============================================================ */
+  .debug-fab {
+    position: fixed; bottom: 20px; right: 20px;
+    width: 54px; height: 54px; border-radius: 50%;
+    background: linear-gradient(135deg, #c084fc, #7b2cbf);
+    color: #fff; font-size: 24px; font-weight: 900;
+    border: 2px solid rgba(192,132,252,0.5);
+    box-shadow: 0 8px 30px rgba(124,40,200,0.5);
+    cursor: pointer; z-index: 850;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .debug-fab:hover { transform: scale(1.08); }
+  .debug-panel {
+    position: fixed; bottom: 90px; right: 20px;
+    width: 340px; max-height: 80vh; overflow-y: auto;
+    background: linear-gradient(180deg, #1a1020 0%, #0a0610 100%);
+    border: 2px solid #7b2cbf;
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8),
+                0 0 40px rgba(192,132,252,0.25);
+    padding: 18px 20px; z-index: 849;
+    color: var(--text); font-size: 13px;
+    display: none;
+  }
+  .debug-panel.open { display: block; }
+  .debug-panel h3 {
+    font-size: 13px; letter-spacing: 3px; text-transform: uppercase;
+    color: #c084fc; margin: 0 0 14px; font-weight: 800;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .debug-panel h4 {
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--accent); margin: 18px 0 8px; font-weight: 700;
+    border-bottom: 1px solid rgba(255,205,107,0.2); padding-bottom: 6px;
+  }
+  .debug-panel .dbg-row {
+    display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;
+  }
+  .debug-panel .dbg-btn {
+    flex: 1; min-width: 62px;
+    padding: 8px 10px; font-size: 12px; font-weight: 700;
+    background: rgba(192,132,252,0.12);
+    border: 1px solid rgba(192,132,252,0.35);
+    color: #e2caf9; border-radius: 6px; cursor: pointer;
+    letter-spacing: 0.5px;
+  }
+  .debug-panel .dbg-btn:hover {
+    background: rgba(192,132,252,0.25);
+    border-color: #c084fc; color: #fff;
+  }
+  .debug-panel .dbg-btn.pyr {
+    background: linear-gradient(90deg, #ffcd6b, #ff8e2e);
+    color: #1a0a05; border: none;
+  }
+  .debug-panel .dbg-btn.danger {
+    background: rgba(255,80,80,0.15);
+    border-color: rgba(255,80,80,0.4);
+    color: #ff9a9a;
+  }
+  .debug-panel .dbg-counts {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 4px; font-size: 11px;
+    background: rgba(0,0,0,0.4); padding: 8px; border-radius: 6px;
+    margin-bottom: 8px; color: var(--muted);
+  }
+  .debug-panel .dbg-counts .k { color: var(--accent); font-weight: 700; }
+  .debug-panel .dbg-close {
+    position: absolute; top: 10px; right: 12px;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(255,255,255,0.06); border: none;
+    color: var(--muted); cursor: pointer; font-size: 14px;
+  }
+  .debug-panel .dbg-close:hover { color: var(--text); background: rgba(255,255,255,0.12); }
+
   /* ---- RESPONSIVE ---- */
   @media (max-width: 900px) {
     .hero-title { font-size: 56px; }
@@ -1112,12 +1128,6 @@
 </style>
 </head>
 <body>
-
-<!-- ======== TOP LIVE TICKER ======== -->
-<div class="top-ticker" id="topTicker">
-  <div class="tt-label">● LIVE</div>
-  <div class="tt-track"><div class="tt-inner" id="tickerInner"></div></div>
-</div>
 
 <div class="topbar">
   <div class="brand">VulcanX <span class="dot">·</span> Champions</div>
@@ -2349,20 +2359,6 @@ function renderBgCreatures() {
   host.innerHTML = frags.join('');
 }
 
-// ---- TOP LIVE TICKER (horizontal marquee) ----
-function buildTickerItem() {
-  const name = pickRand(ACTIVITY_NAMES);
-  const sp = pickRand(ACTIVITY_SPECIES);
-  const txt = pickRand(ACTIVITY_EVENTS)(name);
-  return `<span class="tt-item"><span class="sp">${sp}</span>${txt}</span><span class="sep">✦</span>`;
-}
-function populateTicker() {
-  const inner = document.getElementById('tickerInner');
-  if (!inner) return;
-  // 24 items, duplicated to allow seamless -50% scroll loop
-  const items = Array.from({ length: 24 }).map(buildTickerItem).join('');
-  inner.innerHTML = items + items;
-}
 
 const LANDING_SPECIES = [
   { id: 'orc',        name: 'Orc',        emoji: '🟢', desc: 'Brute strength and ancestral fury. Masters of close combat.' },
@@ -2425,38 +2421,6 @@ function toggleFAQ(i) {
   });
 }
 
-// ---- ACTIVITY TICKER (seeded) ----
-const ACTIVITY_NAMES = ['Ragnar','Sylas','Emberfang','Korvak','Lyra','Grim','Vesper','Drakka','Thorne','Moira','Cael','Varn','Ember','Rook','Silas','Nyx'];
-const ACTIVITY_SPECIES = ['🟢','🌙','👺','🔥','🐉','⚒️','🐺','👻'];
-const ACTIVITY_EVENTS = [
-  n => `<span class="player">${n}</span> <span class="event">hatched from an egg</span>`,
-  n => `<span class="player">${n}</span> <span class="event">reached Level ${5 + Math.floor(Math.random()*40)}</span>`,
-  n => `<span class="player">${n}</span> <span class="event">fed 3 potions · STR +${Math.floor(Math.random()*5)+2}</span>`,
-  n => `<span class="player">${n}</span> <span class="event">evolved into a ${['Warrior','Champion','Elite','Warlord'][Math.floor(Math.random()*4)]}</span>`,
-  n => `<span class="player">${n}</span> <span class="event">unlocked Chapter ${Math.floor(Math.random()*4)+2} of their codex</span>`,
-  n => `<span class="player">${n}</span> <span class="event">ascended to Legendary ✨</span>`,
-  n => `<span class="player">${n}</span> <span class="event">cracked an epic chest · 1 potion drop</span>`,
-];
-function pickRand(a){return a[Math.floor(Math.random()*a.length)];}
-function makeActivityRow() {
-  const name = pickRand(ACTIVITY_NAMES);
-  const sp = pickRand(ACTIVITY_SPECIES);
-  const txt = pickRand(ACTIVITY_EVENTS)(name);
-  const ago = ['just now','5s ago','12s ago','28s ago','42s ago','1m ago','2m ago','3m ago'][Math.floor(Math.random()*8)];
-  return `<div class="activity-row"><div class="av">${sp}</div><div class="txt">${txt}</div><div class="time">${ago}</div></div>`;
-}
-function startActivityFeed() {
-  const feed = document.getElementById('activityFeed');
-  if (!feed) return;
-  // seed 6
-  feed.innerHTML = Array.from({length: 6}).map(makeActivityRow).join('');
-  // prepend a new one every 3.5s, keep at 8
-  setInterval(() => {
-    if (document.querySelector('.view-landing')?.classList.contains('active') === false) return;
-    feed.insertAdjacentHTML('afterbegin', makeActivityRow());
-    while (feed.children.length > 8) feed.removeChild(feed.lastChild);
-  }, 3500);
-}
 
 // ============================================================
 // VIEW RENDERERS
@@ -2763,7 +2727,6 @@ async function boot() {
     loadMyChampions();
     adminMode = false;
     document.body.classList.remove('admin-on');
-    populateTicker();
     navTo('landing');
   } catch (e) {
     alert('Failed to load bloodlines.json: ' + e.message);
@@ -2774,6 +2737,132 @@ async function boot() {
 // Update anywhere that referenced SPECIES[currentSpecies].nameByStage directly:
 // we now reference SPECIES[currentSpecies].bloodlines[currentBloodline].nameByStage
 boot();
+
+// ============================================================
+// DEBUG PANEL
+// ============================================================
+function dbgGrant(key, n) {
+  if (!state.inv) state.inv = {};
+  state.inv[key] = (state.inv[key] || 0) + n;
+  if (typeof render === 'function') render();
+  dbgRefreshCounts();
+}
+function dbgGrantAll() {
+  ['STR','VIT','AGI','FER','INT','LCK','alloc','evo'].forEach(k => dbgGrant(k, 5));
+}
+function dbgAddEvoPct(n) {
+  state.evoPct = Math.min(100, (state.evoPct || 0) + n);
+  if (typeof render === 'function') render();
+  dbgRefreshCounts();
+}
+function dbgForceEvolve() {
+  state.inv.evo = Math.max(1, state.inv.evo || 0);
+  state.evoPct = 100;
+  state.level = (typeof GATE_LEVELS !== 'undefined' && GATE_LEVELS[state.stageIdx]) || state.level;
+  if (typeof evolve === 'function') evolve();
+  dbgRefreshCounts();
+}
+function dbgFakePay5PYR() {
+  alert('✨ FAKE PAY · 5 PYR debited (debug)\n\nChampion animated! In production this would:\n1. Debit 5 PYR from wallet\n2. Call animate edge fn (Kling/Luma)\n3. Mint animated NFT metadata on-chain');
+  // Flag currently-viewed champion as animated in localStorage
+  const last = myChampions && myChampions[myChampions.length - 1];
+  if (last) { last.animated = true; saveMyChampions(); }
+}
+function dbgQuickAdopt() {
+  const speciesIds = Object.keys(SPECIES);
+  const sp_id = speciesIds[Math.floor(Math.random() * speciesIds.length)];
+  const blIds = Object.keys(SPECIES[sp_id].bloodlines);
+  const bl_id = blIds[Math.floor(Math.random() * blIds.length)];
+  const hero = SPECIES[sp_id].bloodlines[bl_id].heroName || 'Nameless';
+  addChampion({ species_id: sp_id, bloodline_id: bl_id, name: hero });
+  alert(`🥚 Adopted: ${hero} (${sp_id} · ${bl_id})\nTotal in stable: ${myChampions.length}`);
+  navTo('stable');
+  const stableBtn = document.getElementById('heroStableBtn');
+  if (stableBtn) stableBtn.style.display = 'inline-block';
+  dbgRefreshCounts();
+}
+function dbgResetStable() {
+  if (!confirm('Delete ALL champions in your stable? This can\'t be undone.')) return;
+  myChampions = [];
+  saveMyChampions();
+  const stableBtn = document.getElementById('heroStableBtn');
+  if (stableBtn) stableBtn.style.display = 'none';
+  if (currentView === 'stable') navTo('stable');
+  alert('🗑 Stable cleared.');
+}
+function dbgRefreshCounts() {
+  const el = document.getElementById('dbgCounts');
+  if (!el) return;
+  const inv = state.inv || {};
+  el.innerHTML = `
+    <div><span class="k">STR</span> ${inv.STR || 0}</div>
+    <div><span class="k">VIT</span> ${inv.VIT || 0}</div>
+    <div><span class="k">AGI</span> ${inv.AGI || 0}</div>
+    <div><span class="k">FER</span> ${inv.FER || 0}</div>
+    <div><span class="k">INT</span> ${inv.INT || 0}</div>
+    <div><span class="k">LCK</span> ${inv.LCK || 0}</div>
+    <div><span class="k">ALLOC</span> ${inv.alloc || 0}</div>
+    <div><span class="k">EVO</span> ${inv.evo || 0}</div>
+    <div style="grid-column:1/-1;margin-top:4px;">
+      <span class="k">Stable:</span> ${myChampions ? myChampions.length : 0} champs
+      · <span class="k">Lvl</span> ${state.level || 1}
+      · <span class="k">Stage</span> ${state.stageIdx || 0}
+    </div>
+  `;
+}
+function dbgToggle() {
+  document.getElementById('dbgPanel').classList.toggle('open');
+  dbgRefreshCounts();
+}
 </script>
+
+<!-- ======== DEBUG PANEL ======== -->
+<button class="debug-fab" onclick="dbgToggle()" title="Debug Panel">🛠</button>
+<div class="debug-panel" id="dbgPanel">
+  <button class="dbg-close" onclick="dbgToggle()">×</button>
+  <h3>🛠 DEBUG PANEL</h3>
+
+  <div class="dbg-counts" id="dbgCounts"></div>
+
+  <h4>Grant Potions (+1)</h4>
+  <div class="dbg-row">
+    <button class="dbg-btn" onclick="dbgGrant('STR',1)">+ STR</button>
+    <button class="dbg-btn" onclick="dbgGrant('VIT',1)">+ VIT</button>
+    <button class="dbg-btn" onclick="dbgGrant('AGI',1)">+ AGI</button>
+  </div>
+  <div class="dbg-row">
+    <button class="dbg-btn" onclick="dbgGrant('FER',1)">+ FER</button>
+    <button class="dbg-btn" onclick="dbgGrant('INT',1)">+ INT</button>
+    <button class="dbg-btn" onclick="dbgGrant('LCK',1)">+ LCK</button>
+  </div>
+  <div class="dbg-row">
+    <button class="dbg-btn" onclick="dbgGrant('alloc',1)">+ ALLOC</button>
+    <button class="dbg-btn" onclick="dbgGrant('evo',1)">+ EVO</button>
+    <button class="dbg-btn" onclick="dbgGrantAll()">+5 ALL</button>
+  </div>
+
+  <h4>Evolution</h4>
+  <div class="dbg-row">
+    <button class="dbg-btn" onclick="dbgAddEvoPct(25)">+25% Evo</button>
+    <button class="dbg-btn" onclick="dbgAddEvoPct(100)">+100% Evo</button>
+    <button class="dbg-btn" onclick="dbgForceEvolve()">Force Evolve</button>
+  </div>
+
+  <h4>Payments · Pretend Pay</h4>
+  <div class="dbg-row">
+    <button class="dbg-btn pyr" onclick="dbgFakePay5PYR()">💎 Fake Pay 5 PYR (Animate)</button>
+  </div>
+
+  <h4>Stable</h4>
+  <div class="dbg-row">
+    <button class="dbg-btn" onclick="dbgQuickAdopt()">🥚 Quick Adopt</button>
+    <button class="dbg-btn danger" onclick="dbgResetStable()">🗑 Reset Stable</button>
+  </div>
+
+  <div style="margin-top:14px;font-size:10px;color:var(--muted);letter-spacing:1px;">
+    DEV TOOLS · not shown in prod
+  </div>
+</div>
+
 </body>
 </html>
