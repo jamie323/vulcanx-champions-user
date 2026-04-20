@@ -359,11 +359,49 @@
   }
 
   .about-head { margin-bottom: 28px; }
+  .about-name-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin-bottom: 12px;
+  }
   .about-name {
     font-size: 40px; font-weight: 800; line-height: 1.1;
     color: var(--accent); letter-spacing: -0.3px;
     text-shadow: 0 2px 24px rgba(255,140,40,0.3);
-    margin-bottom: 12px;
+    flex: 1;
+  }
+  .name-edit-btn {
+    background: rgba(255,205,107,0.08);
+    border: 1px solid rgba(255,205,107,0.3);
+    color: var(--accent); cursor: pointer;
+    width: 38px; height: 38px; border-radius: 8px;
+    font-size: 16px; margin-top: 4px;
+    transition: all 0.15s;
+  }
+  .name-edit-btn:hover {
+    background: rgba(255,205,107,0.18);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  /* Share button under portrait */
+  .champ-share-row {
+    display: flex; justify-content: center; margin-top: 4px;
+  }
+  .share-btn {
+    padding: 10px 22px;
+    background: rgba(255,205,107,0.08);
+    border: 1px solid rgba(255,205,107,0.3);
+    color: var(--accent);
+    border-radius: 10px;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .share-btn:hover {
+    background: rgba(255,205,107,0.18);
+    border-color: var(--accent);
+    transform: translateY(-1px);
   }
   /* LEVEL & PROGRESS — inline row, matches other about-blocks */
   .about-level-row {
@@ -1439,6 +1477,23 @@
   .howto-step-1::before { background: linear-gradient(180deg, #ffcd6b, #ff8e2e); }
   .howto-step-2::before { background: linear-gradient(180deg, #6bc5ff, #2e6dff); }
   .howto-step-3::before { background: linear-gradient(180deg, #c084fc, #7b2cbf); }
+  .howto-step-4::before { background: linear-gradient(180deg, #3aff8a, #1a8a3c); }
+  .howto-step-5::before { background: linear-gradient(180deg, #ff5a3a, #8a1400); }
+
+  .howto-step-4 .howto-page-num {
+    background: linear-gradient(135deg, #3aff8a, #1a8a3c); color: #051a08;
+  }
+  .howto-step-5 .howto-page-num {
+    background: linear-gradient(135deg, #ff5a3a, #8a1400); color: #fff;
+  }
+
+  .howto-img {
+    margin: 6px 0 20px;
+    border-radius: 14px; overflow: hidden;
+    border: 1px solid rgba(255,205,107,0.25);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  }
+  .howto-img img { width: 100%; height: auto; display: block; }
 
   .howto-page-num {
     width: 84px; height: 84px; flex-shrink: 0;
@@ -1924,33 +1979,50 @@
       <div class="howto-page-eyebrow">✦ THE GAME ✦</div>
       <h1 class="howto-page-title">How to raise your Champion</h1>
       <p class="howto-page-sub">
-        Three simple steps. No spreadsheets, no guides needed. Fantasy creatures, potions, and a bar that fills up. That's the whole loop.
+        Adopt a baby creature. Feed it potions you earn across the Vulcan Forged ecosystem. Evolve it through 20 life stages. Keep its NFT in sync with every step. One-of-a-kind, forever yours.
       </p>
     </div>
 
+    <!-- STEP 1 — ADOPT -->
     <section class="howto-page-step howto-step-1">
       <div class="howto-page-num">1</div>
       <div class="howto-page-body">
         <div class="howto-page-step-label">Step One</div>
-        <h2>Get Chests</h2>
-        <p>Treasure chests are where all your potions come from. You earn them by playing the rest of the <b>Vulcan Forged</b> ecosystem:</p>
-        <ul>
-          <li><b>Quests</b> in VulcanVerse — dungeon runs, daily tasks, PvP wins.</li>
-          <li><b>Vulcan Runner</b> — distance milestones, campaign stages.</li>
-          <li><b>Forge Arena</b> — ranked matches and tournaments.</li>
-          <li>Events, airdrops, seasonal chest giveaways.</li>
-        </ul>
-        <p>Each chest drops 3–5 random potions, matched to a <b>species</b>. An orc chest drops orc-only potions, an elf chest drops elf-only. Your potions always match your champion.</p>
-        <p class="howto-page-tip">💡 <b>Try now:</b> open any champion and hit <b>"Open a Test Chest"</b> under their portrait.</p>
+        <h2>Adopt a Champion</h2>
+        <div class="howto-img"><img src="howto/01_adopt.png" alt="Egg hatching" onerror="this.style.display='none'"/></div>
+        <p>Pick your species — <b>Orc</b>, <b>Elf</b>, <b>Goblin</b>, <b>Hellknight</b>, <b>Drakkin</b>, <b>Dwarf</b>, <b>Beastkin</b>, or <b>Wraith</b> — then choose a bloodline from <b>six variants</b>.</p>
+        <p>Adoption costs <b>10 PYR</b>. In return you receive a one-of-a-kind baby champion, minted as an NFT directly to your wallet. Nobody else in the realm will ever have the same one.</p>
       </div>
     </section>
 
+    <!-- STEP 2 — QUEST FOR POTIONS -->
     <section class="howto-page-step howto-step-2">
       <div class="howto-page-num">2</div>
       <div class="howto-page-body">
         <div class="howto-page-step-label">Step Two</div>
-        <h2>Feed Potions</h2>
-        <p>Potions are how your champion grows. Each one lifts one of <b>six traits</b>:</p>
+        <h2>Quest for Chests &amp; Potions</h2>
+        <div class="howto-img"><img src="howto/02_quest.png" alt="Quests and chests" onerror="this.style.display='none'"/></div>
+        <p>Potions are the food your champion needs to grow. You earn them by <b>playing across the Vulcan Forged ecosystem</b>:</p>
+        <ul>
+          <li><b>Quests</b> in VulcanVerse — dungeon runs, daily tasks, seasonal missions</li>
+          <li><b>Vulcan Runner</b> — distance milestones and campaign stages</li>
+          <li><b>Forge Arena</b> — ranked matches and tournaments</li>
+          <li>Events, airdrops, and limited-time chest drops</li>
+        </ul>
+        <p>Each completed quest earns you a <b>treasure chest</b>. Chests open inside their own parts of the ecosystem — when they crack, <b>potion NFTs land directly in your wallet</b>. You don't need to come back here to open them.</p>
+        <p class="howto-page-tip">💡 <b>Don't have time to quest?</b> Potions are tradeable NFTs — buy or sell them on the <b>marketplace</b>.</p>
+      </div>
+    </section>
+
+    <!-- STEP 3 — FEED -->
+    <section class="howto-page-step howto-step-3">
+      <div class="howto-page-num">3</div>
+      <div class="howto-page-body">
+        <div class="howto-page-step-label">Step Three</div>
+        <h2>Feed Your Champion</h2>
+        <div class="howto-img"><img src="howto/03_feed.png" alt="Feeding potions" onerror="this.style.display='none'"/></div>
+        <p>Open your champion's page — we check your wallet automatically and show every potion you own. Tap a bottle to feed it. The potion NFT is <b>burned</b> (destroyed forever), and your champion's matching stat rises while the Evolution Bar fills.</p>
+        <p>Potions come in <b>three tiers</b> — Minor (common, small boost), Major (uncommon, bigger), Epic (rare, massive). Every potion lifts one of <b>six traits</b>:</p>
         <ul class="howto-trait-list">
           <li><span class="t-emoji">💪</span><span class="t-name">Strength</span><span class="t-what">Raw damage output</span></li>
           <li><span class="t-emoji">❤️</span><span class="t-name">Vitality</span><span class="t-what">Health &amp; survivability</span></li>
@@ -1959,43 +2031,44 @@
           <li><span class="t-emoji">🧠</span><span class="t-name">Intelligence</span><span class="t-what">Magic &amp; cunning</span></li>
           <li><span class="t-emoji">🍀</span><span class="t-name">Luck</span><span class="t-what">Loot &amp; crit chance</span></li>
         </ul>
-        <p>Tap any bottle in the feed grid to feed one. Your champion's matching stat rises, and the <b>Evolution Bar</b> fills by a few percent each time.</p>
-        <p><b>Potion tiers:</b> Minor (common) → Major (uncommon) → Epic (rare). Stronger tiers give bigger boosts. Most chests drop Minor; Epics are special.</p>
-        <p><b>Diminishing returns:</b> early potions in a stage give +5 stat, later ones +3, +1.5, +1. Spread your stats — don't pour them all into one.</p>
+        <p><b>Species lock:</b> an Orc potion only feeds Orc champions. No Elf ever drinks Orc brew. Keep that in mind when farming chests for a specific pet.</p>
+        <p><b>Blessings &amp; Evolution Potions</b> are special drops: a <b>Blessing</b> gives you 40 stat points to distribute freely, and an <b>Evolution Potion</b> is what you'll need for the next step.</p>
       </div>
     </section>
 
-    <section class="howto-page-step howto-step-3">
-      <div class="howto-page-num">3</div>
+    <!-- STEP 4 — EVOLVE & SYNC -->
+    <section class="howto-page-step howto-step-4">
+      <div class="howto-page-num">4</div>
       <div class="howto-page-body">
-        <div class="howto-page-step-label">Step Three</div>
-        <h2>Evolve</h2>
-        <p>Your champion grows through <b>9 life stages</b>:</p>
+        <div class="howto-page-step-label">Step Four</div>
+        <h2>Evolve &amp; Sync to Chain</h2>
+        <div class="howto-img"><img src="howto/04_evolve.png" alt="Evolution" onerror="this.style.display='none'"/></div>
+        <p>Your champion passes through <b>20 stages</b> as it grows — not just age, but armor, scars, equipment, and raw power. Each stage looks visibly different. At certain level gates, feeding its Evolution Bar to 100% and spending one <b>Evolution Potion</b> triggers a transformation.</p>
+        <p><b>Here's the important bit</b>: when your champion evolves, your wallet will prompt you to <b>sync the new look to chain</b>. Sign the transaction, and the NFT in your wallet updates to match the latest stage. Skip it and your NFT stays at the previous form — no cheating, no duplicates. You'll also be blocked from feeding more potions until you sync up.</p>
+        <p class="howto-page-tip">✨ Your NFT always reflects the <b>current</b> version of your champion. Every evolution is committed on-chain. No one else will ever have your exact creature at your exact stage.</p>
+      </div>
+    </section>
+
+    <!-- STEP 5 — ASCEND -->
+    <section class="howto-page-step howto-step-5">
+      <div class="howto-page-num">5</div>
+      <div class="howto-page-body">
+        <div class="howto-page-step-label">Step Five</div>
+        <h2>Ascend to Legendary</h2>
+        <div class="howto-img"><img src="howto/05_ascend.png" alt="Legendary ascension" onerror="this.style.display='none'"/></div>
+        <p>Reach the final stage at Level 50, and your champion unlocks the <b>Legendary</b> tier — a fully <b>animated</b> one-of-one NFT, moving art bound forever to your wallet.</p>
+        <p>This is the prize. An animated, on-chain, truly unique champion raised entirely by you. Share it, showcase it, trade it, pass it down.</p>
         <div class="howto-stages">
           <span>Whelp</span><span>→</span>
-          <span>Pup</span><span>→</span>
-          <span>Adolescent</span><span>→</span>
-          <span>Warrior</span><span>→</span>
-          <span>Champion</span><span>→</span>
-          <span>Elite</span><span>→</span>
-          <span>Warlord</span><span>→</span>
-          <span>Ascendant</span><span>→</span>
+          <span>… 20 stages …</span><span>→</span>
           <span class="legendary">Legendary</span>
         </div>
-        <p>Each stage unlocks at a <b>level gate</b>: L5, L10, L15, L20, L30, L40, L45, L50. To evolve:</p>
-        <ol>
-          <li>Reach the level gate (bar fills as you feed potions).</li>
-          <li>Fill the Evolution Bar to <b>100%</b>.</li>
-          <li>Spend <b>1 Evolution Potion</b> (rare drop from chests).</li>
-          <li>Click <b>Evolve</b> — your champion transforms.</li>
-        </ol>
-        <p>At <b>Legendary (L50)</b> your champion unlocks its final, animated form — a one-of-a-kind living NFT, bound forever to your wallet.</p>
       </div>
     </section>
 
     <div class="howto-page-cta">
-      <h3>Ready to raise your first champion?</h3>
-      <button class="cta-big" onclick="navTo('adopt')">🥚 Adopt a Baby Champion</button>
+      <h3>Ready to begin?</h3>
+      <button class="cta-big" onclick="navTo('adopt')">🥚 Adopt a Champion · 10 PYR</button>
     </div>
   </div>
 </div>
@@ -2096,7 +2169,10 @@
 <div class="about-panel" id="aboutPanel">
   <div class="about-head">
     <div class="about-section-label">Champion</div>
-    <div class="about-name" id="aboutName">Grokk the Whelp</div>
+    <div class="about-name-row">
+      <div class="about-name" id="aboutName">Grokk the Whelp</div>
+      <button class="name-edit-btn" onclick="openRenameModal()" title="Rename this champion (5 PYR)">✏️</button>
+    </div>
   </div>
 
   <div class="about-block">
@@ -2194,6 +2270,13 @@
 
   <!-- Evolve button appears only when ready -->
   <button class="evolve-btn-center" id="evolveBtn" disabled>⚡ Evolve (locked)</button>
+
+  <!-- Share row -->
+  <div class="champ-share-row">
+    <button class="share-btn" onclick="shareChampion()" title="Share your champion">
+      🔗 Share
+    </button>
+  </div>
 </main>
 
 <!-- ═══════════════════════════════════════════════════
@@ -3139,6 +3222,20 @@ async function apiFeedPotion({ champion_id, potion_id }) {
   return data;  // { champion, result, potionRemaining }
 }
 
+async function apiRenameChampion({ champion_id, new_name }) {
+  const res = await apiFetch(`${FN_BASE}/champion_rename`, {
+    method: 'POST',
+    headers: AUTH_HEADERS,
+    body: JSON.stringify({ wallet: getWallet(), champion_id, new_name }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const code = data.error || `http_${res.status}`;
+    throw new Error(`${code}: ${data.message || ''}`.trim());
+  }
+  return mapChampion(data.champion);
+}
+
 async function apiEvolveChampion({ champion_id, evolution_potion_id }) {
   const res = await apiFetch(`${FN_BASE}/champion_evolve`, {
     method: 'POST',
@@ -3514,9 +3611,9 @@ function renderBuy() {
       <input type="text" id="buyNameInput" value="${defaultName}" maxlength="48" />
       <div class="buy-price">
         <span class="label">Adoption fee</span>
-        <span class="value">5 PYR</span>
+        <span class="value">10 PYR</span>
       </div>
-      <button class="btn-big" onclick="confirmAdopt()">✨ Adopt this baby</button>
+      <button class="btn-big" id="confirmAdoptBtn" onclick="confirmAdopt()">🥚 Adopt this Champion — 10 PYR</button>
     </div>
   `;
   document.getElementById('buyNameInput').addEventListener('input', e => {
@@ -3531,6 +3628,14 @@ async function confirmAdopt() {
     alert('You already own 10 champions (the maximum). Retire or evolve existing ones before adopting more.');
     return;
   }
+  // 10 PYR simulated payment — real PYR debit will be wired when contracts land
+  const confirmed = confirm(
+    `Adopt ${name} for 10 PYR?\n\n` +
+    `This will mint a unique NFT to your wallet. ` +
+    `In this preview the payment is simulated — on mainnet this will debit 10 PYR from your wallet.`
+  );
+  if (!confirmed) return;
+
   const btn = document.getElementById('confirmAdoptBtn');
   if (btn) { btn.disabled = true; btn.textContent = 'Minting…'; }
   try {
@@ -3543,7 +3648,7 @@ async function confirmAdopt() {
     openChampion(c.id);
   } catch (e) {
     alert('Adopt failed: ' + e.message);
-    if (btn) { btn.disabled = false; btn.textContent = '✨ Adopt Champion'; }
+    if (btn) { btn.disabled = false; btn.textContent = '🥚 Adopt this Champion — 10 PYR'; }
   }
 }
 
@@ -3597,6 +3702,63 @@ async function reloadPotions() {
   if (!currentSpecies) return;
   state.potions = await apiListPotions(currentSpecies);
   deriveInv();
+}
+
+// ============================================================
+// RENAME CHAMPION (5 PYR per rename, simulated payment for now)
+// ============================================================
+async function openRenameModal() {
+  if (!state.championId) return;
+  const current = myChampions.find(c => c.id === state.championId)?.name || '';
+  const newName = prompt(
+    `Rename your champion?\n\n` +
+    `Each rename costs 5 PYR. In this preview the payment is simulated — ` +
+    `on mainnet this will debit 5 PYR from your wallet.\n\n` +
+    `Current name: ${current}\nNew name:`,
+    current,
+  );
+  if (newName === null) return;
+  const trimmed = newName.trim();
+  if (!trimmed || trimmed === current) return;
+  if (trimmed.length > 48) {
+    alert('Name must be 48 characters or fewer.');
+    return;
+  }
+  try {
+    const updated = await apiRenameChampion({ champion_id: state.championId, new_name: trimmed });
+    const cached = myChampions.find(m => m.id === updated.id);
+    if (cached) Object.assign(cached, updated);
+    render();
+    // update top nav title + left-panel name right away
+    document.getElementById('aboutName').textContent = updated.name;
+    document.getElementById('topChampTitle').textContent =
+      `${SPECIES[updated.species_id].label} · ${SPECIES[updated.species_id].bloodlines[updated.bloodline_id].label}`;
+  } catch (e) {
+    alert('Rename failed: ' + e.message);
+  }
+}
+
+// ============================================================
+// SHARE CHAMPION
+// ============================================================
+async function shareChampion() {
+  if (!state.championId) return;
+  const c = myChampions.find(m => m.id === state.championId);
+  if (!c) return;
+  const url = `${location.origin}${location.pathname}?champion=${encodeURIComponent(c.id)}`;
+  const title = `${c.name} · VulcanX Champions`;
+  const text = `Meet ${c.name} — my ${SPECIES[c.species_id].label} champion at Level ${c.level}. Raise your own on VulcanX Champions.`;
+  try {
+    if (navigator.share) {
+      await navigator.share({ title, text, url });
+    } else {
+      await navigator.clipboard.writeText(url);
+      alert(`🔗 Link copied to clipboard!\n\n${url}`);
+    }
+  } catch (e) {
+    // user cancelled share sheet — no-op
+    if (e.name !== 'AbortError') console.warn('Share failed', e);
+  }
 }
 
 
