@@ -410,9 +410,6 @@
   main.champion-main {
     display: flex; flex-direction: column; align-items: center;
     padding: 130px 36px 60px; gap: 18px;
-    position: sticky; top: 0;
-    align-self: start;
-    max-height: 100vh;
   }
 
   /* FEED Me! top bar (above portrait) */
@@ -2079,7 +2076,6 @@
   <div class="about-head">
     <div class="about-section-label">Champion</div>
     <div class="about-name" id="aboutName">Grokk the Whelp</div>
-    <div class="about-level-pill" id="aboutLevelPill">Lvl 01 · Whelp · 0%</div>
   </div>
 
   <div class="about-block">
@@ -2097,6 +2093,31 @@
     <div class="about-section-label">Bloodline</div>
     <div class="about-bloodline-name" id="aboutBloodlineName">Ironfang</div>
     <div class="about-bloodline-hint" id="aboutBloodlineHint">The heavy-armor path — unshakeable defence, iron-forged tusks.</div>
+  </div>
+
+  <!-- ── LEVEL & PROGRESS (moved from right panel) ── -->
+  <div class="card level-card level-card-in-left">
+    <div class="card-title">📊 Level &amp; Progress</div>
+    <div class="level-display">
+      <div class="level-label">Current Level</div>
+      <div class="level-num" id="levelBig">01</div>
+    </div>
+    <div class="level-progress-block">
+      <div class="level-progress-label">
+        <span><b id="evoPct">0</b>% to Level <span id="nextLevelNum">02</span></span>
+      </div>
+      <div class="evo-bar"><div class="evo-fill" id="evoFill" style="width:0%"></div></div>
+    </div>
+    <div class="stage-meta">
+      <div class="stage-meta-row">
+        <span class="stage-meta-label">Stage</span>
+        <span class="stage-meta-value" id="currentStageName">Whelp</span>
+      </div>
+      <div class="stage-meta-row">
+        <span class="stage-meta-label">Next</span>
+        <span class="stage-meta-value" id="nextStageMeta">Pup at L5</span>
+      </div>
+    </div>
   </div>
 
   <div class="about-block about-block-story">
@@ -2149,17 +2170,18 @@
      CENTER — FEED BAR + PORTRAIT (only)
      ═══════════════════════════════════════════════════ -->
 <main class="champion-main">
-  <button class="feed-top-bar" id="feedHero">
-    <span class="feed-top-label">🧪 Feed Me!</span>
-    <span class="feed-top-count" id="feedCount">0 ready</span>
-  </button>
-
   <div class="stage-frame" id="stageFrame">
     <img id="stageImg" src="evolution/L01_whelp_final.jpg" />
     <div class="aura"></div>
     <div class="level-badge" id="levelBadge">L 01</div>
     <div class="rank-pill" id="rankPill">Iron III</div>
   </div>
+
+  <!-- Feed Me bar (below portrait) -->
+  <button class="feed-top-bar" id="feedHero">
+    <span class="feed-top-label">🧪 Feed Me!</span>
+    <span class="feed-top-count" id="feedCount">0 ready</span>
+  </button>
 
   <!-- Evolve button appears only when ready -->
   <button class="evolve-btn-center" id="evolveBtn" disabled>⚡ Evolve (locked)</button>
@@ -2169,34 +2191,6 @@
      RIGHT PANEL — HOW IT WORKS + STATS & LEVEL + STAGES
      ═══════════════════════════════════════════════════ -->
 <aside class="champion-side">
-
-  <!-- LEVEL & PROGRESS -->
-  <div class="card level-card">
-    <div class="card-title">📊 Level &amp; Progress</div>
-
-    <div class="level-display">
-      <div class="level-label">Current Level</div>
-      <div class="level-num" id="levelBig">01</div>
-    </div>
-
-    <div class="level-progress-block">
-      <div class="level-progress-label">
-        <span><b id="evoPct">0</b>% to Level <span id="nextLevelNum">02</span></span>
-      </div>
-      <div class="evo-bar"><div class="evo-fill" id="evoFill" style="width:0%"></div></div>
-    </div>
-
-    <div class="stage-meta">
-      <div class="stage-meta-row">
-        <span class="stage-meta-label">Stage</span>
-        <span class="stage-meta-value" id="currentStageName">Whelp</span>
-      </div>
-      <div class="stage-meta-row">
-        <span class="stage-meta-label">Next</span>
-        <span class="stage-meta-value" id="nextStageMeta">Pup at L5</span>
-      </div>
-    </div>
-  </div>
 
   <!-- STATS (bigger) -->
   <div class="card stats-card-v2">
