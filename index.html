@@ -365,15 +365,36 @@
     text-shadow: 0 2px 24px rgba(255,140,40,0.3);
     margin-bottom: 12px;
   }
-  .about-level-pill {
-    display: inline-block;
-    padding: 7px 16px; border-radius: 16px;
-    background: linear-gradient(90deg, rgba(255,205,107,0.2), rgba(255,140,40,0.12));
-    border: 1px solid var(--border-glow);
-    color: var(--accent); font-weight: 700;
-    font-size: 13px; letter-spacing: 1.5px;
-    text-transform: uppercase;
+  /* LEVEL & PROGRESS — inline row, matches other about-blocks */
+  .about-level-row {
+    display: flex; align-items: baseline; flex-wrap: wrap;
+    gap: 10px;
+    font-size: 18px;
+    margin-bottom: 14px;
   }
+  .about-level-num {
+    color: var(--accent); font-weight: 800;
+    font-family: Georgia, serif; letter-spacing: 0.5px;
+  }
+  .about-level-num span {
+    font-size: 22px;
+  }
+  .about-level-sep { color: var(--accent-dim); opacity: 0.5; }
+  .about-level-stage {
+    color: var(--text); font-weight: 700;
+  }
+  .about-level-next {
+    color: var(--muted); font-size: 15px;
+  }
+  .about-level-next span { color: var(--text); font-weight: 600; }
+  .about-level-bar .evo-bar {
+    height: 10px; border-radius: 6px;
+  }
+  .about-level-pct {
+    font-size: 12px; color: var(--muted);
+    margin-top: 6px; letter-spacing: 0.5px;
+  }
+  .about-level-pct b { color: var(--accent); font-weight: 700; }
 
   .about-block {
     padding: 20px 0;
@@ -2082,10 +2103,7 @@
     <div class="about-section-label">Species</div>
     <div class="about-species" id="aboutSpecies">
       <span class="about-emoji" id="aboutSpeciesEmoji">🟢</span>
-      <span>
-        <span class="about-species-name" id="aboutSpeciesName">Orc</span>
-        <span class="about-archetype" id="aboutArchetype">· Brute</span>
-      </span>
+      <span class="about-species-name" id="aboutSpeciesName">Orc</span>
     </div>
   </div>
 
@@ -2095,28 +2113,19 @@
     <div class="about-bloodline-hint" id="aboutBloodlineHint">The heavy-armor path — unshakeable defence, iron-forged tusks.</div>
   </div>
 
-  <!-- ── LEVEL & PROGRESS (moved from right panel) ── -->
-  <div class="card level-card level-card-in-left">
-    <div class="card-title">📊 Level &amp; Progress</div>
-    <div class="level-display">
-      <div class="level-label">Current Level</div>
-      <div class="level-num" id="levelBig">01</div>
+  <!-- ── LEVEL & PROGRESS (inline, matches other about-blocks) ── -->
+  <div class="about-block">
+    <div class="about-section-label">Level &amp; Progress</div>
+    <div class="about-level-row">
+      <span class="about-level-num">Lvl <span id="levelBig">01</span></span>
+      <span class="about-level-sep">·</span>
+      <span class="about-level-stage" id="currentStageName">Whelp</span>
+      <span class="about-level-sep">·</span>
+      <span class="about-level-next">Next: <span id="nextStageMeta">Pup at L5</span></span>
     </div>
-    <div class="level-progress-block">
-      <div class="level-progress-label">
-        <span><b id="evoPct">0</b>% to Level <span id="nextLevelNum">02</span></span>
-      </div>
+    <div class="about-level-bar">
       <div class="evo-bar"><div class="evo-fill" id="evoFill" style="width:0%"></div></div>
-    </div>
-    <div class="stage-meta">
-      <div class="stage-meta-row">
-        <span class="stage-meta-label">Stage</span>
-        <span class="stage-meta-value" id="currentStageName">Whelp</span>
-      </div>
-      <div class="stage-meta-row">
-        <span class="stage-meta-label">Next</span>
-        <span class="stage-meta-value" id="nextStageMeta">Pup at L5</span>
-      </div>
+      <div class="about-level-pct"><b id="evoPct">0</b>% to Level <span id="nextLevelNum">02</span></div>
     </div>
   </div>
 
@@ -2746,14 +2755,10 @@ function render() {
     aboutName.textContent = bloodlineCfg.nameByStage[state.stageIdx];
     document.getElementById('aboutSpeciesEmoji').textContent = speciesCfg.emoji || '⭐';
     document.getElementById('aboutSpeciesName').textContent = speciesCfg.label;
-    document.getElementById('aboutArchetype').textContent = '· ' + speciesCfg.archetype;
     document.getElementById('aboutBloodlineName').textContent = bloodlineCfg.label;
     document.getElementById('aboutBloodlineHint').textContent =
       BLOODLINE_HINT[currentBloodline] || 'A unique bloodline with its own story.';
     document.getElementById('aboutStory').textContent = STAGE_LORE_MAP[state.stageIdx] || '';
-    const pill = document.getElementById('aboutLevelPill');
-    if (pill) pill.textContent =
-      `Lvl ${String(state.level).padStart(2,'0')} · ${stage.name} · ${Math.round(state.evoPct)}%`;
   }
 
   // ── RIGHT PANEL: Level & Progress
