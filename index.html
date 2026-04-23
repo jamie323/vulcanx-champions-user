@@ -3085,11 +3085,16 @@
       <h3>🎚️ Three tiers — Minor, Major, Epic</h3>
       <p>Same trait, different potency. Stronger tiers drop rarely from chests.</p>
       <table class="guide-table">
-        <tr><th>Tier</th><th>Early stat gain</th><th>Bar fill</th><th>Drop rarity</th></tr>
-        <tr><td><b>Minor</b></td><td>+5 stat</td><td>2-6%</td><td>~70% of chest rolls</td></tr>
-        <tr><td><b>Major</b></td><td>+15 stat (×3)</td><td>6-12%</td><td>~25%</td></tr>
-        <tr><td><b>Epic</b></td><td>+40 stat (×8)</td><td>12-20%</td><td>~5%</td></tr>
+        <tr><th>Tier</th><th>Early stat gain</th><th>Bar fill (random)</th><th>Drop rarity</th></tr>
+        <tr><td><b>Minor</b></td><td>+5 stat</td><td>2–6%</td><td>~70% of chest rolls</td></tr>
+        <tr><td><b>Major</b></td><td>+15 stat (×3)</td><td>6–12%</td><td>~25%</td></tr>
+        <tr><td><b>Epic</b></td><td>+40 stat (×8)</td><td>12–20%</td><td>~5%</td></tr>
       </table>
+      <p style="margin-top:10px;font-size:13px;color:var(--muted);">
+        <b>Heads-up:</b> the bar-fill roll is random within the tier range.
+        Two keepers fed the same potions won't land on the exact same %.
+        Lucky pours fill more, unlucky ones less. That's the potion doing its thing — not a bug.
+      </p>
     </div>
 
     <div class="guide-section">
@@ -4422,7 +4427,7 @@ function render() {
       const tooltipTitle = (
         `${TRAIT_NAMES[t]} Potion (Minor tier)\n` +
         `Raises ${TRAIT_NAMES[t]} by +5 early, tapering to +1 when heavily invested.\n` +
-        `Adds 2-6% to the Evolution Bar.\n\n` +
+        `Fills the Evolution Bar by 2–6% — lucky pours fill more, unlucky ones less. Two keepers with identical feeds can end up at slightly different bar %. That's the potion, not a bug.\n\n` +
         `You have ${count} × ${TRAIT_NAMES[t]} potion${count===1?'':'s'}.` +
         (atCap ? `\n\n⚠️ ${TRAIT_NAMES[t]} is maxed for this stage — the potion still fills your Evolution Bar.` : '')
       );
