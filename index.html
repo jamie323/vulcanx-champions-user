@@ -2,6 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
+<!-- QA: tell browsers not to cache the HTML. Fast-iteration deploys
+     mean every tester should always get the latest bundle; GH Pages'
+     default ~10min CDN cache was holding some testers on old JS
+     (Acadian's Blessings 'nothing changed' after cache-bust ?v=...
+     because the cached HTML still referenced the un-versioned path).
+     Remove post-launch when we have a proper build-hash pipeline. -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <title>VulcanX Champion — MVP</title>
 <!-- Preconnect + preload the WalletConnect UMD so the bundle is already
      parsed by the time the keeper clicks the WC button. Saves ~2-4s on
@@ -2985,8 +2994,15 @@
 <!-- Cache-bust on each deploy so stale wallet.js/stories.js can't hold
      testers on yesterday's bug. Bump the version string when either
      file changes (every commit is fine — it's just a cache key). -->
-<script src="wallet.js?v=20260424-a"></script>
-<script src="stories.js?v=20260424-a"></script>
+<script src="wallet.js?v=20260424-b"></script>
+<script src="stories.js?v=20260424-b"></script>
+<script>
+  // Loud version banner in the console so testers (or Jamie) can
+  // confirm which bundle is running when debugging. If this doesn't
+  // match the latest git SHA, they're on a stale cache.
+  console.log('%c🛡️ VulcanX Champions · v20260424-b',
+    'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
+</script>
 
 <!-- ======== WALLET GATE — blocks app until SIWE completes ======== -->
 <div id="walletGate" class="wallet-gate" style="display:none;">
