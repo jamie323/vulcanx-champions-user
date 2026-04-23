@@ -2606,24 +2606,43 @@
     grid-template-columns: repeat(4, 1fr);
     gap: 14px; margin-top: 14px;
   }
-  .howto-step {
+  /* Scoped under .howto-steps-grid to avoid collision with the legacy
+     landing-page .howto-step (display:flex) that was squashing cards. */
+  .howto-steps-grid .howto-step {
+    display: block !important;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* override legacy dashed */
     border-radius: 10px;
-    padding: 16px; text-align: center;
+    padding: 18px 14px;
+    text-align: center;
+    gap: 0;
+    min-width: 0;
   }
-  .howto-step .n {
+  .howto-steps-grid .howto-step .n {
+    display: block;
     font-size: 10px; letter-spacing: 2px;
     color: var(--accent); font-weight: 700;
     text-transform: uppercase; margin-bottom: 6px;
   }
-  .howto-step .ic { font-size: 32px; margin-bottom: 6px; }
-  .howto-step h4 {
-    font-family: 'Cinzel', serif;
-    font-size: 16px; margin: 0 0 6px;
-    color: var(--text);
+  .howto-steps-grid .howto-step .ic {
+    display: block;
+    font-size: 32px; line-height: 1;
+    margin: 0 auto 8px;
+    width: auto; height: auto;
+    background: none; border-radius: 0;
   }
-  .howto-step p { font-size: 13px; line-height: 1.5; margin: 0; }
+  .howto-steps-grid .howto-step h4 {
+    font-family: 'Cinzel', serif;
+    font-size: 16px; margin: 0 0 8px;
+    color: var(--text);
+    display: block;
+  }
+  .howto-steps-grid .howto-step p {
+    font-size: 13px; line-height: 1.55; margin: 0;
+    color: var(--text);
+    display: block;
+  }
 
   @media (max-width: 700px) {
     .howto-hero h1 { font-size: 32px; }
