@@ -595,6 +595,21 @@
     border-color: var(--accent);
     transform: translateY(-2px);
   }
+  /* At-cap: still clickable (backend fills bar even on capped feeds) but
+     visually dimmed so the keeper sees "I've maxed this for the stage". */
+  .feed-bottle.at-cap:not(:disabled) {
+    opacity: 0.72;
+    border-style: dashed;
+  }
+  .feed-bottle.at-cap:not(:disabled):hover {
+    opacity: 1;
+    border-style: solid;
+  }
+  .feed-bottle.at-cap .fb-name::after {
+    content: ' · MAX';
+    font-size: 8px; color: var(--accent);
+    letter-spacing: 1px;
+  }
   .feed-bottle:disabled, .feed-bottle.empty {
     opacity: 0.4; cursor: not-allowed;
   }
@@ -2536,6 +2551,17 @@
   }
   .stat-glow { animation: statGlow 0.9s ease-out; }
 
+  /* Feed-busy wiggle: fires when the user clicks a potion while another
+     feed is still in flight. Tells them "we heard you, just waiting". */
+  @keyframes feedBusyWiggle {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-3px); }
+    40% { transform: translateX(3px); }
+    60% { transform: translateX(-2px); }
+    80% { transform: translateX(2px); }
+  }
+  .feed-busy { animation: feedBusyWiggle 0.26s ease-out; }
+
   /* RANK pill pulse on level change */
   @keyframes rankPulse {
     0%, 100% { transform: scale(1); box-shadow: 0 0 0 rgba(255,205,107,0); }
@@ -3703,22 +3729,43 @@ function showCinematic(title, subtitle) {
 
 // ===== CORE POTION LOGIC =====
 
+// Feeds must be strictly serialized — the backend reads champion state,
+// mutates it, writes back, all without row-level locking. Two overlapping
+// feeds saw the same baseline and the second write clobbered the first's
+// stat gain, which is how Acadian lost potions clicking fast. We queue on
+// the frontend: the first feed flies through; any click while a feed is
+// in flight is silently ignored. Kind feedback (button shake) keeps the
+// tester from feeling the UI is dead.
+let _feedInFlight = false;
+
 async function usePotion(trait, sourceEl) {
   if (!state.championId) return;
+  if (_feedInFlight) {
+    // Gentle wiggle on the source so the user knows the click registered.
+    if (sourceEl) {
+      sourceEl.classList.remove('feed-busy'); void sourceEl.offsetWidth;
+      sourceEl.classList.add('feed-busy');
+      setTimeout(() => sourceEl.classList.remove('feed-busy'), 260);
+    }
+    return;
+  }
   const potion = findPotion({ trait });
   if (!potion) return; // deriveInv guards the button count, this is extra safety
-  const i = TRAITS.indexOf(trait);
-  const cap = STAGE_CAPS[state.stageIdx][i];
-  if (state.stats[trait] >= cap) return;
+  // NOTE: capped traits are NOT blocked here anymore. The backend will
+  // still consume the potion and award a random bar-fill (2-20% by tier)
+  // so the keeper isn't dead-ended when every trait caps before the gate.
+  // See champion_feed_potion/index.ts — the "atCap" branch.
 
-  const oldVal = state.stats[trait];
+  const oldVal = state.stats[trait] || 0;
   const oldPct = state.evoPct;
   const oldLevel = state.level;
 
+  _feedInFlight = true;
   let resp;
   try {
     resp = await apiFeedPotion({ champion_id: state.championId, potion_id: potion.id });
   } catch (e) {
+    _feedInFlight = false;
     alert('Feed failed: ' + e.message);
     return;
   }
@@ -3760,6 +3807,11 @@ async function usePotion(trait, sourceEl) {
 
   // re-render side panel inventory after a small delay so animation is visible
   setTimeout(() => render(), 300);
+  // Release the feed lock AFTER the animation has had time to play —
+  // this both prevents the race AND throttles feeds to ~1 per 350ms,
+  // which is also more visually satisfying. Testers who want to sprint
+  // through can still click at a brisk pace without losing any.
+  setTimeout(() => { _feedInFlight = false; }, 350);
 }
 
 function useAllocationPotion(sourceEl) {
@@ -4032,9 +4084,14 @@ function render() {
     `${speciesCfg.label} · ${bloodlineCfg.label}`;
 
   // ── LEFT PANEL: Identity
+  // Prefer the persisted champion name (what the user typed on adopt or
+  // changed via rename); fall back to the bloodline default pattern
+  // ("Grokk the Whelp") only if we don't have a real record loaded.
+  const activeChamp = myChampions.find(c => c.id === state.championId);
+  const displayName = activeChamp?.name || bloodlineCfg.nameByStage[state.stageIdx];
   const aboutName = document.getElementById('aboutName');
   if (aboutName) {
-    aboutName.textContent = bloodlineCfg.nameByStage[state.stageIdx];
+    aboutName.textContent = displayName;
     document.getElementById('aboutSpeciesEmoji').textContent = speciesCfg.emoji || '⭐';
     document.getElementById('aboutSpeciesName').textContent = speciesCfg.label;
     document.getElementById('aboutBloodlineName').textContent = bloodlineCfg.label;
@@ -4137,17 +4194,20 @@ function render() {
       const val = state.stats[t] || 0;
       const atCap = val >= cap;
       const count = state.inv[t] || 0;
-      const disabled = count <= 0 || atCap;
+      // Only disable when there's no potion left. Capped traits remain
+      // clickable: the backend consumes the potion and fills the bar so
+      // keepers aren't dead-ended when every stat caps before a gate.
+      const disabled = count <= 0;
       const emoji = TRAIT_EMOJI[t] || '🧪';
       const tooltipTitle = (
         `${TRAIT_NAMES[t]} Potion (Minor tier)\n` +
         `Raises ${TRAIT_NAMES[t]} by +5 early, tapering to +1 when heavily invested.\n` +
         `Adds 2-6% to the Evolution Bar.\n\n` +
         `You have ${count} × ${TRAIT_NAMES[t]} potion${count===1?'':'s'}.` +
-        (atCap ? `\n\n⚠️ Max ${TRAIT_NAMES[t]} reached at this stage — evolve before feeding more.` : '')
+        (atCap ? `\n\n⚠️ ${TRAIT_NAMES[t]} is maxed for this stage — the potion still fills your Evolution Bar.` : '')
       );
       grid.insertAdjacentHTML('beforeend',
-        `<button class="feed-bottle ${count===0?'empty':''}" data-t="${t}" ${disabled?'disabled':''}
+        `<button class="feed-bottle ${count===0?'empty':''} ${atCap?'at-cap':''}" data-t="${t}" ${disabled?'disabled':''}
           title="${tooltipTitle.replace(/"/g,'&quot;').replace(/\n/g,'&#10;')}">
           <div class="fb-emoji">${emoji}</div>
           <div class="fb-count">×${count}</div>
