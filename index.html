@@ -3660,7 +3660,7 @@
     </div>
     <div class="about-level-bar">
       <div class="evo-bar"><div class="evo-fill" id="evoFill" style="width:0%"></div></div>
-      <div class="about-level-pct"><b id="evoPct">0</b>% to Level <span id="nextLevelNum">02</span></div>
+      <div class="about-level-pct"><b id="evoPct">0</b>% <span id="evoPctLabel">to Level <span id="nextLevelNum">02</span></span></div>
     </div>
   </div>
 
@@ -4472,10 +4472,28 @@ function render() {
   document.getElementById('nextStageMeta').textContent =
     next ? `${next.name} at L${next.minLevel}` : 'Max form reached';
 
+  // Label under the bar adapts to state so the keeper sees the right
+  // next step:
+  //   - Below the gate: "% to Level 03" (ticking toward next level)
+  //   - At the gate, bar <100: "% to Evolve" (one last push)
+  //   - At the gate, bar 100%: "Ready — click Evolve" (go go go)
+  //   - Final stage: "Legendary — max form"
   const nextLevelEl = document.getElementById('nextLevelNum');
+  const evoPctLabel = document.getElementById('evoPctLabel');
   if (nextLevelEl) {
-    // At the gate, the next "level" is the first level of the next stage.
     nextLevelEl.textContent = String(Math.min(50, state.level + 1)).padStart(2, '0');
+  }
+  if (evoPctLabel) {
+    if (state.stageIdx >= STAGES.length - 1) {
+      evoPctLabel.textContent = '· Legendary · max form';
+    } else if (canEvolve()) {
+      evoPctLabel.textContent = '· ready to evolve';
+    } else if (atGate()) {
+      evoPctLabel.textContent = 'to Evolve';
+    } else {
+      evoPctLabel.innerHTML = 'to Level <span id="nextLevelNum">' +
+        String(Math.min(50, state.level + 1)).padStart(2, '0') + '</span>';
+    }
   }
 
   document.getElementById('evoPct').textContent = Math.round(state.evoPct);
