@@ -2067,41 +2067,50 @@
 <div class="view view-howto">
   <div class="howto-page">
     <div class="howto-page-hero">
-      <div class="howto-page-eyebrow">✦ THE GAME ✦</div>
+      <div class="howto-page-eyebrow">✦ QA · Elysium Testnet ✦</div>
       <h1 class="howto-page-title">How to raise your Champion</h1>
       <p class="howto-page-sub">
-        Adopt a baby creature. Feed it potions you earn across the Vulcan Forged ecosystem. Evolve it through 20 life stages. Keep its NFT in sync with every step. One-of-a-kind, forever yours.
+        Adopt a baby creature. Feed it potions from your wallet. Evolve it through
+        <b>20 life stages</b>. This is the <b>QA build</b> — only the <b>Orc Ironfang</b>
+        bloodline is adoptable, you get 80 free starter potions on sign-in,
+        and transactions are signed but <b>no PYR is deducted</b>.
       </p>
     </div>
 
-    <!-- STEP 1 — ADOPT -->
+    <!-- STEP 1 — CONNECT -->
     <section class="howto-page-step howto-step-1">
       <div class="howto-page-num">1</div>
       <div class="howto-page-body">
         <div class="howto-page-step-label">Step One</div>
-        <h2>Adopt a Champion</h2>
-        <div class="howto-img"><img src="howto/01_adopt.png" alt="Egg hatching" onerror="this.style.display='none'"/></div>
-        <p>Pick your species — <b>Orc</b>, <b>Elf</b>, <b>Goblin</b>, <b>Hellknight</b>, <b>Drakkin</b>, <b>Dwarf</b>, <b>Beastkin</b>, or <b>Wraith</b> — then choose a bloodline from <b>six variants</b>.</p>
-        <p>Adoption costs <b>10 PYR</b>. In return you receive a one-of-a-kind baby champion, minted as an NFT directly to your wallet. Nobody else in the realm will ever have the same one.</p>
+        <h2>Connect your Wallet</h2>
+        <p>When you first visit the app, you'll see a <b>Connect Wallet</b> screen.
+        Tap the button — your wallet (MetaMask or similar) will prompt you to:</p>
+        <ul>
+          <li><b>Share your account</b> so the app knows who you are</li>
+          <li><b>Switch to the Elysium chain</b> (chainId 1339) — added automatically if you don't have it</li>
+          <li><b>Sign a short "sign-in" message</b> to prove wallet ownership. This is free — no gas.</li>
+        </ul>
+        <p>On your first sign-in, you'll be <b>granted 80 starter potions</b> for free: 10 of each trait (Strength, Vitality, Agility, Ferocity, Intelligence, Luck) in Minor tier + 10 Evolution Potions + 10 Blessings. More than enough to test the full loop.</p>
+        <p class="howto-page-tip">💡 <b>Your progress persists.</b> Anytime you come back and sign in with the same wallet, your champions and potions are exactly where you left them.</p>
       </div>
     </section>
 
-    <!-- STEP 2 — QUEST FOR POTIONS -->
+    <!-- STEP 2 — ADOPT -->
     <section class="howto-page-step howto-step-2">
       <div class="howto-page-num">2</div>
       <div class="howto-page-body">
         <div class="howto-page-step-label">Step Two</div>
-        <h2>Quest for Chests &amp; Potions</h2>
-        <div class="howto-img"><img src="howto/02_quest.png" alt="Quests and chests" onerror="this.style.display='none'"/></div>
-        <p>Potions are the food your champion needs to grow. You earn them by <b>playing across the Vulcan Forged ecosystem</b>:</p>
-        <ul>
-          <li><b>Quests</b> in VulcanVerse — dungeon runs, daily tasks, seasonal missions</li>
-          <li><b>Vulcan Runner</b> — distance milestones and campaign stages</li>
-          <li><b>Forge Arena</b> — ranked matches and tournaments</li>
-          <li>Events, airdrops, and limited-time chest drops</li>
-        </ul>
-        <p>Each completed quest earns you a <b>treasure chest</b>. Chests open inside their own parts of the ecosystem — when they crack, <b>potion NFTs land directly in your wallet</b>. You don't need to come back here to open them.</p>
-        <p class="howto-page-tip">💡 <b>Don't have time to quest?</b> Potions are tradeable NFTs — buy or sell them on the <b>marketplace</b>.</p>
+        <h2>Adopt your Champion</h2>
+        <div class="howto-img"><img src="howto/01_adopt.png" alt="Egg hatching" onerror="this.style.display='none'"/></div>
+        <p>Hit <b>Adopt New</b> in the top nav. You'll see all eight fantasy species,
+        but only <b>Orc</b> is unlockable during QA — and within Orc, only the
+        <b>Ironfang</b> bloodline is ready to hatch. Other species and bloodlines
+        are greyed out as "Coming soon".</p>
+        <p>Name your champion and hit the adopt button. Your wallet will pop up
+        asking you to sign a transaction — <b>this is the dummy 10 PYR receipt</b>.
+        Value is zero during QA, so no actual PYR leaves your wallet. Only a small
+        gas fee on Elysium.</p>
+        <p class="howto-page-tip">⚠️ <b>QA note:</b> Sign the TX in your wallet to complete adoption. If you cancel, the champion isn't created.</p>
       </div>
     </section>
 
@@ -2110,10 +2119,15 @@
       <div class="howto-page-num">3</div>
       <div class="howto-page-body">
         <div class="howto-page-step-label">Step Three</div>
-        <h2>Feed Your Champion</h2>
+        <h2>Feed your Champion</h2>
         <div class="howto-img"><img src="howto/03_feed.png" alt="Feeding potions" onerror="this.style.display='none'"/></div>
-        <p>Open your champion's page — we check your wallet automatically and show every potion you own. Tap a bottle to feed it. The potion NFT is <b>burned</b> (destroyed forever), and your champion's matching stat rises while the Evolution Bar fills.</p>
-        <p>Potions come in <b>three tiers</b> — Minor (common, small boost), Major (uncommon, bigger), Epic (rare, massive). Every potion lifts one of <b>six traits</b>:</p>
+        <p>Open your champion from the Stable — you'll see the full detail view:
+        portrait, level, evolution bar, stats, and your potion inventory in the
+        left panel.</p>
+        <p>Tap any potion bottle. Your champion's matching stat rises (with
+        diminishing returns as you invest more into one trait per stage), and the
+        <b>Evolution Bar</b> fills by a few percent. Every potion lifts one of
+        <b>six traits</b>:</p>
         <ul class="howto-trait-list">
           <li><span class="t-emoji">💪</span><span class="t-name">Strength</span><span class="t-what">Raw damage output</span></li>
           <li><span class="t-emoji">❤️</span><span class="t-name">Vitality</span><span class="t-what">Health &amp; survivability</span></li>
@@ -2122,21 +2136,53 @@
           <li><span class="t-emoji">🧠</span><span class="t-name">Intelligence</span><span class="t-what">Magic &amp; cunning</span></li>
           <li><span class="t-emoji">🍀</span><span class="t-name">Luck</span><span class="t-what">Loot &amp; crit chance</span></li>
         </ul>
-        <p><b>Species lock:</b> an Orc potion only feeds Orc champions. No Elf ever drinks Orc brew. Keep that in mind when farming chests for a specific pet.</p>
-        <p><b>Blessings &amp; Evolution Potions</b> are special drops: a <b>Blessing</b> gives you 40 stat points to distribute freely, and an <b>Evolution Potion</b> is what you'll need for the next step.</p>
+        <p><b>Two special potion types</b> sit in their own card:</p>
+        <ul>
+          <li><b>⚡ Evolution Potion</b> — consumed at a stage gate with a full bar to advance to the next life stage</li>
+          <li><b>✨ Blessing</b> — grants 40 stat points you distribute freely across any traits</li>
+        </ul>
+        <p class="howto-page-tip">🧪 <b>During QA</b>: every potion is a DB-backed record. After launch, potions become on-chain NFTs that you'll earn from Vulcan Forged quests and open from chests in the wider ecosystem.</p>
       </div>
     </section>
 
-    <!-- STEP 4 — EVOLVE & SYNC -->
+    <!-- STEP 4 — EVOLVE -->
     <section class="howto-page-step howto-step-4">
       <div class="howto-page-num">4</div>
       <div class="howto-page-body">
         <div class="howto-page-step-label">Step Four</div>
-        <h2>Evolve &amp; Sync to Chain</h2>
+        <h2>Evolve through 20 Life Stages</h2>
         <div class="howto-img"><img src="howto/04_evolve.png" alt="Evolution" onerror="this.style.display='none'"/></div>
-        <p>Your champion passes through <b>20 stages</b> as it grows — not just age, but armor, scars, equipment, and raw power. Each stage looks visibly different. At certain level gates, feeding its Evolution Bar to 100% and spending one <b>Evolution Potion</b> triggers a transformation.</p>
-        <p><b>Here's the important bit</b>: when your champion evolves, your wallet will prompt you to <b>sync the new look to chain</b>. Sign the transaction, and the NFT in your wallet updates to match the latest stage. Skip it and your NFT stays at the previous form — no cheating, no duplicates. You'll also be blocked from feeding more potions until you sync up.</p>
-        <p class="howto-page-tip">✨ Your NFT always reflects the <b>current</b> version of your champion. Every evolution is committed on-chain. No one else will ever have your exact creature at your exact stage.</p>
+        <p>Your champion passes through <b>20 distinct life stages</b> on its journey from newborn Whelp to Legendary — not just age, but armor, scars, equipment, backdrop, and raw power. Each stage looks visibly different.</p>
+        <div class="howto-stages">
+          <span>Whelp</span><span>→</span>
+          <span>Hatchling</span><span>→</span>
+          <span>Pup</span><span>→</span>
+          <span>Cub</span><span>→</span>
+          <span>Youngling</span><span>→</span>
+          <span>Apprentice</span><span>→</span>
+          <span>Initiate</span><span>→</span>
+          <span>Novice</span><span>→</span>
+          <span>Warrior</span><span>→</span>
+          <span>Veteran</span><span>→</span>
+          <span>Champion</span><span>→</span>
+          <span>Elite</span><span>→</span>
+          <span>Hero</span><span>→</span>
+          <span>Commander</span><span>→</span>
+          <span>Warlord</span><span>→</span>
+          <span>Exemplar</span><span>→</span>
+          <span>Paragon</span><span>→</span>
+          <span>Ascendant</span><span>→</span>
+          <span>Mythic</span><span>→</span>
+          <span class="legendary">Legendary</span>
+        </div>
+        <p>Each stage unlocks at a specific level gate: L3, L5, L7, L10, L13, L15, L18, L22, L26, L30, L34, L38, L41, L44, L46, L48, L49, L50. To evolve:</p>
+        <ol>
+          <li>Fill the Evolution Bar to <b>100%</b> by feeding potions</li>
+          <li>Spend <b>1 Evolution Potion</b></li>
+          <li>Hit the Evolve button — your champion transforms</li>
+          <li>Stats carry up to the new stage's floor; the next cap opens</li>
+        </ol>
+        <p class="howto-page-tip">🐛 <b>QA testers — please flag any stage where</b>: evolution seems stuck, stats drop on evolve, or the new stage art doesn't load.</p>
       </div>
     </section>
 
@@ -2147,19 +2193,17 @@
         <div class="howto-page-step-label">Step Five</div>
         <h2>Ascend to Legendary</h2>
         <div class="howto-img"><img src="howto/05_ascend.png" alt="Legendary ascension" onerror="this.style.display='none'"/></div>
-        <p>Reach the final stage at Level 50, and your champion unlocks the <b>Legendary</b> tier — a fully <b>animated</b> one-of-one NFT, moving art bound forever to your wallet.</p>
-        <p>This is the prize. An animated, on-chain, truly unique champion raised entirely by you. Share it, showcase it, trade it, pass it down.</p>
-        <div class="howto-stages">
-          <span>Whelp</span><span>→</span>
-          <span>… 20 stages …</span><span>→</span>
-          <span class="legendary">Legendary</span>
-        </div>
+        <p>Reach the final stage 20 at Level 50 and your champion unlocks the <b>Legendary</b> tier — a fully realised masterpiece, bound forever to your wallet. In prod this becomes an animated on-chain NFT.</p>
+        <p>This is the prize. A truly unique champion, raised entirely by you. Share it, showcase it, trade it, pass it down.</p>
       </div>
     </section>
 
     <div class="howto-page-cta">
-      <h3>Ready to begin?</h3>
-      <button class="cta-big" onclick="navTo('adopt')">🥚 Adopt a Champion · 10 PYR</button>
+      <h3>Ready to test?</h3>
+      <button class="cta-big" onclick="navTo('adopt')">🥚 Adopt your Ironfang · QA build</button>
+      <div style="font-size:12px; color:var(--muted); margin-top:14px; letter-spacing:1px;">
+        QA testers: log bugs, feedback, or weird behaviour in the Discord QA channel.
+      </div>
     </div>
   </div>
 </div>
@@ -2309,20 +2353,21 @@
     <div id="potionsSection">
       <div class="feed-potion-grid" id="feedPotionGrid"></div>
       <div class="special-potions-inline">
-        <div class="special-potion" id="specEvoRow">
+        <div class="special-potion" id="specEvoRow"
+             title="Evolution Potion — Consumed at a stage gate (L3, 5, 7, 10, 13…) with a full Evolution Bar to advance your champion to the next life stage. One potion per evolution.">
           <div class="sp-ico sp-ico-evo">⚡</div>
           <div class="sp-body">
             <div class="sp-name">Evolution Potion</div>
-            <div class="sp-hint">Unlocks the next life stage</div>
+            <div class="sp-hint">Unlocks the next life stage · advances your champion at the level gate</div>
           </div>
           <div class="sp-count" id="invEvo">0</div>
         </div>
         <div class="special-potion" id="allocPotionRow" style="cursor:pointer;"
-             title="Click to distribute 40 points">
+             title="Blessing — Grants 40 stat points you distribute freely across any traits. Ideal for rebalancing after heavy specialisation. Consumed on use. Also fills 10-25% of the Evolution Bar.">
           <div class="sp-ico sp-ico-alloc">✨</div>
           <div class="sp-body">
             <div class="sp-name">Blessing (40 pts)</div>
-            <div class="sp-hint">Split 40 points across any stats</div>
+            <div class="sp-hint">Click to split 40 points across any stats you choose</div>
           </div>
           <div class="sp-count" id="invAlloc">0</div>
         </div>
@@ -3041,11 +3086,18 @@ function render() {
       const count = state.inv[t] || 0;
       const disabled = count <= 0 || atCap;
       const emoji = TRAIT_EMOJI[t] || '🧪';
+      const tooltipTitle = (
+        `${TRAIT_NAMES[t]} Potion (Minor tier)\n` +
+        `Raises ${TRAIT_NAMES[t]} by +5 early, tapering to +1 when heavily invested.\n` +
+        `Adds 2-6% to the Evolution Bar.\n\n` +
+        `You have ${count} × ${TRAIT_NAMES[t]} potion${count===1?'':'s'}.` +
+        (atCap ? `\n\n⚠️ Max ${TRAIT_NAMES[t]} reached at this stage — evolve before feeding more.` : '')
+      );
       grid.insertAdjacentHTML('beforeend',
         `<button class="feed-bottle ${count===0?'empty':''}" data-t="${t}" ${disabled?'disabled':''}
-          title="${TRAIT_NAMES[t]} — ${count} potion${count===1?'':'s'}${atCap?' · maxed':''}">
+          title="${tooltipTitle.replace(/"/g,'&quot;').replace(/\n/g,'&#10;')}">
           <div class="fb-emoji">${emoji}</div>
-          <div class="fb-count">${count}</div>
+          <div class="fb-count">×${count}</div>
           <div class="fb-name">${TRAIT_NAMES[t]}</div>
         </button>`);
     });
@@ -3054,8 +3106,8 @@ function render() {
   }
 
   // ── SPECIAL POTIONS counts
-  document.getElementById('invEvo').textContent = state.inv.evo;
-  document.getElementById('invAlloc').textContent = state.inv.alloc;
+  document.getElementById('invEvo').textContent = '×' + (state.inv.evo || 0);
+  document.getElementById('invAlloc').textContent = '×' + (state.inv.alloc || 0);
   const evoRow = document.getElementById('specEvoRow');
   if (evoRow) evoRow.classList.toggle('empty', !state.inv.evo);
   const allocRow = document.getElementById('allocPotionRow');
@@ -3836,6 +3888,27 @@ function renderBuy() {
       e.target.value.trim() || defaultName;
   });
 }
+// Send a dummy 0-value TX on Elysium so the user signs a real transaction
+// but no PYR is deducted. Returns the tx hash on success.
+async function signDummyTx(label) {
+  if (!window.ethereum) throw new Error('Wallet unavailable');
+  const wallet = getWallet();
+  // Encode a short hex string as tx data so the tx is identifiable on-chain.
+  const dataHex = '0x' + Array.from(new TextEncoder().encode(`VulcanX:${label}`))
+    .map(b => b.toString(16).padStart(2,'0')).join('');
+  const txHash = await window.ethereum.request({
+    method: 'eth_sendTransaction',
+    params: [{
+      from: wallet,
+      to: '0x000000000000000000000000000000000000dEaD',  // burn address
+      value: '0x0',
+      data: dataHex,
+    }],
+  });
+  console.log('[dummy tx]', label, '→', txHash);
+  return txHash;
+}
+
 async function confirmAdopt() {
   const name = (document.getElementById('buyNameInput').value || '').trim();
   if (!name) { alert('Please name your champion'); return; }
@@ -3843,17 +3916,14 @@ async function confirmAdopt() {
     alert('You already own 10 champions (the maximum). Retire or evolve existing ones before adopting more.');
     return;
   }
-  // 10 PYR simulated payment — real PYR debit will be wired when contracts land
-  const confirmed = confirm(
-    `Adopt ${name} for 10 PYR?\n\n` +
-    `This will mint a unique NFT to your wallet. ` +
-    `In this preview the payment is simulated — on mainnet this will debit 10 PYR from your wallet.`
-  );
-  if (!confirmed) return;
 
   const btn = document.getElementById('confirmAdoptBtn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Minting…'; }
+  if (btn) { btn.disabled = true; btn.textContent = '🦊 Sign in wallet…'; }
   try {
+    // QA payment: user signs a real TX on Elysium for UX realism.
+    // Value is 0 — no PYR deducted during QA. Prod will swap to a 10 PYR transfer.
+    await signDummyTx(`adopt:${name}`);
+    if (btn) btn.textContent = '🥚 Minting champion…';
     const c = await addChampion({
       species_id: adoptFlow.species_id,
       bloodline_id: adoptFlow.bloodline_id,
@@ -3862,7 +3932,8 @@ async function confirmAdopt() {
     adoptFlow = { species_id: null, bloodline_id: null };
     openChampion(c.id);
   } catch (e) {
-    alert('Adopt failed: ' + e.message);
+    const msg = (e && e.code === 4001) ? 'You rejected the wallet prompt.' : (e.message || String(e));
+    alert('Adopt failed: ' + msg);
     if (btn) { btn.disabled = false; btn.textContent = '🥚 Adopt this Champion — 10 PYR'; }
   }
 }
@@ -3940,6 +4011,8 @@ async function openRenameModal() {
     return;
   }
   try {
+    // QA: user signs a dummy 0-value TX on Elysium for the 5 PYR ceremony.
+    await signDummyTx(`rename:${trimmed}`);
     const updated = await apiRenameChampion({ champion_id: state.championId, new_name: trimmed });
     const cached = myChampions.find(m => m.id === updated.id);
     if (cached) Object.assign(cached, updated);
@@ -3949,7 +4022,8 @@ async function openRenameModal() {
     document.getElementById('topChampTitle').textContent =
       `${SPECIES[updated.species_id].label} · ${SPECIES[updated.species_id].bloodlines[updated.bloodline_id].label}`;
   } catch (e) {
-    alert('Rename failed: ' + e.message);
+    const msg = (e && e.code === 4001) ? 'You rejected the wallet prompt.' : (e.message || String(e));
+    alert('Rename failed: ' + msg);
   }
 }
 
