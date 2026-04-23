@@ -2295,6 +2295,67 @@
   }
 
   /* ================================================================
+     GENERIC vxDialog — drop-in replacement for alert() / prompt()
+     ================================================================ */
+  .vx-dialog-card {
+    max-width: 440px;
+    text-align: center;
+    padding: 34px 32px 26px;
+  }
+  .vx-dialog-icon {
+    font-size: 46px; line-height: 1;
+    margin-bottom: 12px;
+    filter: drop-shadow(0 0 16px rgba(255,205,107,0.5));
+  }
+  .vx-dialog-title {
+    font-family: 'Cinzel', serif;
+    font-size: 22px; font-weight: 700;
+    color: var(--accent);
+    margin: 0 0 12px;
+    line-height: 1.25;
+  }
+  .vx-dialog-title:empty { display: none; }
+  .vx-dialog-body {
+    font-size: 15px; line-height: 1.55;
+    color: var(--text);
+    margin: 0 0 20px;
+    white-space: pre-line;
+  }
+  .vx-dialog-body b { color: var(--accent); }
+  .vx-dialog-input {
+    width: 100%;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--accent-dim);
+    border-radius: 8px;
+    padding: 11px 14px;
+    color: var(--text);
+    font-size: 15px;
+    font-family: inherit;
+    margin: 0 0 18px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .vx-dialog-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 14px rgba(255,205,107,0.3);
+  }
+  .vx-dialog-actions {
+    display: flex; gap: 10px; justify-content: center;
+    flex-wrap: wrap;
+  }
+  .vx-dialog-actions .welcome-cta { padding: 11px 28px; font-size: 13px; min-width: 120px; }
+  .vx-dialog-actions .welcome-secondary { padding: 11px 20px; font-size: 13px; }
+
+  /* Variant: error (red flare for failures) */
+  .vx-dialog-card.variant-error { border-color: #ff6b6b; }
+  .vx-dialog-card.variant-error .vx-dialog-icon { filter: drop-shadow(0 0 16px rgba(255,107,107,0.6)); }
+  .vx-dialog-card.variant-error .vx-dialog-title { color: #ff9a9a; }
+  /* Variant: success (green glow) */
+  .vx-dialog-card.variant-success { border-color: #3aff8a; }
+  .vx-dialog-card.variant-success .vx-dialog-icon { filter: drop-shadow(0 0 16px rgba(58,255,138,0.6)); }
+  .vx-dialog-card.variant-success .vx-dialog-title { color: #9effc7; }
+
+  /* ================================================================
      APOTHECARY SHOP
      ================================================================ */
   .shop-card { max-width: 760px; }
@@ -3089,6 +3150,24 @@
 </div>
 
 <!-- ======== POTION ENCYCLOPEDIA MODAL ======== -->
+<!-- ======== GENERIC STYLED DIALOG ========
+     Replaces window.alert / window.prompt calls for tester-facing UX.
+     Driven by vxAlert() / vxPrompt() below — never touch directly. -->
+<div id="vxDialog" class="vx-modal" style="display:none;">
+  <div class="vx-modal-backdrop" onclick="_vxDialogResolve(null)"></div>
+  <div class="vx-modal-card vx-dialog-card">
+    <button class="vx-modal-close" onclick="_vxDialogResolve(null)">×</button>
+    <div class="vx-dialog-icon" id="vxDialogIcon">⚡</div>
+    <div class="vx-dialog-title" id="vxDialogTitle"></div>
+    <div class="vx-dialog-body" id="vxDialogBody"></div>
+    <input type="text" class="vx-dialog-input" id="vxDialogInput" style="display:none;" maxlength="60" />
+    <div class="vx-dialog-actions">
+      <button class="welcome-secondary" id="vxDialogCancel" style="display:none;" onclick="_vxDialogResolve(null)">Cancel</button>
+      <button class="welcome-cta" id="vxDialogOk" onclick="_vxDialogConfirm()">OK</button>
+    </div>
+  </div>
+</div>
+
 <div id="potionGuideModal" class="vx-modal" style="display:none;">
   <div class="vx-modal-backdrop" onclick="closePotionGuide()"></div>
   <div class="vx-modal-card guide-card">
@@ -3725,7 +3804,7 @@
       <div class="empty-text">
         You don't have any potions yet. Earn chests by playing the rest of the <b>Vulcan Forged</b> ecosystem.
       </div>
-      <button class="empty-cta" onclick="alert('⚔️ Quests — coming soon.\n\nComplete dungeon runs, daily tasks, and PvP matches across VulcanVerse, Runner, and Forge Arena to earn treasure chests. Each chest drops potions for your champion.')">
+      <button class="empty-cta" onclick="vxAlert('Complete dungeon runs, daily tasks, and PvP matches across VulcanVerse, Runner, and Forge Arena to earn treasure chests. Each chest drops potions for your champion.', {title: 'Quests · coming soon', icon: '⚔️'})">
         ⚔️ Go to Quests
       </button>
     </div>
@@ -4060,7 +4139,7 @@ async function usePotion(trait, sourceEl) {
     resp = await apiFeedPotion({ champion_id: state.championId, potion_id: potion.id });
   } catch (e) {
     _feedInFlight = false;
-    alert('Feed failed: ' + e.message);
+    vxAlert(e.message || 'Unknown error', {title: 'Feed failed', icon: '🧪', variant: 'error'});
     return;
   }
   // Pull the authoritative state from the server response.
@@ -4195,7 +4274,7 @@ async function tryEvolveFromPotion() {
     await evolve();
     return;
   }
-  alert('⚡ ' + evolveRequirementText());
+  vxAlert(evolveRequirementText(), {title: 'Not ready to evolve', icon: '⚡'});
 }
 
 async function evolve() {
@@ -4210,7 +4289,7 @@ async function evolve() {
       evolution_potion_id: evoPotion.id,
     });
   } catch (e) {
-    alert('Evolve failed: ' + e.message);
+    vxAlert(e.message || 'Unknown error', {title: 'Evolve failed', icon: '⚡', variant: 'error'});
     return;
   }
 
@@ -4315,7 +4394,7 @@ async function applyAllocation() {
   const src = allocState.sourceEl;
   const alloc = findPotion({ kind: 'allocation' });
   if (!alloc) {
-    alert('No Blessing available.');
+    vxAlert('You don\'t have any Blessings in your inventory.', {title: 'No Blessing available', icon: '✨'});
     closeAllocModal();
     return;
   }
@@ -4340,7 +4419,7 @@ async function applyAllocation() {
   } catch (e) {
     _allocInFlight = false;
     if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '✨ Apply Blessing'; }
-    alert('Blessing failed: ' + e.message);
+    vxAlert(e.message || 'Unknown error', {title: 'Blessing failed', icon: '✨', variant: 'error'});
     return;
   }
 
@@ -4793,7 +4872,7 @@ function bindIf(id, event, handler) {
 bindIf('feedHero', 'click', () => {
   const owned = TRAITS.filter(t => state.inv[t] > 0);
   if (owned.length === 0) {
-    alert('🧪 No trait potions in your inventory. Grab some in the 🛒 Shop or wait for the Quests hub to ship.');
+    vxAlert('Grab some in the 🛒 Shop, or wait for the Quests hub to ship.', {title: 'No trait potions left', icon: '🧪'});
     return;
   }
   const nonCapped = owned.filter(t => {
@@ -4813,9 +4892,9 @@ bindIf('feedHero', 'click', () => {
 
 bindIf('animateBtn', 'click', () => {
   if (state.stageIdx >= 8) {
-    alert('✨ Animate flow (demo): would call Kling / Luma image-to-video API on your L50 champion.\n\nCost: 5 PYR.\nResult: unique 5-second looping MP4, cached forever per champion NFT, auto-plays on your profile and social cards.');
+    vxAlert('Would call Kling / Luma image-to-video API on your L50 champion.\n\nCost: 5 PYR.\nResult: unique 5-second looping MP4, cached forever per champion NFT, auto-plays on your profile and social cards.', {title: 'Animate (demo)', icon: '✨'});
   } else {
-    alert('✨ Animate unlocks at L50 Legendary tier. In this demo you can click any stage in the strip below to preview it — try jumping to the Legendary stage.');
+    vxAlert('In this demo you can click any stage in the strip below to preview it — try jumping to the Legendary stage.', {title: 'Animate unlocks at L50', icon: '✨'});
   }
 });
 bindIf('leaderboardBtn', 'click', showLeaderboard);
@@ -5570,9 +5649,9 @@ async function signDummyTx(label) {
 
 async function confirmAdopt() {
   const name = (document.getElementById('buyNameInput').value || '').trim();
-  if (!name) { alert('Please name your champion'); return; }
+  if (!name) { vxAlert('Enter a name for your champion before you adopt.', {title: 'Name required', icon: '✏️'}); return; }
   if (myChampions.length >= 10) {
-    alert('You already own 10 champions (the maximum). Retire or evolve existing ones before adopting more.');
+    vxAlert('You already own 10 champions (the maximum). Retire or evolve existing ones before adopting more.', {title: 'Stable full', icon: '🏛'});
     return;
   }
 
@@ -5595,7 +5674,7 @@ async function confirmAdopt() {
     await playEggHatchCinematic(name, () => { openChampion(c.id); });
   } catch (e) {
     const msg = (e && e.code === 4001) ? 'You rejected the wallet prompt.' : (e.message || String(e));
-    alert('Adopt failed: ' + msg);
+    vxAlert(msg, {title: 'Adopt failed', icon: '🥚', variant: 'error'});
     if (btn) { btn.disabled = false; btn.textContent = '🥚 Adopt this Champion — 10 PYR'; }
   }
 }
@@ -5643,7 +5722,7 @@ function playEggHatchCinematic(name, onRevealCallback) {
 
 async function openChampion(championId) {
   const champ = myChampions.find(c => c.id === championId);
-  if (!champ) { alert('Champion not found.'); return; }
+  if (!champ) { vxAlert('We couldn\'t find that champion — try refreshing the Stable.', {title: 'Champion not found', icon: '🏛', variant: 'error'}); return; }
   // hydrate the single-champion state from this champion's record
   currentSpecies = champ.species_id;
   currentBloodline = champ.bloodline_id;
@@ -5699,18 +5778,16 @@ async function reloadPotions() {
 async function openRenameModal() {
   if (!state.championId) return;
   const current = myChampions.find(c => c.id === state.championId)?.name || '';
-  const newName = prompt(
-    `Rename your champion?\n\n` +
-    `Each rename costs 5 PYR. In this preview the payment is simulated — ` +
-    `on mainnet this will debit 5 PYR from your wallet.\n\n` +
-    `Current name: ${current}\nNew name:`,
+  const newName = await vxPrompt(
+    `Each rename costs 5 PYR. In this preview the payment is simulated — on mainnet this will debit 5 PYR from your wallet.\n\nCurrent name: ${current}`,
     current,
+    { title: 'Rename your champion', icon: '✏️', okLabel: 'Rename · 5 PYR', placeholder: 'Enter a new name', maxLength: 48 }
   );
   if (newName === null) return;
   const trimmed = newName.trim();
   if (!trimmed || trimmed === current) return;
   if (trimmed.length > 48) {
-    alert('Name must be 48 characters or fewer.');
+    vxAlert('Name must be 48 characters or fewer.', {title: 'Name too long', icon: '✏️'});
     return;
   }
   try {
@@ -5726,7 +5803,7 @@ async function openRenameModal() {
       `${SPECIES[updated.species_id].label} · ${SPECIES[updated.species_id].bloodlines[updated.bloodline_id].label}`;
   } catch (e) {
     const msg = (e && e.code === 4001) ? 'You rejected the wallet prompt.' : (e.message || String(e));
-    alert('Rename failed: ' + msg);
+    vxAlert(msg, {title: 'Rename failed', icon: '✏️', variant: 'error'});
   }
 }
 
@@ -5745,7 +5822,7 @@ async function shareChampion() {
       await navigator.share({ title, text, url });
     } else {
       await navigator.clipboard.writeText(url);
-      alert(`🔗 Link copied to clipboard!\n\n${url}`);
+      vxAlert(url, {title: 'Link copied to clipboard', icon: '🔗', variant: 'success'});
     }
   } catch (e) {
     // user cancelled share sheet — no-op
@@ -5848,7 +5925,7 @@ document.getElementById('adminToggle').addEventListener('change', (e) => {
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     if (btn.id === 'arenaNavBtn') {
-      alert('⚔️ Arena — coming soon.\n\nAsync stat battles where your champions fight each other. Deterministic winners based on stats, species affinity, and rank.');
+      vxAlert('Async stat battles where your champions fight each other. Deterministic winners based on stats, species affinity, and rank.', {title: 'Arena · coming soon', icon: '⚔️'});
       return;
     }
     navTo(btn.dataset.view);
@@ -6116,6 +6193,116 @@ function dbgCopyWallet() {
 }
 
 // ============================================================
+// STYLED DIALOG — vxAlert / vxPrompt (replaces window.alert/prompt)
+// Keeps the UI on-brand instead of showing Chrome's "jamie323.github.io
+// says" system prompt. Returns a Promise so call-sites can `await`.
+// ============================================================
+let _vxDialogPending = null; // { resolve, isPrompt }
+
+function vxAlert(message, opts = {}) {
+  return _vxShowDialog({
+    message,
+    title: opts.title || '',
+    icon: opts.icon ?? '⚡',
+    okLabel: opts.okLabel || 'Got it',
+    variant: opts.variant || 'info',  // 'info' | 'error' | 'success'
+    isPrompt: false,
+  });
+}
+
+function vxPrompt(message, defaultValue = '', opts = {}) {
+  return _vxShowDialog({
+    message,
+    title: opts.title || '',
+    icon: opts.icon ?? '✏️',
+    okLabel: opts.okLabel || 'Confirm',
+    cancelLabel: opts.cancelLabel || 'Cancel',
+    variant: opts.variant || 'info',
+    isPrompt: true,
+    placeholder: opts.placeholder || '',
+    defaultValue,
+    maxLength: opts.maxLength || 60,
+  });
+}
+
+function _vxShowDialog(cfg) {
+  return new Promise((resolve) => {
+    // If a dialog is already open, resolve the pending one with null
+    // before replacing it — prevents stuck promises.
+    if (_vxDialogPending) {
+      try { _vxDialogPending.resolve(null); } catch (_) {}
+    }
+    _vxDialogPending = { resolve, isPrompt: cfg.isPrompt };
+
+    const el   = document.getElementById('vxDialog');
+    const card = el.querySelector('.vx-dialog-card');
+    const icon = document.getElementById('vxDialogIcon');
+    const title= document.getElementById('vxDialogTitle');
+    const body = document.getElementById('vxDialogBody');
+    const input= document.getElementById('vxDialogInput');
+    const cancel= document.getElementById('vxDialogCancel');
+    const ok   = document.getElementById('vxDialogOk');
+
+    // Apply variant class
+    card.classList.remove('variant-info', 'variant-error', 'variant-success');
+    card.classList.add('variant-' + (cfg.variant || 'info'));
+
+    icon.textContent = cfg.icon || '';
+    icon.style.display = cfg.icon ? '' : 'none';
+    title.textContent = cfg.title || '';
+    body.textContent = cfg.message || '';
+
+    ok.textContent = cfg.okLabel || 'OK';
+
+    if (cfg.isPrompt) {
+      input.style.display = '';
+      input.value = cfg.defaultValue || '';
+      input.placeholder = cfg.placeholder || '';
+      input.maxLength = cfg.maxLength || 60;
+      cancel.style.display = '';
+      cancel.textContent = cfg.cancelLabel || 'Cancel';
+      setTimeout(() => { input.focus(); input.select(); }, 60);
+    } else {
+      input.style.display = 'none';
+      cancel.style.display = 'none';
+    }
+
+    el.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  });
+}
+
+function _vxDialogResolve(value) {
+  const p = _vxDialogPending;
+  _vxDialogPending = null;
+  document.getElementById('vxDialog').style.display = 'none';
+  document.body.style.overflow = '';
+  if (p) p.resolve(value);
+}
+
+function _vxDialogConfirm() {
+  const p = _vxDialogPending;
+  if (!p) return _vxDialogResolve(null);
+  if (p.isPrompt) {
+    const val = (document.getElementById('vxDialogInput').value || '').trim();
+    _vxDialogResolve(val);
+  } else {
+    _vxDialogResolve(true);
+  }
+}
+
+// ESC / Enter bindings (once-only; guards against re-binding)
+if (!window._vxDialogKeysBound) {
+  window._vxDialogKeysBound = true;
+  document.addEventListener('keydown', (e) => {
+    const el = document.getElementById('vxDialog');
+    if (!el || el.style.display === 'none') return;
+    if (e.key === 'Escape') { e.preventDefault(); _vxDialogResolve(null); }
+    if (e.key === 'Enter')  { e.preventDefault(); _vxDialogConfirm(); }
+  });
+}
+
+// ============================================================
 // STORY NARRATION — ElevenLabs via tts_narrate edge function
 // ============================================================
 let _narrationAudio = null;
@@ -6158,7 +6345,7 @@ async function toggleStoryNarration() {
   } catch (e) {
     console.error('[narration]', e);
     setNarrationState('idle');
-    alert('Narration unavailable: ' + (e.message || e));
+    vxAlert((e.message || String(e)), {title: 'Narration unavailable', icon: '🔊', variant: 'error'});
   }
 }
 
@@ -6344,7 +6531,7 @@ function shopKey(it) { return `${it.kind}:${it.trait || ''}`; }
 
 function openShop() {
   if (!isAuthenticated || !isAuthenticated()) {
-    alert('Connect your wallet first.');
+    vxAlert('Please connect your wallet before using the shop.', {title: 'Wallet required', icon: '🦊'});
     return;
   }
   shopCart = {};
@@ -6461,13 +6648,13 @@ async function checkoutShop() {
     // Friendly confirmation
     setTimeout(() => {
       closeShop();
-      alert(`🧪 Delivered: ${totalQ} potion${totalQ>1?'s':''} (${totalP} PYR).\n\nThey're in your inventory now.`);
+      vxAlert(`${totalQ} potion${totalQ>1?'s':''} added to your inventory.\n\nTotal paid: ${totalP} PYR (dummy TX in QA).`, {title: 'Delivered!', icon: '🧪', variant: 'success'});
       btn.textContent = origText;
       btn.disabled = false;
     }, 700);
   } catch (e) {
     console.error('[checkoutShop]', e);
-    alert('Purchase failed: ' + (e.message || e));
+    vxAlert(e.message || String(e), {title: 'Purchase failed', icon: '🛒', variant: 'error'});
     btn.textContent = origText;
     btn.disabled = false;
   }
