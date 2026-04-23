@@ -4533,9 +4533,10 @@ function render() {
   const evoHint = document.getElementById('evoPotionHint');
   const evoRow = document.getElementById('specEvoRow');
   if (evoHint) evoHint.textContent = evolveRequirementText();
-  if (evoRow) evoRow.classList.toggle('evo-ready', canEvolve());
-  const evoRow = document.getElementById('specEvoRow');
-  if (evoRow) evoRow.classList.toggle('empty', !state.inv.evo);
+  if (evoRow) {
+    evoRow.classList.toggle('evo-ready', canEvolve());
+    evoRow.classList.toggle('empty', !state.inv.evo);
+  }
   const allocRow = document.getElementById('allocPotionRow');
   if (allocRow) allocRow.classList.toggle('empty', !state.inv.alloc);
 
