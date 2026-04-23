@@ -1849,6 +1849,33 @@
   }
   .special-potion.empty .sp-count { color: var(--muted); }
 
+  /* Ready-to-evolve: gold border + breathing glow so the keeper sees
+     the card itself is "live" (matches the big Evolve button state). */
+  .special-potion:hover {
+    background: rgba(255, 205, 107, 0.04);
+    border-radius: 8px;
+  }
+  .special-potion.evo-ready {
+    background: linear-gradient(90deg, rgba(255, 120, 40, 0.14), rgba(255, 205, 107, 0.06));
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 10px 10px;
+    animation: evoReadyPulse 1.8s ease-in-out infinite;
+  }
+  .special-potion.evo-ready .sp-hint { color: var(--accent); font-weight: 600; }
+  .special-potion.evo-ready .sp-ico-evo {
+    box-shadow: 0 0 22px rgba(255, 140, 40, 0.9);
+    animation: evoReadyIcon 1.2s ease-in-out infinite;
+  }
+  @keyframes evoReadyPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(255, 205, 107, 0.3); }
+    50%      { box-shadow: 0 0 24px rgba(255, 205, 107, 0.7); }
+  }
+  @keyframes evoReadyIcon {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.08); }
+  }
+
   /* ============================================================
      LEFT PANEL — POTIONS INVENTORY (moved from center)
      ============================================================ */
@@ -3629,12 +3656,13 @@
     <div id="potionsSection">
       <div class="feed-potion-grid" id="feedPotionGrid"></div>
       <div class="special-potions-inline">
-        <div class="special-potion" id="specEvoRow"
+        <div class="special-potion" id="specEvoRow" style="cursor:pointer;"
+             onclick="tryEvolveFromPotion()"
              title="Evolution Potion — Consumed at a stage gate (L3, 5, 7, 10, 13…) with a full Evolution Bar to advance your champion to the next life stage. One potion per evolution.">
           <div class="sp-ico sp-ico-evo">⚡</div>
           <div class="sp-body">
             <div class="sp-name">Evolution Potion</div>
-            <div class="sp-hint">Unlocks the next life stage · advances your champion at the level gate</div>
+            <div class="sp-hint" id="evoPotionHint">Unlocks the next life stage · click when ready to evolve</div>
           </div>
           <div class="sp-count" id="invEvo">0</div>
         </div>
@@ -4079,6 +4107,41 @@ function canEvolve() {
     state.stageIdx < STAGES.length - 1;
 }
 
+// Explain, in one sentence, what's missing for evolution.
+// Used for the Evolution Potion card hint AND the pop-up shown when
+// the tester clicks on the card before they're ready.
+function evolveRequirementText() {
+  if (state.stageIdx >= STAGES.length - 1) {
+    return 'Your champion is already Legendary — no further evolutions.';
+  }
+  if (state.inv.evo <= 0) {
+    return 'You need an Evolution Potion. Buy one in the 🛒 Shop (20 PYR) or earn one from chests.';
+  }
+  const gate = nextGate();
+  const nextStageName = STAGES[state.stageIdx + 1]?.name || 'the next stage';
+  if (!atGate()) {
+    const levelsAway = gate - state.level;
+    return `Reach Level ${gate} to unlock ${nextStageName} (${levelsAway} level${levelsAway===1?'':'s'} to go). Feed potions to tick the Evolution Bar up.`;
+  }
+  if (state.evoPct < 100) {
+    const pctAway = Math.max(1, 100 - Math.round(state.evoPct));
+    return `At the gate — fill the Evolution Bar to 100% (${pctAway}% to go) then click to evolve.`;
+  }
+  return `Ready! Click to evolve into ${nextStageName}.`;
+}
+
+// Click handler for the Evolution Potion card. If everything is in
+// place, just runs the full evolve flow. Otherwise tells the keeper
+// exactly what's missing. Replaces the dead-click that had Acadian
+// and PegaraX guessing.
+async function tryEvolveFromPotion() {
+  if (canEvolve()) {
+    await evolve();
+    return;
+  }
+  alert('⚡ ' + evolveRequirementText());
+}
+
 async function evolve() {
   if (!canEvolve() || !state.championId) return;
   const evoPotion = findPotion({ kind: 'evolution' });
@@ -4462,6 +4525,15 @@ function render() {
   // ── SPECIAL POTIONS counts
   document.getElementById('invEvo').textContent = '×' + (state.inv.evo || 0);
   document.getElementById('invAlloc').textContent = '×' + (state.inv.alloc || 0);
+  // Dynamic hint on the Evolution Potion card — tells the keeper exactly
+  // what's missing ("Reach L3 (2 levels to go)", "Fill the bar (62% to
+  // go)", "Ready — click to evolve!") so the click behaviour isn't a
+  // mystery. Also mark the card as "ready" when canEvolve() for a gold
+  // border/pulse that matches the big Evolve button.
+  const evoHint = document.getElementById('evoPotionHint');
+  const evoRow = document.getElementById('specEvoRow');
+  if (evoHint) evoHint.textContent = evolveRequirementText();
+  if (evoRow) evoRow.classList.toggle('evo-ready', canEvolve());
   const evoRow = document.getElementById('specEvoRow');
   if (evoRow) evoRow.classList.toggle('empty', !state.inv.evo);
   const allocRow = document.getElementById('allocPotionRow');
