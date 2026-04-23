@@ -4238,8 +4238,15 @@ async function evolve() {
 
 // ===== ALLOCATION MODAL =====
 let allocState = null;
+// Global lock. Matches _feedInFlight — prevents concurrent allocate
+// calls racing on the backend (no row-level lock in Supabase → last
+// write wins → potions consumed for nothing). Acadian burned all 10
+// Blessings this way before the fix. Ignore opens while in flight.
+let _allocInFlight = false;
+
 function openAllocModal(sourceEl) {
   if (state.inv.alloc <= 0) return;
+  if (_allocInFlight) return;
   allocState = { values: {}, remaining: 40, sourceEl };
   TRAITS.forEach(t => allocState.values[t] = 0);
   const rows = document.getElementById('allocRows');
@@ -4304,6 +4311,7 @@ function updateAllocRemaining() {
 // so Blessings did literally nothing persistent.
 async function applyAllocation() {
   if (!allocState) return;
+  if (_allocInFlight) return;
   const src = allocState.sourceEl;
   const alloc = findPotion({ kind: 'allocation' });
   if (!alloc) {
@@ -4321,6 +4329,7 @@ async function applyAllocation() {
   const oldPct = state.evoPct;
   const oldLevel = state.level;
 
+  _allocInFlight = true;
   let resp;
   try {
     resp = await apiAllocateChampion({
@@ -4329,6 +4338,7 @@ async function applyAllocation() {
       distribution,
     });
   } catch (e) {
+    _allocInFlight = false;
     if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '✨ Apply Blessing'; }
     alert('Blessing failed: ' + e.message);
     return;
@@ -4384,6 +4394,10 @@ async function applyAllocation() {
 
   closeAllocModal();
   setTimeout(() => render(), 300);
+  // Release the lock after the animation has had time to play (matches
+  // the feed flow's 350ms). Holds off rapid-fire Blessings so the next
+  // click hits fresh server state, not a stale baseline.
+  setTimeout(() => { _allocInFlight = false; }, 500);
 }
 function closeAllocModal() {
   document.getElementById('allocModal').classList.remove('open');
