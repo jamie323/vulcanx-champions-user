@@ -12,15 +12,19 @@
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <title>VulcanX Champion — MVP</title>
-<!-- Preconnect + preload the WalletConnect UMD so the bundle is already
-     parsed by the time the keeper clicks the WC button. Saves ~2-4s on
-     the "tap → QR modal" latency that Jamie flagged. Cheap if unused
-     (browsers drop unclaimed preloads). -->
+<!-- Warm the connection + fetch the WalletConnect UMD idle-priority so
+     it's in cache when a mobile/no-extension keeper clicks "WalletConnect".
+     Using prefetch (not preload) so desktop MetaMask users who never
+     activate it don't get a "preloaded but not used" browser warning. -->
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 <link rel="preconnect" href="https://relay.walletconnect.com" crossorigin />
-<link rel="preload"
+<link rel="prefetch"
       href="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.23.9/dist/index.umd.js"
       as="script" crossorigin="anonymous" />
+
+<!-- Tiny inline SVG favicon — kills the /favicon.ico 404 without a
+     binary asset. Gold-on-black lightning on a circular backdrop. -->
+<link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="%231a0f05" stroke="%23ffcd6b" stroke-width="1.5"/><path d="M18 6 L9 18 L14 18 L12 26 L22 13 L17 13 Z" fill="%23ffcd6b"/></svg>' />
 <style>
   :root {
     --bg-deep: #0a0608;
