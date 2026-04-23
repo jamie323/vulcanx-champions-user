@@ -1065,19 +1065,57 @@
     font-size: 15px; color: var(--muted); line-height: 1.6; margin: 0 0 18px;
   }
   .wg-sub b { color: var(--text); }
-  .wg-btn {
-    display: inline-block; padding: 16px 36px;
-    background: linear-gradient(90deg, #ffcd6b, #ff8e2e);
-    color: #1a0a05; border: none; border-radius: 12px;
-    font-size: 15px; font-weight: 800; letter-spacing: 2px;
-    text-transform: uppercase; cursor: pointer;
-    box-shadow: 0 10px 30px rgba(255,140,40,0.4);
-    margin-top: 12px;
+  .wg-choose {
+    display: flex; flex-direction: column; gap: 10px;
+    margin-top: 16px;
   }
-  .wg-btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
-  .wg-btn:disabled { opacity: 0.6; cursor: wait; filter: grayscale(0.4); }
+  .wg-btn {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 18px;
+    background: linear-gradient(180deg, rgba(255,205,107,0.12), rgba(255,205,107,0.04));
+    color: var(--text);
+    border: 1px solid rgba(255,205,107,0.35);
+    border-radius: 12px;
+    font-size: 15px; font-weight: 700;
+    text-align: left; cursor: pointer;
+    transition: all 0.15s;
+    width: 100%;
+  }
+  .wg-btn:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(180deg, rgba(255,205,107,0.22), rgba(255,205,107,0.08));
+    border-color: var(--accent);
+    box-shadow: 0 8px 24px rgba(255,140,40,0.25);
+  }
+  .wg-btn:disabled { opacity: 0.5; cursor: wait; filter: grayscale(0.4); transform: none; }
+  .wg-btn-ico {
+    font-size: 28px; line-height: 1;
+    width: 46px; height: 46px; border-radius: 50%;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .wg-btn-body {
+    display: flex; flex-direction: column; gap: 2px; flex: 1;
+  }
+  .wg-btn-title {
+    font-family: 'Cinzel', serif;
+    font-size: 15px; font-weight: 700;
+    color: var(--accent); letter-spacing: 1px;
+  }
+  .wg-btn-sub {
+    font-size: 11px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 1.5px;
+  }
+  .wg-status {
+    margin-top: 14px; color: var(--accent-dim);
+    font-size: 12px; letter-spacing: 1px;
+    text-transform: uppercase;
+    min-height: 16px;
+  }
   .wg-error {
-    margin-top: 16px; color: #ff8a8a; font-size: 13px;
+    margin-top: 8px; color: #ff8a8a; font-size: 13px;
     min-height: 18px; line-height: 1.5;
   }
   .wg-small {
@@ -2654,6 +2692,7 @@
 </head>
 <body>
 
+<script src="wallet.js"></script>
 <script src="stories.js"></script>
 
 <!-- ======== WALLET GATE — blocks app until SIWE completes ======== -->
@@ -2670,11 +2709,25 @@
       No PYR is deducted during QA — adopt &amp; rename transactions are
       signed but free.
     </p>
-    <button class="wg-btn" id="connectBtn" onclick="connectWallet()">
-      🦊 Connect Wallet
-    </button>
+    <div class="wg-choose" id="wgChoose">
+      <button class="wg-btn wg-btn-mm" id="connectBtnMM" onclick="connectWallet('injected')">
+        <span class="wg-btn-ico">🦊</span>
+        <span class="wg-btn-body">
+          <span class="wg-btn-title">MetaMask</span>
+          <span class="wg-btn-sub">or other browser extension</span>
+        </span>
+      </button>
+      <button class="wg-btn wg-btn-wc" id="connectBtnWC" onclick="connectWallet('walletconnect')">
+        <span class="wg-btn-ico">📱</span>
+        <span class="wg-btn-body">
+          <span class="wg-btn-title">WalletConnect</span>
+          <span class="wg-btn-sub">mobile wallets · QR code</span>
+        </span>
+      </button>
+    </div>
+    <div class="wg-status" id="wgStatus"></div>
     <div class="wg-error" id="connectError"></div>
-    <div class="wg-small">Requires MetaMask or another Ethereum wallet. Chain will auto-switch to Elysium (1339).</div>
+    <div class="wg-small">Chain auto-switches to Elysium (1339). No PYR is deducted during QA.</div>
   </div>
 </div>
 
@@ -4281,6 +4334,9 @@ const AUTH_HEADERS = {
 // `vx_auth` = "1". The app is gated — if not authenticated, the
 // connect-wallet screen blocks everything.
 
+// Elysium chain config — kept here for any read-only UI that references
+// it. The live connect flow uses the WalletManager (wallet.js) which
+// owns chain-switch + chain-add.
 const ELYSIUM_CHAIN = {
   chainId: "0x53B",  // 1339
   chainName: "Elysium",
@@ -4298,48 +4354,58 @@ function getWallet() {
   return localStorage.getItem('vx_wallet') || null;
 }
 
-function disconnectWallet() {
+async function disconnectWallet() {
+  try { await window.vxWallet?.disconnect(); } catch (_) {}
   localStorage.removeItem('vx_wallet');
   localStorage.removeItem('vx_auth');
   location.reload();
 }
 
-async function connectWallet() {
-  const btn = document.getElementById('connectBtn');
+// ── Connect flow ────────────────────────────────────────────────
+// method: 'injected' (MetaMask/extension) or 'walletconnect' (mobile QR)
+// Uses window.vxWallet (WalletManager from wallet.js) which handles:
+//  - dual provider routing
+//  - Elysium auto-add + switch
+//  - EIP-2255 revoke-friendly permissions
+//  - mobile deep-link / QR modal / return-to-dapp
+//  - session persistence
+// After the wallet connects, we run the existing SIWE flow
+// (auth_challenge → personal_sign → auth_verify).
+async function connectWallet(method) {
+  const btnMM = document.getElementById('connectBtnMM');
+  const btnWC = document.getElementById('connectBtnWC');
   const err = document.getElementById('connectError');
+  const status = document.getElementById('wgStatus');
+  const allBtns = [btnMM, btnWC].filter(Boolean);
   if (err) err.textContent = '';
-  if (btn) { btn.disabled = true; btn.textContent = 'Connecting…'; }
+  if (status) status.textContent = '';
+  allBtns.forEach(b => b.disabled = true);
+
+  const setStatus = (s) => { if (status) status.textContent = s; };
+
+  // Subscribe once to status/error events for this attempt.
+  const onStatus = (s) => setStatus(s);
+  const onErr = (m) => { if (err) err.textContent = m || ''; };
+  window.vxWallet.on('chainStatus', onStatus);
+  window.vxWallet.on('error', onErr);
 
   try {
-    if (!window.ethereum) {
-      throw new Error('No wallet detected. Install MetaMask (or another Ethereum wallet) and reload.');
+    if (!window.vxWallet) throw new Error('Wallet module not loaded.');
+
+    setStatus(method === 'walletconnect' ? 'Opening WalletConnect…' : 'Opening wallet…');
+    const ok = await window.vxWallet.connectWith(method || 'injected');
+    if (!ok) {
+      // connectWith emits 'error' on rejection; don't overwrite with a generic msg
+      allBtns.forEach(b => b.disabled = false);
+      setStatus('');
+      return;
     }
 
-    // 1) Request account access
-    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    if (!accounts || accounts.length === 0) throw new Error('No account returned from wallet.');
-    const wallet = accounts[0].toLowerCase();
+    const wallet = (window.vxWallet.address || '').toLowerCase();
+    if (!wallet) throw new Error('No account returned from wallet.');
 
-    // 2) Switch to Elysium (add it if not present)
-    if (btn) btn.textContent = 'Switching to Elysium…';
-    try {
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: ELYSIUM_CHAIN.chainId }],
-      });
-    } catch (switchErr) {
-      if (switchErr.code === 4902 || (switchErr.data && switchErr.data.originalError && switchErr.data.originalError.code === 4902)) {
-        await window.ethereum.request({
-          method: 'wallet_addEthereumChain',
-          params: [ELYSIUM_CHAIN],
-        });
-      } else {
-        throw switchErr;
-      }
-    }
-
-    // 3) Request signing challenge
-    if (btn) btn.textContent = 'Requesting challenge…';
+    // SIWE challenge
+    setStatus('Requesting challenge…');
     const chRes = await fetch(`${FN_BASE}/auth_challenge`, {
       method: 'POST', headers: AUTH_HEADERS,
       body: JSON.stringify({ wallet }),
@@ -4347,15 +4413,10 @@ async function connectWallet() {
     const ch = await chRes.json();
     if (!chRes.ok || !ch.nonce) throw new Error('Challenge failed: ' + JSON.stringify(ch));
 
-    // 4) Sign the message
-    if (btn) btn.textContent = 'Check your wallet to sign…';
-    const signature = await window.ethereum.request({
-      method: 'personal_sign',
-      params: [ch.message, wallet],
-    });
+    setStatus('Check your wallet to sign…');
+    const signature = await window.vxWallet.personalSign(ch.message);
 
-    // 5) Verify on server → triggers starter potion grant on first connect
-    if (btn) btn.textContent = 'Verifying signature…';
+    setStatus('Verifying signature…');
     const vRes = await fetch(`${FN_BASE}/auth_verify`, {
       method: 'POST', headers: AUTH_HEADERS,
       body: JSON.stringify({ wallet, nonce: ch.nonce, signature }),
@@ -4363,17 +4424,20 @@ async function connectWallet() {
     const v = await vRes.json();
     if (!vRes.ok || !v.ok) throw new Error('Verify failed: ' + JSON.stringify(v));
 
-    // 6) Persist + (if first time) show welcome modal before reloading
     localStorage.setItem('vx_wallet', wallet);
     localStorage.setItem('vx_auth', '1');
-    if (v.granted_starter) {
-      localStorage.setItem('vx_show_welcome', '1');
-    }
+    if (v.granted_starter) localStorage.setItem('vx_show_welcome', '1');
+
+    setStatus('Connected · loading…');
     location.reload();
   } catch (e) {
     console.error('[connectWallet]', e);
     if (err) err.textContent = e.message || String(e);
-    if (btn) { btn.disabled = false; btn.textContent = '🦊 Connect Wallet'; }
+    setStatus('');
+    allBtns.forEach(b => b.disabled = false);
+  } finally {
+    window.vxWallet.off('chainStatus', onStatus);
+    window.vxWallet.off('error', onErr);
   }
 }
 
@@ -4889,22 +4953,18 @@ function renderBuy() {
   });
 }
 // Send a dummy 0-value TX on Elysium so the user signs a real transaction
-// but no PYR is deducted. Returns the tx hash on success.
+// but no PYR is deducted. Routes through the WalletManager so MetaMask AND
+// WalletConnect (mobile) both work — including the deep-link back-to-dapp
+// dance that WC handles under the hood.
 async function signDummyTx(label) {
-  if (!window.ethereum) throw new Error('Wallet unavailable');
-  const wallet = getWallet();
-  // Encode a short hex string as tx data so the tx is identifiable on-chain.
-  const dataHex = '0x' + Array.from(new TextEncoder().encode(`VulcanX:${label}`))
-    .map(b => b.toString(16).padStart(2,'0')).join('');
-  const txHash = await window.ethereum.request({
-    method: 'eth_sendTransaction',
-    params: [{
-      from: wallet,
-      to: '0x000000000000000000000000000000000000dEaD',  // burn address
-      value: '0x0',
-      data: dataHex,
-    }],
-  });
+  const wm = window.vxWallet;
+  if (!wm || !wm.connected) {
+    // Fallback: try to resume from session silently (e.g. if the page was
+    // refreshed after auth). If that fails, hard-prompt an error.
+    const resumed = wm ? await wm.tryResumeSession() : false;
+    if (!resumed) throw new Error('Wallet not connected. Reconnect and try again.');
+  }
+  const txHash = await window.vxWallet.sendDummyTx(label);
   console.log('[dummy tx]', label, '→', txHash);
   return txHash;
 }
@@ -5160,8 +5220,19 @@ async function boot() {
   // the connect screen instead of booting the app.
   if (!isAuthenticated()) {
     document.getElementById('walletGate').style.display = 'flex';
+    // Kick off WalletConnect SDK fetch in the background so that when the
+    // user taps "WalletConnect" the modal opens instantly (especially
+    // important on mobile Safari, which gates deep-links behind the user
+    // gesture). If the user has an injected wallet and picks MetaMask,
+    // the WC SDK just stays unused — no harm.
+    try { window.vxWallet?.prewarmWalletConnect(); } catch (_) {}
     return;
   }
+
+  // Authenticated path — try to silently rehydrate the wallet provider
+  // so signDummyTx (adopt / rename / shop) works without forcing a fresh
+  // prompt. If rehydrate fails the first on-chain action will re-auth.
+  try { await window.vxWallet?.tryResumeSession(); } catch (_) {}
 
   try {
     const data = await fetch('bloodlines.json').then(r => r.json());
