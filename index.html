@@ -2982,8 +2982,11 @@
 </head>
 <body>
 
-<script src="wallet.js"></script>
-<script src="stories.js"></script>
+<!-- Cache-bust on each deploy so stale wallet.js/stories.js can't hold
+     testers on yesterday's bug. Bump the version string when either
+     file changes (every commit is fine — it's just a cache key). -->
+<script src="wallet.js?v=20260424-a"></script>
+<script src="stories.js?v=20260424-a"></script>
 
 <!-- ======== WALLET GATE — blocks app until SIWE completes ======== -->
 <div id="walletGate" class="wallet-gate" style="display:none;">
@@ -4409,6 +4412,10 @@ async function applyAllocation() {
   const oldLevel = state.level;
 
   _allocInFlight = true;
+  // Hard safety net: ANY path out of this function must release the
+  // lock, even on unexpected runtime errors further down. The outer
+  // try/finally below guarantees release; this inner try catches
+  // only the API-call error so we can show a proper dialog.
   let resp;
   try {
     resp = await apiAllocateChampion({
@@ -4419,9 +4426,19 @@ async function applyAllocation() {
   } catch (e) {
     _allocInFlight = false;
     if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '✨ Apply Blessing'; }
+    console.error('[blessing] api call failed', e);
     vxAlert(e.message || 'Unknown error', {title: 'Blessing failed', icon: '✨', variant: 'error'});
     return;
   }
+  console.log('[blessing] ok', {
+    oldPct: oldPct,
+    newPct: resp?.champion?.evo_pct,
+    oldLevel: oldLevel,
+    newLevel: resp?.champion?.level,
+    potionRemaining: resp?.potionRemaining,
+  });
+
+  try {
 
   // Server is authoritative
   const c = mapChampion(resp.champion);
@@ -4471,12 +4488,20 @@ async function applyAllocation() {
     }
   });
 
-  closeAllocModal();
-  setTimeout(() => render(), 300);
-  // Release the lock after the animation has had time to play (matches
-  // the feed flow's 350ms). Holds off rapid-fire Blessings so the next
-  // click hits fresh server state, not a stale baseline.
-  setTimeout(() => { _allocInFlight = false; }, 500);
+    closeAllocModal();
+    // Render immediately AND on a timeout so the bar update is visible
+    // even if the animation pipeline has any hiccups. Belt-and-braces.
+    render();
+    setTimeout(() => render(), 300);
+  } catch (e) {
+    // Defensive — catches any unexpected throws in the state-apply /
+    // animation path so the lock still releases in the finally below.
+    console.error('[blessing] post-response error', e);
+    vxAlert('Blessing response couldn\'t be applied: ' + (e.message || e),
+      {title: 'Unexpected error', icon: '✨', variant: 'error'});
+  } finally {
+    setTimeout(() => { _allocInFlight = false; }, 500);
+  }
 }
 function closeAllocModal() {
   document.getElementById('allocModal').classList.remove('open');
