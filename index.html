@@ -479,7 +479,55 @@
     font-size: 15px; line-height: 1.8;
     color: #d8cdb8;
     font-family: Georgia, serif;
+    max-height: 280px; overflow-y: auto;
+    padding-right: 6px;
+    scrollbar-width: thin;
   }
+  .about-block-story .about-story::-webkit-scrollbar { width: 6px; }
+  .about-block-story .about-story::-webkit-scrollbar-thumb {
+    background: rgba(255,205,107,0.3); border-radius: 3px;
+  }
+
+  /* Story narration play button */
+  .story-play-btn {
+    display: flex; align-items: center; gap: 5px;
+    background: linear-gradient(180deg, rgba(255,205,107,0.18), rgba(255,205,107,0.08));
+    border: 1px solid rgba(255,205,107,0.5);
+    color: var(--accent);
+    padding: 4px 10px;
+    border-radius: 14px;
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .story-play-btn:hover {
+    background: linear-gradient(180deg, rgba(255,205,107,0.32), rgba(255,205,107,0.15));
+    color: #fff2b8;
+    box-shadow: 0 0 12px rgba(255,205,107,0.4);
+  }
+  .story-play-btn .sp-icon {
+    font-size: 9px; line-height: 1;
+    display: inline-block; width: 10px;
+  }
+  .story-play-btn.loading .sp-icon {
+    animation: spPulse 1s ease-in-out infinite;
+  }
+  .story-play-btn.playing {
+    background: var(--accent); color: #1a0f05;
+    border-color: var(--accent);
+    animation: spPlaying 1.4s ease-in-out infinite;
+  }
+  @keyframes spPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  @keyframes spPlaying {
+    0%, 100% { box-shadow: 0 0 0 rgba(255,205,107,0); }
+    50%      { box-shadow: 0 0 18px rgba(255,205,107,0.8); }
+  }
+  .story-play-btn:disabled { opacity: 0.5; cursor: wait; }
 
   /* ═══════════════════════════════════════════════════
      CENTER — FEED BAR + PORTRAIT
@@ -1913,9 +1961,681 @@
     .species-grid-landing,
     .how-steps { grid-template-columns: repeat(2, 1fr); }
   }
+
+  /* ================================================================
+     WELCOME MODAL + POTION ENCYCLOPEDIA
+     ================================================================ */
+  .vx-modal {
+    position: fixed; inset: 0; z-index: 9000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+    animation: vxModalIn 0.25s ease-out;
+  }
+  @keyframes vxModalIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .vx-modal-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(5, 3, 10, 0.82);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .vx-modal-card {
+    position: relative; z-index: 1;
+    width: min(680px, 96vw);
+    max-height: 92vh; overflow-y: auto;
+    background: linear-gradient(180deg, #1a1226 0%, #0d0817 100%);
+    border: 1px solid var(--accent);
+    border-radius: 18px;
+    box-shadow:
+      0 0 0 1px rgba(255, 200, 90, 0.15),
+      0 30px 80px rgba(0, 0, 0, 0.8),
+      0 0 120px rgba(255, 180, 60, 0.15);
+    padding: 36px 40px 32px;
+    color: var(--text);
+    animation: vxCardIn 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  }
+  @keyframes vxCardIn {
+    from { transform: translateY(20px) scale(0.96); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  .vx-modal-close {
+    position: absolute; top: 14px; right: 16px;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--muted); font-size: 20px; line-height: 1;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .vx-modal-close:hover {
+    background: rgba(255, 80, 80, 0.15);
+    border-color: rgba(255, 80, 80, 0.4);
+    color: #ff9a9a;
+  }
+
+  /* ---- Welcome card ---- */
+  .welcome-card { text-align: center; }
+  .welcome-emoji {
+    font-size: 56px; line-height: 1;
+    margin-bottom: 14px;
+    filter: drop-shadow(0 0 20px rgba(255, 200, 90, 0.5));
+  }
+  .welcome-eyebrow {
+    font-size: 11px; letter-spacing: 4px;
+    color: var(--accent); font-weight: 700;
+    text-transform: uppercase; margin-bottom: 10px;
+  }
+  .welcome-title {
+    font-family: 'Cinzel', serif;
+    font-size: 30px; font-weight: 700;
+    margin: 0 0 14px; line-height: 1.2;
+    color: var(--text);
+  }
+  .welcome-title span {
+    color: var(--accent);
+    text-shadow: 0 0 14px rgba(255, 200, 90, 0.4);
+  }
+  .welcome-sub {
+    color: var(--muted);
+    font-size: 15px; line-height: 1.55;
+    margin: 0 auto 22px; max-width: 520px;
+  }
+  .welcome-potions {
+    display: flex; flex-direction: column; gap: 14px;
+    margin: 18px 0 24px;
+  }
+  .wp-group {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 200, 90, 0.18);
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+  .wp-group-h {
+    font-size: 11px; letter-spacing: 2px;
+    color: var(--accent); font-weight: 700;
+    text-transform: uppercase; margin-bottom: 10px;
+    text-align: left;
+  }
+  .wp-row {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+  }
+  .wp-pot {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 10px 6px;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 2px;
+    transition: all 0.15s;
+  }
+  .wp-pot:hover {
+    background: rgba(255, 200, 90, 0.08);
+    border-color: rgba(255, 200, 90, 0.4);
+    transform: translateY(-2px);
+  }
+  .wp-pot .wp-e { font-size: 22px; }
+  .wp-pot .wp-n {
+    font-size: 10px; color: var(--muted);
+    font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .wp-pot .wp-c {
+    font-size: 13px; font-weight: 800;
+    color: var(--accent);
+  }
+  .wp-pot.wp-special {
+    background: linear-gradient(180deg, rgba(180, 120, 220, 0.12), rgba(180, 120, 220, 0.04));
+    border-color: rgba(180, 120, 220, 0.35);
+  }
+  .wp-pot.wp-special .wp-c { color: #d4a5ff; }
+  .wp-special .wp-row { grid-template-columns: repeat(2, 1fr); }
+  .wp-group:has(.wp-special) .wp-row { grid-template-columns: repeat(2, 1fr); }
+
+  .welcome-actions {
+    display: flex; flex-wrap: wrap;
+    justify-content: center; gap: 10px;
+    margin-top: 4px;
+  }
+  .welcome-cta {
+    background: linear-gradient(180deg, #e8b450 0%, #b8882e 100%);
+    color: #1a0f05; border: none;
+    padding: 14px 28px;
+    font-family: 'Cinzel', serif;
+    font-size: 15px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    border-radius: 10px; cursor: pointer;
+    box-shadow:
+      0 4px 14px rgba(200, 140, 40, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transition: all 0.15s;
+  }
+  .welcome-cta:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 6px 20px rgba(200, 140, 40, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+  .welcome-secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid rgba(255, 200, 90, 0.35);
+    padding: 14px 22px;
+    font-family: 'Cinzel', serif;
+    font-size: 14px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    border-radius: 10px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .welcome-secondary:hover {
+    background: rgba(255, 200, 90, 0.08);
+    border-color: var(--accent);
+  }
+
+  /* ---- Potion guide card ---- */
+  .guide-card { text-align: left; }
+  .guide-header { text-align: center; margin-bottom: 24px; }
+  .guide-title {
+    font-family: 'Cinzel', serif;
+    font-size: 32px; font-weight: 700;
+    margin: 0 0 10px; color: var(--accent);
+    text-shadow: 0 0 14px rgba(255, 200, 90, 0.3);
+  }
+  .guide-section {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 200, 90, 0.12);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+  }
+  .guide-section h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 17px; font-weight: 700;
+    margin: 0 0 10px;
+    color: var(--accent);
+  }
+  .guide-section p {
+    font-size: 14px; line-height: 1.6;
+    color: var(--text); margin: 0;
+  }
+  .guide-section p b { color: var(--accent); }
+  .guide-traits {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px; margin-top: 10px;
+  }
+  .gt {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+  }
+  .gt-e { font-size: 20px; }
+  .gt-n {
+    font-weight: 700; color: var(--text);
+    font-size: 13px; min-width: 90px;
+  }
+  .gt-d { font-size: 12px; color: var(--muted); }
+  .guide-table {
+    width: 100%; border-collapse: collapse;
+    margin-top: 10px; font-size: 13px;
+  }
+  .guide-table th, .guide-table td {
+    padding: 8px 10px; text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .guide-table th {
+    color: var(--accent); font-weight: 700;
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .guide-table td b { color: var(--accent); }
+  .guide-actions {
+    text-align: center; margin-top: 22px;
+  }
+
+  @media (max-width: 640px) {
+    .vx-modal-card { padding: 24px 20px 20px; }
+    .welcome-title { font-size: 24px; }
+    .guide-title { font-size: 26px; }
+    .wp-row { grid-template-columns: repeat(3, 1fr); }
+    .guide-traits { grid-template-columns: 1fr; }
+  }
+
+  /* ================================================================
+     APOTHECARY SHOP
+     ================================================================ */
+  .shop-card { max-width: 760px; }
+  .shop-header { text-align: center; margin-bottom: 18px; }
+  .shop-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .shop-item {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 200, 90, 0.18);
+    border-radius: 10px;
+    padding: 12px 8px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .shop-item:hover {
+    background: rgba(255, 200, 90, 0.1);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.4), 0 0 24px rgba(255,200,90,0.15);
+  }
+  .shop-item .si-emoji { font-size: 28px; line-height: 1; margin-bottom: 4px; filter: drop-shadow(0 0 8px currentColor); }
+  .shop-item .si-name {
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text); margin-bottom: 2px;
+  }
+  .shop-item .si-tier {
+    font-size: 9px; color: var(--muted);
+    letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .shop-item .si-price {
+    font-size: 12px; font-weight: 800;
+    color: var(--accent);
+    background: rgba(0,0,0,0.5);
+    border-radius: 4px;
+    padding: 3px 6px;
+    display: inline-block;
+  }
+  .shop-item.in-cart {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+  .shop-item .si-badge {
+    position: absolute; top: 6px; right: 6px;
+    background: var(--accent); color: #1a0f05;
+    font-weight: 800; font-size: 11px;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .shop-item.tier-major { border-color: rgba(180, 120, 220, 0.35); }
+  .shop-item.tier-major .si-name { color: #d4a5ff; }
+  .shop-item.tier-epic {
+    border-color: rgba(255, 120, 80, 0.5);
+    background: linear-gradient(180deg, rgba(255, 100, 40, 0.12), rgba(0,0,0,0.3));
+  }
+  .shop-item.tier-epic .si-name { color: #ff9a5a; }
+
+  .shop-cart {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 200, 90, 0.2);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .shop-cart-rows {
+    min-height: 40px;
+    margin-bottom: 12px;
+  }
+  .shop-cart-empty {
+    color: var(--muted);
+    font-size: 13px; text-align: center;
+    padding: 10px 0; font-style: italic;
+  }
+  .shop-cart-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 13px;
+  }
+  .shop-cart-row:last-child { border-bottom: none; }
+  .shop-cart-row .scr-e { font-size: 18px; width: 22px; text-align:center; }
+  .shop-cart-row .scr-name { flex: 1; color: var(--text); }
+  .shop-cart-row .scr-qty {
+    display: flex; align-items: center; gap: 2px;
+  }
+  .shop-cart-row .scr-qty button {
+    width: 22px; height: 22px; border-radius: 4px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text); font-weight: 800; cursor: pointer;
+  }
+  .shop-cart-row .scr-qty button:hover {
+    background: var(--accent); color: #1a0f05;
+  }
+  .shop-cart-row .scr-qty .scr-n {
+    min-width: 24px; text-align: center;
+    font-weight: 800; color: var(--accent);
+  }
+  .shop-cart-row .scr-sub {
+    color: var(--accent); font-weight: 700;
+    min-width: 54px; text-align: right;
+    font-size: 12px;
+  }
+  .shop-cart-total {
+    display: flex; justify-content: space-between;
+    padding: 10px 4px;
+    border-top: 1px solid rgba(255, 200, 90, 0.25);
+    font-size: 13px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 1.5px;
+  }
+  .shop-cart-total b { color: var(--accent); }
+  .shop-actions {
+    display: flex; gap: 8px; justify-content: flex-end;
+    margin-top: 12px;
+  }
+  .shop-actions .welcome-cta { padding: 12px 22px; font-size: 13px; }
+  .shop-actions .welcome-secondary { padding: 12px 16px; font-size: 13px; }
+
+  @media (max-width: 700px) {
+    .shop-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  /* ================================================================
+     JUICE LAYER — enhanced bar FX, image crossfade, level-up flash
+     ================================================================ */
+  /* Animated shimmer gradient across the evo fill */
+  .evo-fill {
+    background: linear-gradient(90deg,
+      #ff8e2e 0%,
+      #ffcd6b 30%,
+      #fff2b8 50%,
+      #ffcd6b 70%,
+      #ff8e2e 100%);
+    background-size: 200% 100%;
+    animation: evoShimmer 2.8s linear infinite;
+  }
+  @keyframes evoShimmer {
+    0% { background-position: 0% 0%; }
+    100% { background-position: -200% 0%; }
+  }
+  /* Splash at the leading edge when the bar grows */
+  .evo-fill.splash::after {
+    content: '';
+    position: absolute;
+    right: -6px; top: -4px; bottom: -4px;
+    width: 14px;
+    background: radial-gradient(circle, rgba(255, 242, 184, 0.9) 0%, transparent 70%);
+    animation: evoSplash 0.7s ease-out;
+    pointer-events: none;
+  }
+  @keyframes evoSplash {
+    0% { transform: scaleX(0.5); opacity: 1; }
+    100% { transform: scaleX(3); opacity: 0; }
+  }
+  /* bar near-full glow pulse */
+  .evo-fill.near-full {
+    box-shadow: 0 0 18px rgba(255, 205, 107, 0.9),
+                0 0 36px rgba(255, 205, 107, 0.5);
+    animation: evoShimmer 1.2s linear infinite,
+               evoNearFull 1.1s ease-in-out infinite;
+  }
+  @keyframes evoNearFull {
+    0%, 100% { filter: brightness(1); }
+    50%      { filter: brightness(1.35); }
+  }
+  /* required: evo-bar must position-relative for splash */
+  .evo-bar { position: relative; }
+  .evo-fill { position: relative; overflow: visible; }
+
+  /* SCREEN FLASH — triggered on level-up */
+  .screen-flash {
+    position: fixed; inset: 0; z-index: 8500;
+    background: radial-gradient(ellipse at center,
+      rgba(255, 242, 184, 0.5) 0%,
+      rgba(255, 205, 107, 0.25) 30%,
+      transparent 70%);
+    pointer-events: none;
+    opacity: 0;
+  }
+  .screen-flash.fire { animation: screenFlash 0.55s ease-out; }
+  @keyframes screenFlash {
+    0% { opacity: 0; }
+    20% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  /* LEVEL-UP BANNER — slides in, pulses, slides out */
+  .level-up-banner {
+    position: fixed;
+    top: 38%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    z-index: 8600;
+    background: linear-gradient(180deg, rgba(40, 20, 8, 0.95), rgba(20, 10, 4, 0.95));
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    padding: 18px 40px;
+    box-shadow:
+      0 0 40px rgba(255, 205, 107, 0.7),
+      0 0 80px rgba(255, 205, 107, 0.4),
+      inset 0 0 30px rgba(255, 205, 107, 0.15);
+    opacity: 0;
+    pointer-events: none;
+    text-align: center;
+  }
+  .level-up-banner.fire { animation: lvlBanner 1.4s cubic-bezier(.25,.8,.25,1.2); }
+  .level-up-banner .lv-label {
+    font-size: 12px; letter-spacing: 4px;
+    color: var(--accent); text-transform: uppercase;
+    font-weight: 800; margin-bottom: 4px;
+    font-family: 'Cinzel', serif;
+  }
+  .level-up-banner .lv-num {
+    font-size: 56px; font-weight: 900;
+    color: #fff2b8;
+    text-shadow: 0 0 20px rgba(255, 242, 184, 0.8),
+                 0 4px 10px rgba(0, 0, 0, 0.8);
+    font-family: 'Cinzel', serif;
+    line-height: 1;
+  }
+  @keyframes lvlBanner {
+    0%   { opacity: 0; transform: translate(-50%, -30%) scale(0.6); }
+    25%  { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+    40%  { transform: translate(-50%, -50%) scale(0.95); }
+    55%  { transform: translate(-50%, -50%) scale(1.02); }
+    85%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -70%) scale(0.9); }
+  }
+
+  /* STAGE IMAGE CROSSFADE — second img layer that fades out */
+  .stage-frame .stageImgPrev {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0; pointer-events: none;
+    transition: opacity 1.2s ease-out;
+    z-index: 2;
+  }
+  .stage-frame .stageImgPrev.fading {
+    opacity: 1;
+    animation: stageFadeOut 1.4s ease-out forwards;
+  }
+  @keyframes stageFadeOut {
+    0%   { opacity: 1; transform: scale(1); filter: brightness(1); }
+    30%  { opacity: 1; transform: scale(1.05); filter: brightness(1.6) blur(0); }
+    60%  { opacity: 0.5; transform: scale(1.1); filter: brightness(2) blur(6px); }
+    100% { opacity: 0; transform: scale(1.15); filter: brightness(1) blur(12px); }
+  }
+  .stage-frame #stageImg { position: relative; z-index: 1; }
+  .stage-frame.evolving #stageImg {
+    animation: stageZoomIn 1.4s ease-out;
+  }
+  @keyframes stageZoomIn {
+    0%   { opacity: 0; transform: scale(0.85); filter: brightness(2); }
+    40%  { opacity: 0.6; transform: scale(1.02); filter: brightness(1.5); }
+    100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+  }
+  /* Evolution burst ring */
+  .stage-frame .evo-burst {
+    position: absolute; inset: 0;
+    border-radius: 14px;
+    pointer-events: none; z-index: 5;
+    opacity: 0;
+  }
+  .stage-frame .evo-burst.fire {
+    animation: evoBurst 1.5s ease-out;
+  }
+  @keyframes evoBurst {
+    0%   { opacity: 0; box-shadow:
+              inset 0 0 0 0 rgba(255, 242, 184, 0),
+              0 0 0 0 rgba(255, 205, 107, 0); }
+    25%  { opacity: 1; box-shadow:
+              inset 0 0 120px 40px rgba(255, 242, 184, 0.8),
+              0 0 80px 20px rgba(255, 205, 107, 0.6); }
+    100% { opacity: 0; box-shadow:
+              inset 0 0 200px 80px rgba(255, 242, 184, 0),
+              0 0 160px 60px rgba(255, 205, 107, 0); }
+  }
+
+  /* STAT count-up glow — pulsing text when stat changes */
+  @keyframes statGlow {
+    0%   { text-shadow: 0 0 0 rgba(255, 242, 184, 0); color: var(--text); }
+    30%  { text-shadow: 0 0 14px rgba(255, 242, 184, 0.9); color: #fff2b8; }
+    100% { text-shadow: 0 0 0 rgba(255, 242, 184, 0); color: var(--text); }
+  }
+  .stat-glow { animation: statGlow 0.9s ease-out; }
+
+  /* RANK pill pulse on level change */
+  @keyframes rankPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 rgba(255,205,107,0); }
+    50% { transform: scale(1.15); box-shadow: 0 0 20px rgba(255,205,107,0.6); }
+  }
+  .rank-pulse { animation: rankPulse 0.7s ease-out; }
+  .level-badge { transition: transform 0.2s; }
+  .level-badge.pulse { animation: rankPulse 0.7s ease-out; }
+
+  /* ================================================================
+     HOW IT WORKS — tabbed deep-dive (in-view variant)
+     ================================================================ */
+  .howto-view-wrap {
+    max-width: 980px; margin: 0 auto;
+    padding: 32px 24px 64px;
+  }
+  .howto-hero {
+    text-align: center; margin-bottom: 28px;
+  }
+  .howto-hero h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 44px; margin: 0 0 8px;
+    color: var(--accent);
+    text-shadow: 0 0 20px rgba(255, 200, 90, 0.3);
+  }
+  .howto-hero p {
+    font-size: 17px; color: var(--muted);
+    max-width: 620px; margin: 0 auto;
+    line-height: 1.5;
+  }
+  .howto-tabs {
+    display: flex; flex-wrap: wrap;
+    gap: 6px; justify-content: center;
+    margin-bottom: 22px;
+    border-bottom: 1px solid rgba(255, 200, 90, 0.2);
+    padding-bottom: 8px;
+  }
+  .howto-tab {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--muted);
+    padding: 10px 18px;
+    font-family: 'Cinzel', serif;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .howto-tab:hover {
+    background: rgba(255, 200, 90, 0.05);
+    color: var(--text);
+  }
+  .howto-tab.active {
+    background: rgba(255, 200, 90, 0.12);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .howto-panel {
+    display: none;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 200, 90, 0.15);
+    border-radius: 14px;
+    padding: 30px 34px;
+    animation: howtoPanelIn 0.25s ease-out;
+  }
+  .howto-panel.active { display: block; }
+  @keyframes howtoPanelIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .howto-panel h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 26px; margin: 0 0 14px;
+    color: var(--accent);
+  }
+  .howto-panel h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 18px; margin: 20px 0 8px;
+    color: var(--text);
+  }
+  .howto-panel p,
+  .howto-panel li {
+    font-size: 16px; line-height: 1.65;
+    color: var(--text);
+  }
+  .howto-panel p { margin: 0 0 12px; }
+  .howto-panel p.lead {
+    font-size: 18px; color: var(--muted);
+    margin-bottom: 18px;
+  }
+  .howto-panel ul {
+    margin: 0 0 14px; padding-left: 22px;
+  }
+  .howto-panel li { margin-bottom: 8px; }
+  .howto-panel b { color: var(--accent); }
+  .howto-panel .callout {
+    background: rgba(255, 200, 90, 0.08);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 15px;
+  }
+  .howto-steps-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px; margin-top: 14px;
+  }
+  .howto-step {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 16px; text-align: center;
+  }
+  .howto-step .n {
+    font-size: 10px; letter-spacing: 2px;
+    color: var(--accent); font-weight: 700;
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .howto-step .ic { font-size: 32px; margin-bottom: 6px; }
+  .howto-step h4 {
+    font-family: 'Cinzel', serif;
+    font-size: 16px; margin: 0 0 6px;
+    color: var(--text);
+  }
+  .howto-step p { font-size: 13px; line-height: 1.5; margin: 0; }
+
+  @media (max-width: 700px) {
+    .howto-hero h1 { font-size: 32px; }
+    .howto-panel { padding: 22px 20px; }
+    .howto-panel h2 { font-size: 22px; }
+    .howto-steps-grid { grid-template-columns: repeat(2, 1fr); }
+  }
 </style>
 </head>
 <body>
+
+<script src="stories.js"></script>
 
 <!-- ======== WALLET GATE — blocks app until SIWE completes ======== -->
 <div id="walletGate" class="wallet-gate" style="display:none;">
@@ -1939,6 +2659,152 @@
   </div>
 </div>
 
+<!-- ======== WELCOME MODAL — shown once after first SIWE ======== -->
+<div id="welcomeModal" class="vx-modal" style="display:none;">
+  <div class="vx-modal-backdrop" onclick="closeWelcome()"></div>
+  <div class="vx-modal-card welcome-card">
+    <button class="vx-modal-close" onclick="closeWelcome()">×</button>
+    <div class="welcome-emoji">🎁</div>
+    <div class="welcome-eyebrow">Welcome, keeper</div>
+    <h2 class="welcome-title">You've been granted <span>80 starter potions</span></h2>
+    <p class="welcome-sub">
+      A full QA pack for the <b>Orc</b> bloodline. Feed these to your baby Ironfang
+      to raise its stats and unlock evolutions. Every stat matters — they'll fuel
+      the coming arena.
+    </p>
+    <div class="welcome-potions">
+      <div class="wp-group">
+        <div class="wp-group-h">Trait potions · 60 total</div>
+        <div class="wp-row">
+          <div class="wp-pot"><div class="wp-e">💪</div><div class="wp-n">Strength</div><div class="wp-c">×10</div></div>
+          <div class="wp-pot"><div class="wp-e">❤️</div><div class="wp-n">Vitality</div><div class="wp-c">×10</div></div>
+          <div class="wp-pot"><div class="wp-e">🏃</div><div class="wp-n">Agility</div><div class="wp-c">×10</div></div>
+          <div class="wp-pot"><div class="wp-e">⚔️</div><div class="wp-n">Ferocity</div><div class="wp-c">×10</div></div>
+          <div class="wp-pot"><div class="wp-e">🧠</div><div class="wp-n">Intelligence</div><div class="wp-c">×10</div></div>
+          <div class="wp-pot"><div class="wp-e">🍀</div><div class="wp-n">Luck</div><div class="wp-c">×10</div></div>
+        </div>
+      </div>
+      <div class="wp-group">
+        <div class="wp-group-h">Special potions · 20 total</div>
+        <div class="wp-row">
+          <div class="wp-pot wp-special"><div class="wp-e">⚡</div><div class="wp-n">Evolution</div><div class="wp-c">×10</div></div>
+          <div class="wp-pot wp-special"><div class="wp-e">✨</div><div class="wp-n">Blessing</div><div class="wp-c">×10</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="welcome-actions">
+      <button class="welcome-cta" onclick="closeWelcome(); navTo('adopt');">🥚 Adopt my Ironfang</button>
+      <button class="welcome-secondary" onclick="closeWelcome(); openPotionGuide();">📖 Learn about potions</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======== APOTHECARY SHOP MODAL ======== -->
+<div id="shopModal" class="vx-modal" style="display:none;">
+  <div class="vx-modal-backdrop" onclick="closeShop()"></div>
+  <div class="vx-modal-card shop-card">
+    <button class="vx-modal-close" onclick="closeShop()">×</button>
+    <div class="shop-header">
+      <div class="welcome-eyebrow">✦ The Apothecary ✦</div>
+      <h2 class="guide-title">Potion Shop</h2>
+      <p class="welcome-sub">
+        Buy potions with <b>PYR</b>. Every bottle is <b>5 PYR</b>. Species-locked
+        to <b>Orc Ironfang</b> during QA.
+        <br/><span style="color:var(--muted);font-size:12px;">QA note: TX is signed on Elysium but zero value — no PYR is deducted.</span>
+      </p>
+    </div>
+
+    <div class="shop-grid" id="shopGrid">
+      <!-- injected by renderShop() -->
+    </div>
+
+    <div class="shop-cart">
+      <div class="shop-cart-rows" id="shopCartRows">
+        <div class="shop-cart-empty">Tap a potion to add it to your basket.</div>
+      </div>
+      <div class="shop-cart-total">
+        <div>Total</div>
+        <div><b id="shopTotalCount">0</b> potions &middot; <b id="shopTotalPyr">0</b> PYR</div>
+      </div>
+      <div class="shop-actions">
+        <button class="welcome-secondary" onclick="clearShopCart()">Clear</button>
+        <button class="welcome-cta" id="shopBuyBtn" onclick="checkoutShop()">🦊 Pay with wallet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== POTION ENCYCLOPEDIA MODAL ======== -->
+<div id="potionGuideModal" class="vx-modal" style="display:none;">
+  <div class="vx-modal-backdrop" onclick="closePotionGuide()"></div>
+  <div class="vx-modal-card guide-card">
+    <button class="vx-modal-close" onclick="closePotionGuide()">×</button>
+    <div class="guide-header">
+      <div class="welcome-eyebrow">✦ The Apothecary ✦</div>
+      <h2 class="guide-title">All about potions</h2>
+      <p class="welcome-sub">
+        Potions are the food of your champion. Every bottle raises a specific
+        trait and nudges the <b>Evolution Bar</b> forward. Understand these
+        and you understand the game.
+      </p>
+    </div>
+
+    <div class="guide-section">
+      <h3>🧪 Trait potions — the six colors</h3>
+      <p>Each trait has its own potion. They lift that stat by an amount that <b>decays</b>
+      as you invest more into it at a stage — early pours are potent, later pours less so.</p>
+      <div class="guide-traits">
+        <div class="gt"><span class="gt-e">💪</span><span class="gt-n">Strength</span><span class="gt-d">Raw damage output</span></div>
+        <div class="gt"><span class="gt-e">❤️</span><span class="gt-n">Vitality</span><span class="gt-d">Health &amp; survivability</span></div>
+        <div class="gt"><span class="gt-e">🏃</span><span class="gt-n">Agility</span><span class="gt-d">Speed &amp; dodge</span></div>
+        <div class="gt"><span class="gt-e">⚔️</span><span class="gt-n">Ferocity</span><span class="gt-d">Critical power</span></div>
+        <div class="gt"><span class="gt-e">🧠</span><span class="gt-n">Intelligence</span><span class="gt-d">Magic &amp; cunning</span></div>
+        <div class="gt"><span class="gt-e">🍀</span><span class="gt-n">Luck</span><span class="gt-d">Loot &amp; crit chance</span></div>
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <h3>🎚️ Three tiers — Minor, Major, Epic</h3>
+      <p>Same trait, different potency. Stronger tiers drop rarely from chests.</p>
+      <table class="guide-table">
+        <tr><th>Tier</th><th>Early stat gain</th><th>Bar fill</th><th>Drop rarity</th></tr>
+        <tr><td><b>Minor</b></td><td>+5 stat</td><td>2-6%</td><td>~70% of chest rolls</td></tr>
+        <tr><td><b>Major</b></td><td>+15 stat (×3)</td><td>6-12%</td><td>~25%</td></tr>
+        <tr><td><b>Epic</b></td><td>+40 stat (×8)</td><td>12-20%</td><td>~5%</td></tr>
+      </table>
+    </div>
+
+    <div class="guide-section">
+      <h3>⚡ Evolution Potion</h3>
+      <p>One-use. Consumed at a stage-gate level (L3 · 5 · 7 · 10 · 13 · 15 · 18 · 22 · 26 · 30 · 34 · 38 · 41 · 44 · 46 · 48 · 49 · 49 · 50) when your Evolution Bar is full. Triggers the transformation to the next stage — new silhouette, new cap tier, new floor stats.</p>
+    </div>
+
+    <div class="guide-section">
+      <h3>✨ Blessing (40 points)</h3>
+      <p>A flexible stat-allocation potion. When used you choose how to split 40 points across the six traits. Great for fixing a lopsided build or pushing a specific stat. Also fills 10-25% of the bar.</p>
+    </div>
+
+    <div class="guide-section">
+      <h3>🔒 Species-lock</h3>
+      <p>An Orc potion only feeds Orc champions. An Elf potion only feeds Elves. You can't cross-pollinate — keep them separate in your wallet.</p>
+    </div>
+
+    <div class="guide-section">
+      <h3>🔥 What happens at the cap?</h3>
+      <p>Every trait has a cap at each stage. When you try to feed a potion into a maxed trait, the potion is still consumed and still fills the bar — but the stat doesn't rise further. This means you can always evolve your way out of a capped state.</p>
+    </div>
+
+    <div class="guide-section">
+      <h3>🧬 Where do potions come from?</h3>
+      <p>In prod: potions are <b>ERC-1155 NFTs</b> that drop from treasure chests across the Vulcan Forged ecosystem (quests, Runner, Forge Arena) and can be bought/sold on the marketplace. During QA they're DB-backed — you got 80 free to test with.</p>
+    </div>
+
+    <div class="guide-actions">
+      <button class="welcome-cta" onclick="closePotionGuide()">Got it, back to the game</button>
+    </div>
+  </div>
+</div>
+
 <div class="topbar">
   <div class="brand">VulcanX <span class="dot">·</span> Champions</div>
   <div class="champ-title" id="topChampTitle">Orc Champion</div>
@@ -1954,7 +2820,7 @@
     <div class="coin gold"><span class="icon">G</span><span id="curGold">1,540</span></div>
     <div class="coin gem"><span class="icon">V</span><span id="curGem">15,320</span></div>
     <div class="coin ess"><span class="icon">E</span><span id="curEss">420</span></div>
-    <button class="shop-btn" onclick="alert('Shop: coming soon.')">Shop ▾</button>
+    <button class="shop-btn" onclick="openShop()">🛒 Shop</button>
     <div class="wallet-chip" id="walletChip" title="Your test wallet — click to copy" onclick="dbgCopyWallet()">
       <span class="dot-live">●</span>
       <span id="walletChipAddr">—</span>
@@ -2065,146 +2931,222 @@
 
 <!-- ======== VIEW: HOW IT WORKS (full page) ======== -->
 <div class="view view-howto">
-  <div class="howto-page">
-    <div class="howto-page-hero">
-      <div class="howto-page-eyebrow">✦ QA · Elysium Testnet ✦</div>
-      <h1 class="howto-page-title">How to raise your Champion</h1>
-      <p class="howto-page-sub">
-        Adopt a baby creature. Feed it potions from your wallet. Evolve it through
-        <b>20 life stages</b>. This is the <b>QA build</b> — only the <b>Orc Ironfang</b>
-        bloodline is adoptable, you get 80 free starter potions on sign-in,
-        and transactions are signed but <b>no PYR is deducted</b>.
+  <div class="howto-view-wrap">
+    <div class="howto-hero">
+      <div class="welcome-eyebrow">✦ QA · ELYSIUM TESTNET ✦</div>
+      <h1>How it Works</h1>
+      <p>Adopt a baby creature · Feed it potions · Raise it through 20 life stages to Legendary.</p>
+    </div>
+
+    <div class="howto-tabs" role="tablist">
+      <button class="howto-tab active" data-tab="ht-overview">Overview</button>
+      <button class="howto-tab" data-tab="ht-connect">1. Connect</button>
+      <button class="howto-tab" data-tab="ht-adopt">2. Adopt</button>
+      <button class="howto-tab" data-tab="ht-feed">3. Feed</button>
+      <button class="howto-tab" data-tab="ht-evolve">4. Evolve</button>
+      <button class="howto-tab" data-tab="ht-ascend">5. Ascend</button>
+      <button class="howto-tab" data-tab="ht-faq">QA Notes</button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <section id="ht-overview" class="howto-panel active">
+      <h2>The loop, in 60 seconds</h2>
+      <p class="lead">
+        VulcanX Champions is a creature-raising game. You adopt a baby creature,
+        feed it potions to grow its stats, and evolve it through twenty distinct
+        life stages to Legendary.
       </p>
-    </div>
-
-    <!-- STEP 1 — CONNECT -->
-    <section class="howto-page-step howto-step-1">
-      <div class="howto-page-num">1</div>
-      <div class="howto-page-body">
-        <div class="howto-page-step-label">Step One</div>
-        <h2>Connect your Wallet</h2>
-        <p>When you first visit the app, you'll see a <b>Connect Wallet</b> screen.
-        Tap the button — your wallet (MetaMask or similar) will prompt you to:</p>
-        <ul>
-          <li><b>Share your account</b> so the app knows who you are</li>
-          <li><b>Switch to the Elysium chain</b> (chainId 1339) — added automatically if you don't have it</li>
-          <li><b>Sign a short "sign-in" message</b> to prove wallet ownership. This is free — no gas.</li>
-        </ul>
-        <p>On your first sign-in, you'll be <b>granted 80 starter potions</b> for free: 10 of each trait (Strength, Vitality, Agility, Ferocity, Intelligence, Luck) in Minor tier + 10 Evolution Potions + 10 Blessings. More than enough to test the full loop.</p>
-        <p class="howto-page-tip">💡 <b>Your progress persists.</b> Anytime you come back and sign in with the same wallet, your champions and potions are exactly where you left them.</p>
-      </div>
-    </section>
-
-    <!-- STEP 2 — ADOPT -->
-    <section class="howto-page-step howto-step-2">
-      <div class="howto-page-num">2</div>
-      <div class="howto-page-body">
-        <div class="howto-page-step-label">Step Two</div>
-        <h2>Adopt your Champion</h2>
-        <div class="howto-img"><img src="howto/01_adopt.png" alt="Egg hatching" onerror="this.style.display='none'"/></div>
-        <p>Hit <b>Adopt New</b> in the top nav. You'll see all eight fantasy species,
-        but only <b>Orc</b> is unlockable during QA — and within Orc, only the
-        <b>Ironfang</b> bloodline is ready to hatch. Other species and bloodlines
-        are greyed out as "Coming soon".</p>
-        <p>Name your champion and hit the adopt button. Your wallet will pop up
-        asking you to sign a transaction — <b>this is the dummy 10 PYR receipt</b>.
-        Value is zero during QA, so no actual PYR leaves your wallet. Only a small
-        gas fee on Elysium.</p>
-        <p class="howto-page-tip">⚠️ <b>QA note:</b> Sign the TX in your wallet to complete adoption. If you cancel, the champion isn't created.</p>
-      </div>
-    </section>
-
-    <!-- STEP 3 — FEED -->
-    <section class="howto-page-step howto-step-3">
-      <div class="howto-page-num">3</div>
-      <div class="howto-page-body">
-        <div class="howto-page-step-label">Step Three</div>
-        <h2>Feed your Champion</h2>
-        <div class="howto-img"><img src="howto/03_feed.png" alt="Feeding potions" onerror="this.style.display='none'"/></div>
-        <p>Open your champion from the Stable — you'll see the full detail view:
-        portrait, level, evolution bar, stats, and your potion inventory in the
-        left panel.</p>
-        <p>Tap any potion bottle. Your champion's matching stat rises (with
-        diminishing returns as you invest more into one trait per stage), and the
-        <b>Evolution Bar</b> fills by a few percent. Every potion lifts one of
-        <b>six traits</b>:</p>
-        <ul class="howto-trait-list">
-          <li><span class="t-emoji">💪</span><span class="t-name">Strength</span><span class="t-what">Raw damage output</span></li>
-          <li><span class="t-emoji">❤️</span><span class="t-name">Vitality</span><span class="t-what">Health &amp; survivability</span></li>
-          <li><span class="t-emoji">🏃</span><span class="t-name">Agility</span><span class="t-what">Speed &amp; dodge</span></li>
-          <li><span class="t-emoji">⚔️</span><span class="t-name">Ferocity</span><span class="t-what">Critical power</span></li>
-          <li><span class="t-emoji">🧠</span><span class="t-name">Intelligence</span><span class="t-what">Magic &amp; cunning</span></li>
-          <li><span class="t-emoji">🍀</span><span class="t-name">Luck</span><span class="t-what">Loot &amp; crit chance</span></li>
-        </ul>
-        <p><b>Two special potion types</b> sit in their own card:</p>
-        <ul>
-          <li><b>⚡ Evolution Potion</b> — consumed at a stage gate with a full bar to advance to the next life stage</li>
-          <li><b>✨ Blessing</b> — grants 40 stat points you distribute freely across any traits</li>
-        </ul>
-        <p class="howto-page-tip">🧪 <b>During QA</b>: every potion is a DB-backed record. After launch, potions become on-chain NFTs that you'll earn from Vulcan Forged quests and open from chests in the wider ecosystem.</p>
-      </div>
-    </section>
-
-    <!-- STEP 4 — EVOLVE -->
-    <section class="howto-page-step howto-step-4">
-      <div class="howto-page-num">4</div>
-      <div class="howto-page-body">
-        <div class="howto-page-step-label">Step Four</div>
-        <h2>Evolve through 20 Life Stages</h2>
-        <div class="howto-img"><img src="howto/04_evolve.png" alt="Evolution" onerror="this.style.display='none'"/></div>
-        <p>Your champion passes through <b>20 distinct life stages</b> on its journey from newborn Whelp to Legendary — not just age, but armor, scars, equipment, backdrop, and raw power. Each stage looks visibly different.</p>
-        <div class="howto-stages">
-          <span>Whelp</span><span>→</span>
-          <span>Hatchling</span><span>→</span>
-          <span>Pup</span><span>→</span>
-          <span>Cub</span><span>→</span>
-          <span>Youngling</span><span>→</span>
-          <span>Apprentice</span><span>→</span>
-          <span>Initiate</span><span>→</span>
-          <span>Novice</span><span>→</span>
-          <span>Warrior</span><span>→</span>
-          <span>Veteran</span><span>→</span>
-          <span>Champion</span><span>→</span>
-          <span>Elite</span><span>→</span>
-          <span>Hero</span><span>→</span>
-          <span>Commander</span><span>→</span>
-          <span>Warlord</span><span>→</span>
-          <span>Exemplar</span><span>→</span>
-          <span>Paragon</span><span>→</span>
-          <span>Ascendant</span><span>→</span>
-          <span>Mythic</span><span>→</span>
-          <span class="legendary">Legendary</span>
+      <div class="howto-steps-grid">
+        <div class="howto-step">
+          <div class="n">STEP 1</div><div class="ic">🔐</div>
+          <h4>Connect</h4>
+          <p>Sign in with your wallet on Elysium. Get 80 free starter potions.</p>
         </div>
-        <p>Each stage unlocks at a specific level gate: L3, L5, L7, L10, L13, L15, L18, L22, L26, L30, L34, L38, L41, L44, L46, L48, L49, L50. To evolve:</p>
-        <ol>
-          <li>Fill the Evolution Bar to <b>100%</b> by feeding potions</li>
-          <li>Spend <b>1 Evolution Potion</b></li>
-          <li>Hit the Evolve button — your champion transforms</li>
-          <li>Stats carry up to the new stage's floor; the next cap opens</li>
-        </ol>
-        <p class="howto-page-tip">🐛 <b>QA testers — please flag any stage where</b>: evolution seems stuck, stats drop on evolve, or the new stage art doesn't load.</p>
+        <div class="howto-step">
+          <div class="n">STEP 2</div><div class="ic">🥚</div>
+          <h4>Adopt</h4>
+          <p>Pick a bloodline, name your champion, sign the mint TX.</p>
+        </div>
+        <div class="howto-step">
+          <div class="n">STEP 3</div><div class="ic">🧪</div>
+          <h4>Feed</h4>
+          <p>Pour potions to raise stats. The Evolution Bar fills with each feed.</p>
+        </div>
+        <div class="howto-step">
+          <div class="n">STEP 4</div><div class="ic">⚡</div>
+          <h4>Evolve</h4>
+          <p>At each level gate, burn an Evolution Potion to transform.</p>
+        </div>
+      </div>
+      <div class="callout">
+        <b>QA build:</b> Only the Orc <b>Ironfang</b> bloodline is adoptable. You get
+        80 free starter potions on first sign-in. Transactions are signed but
+        <b>no PYR is deducted</b>.
       </div>
     </section>
 
-    <!-- STEP 5 — ASCEND -->
-    <section class="howto-page-step howto-step-5">
-      <div class="howto-page-num">5</div>
-      <div class="howto-page-body">
-        <div class="howto-page-step-label">Step Five</div>
-        <h2>Ascend to Legendary</h2>
-        <div class="howto-img"><img src="howto/05_ascend.png" alt="Legendary ascension" onerror="this.style.display='none'"/></div>
-        <p>Reach the final stage 20 at Level 50 and your champion unlocks the <b>Legendary</b> tier — a fully realised masterpiece, bound forever to your wallet. In prod this becomes an animated on-chain NFT.</p>
-        <p>This is the prize. A truly unique champion, raised entirely by you. Share it, showcase it, trade it, pass it down.</p>
+    <!-- CONNECT -->
+    <section id="ht-connect" class="howto-panel">
+      <h2>1. Connect your Wallet</h2>
+      <p class="lead">
+        When you first visit, you'll see a Connect Wallet screen. Tap it — your
+        wallet (MetaMask or similar) will prompt you to:
+      </p>
+      <ul>
+        <li><b>Share your account</b> so the app knows who you are.</li>
+        <li><b>Switch to Elysium</b> (chainId 1339) — added automatically if missing.</li>
+        <li><b>Sign a short sign-in message</b> to prove wallet ownership. This is free — no gas.</li>
+      </ul>
+      <h3>You'll be granted 80 starter potions</h3>
+      <p>
+        On your first sign-in: <b>10 of each trait potion</b> (Strength, Vitality,
+        Agility, Ferocity, Intelligence, Luck) in Minor tier, plus <b>10 Evolution</b>
+        potions and <b>10 Blessings</b>. Enough to test the full 20-stage loop.
+      </p>
+      <div class="callout">
+        💡 <b>Your progress persists.</b> Come back anytime, sign in with the same
+        wallet, and your champions and potions are right where you left them.
       </div>
     </section>
 
-    <div class="howto-page-cta">
-      <h3>Ready to test?</h3>
-      <button class="cta-big" onclick="navTo('adopt')">🥚 Adopt your Ironfang · QA build</button>
-      <div style="font-size:12px; color:var(--muted); margin-top:14px; letter-spacing:1px;">
-        QA testers: log bugs, feedback, or weird behaviour in the Discord QA channel.
+    <!-- ADOPT -->
+    <section id="ht-adopt" class="howto-panel">
+      <h2>2. Adopt your Champion</h2>
+      <p class="lead">
+        Hit <b>Adopt New</b> in the top nav. You'll see all eight fantasy species,
+        but only <b>Orc</b> is unlockable during QA — and within Orc, only the
+        <b>Ironfang</b> bloodline is ready to hatch.
+      </p>
+      <ul>
+        <li>Other species and bloodlines are greyed out as "Coming soon".</li>
+        <li>Name your champion — the name is permanent and shown on its NFT.</li>
+        <li>Hit Adopt. Your wallet pops up for the <b>dummy 10 PYR receipt TX</b>.</li>
+        <li>Value is zero during QA — only a small Elysium gas fee.</li>
+      </ul>
+      <div class="callout">
+        ⚠️ <b>QA note:</b> You must sign the TX in your wallet to complete adoption.
+        If you cancel, the champion isn't created.
       </div>
-    </div>
+    </section>
+
+    <!-- FEED -->
+    <section id="ht-feed" class="howto-panel">
+      <h2>3. Feed your Champion</h2>
+      <p class="lead">
+        Open a champion from the Stable. You'll see portrait, level, evolution bar,
+        stats, and your potion inventory in the left panel.
+      </p>
+      <p>
+        Tap any potion bottle. Your champion's matching stat rises (with <b>diminishing
+        returns</b> — early pours into a trait are more potent than the 10th), and
+        the <b>Evolution Bar</b> fills by 2-20%.
+      </p>
+      <h3>Six trait potions</h3>
+      <div class="guide-traits">
+        <div class="gt"><span class="gt-e">💪</span><span class="gt-n">Strength</span><span class="gt-d">Raw damage output</span></div>
+        <div class="gt"><span class="gt-e">❤️</span><span class="gt-n">Vitality</span><span class="gt-d">Health &amp; survivability</span></div>
+        <div class="gt"><span class="gt-e">🏃</span><span class="gt-n">Agility</span><span class="gt-d">Speed &amp; dodge</span></div>
+        <div class="gt"><span class="gt-e">⚔️</span><span class="gt-n">Ferocity</span><span class="gt-d">Critical power</span></div>
+        <div class="gt"><span class="gt-e">🧠</span><span class="gt-n">Intelligence</span><span class="gt-d">Magic &amp; cunning</span></div>
+        <div class="gt"><span class="gt-e">🍀</span><span class="gt-n">Luck</span><span class="gt-d">Loot &amp; crit chance</span></div>
+      </div>
+      <h3>Two special potions</h3>
+      <ul>
+        <li><b>⚡ Evolution Potion</b> — consumed at a stage-gate level with a full bar to advance to the next life stage.</li>
+        <li><b>✨ Blessing</b> — grants 40 stat points you distribute freely across any traits. Also fills 10-25% of the bar.</li>
+      </ul>
+      <div class="callout">
+        🧪 <b>During QA:</b> every potion is a DB-backed record. After launch,
+        potions become on-chain ERC-1155 NFTs earned from Vulcan Forged quests.
+      </div>
+      <p style="text-align:center; margin-top:18px;">
+        <button class="welcome-secondary" onclick="openPotionGuide()">📖 Open the Potion Guide</button>
+      </p>
+    </section>
+
+    <!-- EVOLVE -->
+    <section id="ht-evolve" class="howto-panel">
+      <h2>4. Evolve through 20 Life Stages</h2>
+      <p class="lead">
+        Your champion passes through <b>20 distinct life stages</b> — not just age,
+        but armor, scars, equipment, backdrop, and raw power. Each stage looks
+        visibly different.
+      </p>
+      <div class="howto-stages">
+        <span>Whelp</span><span>→</span>
+        <span>Hatchling</span><span>→</span>
+        <span>Pup</span><span>→</span>
+        <span>Cub</span><span>→</span>
+        <span>Youngling</span><span>→</span>
+        <span>Apprentice</span><span>→</span>
+        <span>Initiate</span><span>→</span>
+        <span>Novice</span><span>→</span>
+        <span>Warrior</span><span>→</span>
+        <span>Veteran</span><span>→</span>
+        <span>Champion</span><span>→</span>
+        <span>Elite</span><span>→</span>
+        <span>Hero</span><span>→</span>
+        <span>Commander</span><span>→</span>
+        <span>Warlord</span><span>→</span>
+        <span>Exemplar</span><span>→</span>
+        <span>Paragon</span><span>→</span>
+        <span>Ascendant</span><span>→</span>
+        <span>Mythic</span><span>→</span>
+        <span class="legendary">Legendary</span>
+      </div>
+      <h3>How evolution works</h3>
+      <ol>
+        <li>Fill the Evolution Bar to <b>100%</b> by feeding potions.</li>
+        <li>Hit a <b>stage-gate level</b> (L3, 5, 7, 10, 13, 15, 18, 22, 26, 30, 34, 38, 41, 44, 46, 48, 49, 49, 50).</li>
+        <li>Spend <b>1 Evolution Potion</b>.</li>
+        <li>Hit the Evolve button — your champion transforms.</li>
+        <li>Stats carry up to the new stage's floor; the next cap opens.</li>
+      </ol>
+      <div class="callout">
+        🐛 <b>QA testers:</b> flag any stage where evolution seems stuck, stats drop
+        on evolve, or the new stage art doesn't load.
+      </div>
+    </section>
+
+    <!-- ASCEND -->
+    <section id="ht-ascend" class="howto-panel">
+      <h2>5. Ascend to Legendary</h2>
+      <p class="lead">
+        Reach stage 20 at Level 50 and your champion unlocks the <b>Legendary</b> tier —
+        a fully realised masterpiece, bound forever to your wallet.
+      </p>
+      <p>
+        In prod this becomes an <b>animated on-chain NFT</b>. This is the prize:
+        a truly unique champion, raised entirely by you. Share it, showcase it,
+        trade it, pass it down.
+      </p>
+      <div class="callout">
+        🏆 Each Legendary is 1-of-1 — no two keepers will arrive at the same stat
+        distribution, name, and art progression path.
+      </div>
+    </section>
+
+    <!-- FAQ / QA -->
+    <section id="ht-faq" class="howto-panel">
+      <h2>QA Notes &amp; FAQ</h2>
+      <h3>What's real vs dummy in QA?</h3>
+      <ul>
+        <li><b>Wallet auth:</b> real. SIWE on Elysium (chain 1339).</li>
+        <li><b>Adoption TX:</b> real transaction, zero value. Tagged on-chain as VulcanX:adopt.</li>
+        <li><b>Potions:</b> DB-backed for QA. ERC-1155 after launch.</li>
+        <li><b>Champions:</b> DB-backed for QA. ERC-721 after launch.</li>
+        <li><b>Art:</b> final for Orc Ironfang (20 stages). Other bloodlines coming.</li>
+      </ul>
+      <h3>What happens if I run out of potions?</h3>
+      <p>In prod you earn more from chests in the wider Vulcan Forged ecosystem. In QA we can top you up via the admin tools — ping the Discord channel.</p>
+      <h3>What if a trait is maxed?</h3>
+      <p>Feeding a potion into a maxed trait still <b>consumes the potion and fills the bar</b> — the stat just doesn't rise. This keeps you progressing even if you over-invested early.</p>
+      <h3>Can I trade/sell my champion?</h3>
+      <p>Not in QA. In prod, yes — champions and potions both live on-chain and move through the Vulcan marketplace.</p>
+      <div style="text-align:center; margin-top:24px;">
+        <button class="welcome-cta" onclick="navTo('adopt')">🥚 Adopt your Ironfang</button>
+      </div>
+    </section>
   </div>
 </div>
 
@@ -2341,7 +3283,13 @@
   </div>
 
   <div class="about-block about-block-story">
-    <div class="about-section-label">Story</div>
+    <div class="about-section-label" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <span>Chapter <span id="storyChapterNum">—</span> · <span id="storyStageName" style="color:var(--accent);">Whelp</span></span>
+      <button class="story-play-btn" id="storyPlayBtn" onclick="toggleStoryNarration()" title="Narrate this chapter">
+        <span class="sp-icon">▶</span>
+        <span class="sp-label">Play</span>
+      </button>
+    </div>
     <div class="about-story" id="aboutStory">
       Born beneath the twin moons of Elysium, every champion carries a story only their keeper will uncover. As they grow, chapter by chapter, their legend unfolds.
     </div>
@@ -2349,7 +3297,12 @@
 
   <!-- ── YOUR POTIONS (feed bottles) ── -->
   <div class="about-block about-potions">
-    <div class="about-section-label">🧪 Your Potions</div>
+    <div class="about-section-label" style="display:flex;align-items:center;justify-content:space-between;">
+      <span>🧪 Your Potions</span>
+      <a href="javascript:void(0)" onclick="openPotionGuide()"
+         style="font-size:11px;letter-spacing:1px;color:var(--accent);text-decoration:none;opacity:0.85;cursor:pointer;"
+         title="Learn what each potion does">📖 Guide</a>
+    </div>
     <div id="potionsSection">
       <div class="feed-potion-grid" id="feedPotionGrid"></div>
       <div class="special-potions-inline">
@@ -2392,8 +3345,10 @@
      ═══════════════════════════════════════════════════ -->
 <main class="champion-main">
   <div class="stage-frame" id="stageFrame">
+    <img id="stageImgPrev" class="stageImgPrev" src="" alt="" aria-hidden="true" />
     <img id="stageImg" src="evolution/L01_whelp_final.jpg" />
     <div class="aura"></div>
+    <div class="evo-burst" id="stageBurst"></div>
     <div class="level-badge" id="levelBadge">L 01</div>
     <div class="rank-pill" id="rankPill">Iron III</div>
   </div>
@@ -2711,18 +3666,23 @@ async function usePotion(trait, sourceEl) {
   const actualGain = state.stats[trait] - oldVal;
   const didLevelUp = state.level > oldLevel;
 
-  // animate: fly → burst → float text + bar pulse + stat count-up
+  // animate: fly → burst → float text + bar pulse + stat count-up + juice
   potionFlyAndBurst(sourceEl || document.body, (tx, ty) => {
     floatText(`+${Math.round(actualGain)} ${trait}`, tx, ty - 20);
     pulseBar();
+    fireBarSplash();
+    glowStatRow(trait);
     const fill = document.getElementById('evoFill');
     fill.style.width = state.evoPct + '%';
-    // count-up: if we level-ruped, the bar reset so animate from 0 to current
+    updateBarNearFull(state.evoPct);
+    // count-up: if we levelled up, the bar reset so animate from 0 to current
     const fromPct = didLevelUp ? 0 : oldPct;
     countUpText(document.getElementById('evoPct'),
       Math.round(fromPct), Math.round(state.evoPct), 700);
     if (didLevelUp) {
       floatText(`LEVEL ${state.level}`, tx, ty - 60, '#ffd98a');
+      fireScreenFlash();
+      fireLevelUpBanner(state.level);
     }
   });
 
@@ -2783,6 +3743,11 @@ async function evolve() {
 
   const newStage = STAGES[state.stageIdx];
   showCinematic('EVOLVED', `${newStage.name.toUpperCase()} · ${newStage.zone.toUpperCase()}`);
+  // Extra juice: screen flash + level banner + bar reset with splash
+  fireScreenFlash();
+  fireLevelUpBanner(state.level);
+  setTimeout(() => fireBarSplash(), 150);
+  // setStageImage in render() will fire crossfade + burst ring
 
   setTimeout(() => render(), 400);
 }
@@ -2984,8 +3949,8 @@ function render() {
   const bloodlineCfg = speciesCfg.bloodlines[currentBloodline];
   const next = STAGES[state.stageIdx + 1];
 
-  // ── PORTRAIT + BADGES
-  document.getElementById('stageImg').src = stage.img;
+  // ── PORTRAIT + BADGES (with crossfade when image changes)
+  setStageImage(stage.img);
   document.getElementById('stageFrame').classList.toggle('legend', !!stage.legend);
   document.getElementById('levelBadge').textContent =
     'L ' + String(state.level).padStart(2,'0');
@@ -3003,7 +3968,22 @@ function render() {
     document.getElementById('aboutBloodlineName').textContent = bloodlineCfg.label;
     document.getElementById('aboutBloodlineHint').textContent =
       BLOODLINE_HINT[currentBloodline] || 'A unique bloodline with its own story.';
-    document.getElementById('aboutStory').textContent = STAGE_LORE_MAP[state.stageIdx] || '';
+
+    // Story chapter — use bloodline story if available, fall back to stage lore.
+    const stageName = (STAGES[state.stageIdx]?.name || `Stage ${state.stageIdx+1}`);
+    const chapterText = (typeof getStoryChapter === 'function')
+      ? getStoryChapter(currentSpecies, currentBloodline, state.stageIdx, speciesCfg.label, bloodlineCfg.label, stageName)
+      : (STAGE_LORE_MAP[state.stageIdx] || '');
+    document.getElementById('aboutStory').textContent = chapterText;
+    const cn = document.getElementById('storyChapterNum');
+    if (cn) cn.textContent = String(state.stageIdx + 1).padStart(2, '0');
+    const sn = document.getElementById('storyStageName');
+    if (sn) sn.textContent = stageName;
+    // If chapter changed while audio is playing, stop it.
+    if (_narrationText && _narrationText !== chapterText) {
+      stopNarration();
+    }
+    _narrationText = chapterText;
   }
 
   // ── RIGHT PANEL: Level & Progress
@@ -3022,6 +4002,7 @@ function render() {
   const fill = document.getElementById('evoFill');
   fill.style.width = state.evoPct + '%';
   fill.classList.toggle('gate-ready', canEvolve());
+  updateBarNearFull(state.evoPct);
 
   const evoBtn = document.getElementById('evolveBtn');
   const ok = canEvolve();
@@ -3363,11 +4344,11 @@ async function connectWallet() {
     const v = await vRes.json();
     if (!vRes.ok || !v.ok) throw new Error('Verify failed: ' + JSON.stringify(v));
 
-    // 6) Persist + reload
+    // 6) Persist + (if first time) show welcome modal before reloading
     localStorage.setItem('vx_wallet', wallet);
     localStorage.setItem('vx_auth', '1');
     if (v.granted_starter) {
-      alert('🎉 Welcome! You\'ve been granted 80 starter potions for Orc QA testing.');
+      localStorage.setItem('vx_show_welcome', '1');
     }
     location.reload();
   } catch (e) {
@@ -4382,6 +5363,425 @@ function dbgCopyWallet() {
   navigator.clipboard?.writeText(w);
   alert('Copied: ' + w);
 }
+
+// ============================================================
+// STORY NARRATION — ElevenLabs via tts_narrate edge function
+// ============================================================
+let _narrationAudio = null;
+let _narrationText = null;
+let _narrationCache = {}; // text → objectURL
+
+async function toggleStoryNarration() {
+  const btn = document.getElementById('storyPlayBtn');
+  if (!btn) return;
+  // If playing, stop.
+  if (_narrationAudio && !_narrationAudio.paused) {
+    stopNarration();
+    return;
+  }
+  const text = document.getElementById('aboutStory')?.textContent?.trim();
+  if (!text) return;
+
+  setNarrationState('loading');
+  try {
+    let url = _narrationCache[text];
+    if (!url) {
+      const res = await fetch(`${FN_BASE}/tts_narrate`, {
+        method: 'POST',
+        headers: AUTH_HEADERS,
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) {
+        const errText = await res.text().catch(() => '');
+        throw new Error(`TTS ${res.status}: ${errText.slice(0, 180)}`);
+      }
+      const blob = await res.blob();
+      url = URL.createObjectURL(blob);
+      _narrationCache[text] = url;
+    }
+    _narrationAudio = new Audio(url);
+    _narrationAudio.onended = () => setNarrationState('idle');
+    _narrationAudio.onerror = () => setNarrationState('idle');
+    await _narrationAudio.play();
+    setNarrationState('playing');
+  } catch (e) {
+    console.error('[narration]', e);
+    setNarrationState('idle');
+    alert('Narration unavailable: ' + (e.message || e));
+  }
+}
+
+function stopNarration() {
+  if (_narrationAudio) {
+    try { _narrationAudio.pause(); } catch {}
+    _narrationAudio.currentTime = 0;
+    _narrationAudio = null;
+  }
+  setNarrationState('idle');
+}
+
+function setNarrationState(s) {
+  const btn = document.getElementById('storyPlayBtn');
+  if (!btn) return;
+  const icon = btn.querySelector('.sp-icon');
+  const label = btn.querySelector('.sp-label');
+  btn.classList.remove('loading', 'playing');
+  btn.disabled = false;
+  if (s === 'loading') {
+    btn.classList.add('loading');
+    btn.disabled = true;
+    if (icon) icon.textContent = '◐';
+    if (label) label.textContent = 'Loading…';
+  } else if (s === 'playing') {
+    btn.classList.add('playing');
+    if (icon) icon.textContent = '■';
+    if (label) label.textContent = 'Stop';
+  } else {
+    if (icon) icon.textContent = '▶';
+    if (label) label.textContent = 'Play';
+  }
+}
+
+// ============================================================
+// JUICE / FX helpers — crossfade, level-up, screen flash
+// ============================================================
+
+// Remember what src we last showed so we can detect stage/image changes.
+let _lastStageSrc = null;
+
+function setStageImage(newSrc) {
+  const cur = document.getElementById('stageImg');
+  const prev = document.getElementById('stageImgPrev');
+  const frame = document.getElementById('stageFrame');
+  if (!cur) return;
+  // absolute url for equality
+  const curAbs = cur.src;
+  if (!_lastStageSrc) {
+    // first paint — no animation
+    cur.src = newSrc;
+    _lastStageSrc = newSrc;
+    return;
+  }
+  // same image — nothing to do
+  if (_lastStageSrc.endsWith(newSrc) || newSrc === _lastStageSrc) return;
+
+  // Snapshot current image into prev layer, then swap cur to newSrc with zoom-in.
+  if (prev) {
+    prev.src = curAbs;
+    prev.classList.remove('fading'); void prev.offsetWidth;
+    prev.classList.add('fading');
+    setTimeout(() => prev.classList.remove('fading'), 1500);
+  }
+  frame.classList.remove('evolving'); void frame.offsetWidth;
+  frame.classList.add('evolving');
+  setTimeout(() => frame.classList.remove('evolving'), 1500);
+
+  // Burst ring
+  const burst = document.getElementById('stageBurst');
+  if (burst) {
+    burst.classList.remove('fire'); void burst.offsetWidth;
+    burst.classList.add('fire');
+    setTimeout(() => burst.classList.remove('fire'), 1600);
+  }
+
+  // swap source after a tiny delay so prev paints
+  setTimeout(() => { cur.src = newSrc; }, 40);
+  _lastStageSrc = newSrc;
+}
+
+function fireScreenFlash() {
+  let f = document.getElementById('vxScreenFlash');
+  if (!f) {
+    f = document.createElement('div');
+    f.id = 'vxScreenFlash';
+    f.className = 'screen-flash';
+    document.body.appendChild(f);
+  }
+  f.classList.remove('fire'); void f.offsetWidth;
+  f.classList.add('fire');
+  setTimeout(() => f.classList.remove('fire'), 600);
+}
+
+function fireLevelUpBanner(newLevel) {
+  let b = document.getElementById('vxLevelBanner');
+  if (!b) {
+    b = document.createElement('div');
+    b.id = 'vxLevelBanner';
+    b.className = 'level-up-banner';
+    b.innerHTML = '<div class="lv-label">Level Up</div><div class="lv-num">—</div>';
+    document.body.appendChild(b);
+  }
+  b.querySelector('.lv-num').textContent = 'L ' + String(newLevel).padStart(2, '0');
+  b.classList.remove('fire'); void b.offsetWidth;
+  b.classList.add('fire');
+  setTimeout(() => b.classList.remove('fire'), 1500);
+  // also pulse the level badge inside the frame
+  const badge = document.getElementById('levelBadge');
+  if (badge) {
+    badge.classList.remove('pulse'); void badge.offsetWidth;
+    badge.classList.add('pulse');
+    setTimeout(() => badge.classList.remove('pulse'), 800);
+  }
+  const rank = document.getElementById('rankPill');
+  if (rank) {
+    rank.classList.remove('rank-pulse'); void rank.offsetWidth;
+    rank.classList.add('rank-pulse');
+    setTimeout(() => rank.classList.remove('rank-pulse'), 800);
+  }
+}
+
+function fireBarSplash() {
+  const fill = document.getElementById('evoFill');
+  if (!fill) return;
+  fill.classList.remove('splash'); void fill.offsetWidth;
+  fill.classList.add('splash');
+  setTimeout(() => fill.classList.remove('splash'), 800);
+}
+
+function updateBarNearFull(pct) {
+  const fill = document.getElementById('evoFill');
+  if (!fill) return;
+  fill.classList.toggle('near-full', pct >= 80);
+}
+
+function glowStatRow(trait) {
+  // find the stat row element by data-trait attribute; fall back to any .stat-row
+  const row = document.querySelector(`[data-trait-row="${trait}"]`) ||
+              document.querySelector(`[data-stat-trait="${trait}"]`);
+  if (row) {
+    row.classList.remove('stat-glow'); void row.offsetWidth;
+    row.classList.add('stat-glow');
+    setTimeout(() => row.classList.remove('stat-glow'), 1000);
+  }
+}
+
+// ============================================================
+// APOTHECARY SHOP
+// ============================================================
+
+const SHOP_ITEMS = [
+  // Trait potions (Minor, Major, Epic) for orc — species-locked in QA
+  { kind: 'minor', trait: 'STR', label: 'Strength', emoji: '💪', tier: 'Minor', price: 5 },
+  { kind: 'minor', trait: 'VIT', label: 'Vitality', emoji: '❤️', tier: 'Minor', price: 5 },
+  { kind: 'minor', trait: 'AGI', label: 'Agility', emoji: '🏃', tier: 'Minor', price: 5 },
+  { kind: 'minor', trait: 'FER', label: 'Ferocity', emoji: '⚔️', tier: 'Minor', price: 5 },
+  { kind: 'minor', trait: 'INT', label: 'Intelligence', emoji: '🧠', tier: 'Minor', price: 5 },
+  { kind: 'minor', trait: 'LCK', label: 'Luck', emoji: '🍀', tier: 'Minor', price: 5 },
+  // Major trio (sample)
+  { kind: 'major', trait: 'STR', label: 'STR Major', emoji: '💪', tier: 'Major', price: 15 },
+  { kind: 'major', trait: 'VIT', label: 'VIT Major', emoji: '❤️', tier: 'Major', price: 15 },
+  { kind: 'major', trait: 'AGI', label: 'AGI Major', emoji: '🏃', tier: 'Major', price: 15 },
+  { kind: 'major', trait: 'FER', label: 'FER Major', emoji: '⚔️', tier: 'Major', price: 15 },
+  // Epic
+  { kind: 'epic',  trait: 'STR', label: 'STR Epic',  emoji: '💪', tier: 'Epic',  price: 40 },
+  { kind: 'epic',  trait: 'VIT', label: 'VIT Epic',  emoji: '❤️', tier: 'Epic',  price: 40 },
+  // Specials
+  { kind: 'evolution',  trait: null, label: 'Evolution', emoji: '⚡', tier: 'Special', price: 20 },
+  { kind: 'allocation', trait: null, label: 'Blessing',  emoji: '✨', tier: 'Special', price: 25 },
+];
+
+let shopCart = {}; // key -> { item, qty }
+
+function shopKey(it) { return `${it.kind}:${it.trait || ''}`; }
+
+function openShop() {
+  if (!isAuthenticated || !isAuthenticated()) {
+    alert('Connect your wallet first.');
+    return;
+  }
+  shopCart = {};
+  renderShop();
+  const m = document.getElementById('shopModal');
+  m.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeShop() {
+  const m = document.getElementById('shopModal');
+  m.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function renderShop() {
+  const grid = document.getElementById('shopGrid');
+  grid.innerHTML = SHOP_ITEMS.map(it => {
+    const key = shopKey(it);
+    const qty = shopCart[key]?.qty || 0;
+    const tierCls = it.tier === 'Major' ? 'tier-major' :
+                    it.tier === 'Epic'  ? 'tier-epic'  : '';
+    return `
+      <div class="shop-item ${tierCls} ${qty > 0 ? 'in-cart' : ''}"
+           data-key="${key}" onclick="addToCart('${key}')">
+        ${qty > 0 ? `<div class="si-badge">${qty}</div>` : ''}
+        <div class="si-emoji">${it.emoji}</div>
+        <div class="si-name">${it.label}</div>
+        <div class="si-tier">${it.tier}</div>
+        <div class="si-price">${it.price} PYR</div>
+      </div>`;
+  }).join('');
+  renderCart();
+}
+
+function addToCart(key) {
+  const it = SHOP_ITEMS.find(x => shopKey(x) === key);
+  if (!it) return;
+  if (!shopCart[key]) shopCart[key] = { item: it, qty: 0 };
+  shopCart[key].qty += 1;
+  renderShop();
+}
+function removeFromCart(key) {
+  if (!shopCart[key]) return;
+  shopCart[key].qty -= 1;
+  if (shopCart[key].qty <= 0) delete shopCart[key];
+  renderShop();
+}
+function clearShopCart() {
+  shopCart = {};
+  renderShop();
+}
+
+function renderCart() {
+  const rows = document.getElementById('shopCartRows');
+  const entries = Object.entries(shopCart);
+  if (entries.length === 0) {
+    rows.innerHTML = '<div class="shop-cart-empty">Tap a potion to add it to your basket.</div>';
+    document.getElementById('shopTotalCount').textContent = '0';
+    document.getElementById('shopTotalPyr').textContent = '0';
+    document.getElementById('shopBuyBtn').disabled = true;
+    return;
+  }
+  let totalQ = 0, totalP = 0;
+  rows.innerHTML = entries.map(([key, { item, qty }]) => {
+    const sub = qty * item.price;
+    totalQ += qty; totalP += sub;
+    return `
+      <div class="shop-cart-row">
+        <span class="scr-e">${item.emoji}</span>
+        <span class="scr-name">${item.label} <span style="color:var(--muted);font-size:11px;">· ${item.tier}</span></span>
+        <span class="scr-qty">
+          <button onclick="removeFromCart('${key}')">−</button>
+          <span class="scr-n">${qty}</span>
+          <button onclick="addToCart('${key}')">+</button>
+        </span>
+        <span class="scr-sub">${sub} PYR</span>
+      </div>`;
+  }).join('');
+  document.getElementById('shopTotalCount').textContent = totalQ;
+  document.getElementById('shopTotalPyr').textContent = totalP;
+  document.getElementById('shopBuyBtn').disabled = false;
+}
+
+async function checkoutShop() {
+  const entries = Object.entries(shopCart);
+  if (entries.length === 0) return;
+  const totalQ = entries.reduce((s, [_, v]) => s + v.qty, 0);
+  const totalP = entries.reduce((s, [_, v]) => s + v.qty * v.item.price, 0);
+  const btn = document.getElementById('shopBuyBtn');
+  btn.disabled = true;
+  const origText = btn.textContent;
+  btn.textContent = '🦊 Sign in wallet…';
+
+  try {
+    // Dummy TX on Elysium — zero value in QA. Label encodes the purchase.
+    const label = `shop:${totalQ}x@${totalP}PYR`;
+    await signDummyTx(label);
+
+    btn.textContent = '🧪 Brewing…';
+    // Grant each potion in the cart via the existing grant endpoint.
+    const species_id = 'orc';
+    for (const [, { item, qty }] of entries) {
+      await apiGrantPotion({
+        species_id,
+        kind: item.kind,
+        trait: item.trait,
+        quantity: qty,
+      });
+    }
+    // Refresh inventory
+    await reloadPotions();
+    render();
+    btn.textContent = '✅ Delivered';
+    // Friendly confirmation
+    setTimeout(() => {
+      closeShop();
+      alert(`🧪 Delivered: ${totalQ} potion${totalQ>1?'s':''} (${totalP} PYR).\n\nThey're in your inventory now.`);
+      btn.textContent = origText;
+      btn.disabled = false;
+    }, 700);
+  } catch (e) {
+    console.error('[checkoutShop]', e);
+    alert('Purchase failed: ' + (e.message || e));
+    btn.textContent = origText;
+    btn.disabled = false;
+  }
+}
+
+// ============================================================
+// Welcome modal + Potion encyclopedia
+// ============================================================
+function openWelcome() {
+  const el = document.getElementById('welcomeModal');
+  if (!el) return;
+  el.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeWelcome() {
+  const el = document.getElementById('welcomeModal');
+  if (!el) return;
+  el.style.display = 'none';
+  document.body.style.overflow = '';
+}
+function openPotionGuide() {
+  const el = document.getElementById('potionGuideModal');
+  if (!el) return;
+  el.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  // reset scroll to top
+  const card = el.querySelector('.vx-modal-card');
+  if (card) card.scrollTop = 0;
+}
+function closePotionGuide() {
+  const el = document.getElementById('potionGuideModal');
+  if (!el) return;
+  el.style.display = 'none';
+  document.body.style.overflow = '';
+}
+// ESC to close either modal
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('welcomeModal')?.style.display === 'flex') closeWelcome();
+    if (document.getElementById('potionGuideModal')?.style.display === 'flex') closePotionGuide();
+  }
+});
+// Auto-fire welcome modal on boot if the flag is set
+window.addEventListener('DOMContentLoaded', () => {
+  try {
+    if (localStorage.getItem('vx_show_welcome') === '1') {
+      // Delay slightly so the rest of the UI has painted
+      setTimeout(() => {
+        openWelcome();
+        localStorage.removeItem('vx_show_welcome');
+      }, 350);
+    }
+  } catch {}
+});
+
+// ============================================================
+// How-It-Works tabs
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  const tabs = document.querySelectorAll('.howto-tab');
+  const panels = document.querySelectorAll('.howto-panel');
+  tabs.forEach(t => {
+    t.addEventListener('click', () => {
+      const target = t.getAttribute('data-tab');
+      tabs.forEach(x => x.classList.toggle('active', x === t));
+      panels.forEach(p => p.classList.toggle('active', p.id === target));
+      // Scroll the view-wrap to top so the panel is in focus
+      const wrap = document.querySelector('.howto-view-wrap');
+      if (wrap) wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+});
 </script>
 
 <!-- ======== DEBUG PANEL (prod-gated by ?debug=1 / localStorage vx_debug) ======== -->
