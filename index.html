@@ -4244,16 +4244,38 @@ function openAllocModal(sourceEl) {
   TRAITS.forEach(t => allocState.values[t] = 0);
   const rows = document.getElementById('allocRows');
   rows.innerHTML = '';
+  // Detect if every trait is already capped — if so, distribution is
+  // impossible and we tell the keeper the Blessing can still be used
+  // for the bar-fill (10–25%) via a clear inline note. Button stays
+  // enabled so Apply fires with zeros.
+  const allCapped = TRAITS.every(t => {
+    const idx = TRAITS.indexOf(t);
+    const cur = state.stats[t] || STAGE_FLOORS[state.stageIdx][idx];
+    const cap = STAGE_CAPS[state.stageIdx][idx];
+    return cap - cur <= 0;
+  });
+  if (allCapped) {
+    rows.insertAdjacentHTML('beforeend',
+      `<div style="padding:14px 10px;text-align:center;color:var(--accent);
+                   background:rgba(255,205,107,0.08);border:1px dashed var(--accent-dim);
+                   border-radius:8px;margin-bottom:10px;font-size:13px;line-height:1.5;">
+         <b>All stats maxed for this stage.</b><br/>
+         <span style="color:var(--muted);font-size:12px;">
+           The Blessing will still fill your Evolution Bar by 10–25%. Click Apply.
+         </span>
+       </div>`);
+  }
   TRAITS.forEach(t => {
     const idx = TRAITS.indexOf(t);
     const cur = state.stats[t] || STAGE_FLOORS[state.stageIdx][idx];
     const cap = STAGE_CAPS[state.stageIdx][idx];
     const maxAllowed = Math.min(40, cap - cur);
+    const isMaxed = maxAllowed <= 0;
     rows.insertAdjacentHTML('beforeend',
-      `<div class="alloc-row">
-        <div class="alloc-label" style="color:var(--${t.toLowerCase()}-color,var(--accent));">${t}</div>
-        <input type="range" min="0" max="${maxAllowed}" value="0" data-t="${t}" />
-        <div class="alloc-val" id="av-${t}">0</div>
+      `<div class="alloc-row" style="${isMaxed?'opacity:0.55;':''}">
+        <div class="alloc-label" style="color:var(--${t.toLowerCase()}-color,var(--accent));">${t}${isMaxed?' · MAX':''}</div>
+        <input type="range" min="0" max="${Math.max(0,maxAllowed)}" value="0" data-t="${t}" ${isMaxed?'disabled':''}/>
+        <div class="alloc-val" id="av-${t}">${isMaxed?'–':'0'}</div>
       </div>`);
   });
   rows.querySelectorAll('input').forEach(inp => {
@@ -4276,28 +4298,88 @@ function updateAllocRemaining() {
   });
   document.getElementById('allocApply').disabled = allocState.remaining < 0;
 }
-function applyAllocation() {
+// Apply the Blessing: sends the distribution to the champion_allocate
+// edge function, consumes the potion server-side, and uses the returned
+// champion state as the source of truth. Pre-fix this was client-only
+// so Blessings did literally nothing persistent.
+async function applyAllocation() {
   if (!allocState) return;
   const src = allocState.sourceEl;
-  state.inv.alloc--;
-  // apply each trait with animation
-  const totalFill = randFill(10, 25);
-  tickEvo(totalFill);
+  const alloc = findPotion({ kind: 'allocation' });
+  if (!alloc) {
+    alert('No Blessing available.');
+    closeAllocModal();
+    return;
+  }
+
+  const distribution = { ...allocState.values };
+  const wantedGains = { ...distribution }; // snapshot for the float text
+  const applyBtn = document.getElementById('allocApply');
+  if (applyBtn) { applyBtn.disabled = true; applyBtn.textContent = '✨ Blessing…'; }
+
+  const oldStats = { ...state.stats };
+  const oldPct = state.evoPct;
+  const oldLevel = state.level;
+
+  let resp;
+  try {
+    resp = await apiAllocateChampion({
+      champion_id: state.championId,
+      allocation_potion_id: alloc.id,
+      distribution,
+    });
+  } catch (e) {
+    if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '✨ Apply Blessing'; }
+    alert('Blessing failed: ' + e.message);
+    return;
+  }
+
+  // Server is authoritative
+  const c = mapChampion(resp.champion);
+  state.stats = { ...c.stats };
+  state.evoPct = c.evoPct;
+  state.level = c.level;
+  state.stageIdx = c.stageIdx;
+  const cached = myChampions.find(m => m.id === c.id);
+  if (cached) Object.assign(cached, c);
+  await reloadPotions();
+
+  const didLevelUp = state.level > oldLevel;
+
+  // Animation: one fly → per-trait float texts → bar fill. Show the
+  // *applied* values from the server (respect caps), not the user-set
+  // ones, so the tester sees what actually happened if anything was
+  // clamped by cap.
+  const appliedMap = (resp.result && resp.result.applied) || wantedGains;
 
   potionFlyAndBurst(src || document.body, (tx, ty) => {
     let offset = 0;
+    let any = false;
     TRAITS.forEach(t => {
-      const gain = allocState.values[t];
+      const gain = Math.round(appliedMap[t] || 0);
       if (gain > 0) {
-        const idx = TRAITS.indexOf(t);
-        const cap = STAGE_CAPS[state.stageIdx][idx];
-        state.stats[t] = Math.min(cap, (state.stats[t] || STAGE_FLOORS[state.stageIdx][idx]) + gain);
+        any = true;
         setTimeout(() => floatText(`+${gain} ${t}`, tx, ty - offset), offset * 8);
         offset += 24;
       }
     });
+    // If everything was capped and nothing landed as stat, show a bar-only nudge.
+    if (!any) {
+      floatText('ALL MAXED', tx, ty - 36, '#ffd98a');
+      const barGain = Math.max(1, didLevelUp
+        ? (100 - oldPct) + state.evoPct
+        : state.evoPct - oldPct);
+      floatText(`+${Math.round(barGain)}% BAR`, tx, ty - 12, '#9effc7');
+    }
     pulseBar();
-    document.getElementById('evoFill').style.width = state.evoPct + '%';
+    fireBarSplash();
+    const fill = document.getElementById('evoFill');
+    fill.style.width = state.evoPct + '%';
+    updateBarNearFull(state.evoPct);
+    if (didLevelUp) {
+      fireScreenFlash();
+      fireLevelUpBanner(state.level);
+    }
   });
 
   closeAllocModal();
@@ -5051,6 +5133,25 @@ async function apiEvolveChampion({ champion_id, evolution_potion_id }) {
     throw new Error(`${code}: ${data.message || ''}`.trim());
   }
   return data;  // { champion, newStageIdx, newStageName, levelAfter, potionRemaining }
+}
+
+async function apiAllocateChampion({ champion_id, allocation_potion_id, distribution }) {
+  const res = await apiFetch(`${FN_BASE}/champion_allocate`, {
+    method: 'POST',
+    headers: AUTH_HEADERS,
+    body: JSON.stringify({
+      wallet: getWallet(),
+      champion_id,
+      allocation_potion_id,
+      distribution,
+    }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const code = data.error || `http_${res.status}`;
+    throw new Error(`${code}: ${data.message || ''}`.trim());
+  }
+  return data;  // { champion, result, potionRemaining }
 }
 
 async function loadMyChampions() {
