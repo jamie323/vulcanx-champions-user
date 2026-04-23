@@ -4010,9 +4010,25 @@ async function usePotion(trait, sourceEl) {
   const actualGain = state.stats[trait] - oldVal;
   const didLevelUp = state.level > oldLevel;
 
+  // Compute bar-fill so the float can show it when the trait was capped.
+  // If we levelled up, the bar overflowed — show the *amount* added, not
+  // the ending pct (which would look like the bar went backwards).
+  const barGain = didLevelUp
+    ? (100 - oldPct) + state.evoPct   // overflowed: old→100 plus new→now
+    : state.evoPct - oldPct;
+  // If the trait was capped (actualGain === 0), the potion still filled
+  // the bar. Show that instead of the confusing "+0 TRAIT". Otherwise
+  // show the stat gain as usual.
+  const cappedFeed = Math.round(actualGain) === 0;
+
   // animate: fly → burst → float text + bar pulse + stat count-up + juice
   potionFlyAndBurst(sourceEl || document.body, (tx, ty) => {
-    floatText(`+${Math.round(actualGain)} ${trait}`, tx, ty - 20);
+    if (cappedFeed) {
+      floatText(`${trait} MAXED`, tx, ty - 36, '#ffd98a');
+      floatText(`+${Math.max(1, Math.round(barGain))}% BAR`, tx, ty - 12, '#9effc7');
+    } else {
+      floatText(`+${Math.round(actualGain)} ${trait}`, tx, ty - 20);
+    }
     pulseBar();
     fireBarSplash();
     glowStatRow(trait);
@@ -4472,11 +4488,26 @@ function render() {
   if (feedBtn) {
     const totalReady = TRAITS.reduce((sum, t) => sum + (state.inv[t] || 0), 0);
     const allCapped = TRAITS.every(t => (state.stats[t] || 0) >= STAGE_CAPS[state.stageIdx][TRAITS.indexOf(t)]);
+    // Predict the next trait Feed Me will fire, mirroring the click-handler
+    // priority (prefer non-capped with stock, lowest ratio first).
+    let nextTrait = null;
+    const owned = TRAITS.filter(t => state.inv[t] > 0);
+    if (owned.length) {
+      const nonCapped = owned.filter(t => (state.stats[t] || 0) < STAGE_CAPS[state.stageIdx][TRAITS.indexOf(t)]);
+      const pool = nonCapped.length ? nonCapped : owned;
+      pool.sort((a, b) => {
+        const ai = TRAITS.indexOf(a), bi = TRAITS.indexOf(b);
+        return (state.stats[a] || 0) / STAGE_CAPS[state.stageIdx][ai]
+             - (state.stats[b] || 0) / STAGE_CAPS[state.stageIdx][bi];
+      });
+      nextTrait = pool[0];
+    }
     feedBtn.disabled = totalReady === 0;
+    const nextEmoji = nextTrait ? (TRAIT_EMOJI[nextTrait] || '') : '';
     document.getElementById('feedCount').textContent =
       totalReady === 0 ? 'No potions yet — open a chest'
-      : allCapped ? `${totalReady} ready · stats maxed · bar only`
-      : `${totalReady} ready`;
+      : allCapped ? `${nextEmoji} next · bar only · ${totalReady} left`
+      : `${nextEmoji} next · ${totalReady} ready`;
   }
 }
 
@@ -5998,13 +6029,20 @@ const SHOP_ITEMS = [
   { kind: 'minor', trait: 'INT', label: 'Intelligence', emoji: '🧠', tier: 'Minor', price: 5 },
   { kind: 'minor', trait: 'LCK', label: 'Luck', emoji: '🍀', tier: 'Minor', price: 5 },
   // Major trio (sample)
+  // Majors — full 6-trait set
   { kind: 'major', trait: 'STR', label: 'STR Major', emoji: '💪', tier: 'Major', price: 15 },
   { kind: 'major', trait: 'VIT', label: 'VIT Major', emoji: '❤️', tier: 'Major', price: 15 },
   { kind: 'major', trait: 'AGI', label: 'AGI Major', emoji: '🏃', tier: 'Major', price: 15 },
   { kind: 'major', trait: 'FER', label: 'FER Major', emoji: '⚔️', tier: 'Major', price: 15 },
-  // Epic
+  { kind: 'major', trait: 'INT', label: 'INT Major', emoji: '🧠', tier: 'Major', price: 15 },
+  { kind: 'major', trait: 'LCK', label: 'LCK Major', emoji: '🍀', tier: 'Major', price: 15 },
+  // Epics — full 6-trait set
   { kind: 'epic',  trait: 'STR', label: 'STR Epic',  emoji: '💪', tier: 'Epic',  price: 40 },
   { kind: 'epic',  trait: 'VIT', label: 'VIT Epic',  emoji: '❤️', tier: 'Epic',  price: 40 },
+  { kind: 'epic',  trait: 'AGI', label: 'AGI Epic',  emoji: '🏃', tier: 'Epic',  price: 40 },
+  { kind: 'epic',  trait: 'FER', label: 'FER Epic',  emoji: '⚔️', tier: 'Epic',  price: 40 },
+  { kind: 'epic',  trait: 'INT', label: 'INT Epic',  emoji: '🧠', tier: 'Epic',  price: 40 },
+  { kind: 'epic',  trait: 'LCK', label: 'LCK Epic',  emoji: '🍀', tier: 'Epic',  price: 40 },
   // Specials
   { kind: 'evolution',  trait: null, label: 'Evolution', emoji: '⚡', tier: 'Special', price: 20 },
   { kind: 'allocation', trait: null, label: 'Blessing',  emoji: '✨', tier: 'Special', price: 25 },
