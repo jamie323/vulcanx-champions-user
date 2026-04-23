@@ -3488,11 +3488,43 @@
         <li><b>Art:</b> final for Orc Ironfang (20 stages). Other bloodlines coming.</li>
       </ul>
       <h3>What happens if I run out of potions?</h3>
-      <p>In prod you earn more from chests in the wider Vulcan Forged ecosystem. In QA we can top you up via the admin tools — ping the Discord channel.</p>
+      <p>Buy more in the <b>🛒 Shop</b> (top bar) — Minors 5 PYR, Majors 15 PYR, Epics 40 PYR. Dummy TX in QA, no PYR deducted. In prod potions drop from chests across the Vulcan Forged ecosystem.</p>
+
       <h3>What if a trait is maxed?</h3>
-      <p>Feeding a potion into a maxed trait still <b>consumes the potion and fills the bar</b> — the stat just doesn't rise. This keeps you progressing even if you over-invested early.</p>
+      <p>Feeding a potion into a maxed trait still <b>consumes the potion and fills the Evolution Bar</b> — the stat just doesn't rise. You'll see "TRAIT MAXED · +X% BAR" float over the portrait. This keeps you progressing even if you over-invested early.</p>
+
+      <h3>How do I actually evolve?</h3>
+      <p>Three things must be true at once:</p>
+      <ul>
+        <li>You're at a <b>stage-gate level</b> (L3, 5, 7, 10, 13, 15, 18, 22, 26, 30, 34, 38, 41, 44, 46, 48, 49, 49, 50)</li>
+        <li>Evolution Bar is at <b>100%</b></li>
+        <li>You have <b>≥1 Evolution Potion</b></li>
+      </ul>
+      <p>When all three line up, both the big Evolve button <i>and</i> the Evolution Potion card in your potions panel light up gold and pulse. Click either to evolve. The card's subtitle always tells you exactly what's still missing.</p>
+
+      <h3>Why did two of my champions end up at different bar % after identical feeds?</h3>
+      <p>Bar fill is a <b>random roll</b> inside each tier range (Minor 2–6%, Major 6–12%, Epic 12–20%). Two keepers fed the same potions will land on slightly different %. Lucky pours fill more. By design — not a bug.</p>
+
+      <h3>Why do my two champions show different potion counts?</h3>
+      <p>Potions are shared <b>per wallet + per species</b>. Two Orc champions on the same wallet see identical Orc potion inventories — whatever you feed to champion A comes out of champion B's pool too. If your counts differ, you're on two different wallets (likely the "fresh wallet" dev button).</p>
+
+      <h3>Which trait will Feed Me fire?</h3>
+      <p>The little label under the button shows a preview, e.g. <b>🍀 next · 13 ready</b>. Priority: non-capped traits with the lowest fill ratio first (keeps your build balanced); if every trait is capped, it fires whatever's in stock (still fills the bar).</p>
+
+      <h3>Why did my potion count drop but the trait bar didn't move?</h3>
+      <p>That trait is maxed for the current stage. The potion still did something useful — it filled your Evolution Bar. Look for the green <b>"+X% BAR"</b> float on the portrait.</p>
+
+      <h3>Can I rename my champion?</h3>
+      <p>Yes — click the ✏️ next to the name in the left panel. 5 PYR per rename in prod, free in QA (dummy TX).</p>
+
+      <h3>How many potions to reach Legendary?</h3>
+      <p>Roughly <b>1,700 Minors</b> on a greedy play-through. By design — this is the long-term collectible economy. Major/Epic tiers get there faster (3× and 8× stat gain respectively). Don't expect to Legendary in a single QA session.</p>
+
       <h3>Can I trade/sell my champion?</h3>
       <p>Not in QA. In prod, yes — champions and potions both live on-chain and move through the Vulcan marketplace.</p>
+
+      <h3>I found a bug. What do I do?</h3>
+      <p>Screenshot + wallet address + current stage + what you expected vs what happened, drop it in the QA Discord channel. Even tiny nits are useful.</p>
       <div style="text-align:center; margin-top:24px;">
         <button class="welcome-cta" onclick="navTo('adopt')">🥚 Adopt your Ironfang</button>
       </div>
