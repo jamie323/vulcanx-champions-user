@@ -986,6 +986,57 @@
     color: var(--accent); margin: 4px 0; }
   .chest-result .item.evo { color: var(--legend); }
 
+  /* Wallet gate (pre-auth lock screen) */
+  .wallet-gate {
+    position: fixed; inset: 0; z-index: 1000;
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(255,120,40,0.18) 0%, transparent 60%),
+      linear-gradient(180deg, #0a0608 0%, #050305 100%);
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px;
+  }
+  .wg-card {
+    max-width: 540px; padding: 48px 40px;
+    background: linear-gradient(180deg, var(--panel), var(--bg-deep));
+    border: 1px solid var(--accent-dim); border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 80px rgba(255,120,40,0.15);
+  }
+  .wg-eyebrow {
+    color: var(--accent); font-size: 12px; letter-spacing: 6px;
+    text-transform: uppercase; font-weight: 700; margin-bottom: 16px;
+  }
+  .wg-title {
+    font-size: 44px; font-weight: 900; line-height: 1.05;
+    background: linear-gradient(180deg, #fff4d2 0%, #ffcd6b 60%, #b8915a 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0 0 18px; letter-spacing: -0.5px;
+  }
+  .wg-sub {
+    font-size: 15px; color: var(--muted); line-height: 1.6; margin: 0 0 18px;
+  }
+  .wg-sub b { color: var(--text); }
+  .wg-btn {
+    display: inline-block; padding: 16px 36px;
+    background: linear-gradient(90deg, #ffcd6b, #ff8e2e);
+    color: #1a0a05; border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 800; letter-spacing: 2px;
+    text-transform: uppercase; cursor: pointer;
+    box-shadow: 0 10px 30px rgba(255,140,40,0.4);
+    margin-top: 12px;
+  }
+  .wg-btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
+  .wg-btn:disabled { opacity: 0.6; cursor: wait; filter: grayscale(0.4); }
+  .wg-error {
+    margin-top: 16px; color: #ff8a8a; font-size: 13px;
+    min-height: 18px; line-height: 1.5;
+  }
+  .wg-small {
+    margin-top: 18px; color: var(--muted); font-size: 11px;
+    letter-spacing: 1px; opacity: 0.7;
+  }
+
   .btn-primary { width: 100%; padding: 12px;
     background: linear-gradient(90deg,#ffcd6b,#ff8e2e);
     color: #1a0a05; font-weight: 700; letter-spacing: 1px;
@@ -1865,6 +1916,28 @@
 </style>
 </head>
 <body>
+
+<!-- ======== WALLET GATE — blocks app until SIWE completes ======== -->
+<div id="walletGate" class="wallet-gate" style="display:none;">
+  <div class="wg-card">
+    <div class="wg-eyebrow">✦ QA · Elysium Testnet ✦</div>
+    <h1 class="wg-title">Connect your Wallet</h1>
+    <p class="wg-sub">
+      Welcome to VulcanX Champions QA. Sign in with your wallet on the
+      <b>Elysium</b> chain to begin testing. You'll receive <b>80 starter potions</b>
+      on your first connect to fully test the Orc Ironfang bloodline.
+    </p>
+    <p class="wg-sub" style="margin-top:6px;">
+      No PYR is deducted during QA — adopt &amp; rename transactions are
+      signed but free.
+    </p>
+    <button class="wg-btn" id="connectBtn" onclick="connectWallet()">
+      🦊 Connect Wallet
+    </button>
+    <div class="wg-error" id="connectError"></div>
+    <div class="wg-small">Requires MetaMask or another Ethereum wallet. Chain will auto-switch to Elysium (1339).</div>
+  </div>
+</div>
 
 <div class="topbar">
   <div class="brand">VulcanX <span class="dot">·</span> Champions</div>
@@ -3148,22 +3221,108 @@ const AUTH_HEADERS = {
   'Authorization': `Bearer ${SUPABASE_ANON}`,
 };
 
-// Persistent test wallet — stored in localStorage under `vx_wallet`.
-// Shape: 0xtest_<16 hex chars> to satisfy the edge-fn wallet regex.
-// Replaced with a real SIWE flow later.
-function getWallet() {
-  let w = localStorage.getItem('vx_wallet');
-  if (!w) {
-    const r = Array.from({length:16}, () =>
-      '0123456789abcdef'[Math.floor(Math.random()*16)]).join('');
-    w = `0xtest_${r}`;
-    localStorage.setItem('vx_wallet', w);
-  }
-  return w;
+// =============================================================
+// WALLET AUTH — SIWE on Elysium chain (chainId 1339)
+// =============================================================
+// After successful wallet connect + signature verify, the lowercase
+// wallet address is persisted in localStorage under `vx_wallet` and
+// `vx_auth` = "1". The app is gated — if not authenticated, the
+// connect-wallet screen blocks everything.
+
+const ELYSIUM_CHAIN = {
+  chainId: "0x53B",  // 1339
+  chainName: "Elysium",
+  nativeCurrency: { name: "LAVA", symbol: "LAVA", decimals: 18 },
+  rpcUrls: ["https://rpc.elysiumchain.tech"],
+  blockExplorerUrls: ["https://blockscout.elysiumchain.tech/"],
+};
+
+function isAuthenticated() {
+  return localStorage.getItem('vx_auth') === '1'
+      && !!localStorage.getItem('vx_wallet');
 }
-function resetWallet() {
+
+function getWallet() {
+  return localStorage.getItem('vx_wallet') || null;
+}
+
+function disconnectWallet() {
   localStorage.removeItem('vx_wallet');
-  return getWallet();
+  localStorage.removeItem('vx_auth');
+  location.reload();
+}
+
+async function connectWallet() {
+  const btn = document.getElementById('connectBtn');
+  const err = document.getElementById('connectError');
+  if (err) err.textContent = '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Connecting…'; }
+
+  try {
+    if (!window.ethereum) {
+      throw new Error('No wallet detected. Install MetaMask (or another Ethereum wallet) and reload.');
+    }
+
+    // 1) Request account access
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    if (!accounts || accounts.length === 0) throw new Error('No account returned from wallet.');
+    const wallet = accounts[0].toLowerCase();
+
+    // 2) Switch to Elysium (add it if not present)
+    if (btn) btn.textContent = 'Switching to Elysium…';
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: ELYSIUM_CHAIN.chainId }],
+      });
+    } catch (switchErr) {
+      if (switchErr.code === 4902 || (switchErr.data && switchErr.data.originalError && switchErr.data.originalError.code === 4902)) {
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [ELYSIUM_CHAIN],
+        });
+      } else {
+        throw switchErr;
+      }
+    }
+
+    // 3) Request signing challenge
+    if (btn) btn.textContent = 'Requesting challenge…';
+    const chRes = await fetch(`${FN_BASE}/auth_challenge`, {
+      method: 'POST', headers: AUTH_HEADERS,
+      body: JSON.stringify({ wallet }),
+    });
+    const ch = await chRes.json();
+    if (!chRes.ok || !ch.nonce) throw new Error('Challenge failed: ' + JSON.stringify(ch));
+
+    // 4) Sign the message
+    if (btn) btn.textContent = 'Check your wallet to sign…';
+    const signature = await window.ethereum.request({
+      method: 'personal_sign',
+      params: [ch.message, wallet],
+    });
+
+    // 5) Verify on server → triggers starter potion grant on first connect
+    if (btn) btn.textContent = 'Verifying signature…';
+    const vRes = await fetch(`${FN_BASE}/auth_verify`, {
+      method: 'POST', headers: AUTH_HEADERS,
+      body: JSON.stringify({ wallet, nonce: ch.nonce, signature }),
+    });
+    const v = await vRes.json();
+    if (!vRes.ok || !v.ok) throw new Error('Verify failed: ' + JSON.stringify(v));
+
+    // 6) Persist + reload
+    localStorage.setItem('vx_wallet', wallet);
+    localStorage.setItem('vx_auth', '1');
+    if (v.granted_starter) {
+      alert('🎉 Welcome! You\'ve been granted 80 starter potions for Orc QA testing.');
+    }
+    location.reload();
+  } catch (e) {
+    console.error('[connectWallet]', e);
+    if (err) err.textContent = e.message || String(e);
+    if (btn) { btn.disabled = false; btn.textContent = '🦊 Connect Wallet'; }
+  }
 }
 
 // Map backend champion row → frontend shape (historical field names).
@@ -3923,6 +4082,13 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
 // BOOT
 // ============================================================
 async function boot() {
+  // WALLET GATE — if the user hasn't signed in with their wallet, show
+  // the connect screen instead of booting the app.
+  if (!isAuthenticated()) {
+    document.getElementById('walletGate').style.display = 'flex';
+    return;
+  }
+
   try {
     const data = await fetch('bloodlines.json').then(r => r.json());
     // Transform bloodlines.json schema → runtime SPECIES
@@ -3937,8 +4103,9 @@ async function boot() {
         // Build per-stage nameByStage from hero name + stage names
         const hero = bl.heroName;
         const nameByStage = sp.stageNames.map((name, idx) => {
+          const last = sp.stageNames.length - 1;
           if (idx === 0) return `${hero} the ${name}`;
-          if (idx === 8) return `${hero}, the ${name}`;
+          if (idx === last) return `${hero}, the ${name}`;
           return `${hero} ${name}`;
         });
         SPECIES[sp_id].bloodlines[bl_id] = {
@@ -3946,6 +4113,8 @@ async function boot() {
           heroName: hero,
           nameByStage,
           stages: bl.stages,
+          adoptable: !!bl.adoptable,
+          complete: !!bl.complete,
         };
       });
     });
