@@ -3,6 +3,15 @@
 <head>
 <meta charset="utf-8" />
 <title>VulcanX Champion — MVP</title>
+<!-- Preconnect + preload the WalletConnect UMD so the bundle is already
+     parsed by the time the keeper clicks the WC button. Saves ~2-4s on
+     the "tap → QR modal" latency that Jamie flagged. Cheap if unused
+     (browsers drop unclaimed preloads). -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+<link rel="preconnect" href="https://relay.walletconnect.com" crossorigin />
+<link rel="preload"
+      href="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.23.9/dist/index.umd.js"
+      as="script" crossorigin="anonymous" />
 <style>
   :root {
     --bg-deep: #0a0608;
@@ -2941,7 +2950,7 @@
         <span class="wg-btn-ico">📱</span>
         <span class="wg-btn-body">
           <span class="wg-btn-title">WalletConnect</span>
-          <span class="wg-btn-sub">mobile wallets · QR code</span>
+          <span class="wg-btn-sub" id="wcSubLabel">mobile wallets · QR code</span>
         </span>
       </button>
     </div>
@@ -5739,12 +5748,30 @@ async function boot() {
   // the connect screen instead of booting the app.
   if (!isAuthenticated()) {
     document.getElementById('walletGate').style.display = 'flex';
-    // Kick off WalletConnect SDK fetch in the background so that when the
-    // user taps "WalletConnect" the modal opens instantly (especially
-    // important on mobile Safari, which gates deep-links behind the user
-    // gesture). If the user has an injected wallet and picks MetaMask,
-    // the WC SDK just stays unused — no harm.
+    // WC prewarm already fires on wallet.js DOMContentLoaded for users
+    // without window.ethereum — but for mobile in-app browsers that DO
+    // inject ethereum we still want WC available as an option, so
+    // prewarm here too. Idempotent.
     try { window.vxWallet?.prewarmWalletConnect(); } catch (_) {}
+    // Reflect the readiness state on the WC button sublabel so the keeper
+    // sees "getting ready…" → "ready · QR code" once the SDK is loaded.
+    const wcSub = document.getElementById('wcSubLabel');
+    if (wcSub) {
+      wcSub.textContent = 'warming up SDK · 1-3s';
+      const check = setInterval(() => {
+        if (window.vxWallet && window.vxWallet._wcProvider) {
+          wcSub.textContent = 'mobile wallets · ready';
+          clearInterval(check);
+        }
+      }, 300);
+      // Give up after 10s so we don't sit on a stale label
+      setTimeout(() => {
+        clearInterval(check);
+        if (wcSub.textContent.includes('warming')) {
+          wcSub.textContent = 'mobile wallets · QR code';
+        }
+      }, 10000);
+    }
     return;
   }
 

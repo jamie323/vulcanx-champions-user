@@ -341,6 +341,12 @@
 
     async __doConnectWalletConnect() {
       let provider;
+      // Emit a status IMMEDIATELY so the UI shows "Preparing…" from the
+      // first tick. The actual init (script load + relay handshake) can
+      // take 2-5s on cold page load; without this, the button sits dead
+      // and testers think nothing's happening.
+      this._emit('chainStatus',
+        this._wcProvider ? 'Opening wallet…' : 'Preparing WalletConnect…');
       try { provider = await this._initWalletConnectProvider(); }
       catch (e) { this._emit('error', e.message || 'WalletConnect init failed'); return false; }
 
@@ -505,4 +511,23 @@
   // Expose to the page
   window.VXWalletManager = WalletManager;
   window.vxWallet = new WalletManager();
+
+  // Eager prewarm for users without an injected wallet — those are the
+  // keepers who'll use WalletConnect and suffer the 2-5s cold init.
+  // For MetaMask users we skip it to avoid a wasted 1.8MB fetch.
+  // Fire at idle-time so the main thread stays responsive for rendering.
+  function schedulePrewarm() {
+    if (window.ethereum) return;  // MM user — no WC needed
+    try {
+      window.vxWallet.prewarmWalletConnect();
+    } catch (_) {}
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', schedulePrewarm, { once: true });
+  } else {
+    // requestIdleCallback falls back to setTimeout where unsupported (Safari).
+    const ric = window.requestIdleCallback
+      || ((fn) => setTimeout(fn, 50));
+    ric(schedulePrewarm, { timeout: 1000 });
+  }
 })();
