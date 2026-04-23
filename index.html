@@ -4624,10 +4624,20 @@ function render() {
     }
     feedBtn.disabled = totalReady === 0;
     const nextEmoji = nextTrait ? (TRAIT_EMOJI[nextTrait] || '') : '';
-    document.getElementById('feedCount').textContent =
-      totalReady === 0 ? 'No potions yet — open a chest'
-      : allCapped ? `${nextEmoji} next · bar only · ${totalReady} left`
-      : `${nextEmoji} next · ${totalReady} ready`;
+    // When every trait is capped, point the keeper at a Blessing if they
+    // have one (fills the bar 3-4× faster than a capped Minor) or at the
+    // Shop if they don't. Mirrors the evo-card hint logic.
+    let label;
+    if (totalReady === 0) {
+      label = 'No potions yet — open a chest';
+    } else if (allCapped && state.inv.alloc > 0) {
+      label = `${nextEmoji} next · try ✨×${state.inv.alloc} for faster bar`;
+    } else if (allCapped) {
+      label = `${nextEmoji} next · bar only · ${totalReady} left`;
+    } else {
+      label = `${nextEmoji} next · ${totalReady} ready`;
+    }
+    document.getElementById('feedCount').textContent = label;
   }
 }
 
