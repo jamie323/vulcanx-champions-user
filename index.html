@@ -2373,6 +2373,60 @@
   .vx-dialog-card.variant-success .vx-dialog-title { color: #9effc7; }
 
   /* ================================================================
+     TOAST — top-right non-blocking notifications
+     ================================================================ */
+  .vx-toast-stack {
+    position: fixed;
+    top: 72px; right: 20px;
+    z-index: 9700;
+    display: flex; flex-direction: column; gap: 8px;
+    pointer-events: none;
+  }
+  .vx-toast {
+    pointer-events: auto;
+    background: linear-gradient(180deg, #1a1226 0%, #0d0817 100%);
+    color: var(--text);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 14px; font-weight: 600;
+    letter-spacing: 0.3px;
+    box-shadow:
+      0 8px 24px rgba(0,0,0,0.6),
+      0 0 40px rgba(255, 205, 107, 0.2);
+    transform: translateX(110%) scale(0.96);
+    opacity: 0;
+    transition: transform 0.35s cubic-bezier(.2,.9,.3,1.2), opacity 0.35s;
+    min-width: 260px; max-width: 360px;
+  }
+  .vx-toast.show {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+  .vx-toast.fade {
+    transform: translateX(110%) scale(0.96);
+    opacity: 0;
+  }
+  .vx-toast.vx-toast-success {
+    border-color: #3aff8a;
+    box-shadow:
+      0 8px 24px rgba(0,0,0,0.6),
+      0 0 40px rgba(58, 255, 138, 0.25);
+    color: #d7ffe5;
+  }
+  .vx-toast.vx-toast-error {
+    border-color: #ff6b6b;
+    box-shadow:
+      0 8px 24px rgba(0,0,0,0.6),
+      0 0 40px rgba(255, 107, 107, 0.25);
+    color: #ffd0d0;
+  }
+  @media (max-width: 560px) {
+    .vx-toast-stack { top: auto; bottom: 80px; left: 12px; right: 12px; }
+    .vx-toast { min-width: 0; width: 100%; }
+  }
+
+  /* ================================================================
      APOTHECARY SHOP
      ================================================================ */
   .shop-card { max-width: 760px; }
@@ -4500,6 +4554,23 @@ async function applyAllocation() {
   // clamped by cap.
   const appliedMap = (resp.result && resp.result.applied) || wantedGains;
 
+  // Stronger "it worked" feedback — Acadian's session showed the
+  // backend applied the Blessing but he couldn't tell visually, so he
+  // reported "nothing changed". Fire a bar-pulse + splash IMMEDIATELY
+  // (not inside the fly-burst onImpact, which can be delayed by 800ms
+  // on slow devices), plus a top-right toast with the exact delta.
+  const barGain = Math.max(1, didLevelUp
+    ? (100 - oldPct) + state.evoPct
+    : state.evoPct - oldPct);
+  // Immediate: update the bar width + splash so the progression is
+  // felt the instant Apply is clicked.
+  const fill = document.getElementById('evoFill');
+  fill.style.width = state.evoPct + '%';
+  updateBarNearFull(state.evoPct);
+  pulseBar();
+  fireBarSplash();
+  showToast(`✨ Blessing applied · +${Math.round(barGain)}% bar`, 'success');
+
   potionFlyAndBurst(src || document.body, (tx, ty) => {
     let offset = 0;
     let any = false;
@@ -4514,16 +4585,8 @@ async function applyAllocation() {
     // If everything was capped and nothing landed as stat, show a bar-only nudge.
     if (!any) {
       floatText('ALL MAXED', tx, ty - 36, '#ffd98a');
-      const barGain = Math.max(1, didLevelUp
-        ? (100 - oldPct) + state.evoPct
-        : state.evoPct - oldPct);
       floatText(`+${Math.round(barGain)}% BAR`, tx, ty - 12, '#9effc7');
     }
-    pulseBar();
-    fireBarSplash();
-    const fill = document.getElementById('evoFill');
-    fill.style.width = state.evoPct + '%';
-    updateBarNearFull(state.evoPct);
     if (didLevelUp) {
       fireScreenFlash();
       fireLevelUpBanner(state.level);
@@ -6260,6 +6323,32 @@ function dbgCopyWallet() {
 }
 
 // ============================================================
+// TOAST — non-blocking top-right notification (for quick wins like
+// "Blessing applied · +24% bar"). 2s auto-dismiss, stacks if multiple.
+// ============================================================
+function showToast(message, variant = 'info', durationMs = 2600) {
+  let stack = document.getElementById('vxToastStack');
+  if (!stack) {
+    stack = document.createElement('div');
+    stack.id = 'vxToastStack';
+    stack.className = 'vx-toast-stack';
+    document.body.appendChild(stack);
+  }
+  const t = document.createElement('div');
+  t.className = `vx-toast vx-toast-${variant}`;
+  t.textContent = message;
+  stack.appendChild(t);
+  // Force layout before class toggle so the enter animation plays.
+  void t.offsetWidth;
+  t.classList.add('show');
+  setTimeout(() => {
+    t.classList.remove('show');
+    t.classList.add('fade');
+    setTimeout(() => t.remove(), 400);
+  }, durationMs);
+}
+
+// ============================================================
 // STYLED DIALOG — vxAlert / vxPrompt (replaces window.alert/prompt)
 // Keeps the UI on-brand instead of showing Chrome's "jamie323.github.io
 // says" system prompt. Returns a Promise so call-sites can `await`.
@@ -6715,7 +6804,7 @@ async function checkoutShop() {
     // Friendly confirmation
     setTimeout(() => {
       closeShop();
-      vxAlert(`${totalQ} potion${totalQ>1?'s':''} added to your inventory.\n\nTotal paid: ${totalP} PYR (dummy TX in QA).`, {title: 'Delivered!', icon: '🧪', variant: 'success'});
+      showToast(`🧪 ${totalQ} potion${totalQ>1?'s':''} delivered · ${totalP} PYR (dummy)`, 'success', 3200);
       btn.textContent = origText;
       btn.disabled = false;
     }, 700);
