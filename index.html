@@ -4151,13 +4151,28 @@ function evolveRequirementText() {
   }
   const gate = nextGate();
   const nextStageName = STAGES[state.stageIdx + 1]?.name || 'the next stage';
+
+  // When all stats are capped and bar is still climbing, testers feel
+  // stuck ("stats maxed but not at L3"). Suggest the fastest bar-fill
+  // tools they already own.
+  const allCapped = TRAITS.every(t =>
+    (state.stats[t] || 0) >= STAGE_CAPS[state.stageIdx][TRAITS.indexOf(t)]);
+  let bestTip = '';
+  if (allCapped) {
+    if (state.inv.alloc > 0) {
+      bestTip = ` Tip: Blessings fill 10–25% each — you have ${state.inv.alloc}.`;
+    } else {
+      bestTip = ' Tip: Epics fill 12–20%, Majors 6–12%. Buy some in the 🛒 Shop.';
+    }
+  }
+
   if (!atGate()) {
     const levelsAway = gate - state.level;
-    return `Reach Level ${gate} to unlock ${nextStageName} (${levelsAway} level${levelsAway===1?'':'s'} to go). Feed potions to tick the Evolution Bar up.`;
+    return `Reach Level ${gate} to unlock ${nextStageName} (${levelsAway} level${levelsAway===1?'':'s'} to go). Feed potions to tick the Evolution Bar up.${bestTip}`;
   }
   if (state.evoPct < 100) {
     const pctAway = Math.max(1, 100 - Math.round(state.evoPct));
-    return `At the gate — fill the Evolution Bar to 100% (${pctAway}% to go) then click to evolve.`;
+    return `At the gate — fill the Evolution Bar to 100% (${pctAway}% to go) then click to evolve.${bestTip}`;
   }
   return `Ready! Click to evolve into ${nextStageName}.`;
 }
