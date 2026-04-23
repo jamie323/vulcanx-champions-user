@@ -4358,42 +4358,71 @@ async function tryEvolveFromPotion() {
   vxAlert(evolveRequirementText(), {title: 'Not ready to evolve', icon: '⚡'});
 }
 
+// Global lock — mirrors _feedInFlight / _allocInFlight. Without this,
+// a rapid double-click on the Evolve button could fire two concurrent
+// champion_evolve calls. First succeeds, second either races (both
+// advance stage, burning two Evolution potions) or gets bar_not_full
+// after the first response lands. Either way not good.
+let _evolveInFlight = false;
+
 async function evolve() {
   if (!canEvolve() || !state.championId) return;
+  if (_evolveInFlight) {
+    console.warn('[evolve] bailed: already in flight');
+    return;
+  }
   const evoPotion = findPotion({ kind: 'evolution' });
   if (!evoPotion) return;
 
+  _evolveInFlight = true;
   let resp;
   try {
-    resp = await apiEvolveChampion({
-      champion_id: state.championId,
-      evolution_potion_id: evoPotion.id,
+    try {
+      resp = await apiEvolveChampion({
+        champion_id: state.championId,
+        evolution_potion_id: evoPotion.id,
+      });
+    } catch (e) {
+      console.error('[evolve] api call failed', e);
+      vxAlert(e.message || 'Unknown error', {title: 'Evolve failed', icon: '⚡', variant: 'error'});
+      return;
+    }
+
+    console.log('[evolve] ok', {
+      oldStage: state.stageIdx,
+      newStage: resp?.champion?.stage_idx,
+      oldLevel: state.level,
+      newLevel: resp?.champion?.level,
+      potionRemaining: resp?.potionRemaining,
     });
-  } catch (e) {
-    vxAlert(e.message || 'Unknown error', {title: 'Evolve failed', icon: '⚡', variant: 'error'});
-    return;
+
+    const c = mapChampion(resp.champion);
+    state.stats = { ...c.stats };
+    state.evoPct = c.evoPct;
+    state.level = c.level;
+    state.stageIdx = c.stageIdx;
+    state.evoMaxLevel = GATE_LEVELS[state.stageIdx + 1] || 50;
+    const cached = myChampions.find(m => m.id === c.id);
+    if (cached) Object.assign(cached, c);
+
+    await reloadPotions();
+
+    const newStage = STAGES[state.stageIdx];
+    showCinematic('EVOLVED', `${newStage.name.toUpperCase()} · ${newStage.zone.toUpperCase()}`);
+    showToast(`⚡ Evolved to ${newStage.name}!`, 'success', 3400);
+    // Extra juice: screen flash + level banner + bar reset with splash
+    fireScreenFlash();
+    fireLevelUpBanner(state.level);
+    setTimeout(() => fireBarSplash(), 150);
+    // setStageImage in render() will fire crossfade + burst ring
+
+    setTimeout(() => render(), 400);
+  } finally {
+    // Longer release than feed/blessing because the evolve cinematic
+    // runs ~2.3s — don't want the user firing another evolve while the
+    // crossfade is still playing.
+    setTimeout(() => { _evolveInFlight = false; }, 2500);
   }
-
-  const c = mapChampion(resp.champion);
-  state.stats = { ...c.stats };
-  state.evoPct = c.evoPct;
-  state.level = c.level;
-  state.stageIdx = c.stageIdx;
-  state.evoMaxLevel = GATE_LEVELS[state.stageIdx + 1] || 50;
-  const cached = myChampions.find(m => m.id === c.id);
-  if (cached) Object.assign(cached, c);
-
-  await reloadPotions();
-
-  const newStage = STAGES[state.stageIdx];
-  showCinematic('EVOLVED', `${newStage.name.toUpperCase()} · ${newStage.zone.toUpperCase()}`);
-  // Extra juice: screen flash + level banner + bar reset with splash
-  fireScreenFlash();
-  fireLevelUpBanner(state.level);
-  setTimeout(() => fireBarSplash(), 150);
-  // setStageImage in render() will fire crossfade + burst ring
-
-  setTimeout(() => render(), 400);
 }
 
 // ===== ALLOCATION MODAL =====
