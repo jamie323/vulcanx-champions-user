@@ -4464,16 +4464,19 @@ function render() {
 
 
   // ── FEED hero button (still in the feed panel)
+  // Enabled whenever ANY trait potion is in stock. Capped feeds still
+  // consume the potion and fill the bar server-side, so we no longer
+  // dead-end the button when every trait is maxed — the bar still needs
+  // topping up to reach the gate.
   const feedBtn = document.getElementById('feedHero');
   if (feedBtn) {
     const totalReady = TRAITS.reduce((sum, t) => sum + (state.inv[t] || 0), 0);
-    const anyAtCap = TRAITS.every(t => (state.stats[t] || 0) >= STAGE_CAPS[state.stageIdx][TRAITS.indexOf(t)]);
-    const hasUsable = totalReady > 0 && !anyAtCap;
-    feedBtn.disabled = !hasUsable;
+    const allCapped = TRAITS.every(t => (state.stats[t] || 0) >= STAGE_CAPS[state.stageIdx][TRAITS.indexOf(t)]);
+    feedBtn.disabled = totalReady === 0;
     document.getElementById('feedCount').textContent =
       totalReady === 0 ? 'No potions yet — open a chest'
-      : hasUsable ? `${totalReady} ready`
-      : 'All traits maxed — evolve first';
+      : allCapped ? `${totalReady} ready · stats maxed · bar only`
+      : `${totalReady} ready`;
   }
 }
 
@@ -4496,24 +4499,32 @@ function bindIf(id, event, handler) {
   if (el) el.addEventListener(event, handler);
 }
 
-// Hero Feed button — uses first available trait potion that isn't capped
+// Hero Feed button — picks the best trait potion to fire.
+// Priority:
+//   1. Any trait with potions AND room below the cap, preferring the
+//      one with the lowest fill ratio (spreads progress evenly).
+//   2. If every trait is capped, feed any potion we own — server-side
+//      it still consumes the potion and fills the Evolution Bar.
+// Only alerts when the inventory is truly empty.
 bindIf('feedHero', 'click', () => {
-  const available = TRAITS.filter(t => {
-    const cap = STAGE_CAPS[state.stageIdx][TRAITS.indexOf(t)];
-    return state.inv[t] > 0 && (state.stats[t] || 0) < cap;
-  });
-  if (available.length === 0) {
-    alert('🧪 No potions available for this stage. Earn chests in the Quests hub and bring potions back here.');
+  const owned = TRAITS.filter(t => state.inv[t] > 0);
+  if (owned.length === 0) {
+    alert('🧪 No trait potions in your inventory. Grab some in the 🛒 Shop or wait for the Quests hub to ship.');
     return;
   }
-  // Feed the trait with the lowest ratio (bar furthest from cap)
-  available.sort((a, b) => {
+  const nonCapped = owned.filter(t => {
+    const cap = STAGE_CAPS[state.stageIdx][TRAITS.indexOf(t)];
+    return (state.stats[t] || 0) < cap;
+  });
+  const pool = nonCapped.length > 0 ? nonCapped : owned;
+  // Lowest ratio first (bar furthest from cap) — keeps stats balanced.
+  pool.sort((a, b) => {
     const ai = TRAITS.indexOf(a), bi = TRAITS.indexOf(b);
     const aRat = (state.stats[a] || 0) / STAGE_CAPS[state.stageIdx][ai];
     const bRat = (state.stats[b] || 0) / STAGE_CAPS[state.stageIdx][bi];
     return aRat - bRat;
   });
-  usePotion(available[0], document.getElementById('feedHero'));
+  usePotion(pool[0], document.getElementById('feedHero'));
 });
 
 bindIf('animateBtn', 'click', () => {
