@@ -978,15 +978,32 @@
 
   /* allocation potion modal */
   .alloc-row {
-    display: grid; grid-template-columns: 40px 1fr 40px;
+    display: grid; grid-template-columns: 46px 1fr 40px;
     align-items: center; gap: 10px; margin-bottom: 10px;
+    /* Prevent text selection on the whole row — Sean reported dragging
+       AGI slider was selecting row text instead of moving the thumb.
+       Capped sliders (maxAllowed=0) can't drag at all, so a missed
+       click fell through to default text-selection. Kill it. */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
   }
   .alloc-row .alloc-label {
     font-size: 11px; color: var(--muted);
     text-transform: uppercase; font-weight: 700;
+    pointer-events: none;
+  }
+  .alloc-row .alloc-val {
+    pointer-events: none;
   }
   .alloc-row input[type=range] {
     width: 100%; accent-color: var(--accent);
+    cursor: grab;
+  }
+  .alloc-row input[type=range]:active { cursor: grabbing; }
+  .alloc-row input[type=range]:disabled {
+    cursor: not-allowed;
+    opacity: 0.35;
   }
   .alloc-row .alloc-val {
     color: var(--accent); font-weight: 700; font-size: 14px;
@@ -3056,13 +3073,13 @@
 <!-- Cache-bust on each deploy so stale wallet.js/stories.js can't hold
      testers on yesterday's bug. Bump the version string when either
      file changes (every commit is fine — it's just a cache key). -->
-<script src="wallet.js?v=20260424-e"></script>
-<script src="stories.js?v=20260424-e"></script>
+<script src="wallet.js?v=20260424-f"></script>
+<script src="stories.js?v=20260424-f"></script>
 <script>
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260424-e',
+  console.log('%c🛡️ VulcanX Champions · v20260424-f',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -6186,6 +6203,23 @@ async function boot() {
     await loadMyChampions();
     adminMode = false;
     document.body.classList.remove('admin-on');
+
+    // ── Deep-link: handle ?champion=<id> share URLs ──
+    // Sean L. flagged that shareChampion() built ?champion=<uuid> URLs but
+    // nothing on the landing page actually used the param — so clicking
+    // a share link dropped you on the homepage. Now: if the param points
+    // to one of MY champions, jump straight into the champion view. If
+    // it's someone else's champion or doesn't exist, fall through to
+    // landing (future: render a public read-only "champion card").
+    const urlChampId = new URLSearchParams(location.search).get('champion');
+    const ownedChamp = urlChampId && myChampions.find(c => c.id === urlChampId);
+    if (ownedChamp) {
+      await openChampion(ownedChamp.id);
+      updateWalletUI();
+      applyDebugGate();
+      return;
+    }
+
     navTo('landing');
     updateWalletUI();
     applyDebugGate();
