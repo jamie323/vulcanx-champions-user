@@ -402,9 +402,65 @@
       }
     }
 
+    // ── Connection health check ──────────────────────────────────
+    // Reconciles our cached state (this.connected / this.address) with
+    // the provider's actual live state. Idle browsers / phone sleeps
+    // can silently kill the provider session while our UI still thinks
+    // we're connected — that's exactly what Salman flagged ("wallet
+    // shows connected, but purchase says 'wallet not connected'").
+    //
+    // Returns:  true if provider still has accounts → connection live
+    //           false if no accounts → we were stale; caller should
+    //                 prompt reconnect
+    // Throws only on totally unreachable providers.
+    async verifyConnection() {
+      if (!this._provider || !this.address) return false;
+      try {
+        const accs = await this._provider.request({ method: 'eth_accounts' });
+        if (!accs || !accs.length) {
+          // Provider is alive but no accounts — session expired or
+          // user disconnected the site externally. Tear down our
+          // cached state so the next interaction prompts afresh.
+          this.disconnect();
+          return false;
+        }
+        // Account may have silently changed (switched account in MM)
+        const live = accs[0].toLowerCase();
+        if (live !== this.address) {
+          this.address = live;
+          this._emit('accountChanged', this.address);
+          const s = this._loadSession();
+          if (s) this._saveSession({ ...s, address: this.address });
+        }
+        return true;
+      } catch (e) {
+        console.warn('[wallet] verifyConnection failed:', e?.message);
+        return false;
+      }
+    }
+
+    // Called when verifyConnection returned false. Tries to silently
+    // re-hydrate from the stored session (works for recent sessions
+    // that are still valid on the provider side, just not cached
+    // locally). Returns true if we recovered, false if the caller
+    // must prompt an interactive reconnect.
+    async tryAutoReconnect() {
+      try {
+        const ok = await this.tryResumeSession();
+        return !!ok;
+      } catch (_) { return false; }
+    }
+
     // ── Signing helpers ──────────────────────────────────────────
     async personalSign(message) {
-      if (!this._provider || !this.address) throw new Error('Wallet not connected');
+      // Pre-flight: verify the provider still has accounts. Fixes the
+      // idle-desync bug where the UI says "connected" but the provider
+      // has evicted our session.
+      const alive = await this.verifyConnection();
+      if (!alive) {
+        const recovered = await this.tryAutoReconnect();
+        if (!recovered) throw new Error('Wallet session expired — please reconnect.');
+      }
       return await this._provider.request({
         method: 'personal_sign',
         params: [message, this.address],
@@ -412,7 +468,11 @@
     }
 
     async sendDummyTx(label) {
-      if (!this._provider || !this.address) throw new Error('Wallet not connected');
+      const alive = await this.verifyConnection();
+      if (!alive) {
+        const recovered = await this.tryAutoReconnect();
+        if (!recovered) throw new Error('Wallet session expired — please reconnect.');
+      }
       await this.ensureElysium();
       const dataHex = '0x' + Array.from(new TextEncoder().encode(`VulcanX:${label}`))
         .map(b => b.toString(16).padStart(2, '0')).join('');

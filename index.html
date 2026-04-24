@@ -1127,6 +1127,19 @@
     display: flex; flex-direction: column; gap: 10px;
     margin-top: 16px;
   }
+  /* Mobile: when no browser extension detected, the MetaMask chooser
+     greys out and a WC emphasis highlights the working path. */
+  .wg-btn.wg-btn-disabled {
+    opacity: 0.45;
+    cursor: help;
+    pointer-events: auto;
+  }
+  .wg-btn.wg-btn-disabled:hover { transform: none; box-shadow: none; }
+  .wg-btn.wg-btn-primary {
+    background: linear-gradient(180deg, rgba(255,205,107,0.25), rgba(255,205,107,0.12));
+    border-color: var(--accent);
+    box-shadow: 0 4px 14px rgba(255, 205, 107, 0.25);
+  }
   .wg-btn {
     display: flex; align-items: center; gap: 14px;
     padding: 14px 18px;
@@ -1992,6 +2005,27 @@
     margin-left: 10px; letter-spacing: 0.5px;
   }
   .wallet-chip:hover { background: rgba(192,132,252,0.2); color: #fff; }
+  /* Heartbeat-flagged stale: red border + amber dot so the keeper
+     sees something's wrong before they try to transact. */
+  .wallet-chip.stale {
+    border-color: #ff7a7a;
+    background: rgba(255, 80, 80, 0.15);
+    color: #ffd0d0;
+    animation: walletStalePulse 2s ease-in-out infinite;
+  }
+  .wallet-chip.stale .dot-live {
+    background: #ff8e2e;
+    box-shadow: 0 0 8px rgba(255, 142, 46, 0.8);
+  }
+  .wallet-chip.stale::before {
+    content: '⚠ ';
+    color: #ff8e2e;
+    margin-right: 4px;
+  }
+  @keyframes walletStalePulse {
+    0%, 100% { box-shadow: 0 0 0 rgba(255, 122, 122, 0); }
+    50%      { box-shadow: 0 0 14px rgba(255, 122, 122, 0.45); }
+  }
   .wallet-chip .dot-live {
     color: #4ade80; font-size: 10px;
     animation: walletPulse 2s infinite;
@@ -3073,13 +3107,13 @@
 <!-- Cache-bust on each deploy so stale wallet.js/stories.js can't hold
      testers on yesterday's bug. Bump the version string when either
      file changes (every commit is fine — it's just a cache key). -->
-<script src="wallet.js?v=20260424-f"></script>
-<script src="stories.js?v=20260424-f"></script>
+<script src="wallet.js?v=20260424-g"></script>
+<script src="stories.js?v=20260424-g"></script>
 <script>
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260424-f',
+  console.log('%c🛡️ VulcanX Champions · v20260424-g',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -3357,7 +3391,7 @@
     <div class="coin gem"><span class="icon">V</span><span id="curGem">15,320</span></div>
     <div class="coin ess"><span class="icon">E</span><span id="curEss">420</span></div>
     <button class="shop-btn" onclick="openShop()">🛒 Shop</button>
-    <div class="wallet-chip" id="walletChip" title="Your test wallet — click to copy" onclick="dbgCopyWallet()">
+    <div class="wallet-chip" id="walletChip" title="Your wallet · click to copy" onclick="onWalletChipClick()">
       <span class="dot-live">●</span>
       <span id="walletChipAddr">—</span>
     </div>
@@ -5824,19 +5858,63 @@ function renderBuy() {
 }
 // Send a dummy 0-value TX on Elysium so the user signs a real transaction
 // but no PYR is deducted. Routes through the WalletManager so MetaMask AND
-// WalletConnect (mobile) both work — including the deep-link back-to-dapp
-// dance that WC handles under the hood.
+// WalletConnect (mobile) both work.
+//
+// On an idle desync the wallet manager's verifyConnection() throws a
+// "session expired" error. We surface that as a friendly "Reconnect"
+// modal — clicking Reconnect clears the stale session and reloads, so
+// the wallet gate comes back up clean. Cheaper and more reliable than
+// trying to stitch the reconnect inline with the in-flight flow.
 async function signDummyTx(label) {
   const wm = window.vxWallet;
-  if (!wm || !wm.connected) {
-    // Fallback: try to resume from session silently (e.g. if the page was
-    // refreshed after auth). If that fails, hard-prompt an error.
-    const resumed = wm ? await wm.tryResumeSession() : false;
-    if (!resumed) throw new Error('Wallet not connected. Reconnect and try again.');
+  if (!wm) throw new Error('Wallet module not loaded');
+  try {
+    const txHash = await wm.sendDummyTx(label);
+    console.log('[dummy tx]', label, '→', txHash);
+    return txHash;
+  } catch (e) {
+    const msg = (e && e.message) || '';
+    if (/session expired|not connected|Wallet not connected/i.test(msg)) {
+      await offerReconnect();
+      // Whatever the user chose, the current flow is dead.
+      throw new Error('Wallet session expired.');
+    }
+    throw e;
   }
-  const txHash = await window.vxWallet.sendDummyTx(label);
-  console.log('[dummy tx]', label, '→', txHash);
-  return txHash;
+}
+
+// Friendly reconnect modal — clearing the session triggers the wallet
+// gate on next load so the keeper picks MetaMask or WalletConnect
+// cleanly. Matches the styled vxAlert look, no Chrome system dialog.
+function offerReconnect() {
+  return new Promise((resolve) => {
+    _vxDialogPending = null;
+    const el   = document.getElementById('vxDialog');
+    const card = el.querySelector('.vx-dialog-card');
+    card.classList.remove('variant-info', 'variant-error', 'variant-success');
+    card.classList.add('variant-error');
+    document.getElementById('vxDialogIcon').textContent = '🦊';
+    document.getElementById('vxDialogTitle').textContent = 'Wallet session expired';
+    document.getElementById('vxDialogBody').textContent =
+      'Your wallet disconnected while the page was idle (phone slept, extension locked, etc.). Reconnect to resume — your champions and potions are safe, nothing was lost.';
+    document.getElementById('vxDialogInput').style.display = 'none';
+    document.getElementById('vxDialogCancel').style.display = '';
+    document.getElementById('vxDialogCancel').textContent = 'Not now';
+    document.getElementById('vxDialogOk').textContent = 'Reconnect';
+    _vxDialogPending = {
+      resolve: async (v) => {
+        if (v === true) {
+          try { await window.vxWallet?.disconnect(); } catch (_) {}
+          localStorage.removeItem('vx_auth');
+          location.reload();
+        }
+        resolve();
+      },
+      isPrompt: false,
+    };
+    el.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  });
 }
 
 async function confirmAdopt() {
@@ -6137,6 +6215,28 @@ async function boot() {
     // inject ethereum we still want WC available as an option, so
     // prewarm here too. Idempotent.
     try { window.vxWallet?.prewarmWalletConnect(); } catch (_) {}
+
+    // Mobile-refix: if the browser has no injected provider (mobile
+    // Safari / Chrome without the MetaMask extension), clicking the
+    // 🦊 MetaMask chooser just throws "no wallet found" — bad UX for
+    // the testers who filed the MM mobile bug. Instead: disable the
+    // MM button, explain why, and highlight WC as the intended path.
+    const hasInjected = !!window.ethereum;
+    const mmBtn = document.getElementById('connectBtnMM');
+    const mmSub = mmBtn?.querySelector('.wg-btn-sub');
+    const wcBtn = document.getElementById('connectBtnWC');
+    if (!hasInjected && mmBtn) {
+      mmBtn.disabled = true;
+      mmBtn.classList.add('wg-btn-disabled');
+      mmBtn.onclick = () => vxAlert(
+        'MetaMask requires a browser extension — install it on desktop Chrome/Firefox/Brave, or use the MetaMask mobile app\'s in-app browser. On regular mobile browsers, tap WalletConnect below instead — it deep-links into any mobile wallet you have installed.',
+        {title: 'No browser extension detected', icon: '🦊'}
+      );
+      if (mmSub) mmSub.textContent = 'install the extension — or use ↓';
+      // Subtly nudge WC as the go-to on mobile
+      if (wcBtn) wcBtn.classList.add('wg-btn-primary');
+    }
+
     // Reflect the readiness state on the WC button sublabel so the keeper
     // sees "getting ready…" → "ready · QR code" once the SDK is loaded.
     const wcSub = document.getElementById('wcSubLabel');
@@ -6144,7 +6244,7 @@ async function boot() {
       wcSub.textContent = 'warming up SDK · 1-3s';
       const check = setInterval(() => {
         if (window.vxWallet && window.vxWallet._wcProvider) {
-          wcSub.textContent = 'mobile wallets · ready';
+          wcSub.textContent = hasInjected ? 'mobile wallets · ready' : '📱 mobile · tap to connect';
           clearInterval(check);
         }
       }, 300);
@@ -6217,12 +6317,14 @@ async function boot() {
       await openChampion(ownedChamp.id);
       updateWalletUI();
       applyDebugGate();
+      startWalletHeartbeat();
       return;
     }
 
     navTo('landing');
     updateWalletUI();
     applyDebugGate();
+    startWalletHeartbeat();
   } catch (e) {
     alert('Failed to load bloodlines.json: ' + e.message);
     console.error(e);
@@ -6379,7 +6481,49 @@ function updateWalletUI() {
   if (chip) chip.textContent = shortWallet(w);
   const dbg = document.getElementById('dbgWalletAddr');
   if (dbg) dbg.textContent = w;
+  // Mark the chip visually stale/fresh based on the last heartbeat
+  const chipEl = document.getElementById('walletChip');
+  if (chipEl) {
+    chipEl.classList.toggle('stale', _walletStale === true);
+    chipEl.title = _walletStale
+      ? 'Wallet session expired — click to reconnect'
+      : 'Your wallet · click to copy';
+  }
 }
+
+// ── Wallet heartbeat ────────────────────────────────────────────
+// Runs every 30s while the app is visible. Calls vxWallet.verifyConnection()
+// which does a lightweight eth_accounts ping — detects idle desync BEFORE
+// the keeper tries to transact (Salman's "shows connected, says not
+// connected on purchase" repro). Updates the top-bar wallet chip to red
+// when stale so they can reconnect pre-emptively.
+let _walletStale = false;
+let _walletHeartbeatTimer = null;
+
+async function runWalletHeartbeat() {
+  if (!isAuthenticated() || !window.vxWallet) return;
+  if (document.visibilityState !== 'visible') return;
+  try {
+    const alive = await window.vxWallet.verifyConnection();
+    const wasStale = _walletStale;
+    _walletStale = !alive;
+    if (wasStale !== _walletStale) updateWalletUI();
+  } catch (_) { /* transient — retry next tick */ }
+}
+
+function startWalletHeartbeat() {
+  if (_walletHeartbeatTimer) clearInterval(_walletHeartbeatTimer);
+  _walletHeartbeatTimer = setInterval(runWalletHeartbeat, 30000);
+  // Also fire one right after tab returns to foreground — catches phones
+  // that slept mid-session and woke up with a dead WC socket.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') runWalletHeartbeat();
+  });
+  // And once at boot, ~2s in, so a freshly-loaded tab catches a stale
+  // sessionStorage carryover fast.
+  setTimeout(runWalletHeartbeat, 2000);
+}
+// Fire on boot after wallet gate passes — boot() hooks this up
 async function _swapToFreshWallet() {
   resetWallet();
   myChampions = [];
@@ -6399,6 +6543,21 @@ function dbgCopyWallet() {
   const w = getWallet();
   navigator.clipboard?.writeText(w);
   alert('Copied: ' + w);
+}
+
+// Wallet chip click: if the heartbeat has flagged the session as stale,
+// offer to reconnect. Otherwise copy address to clipboard (existing
+// behaviour so devs can grab their wallet quickly).
+function onWalletChipClick() {
+  if (_walletStale) {
+    offerReconnect();
+    return;
+  }
+  const w = getWallet();
+  if (w) {
+    navigator.clipboard?.writeText(w);
+    showToast('📋 Wallet copied: ' + shortWallet(w), 'info', 2000);
+  }
 }
 
 // ============================================================
