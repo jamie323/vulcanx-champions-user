@@ -3056,13 +3056,13 @@
 <!-- Cache-bust on each deploy so stale wallet.js/stories.js can't hold
      testers on yesterday's bug. Bump the version string when either
      file changes (every commit is fine — it's just a cache key). -->
-<script src="wallet.js?v=20260424-d"></script>
-<script src="stories.js?v=20260424-d"></script>
+<script src="wallet.js?v=20260424-e"></script>
+<script src="stories.js?v=20260424-e"></script>
 <script>
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260424-d',
+  console.log('%c🛡️ VulcanX Champions · v20260424-e',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -4912,11 +4912,26 @@ function render() {
       // keepers aren't dead-ended when every stat caps before a gate.
       const disabled = count <= 0;
       const emoji = TRAIT_EMOJI[t] || '🧪';
+      // Break down stock by tier — the tester complaint (Trello) was
+      // that the tooltip only talked about Minor even when they also
+      // owned Majors/Epics. Count up each tier for this trait.
+      const byTier = (state.potions || []).reduce((acc, p) => {
+        if (p.trait === t && p.quantity > 0) acc[p.kind] = (acc[p.kind] || 0) + p.quantity;
+        return acc;
+      }, {});
+      const minorN = byTier.minor || 0;
+      const majorN = byTier.major || 0;
+      const epicN  = byTier.epic  || 0;
+      // The fire priority (findPotion) is minor → major → epic, so the
+      // "next pour" tier is whichever tier has ≥1 stock in that order.
+      const nextTier = minorN > 0 ? 'Minor' : majorN > 0 ? 'Major' : epicN > 0 ? 'Epic' : null;
       const tooltipTitle = (
-        `${TRAIT_NAMES[t]} Potion (Minor tier)\n` +
-        `Raises ${TRAIT_NAMES[t]} by +5 early, tapering to +1 when heavily invested.\n` +
-        `Fills the Evolution Bar by 2–6% — lucky pours fill more, unlucky ones less. Two keepers with identical feeds can end up at slightly different bar %. That's the potion, not a bug.\n\n` +
-        `You have ${count} × ${TRAIT_NAMES[t]} potion${count===1?'':'s'}.` +
+        `${TRAIT_NAMES[t]} Potions — ${count} total` +
+        (nextTier ? ` (next pour: ${nextTier})` : '') + `\n\n` +
+        `  • Minor ×${minorN}  ·  +5→+1 stat, 2–6% bar\n` +
+        `  • Major ×${majorN}  ·  +15→+3 stat, 6–12% bar\n` +
+        `  • Epic  ×${epicN}   ·  +40→+8 stat, 12–20% bar\n\n` +
+        `Clicking pours the highest-priority tier you own (Minor first), so stronger tiers save for later stages.` +
         (atCap ? `\n\n⚠️ ${TRAIT_NAMES[t]} is maxed for this stage — the potion still fills your Evolution Bar.` : '')
       );
       grid.insertAdjacentHTML('beforeend',
@@ -6683,32 +6698,47 @@ function glowStatRow(trait) {
 // APOTHECARY SHOP
 // ============================================================
 
+// Labels unified across tiers (Trello "Consistency within the shop" card).
+// Every trait potion shows as "<Trait> · <Tier>" so a keeper can scan the
+// shop and not wonder why one says "Agility" and another says "AGI Major".
+// The SHOP_TIER_INFO block below feeds per-tier tooltips (stat gain + bar
+// fill), addressing "how much does each tier add to my stat?".
+const SHOP_TIER_INFO = {
+  minor:      { statGain: '+5 early, tapering to +1 after heavy use', barFill: '2–6%' },
+  major:      { statGain: '+15 early (×3 Minor), tapering to +3', barFill: '6–12%' },
+  epic:       { statGain: '+40 early (×8 Minor), tapering to +8', barFill: '12–20%' },
+  evolution:  { statGain: '—', barFill: '—' },
+  allocation: { statGain: 'distribute 40 points across any traits', barFill: '10–25%' },
+};
+const SHOP_DESCRIPTIONS = {
+  evolution:  'Consumed at a stage-gate level (L3, 5, 7, 10, 13, 15, 18, 22, 26, 30, 34, 38, 41, 44, 46, 48, 49, 49, 50) with a full Evolution Bar. Advances your champion to the next life stage — new art, new stat caps, new chapter of the saga.',
+  allocation: 'Pours 40 stat points you distribute however you want across the six traits. Great for rebalancing a lopsided build or pushing a single stat. Also fills 10–25% of the Evolution Bar.',
+};
+
 const SHOP_ITEMS = [
-  // Trait potions (Minor, Major, Epic) for orc — species-locked in QA
-  { kind: 'minor', trait: 'STR', label: 'Strength', emoji: '💪', tier: 'Minor', price: 5 },
-  { kind: 'minor', trait: 'VIT', label: 'Vitality', emoji: '❤️', tier: 'Minor', price: 5 },
-  { kind: 'minor', trait: 'AGI', label: 'Agility', emoji: '🏃', tier: 'Minor', price: 5 },
-  { kind: 'minor', trait: 'FER', label: 'Ferocity', emoji: '⚔️', tier: 'Minor', price: 5 },
-  { kind: 'minor', trait: 'INT', label: 'Intelligence', emoji: '🧠', tier: 'Minor', price: 5 },
-  { kind: 'minor', trait: 'LCK', label: 'Luck', emoji: '🍀', tier: 'Minor', price: 5 },
-  // Major trio (sample)
-  // Majors — full 6-trait set
-  { kind: 'major', trait: 'STR', label: 'STR Major', emoji: '💪', tier: 'Major', price: 15 },
-  { kind: 'major', trait: 'VIT', label: 'VIT Major', emoji: '❤️', tier: 'Major', price: 15 },
-  { kind: 'major', trait: 'AGI', label: 'AGI Major', emoji: '🏃', tier: 'Major', price: 15 },
-  { kind: 'major', trait: 'FER', label: 'FER Major', emoji: '⚔️', tier: 'Major', price: 15 },
-  { kind: 'major', trait: 'INT', label: 'INT Major', emoji: '🧠', tier: 'Major', price: 15 },
-  { kind: 'major', trait: 'LCK', label: 'LCK Major', emoji: '🍀', tier: 'Major', price: 15 },
-  // Epics — full 6-trait set
-  { kind: 'epic',  trait: 'STR', label: 'STR Epic',  emoji: '💪', tier: 'Epic',  price: 40 },
-  { kind: 'epic',  trait: 'VIT', label: 'VIT Epic',  emoji: '❤️', tier: 'Epic',  price: 40 },
-  { kind: 'epic',  trait: 'AGI', label: 'AGI Epic',  emoji: '🏃', tier: 'Epic',  price: 40 },
-  { kind: 'epic',  trait: 'FER', label: 'FER Epic',  emoji: '⚔️', tier: 'Epic',  price: 40 },
-  { kind: 'epic',  trait: 'INT', label: 'INT Epic',  emoji: '🧠', tier: 'Epic',  price: 40 },
-  { kind: 'epic',  trait: 'LCK', label: 'LCK Epic',  emoji: '🍀', tier: 'Epic',  price: 40 },
+  // Trait potions — six traits × three tiers. Label convention is
+  // "<Trait> · <Tier>" across the board for consistency.
+  { kind: 'minor', trait: 'STR', label: 'Strength · Minor', emoji: '💪', tier: 'Minor', price: 5 },
+  { kind: 'minor', trait: 'VIT', label: 'Vitality · Minor', emoji: '❤️', tier: 'Minor', price: 5 },
+  { kind: 'minor', trait: 'AGI', label: 'Agility · Minor',  emoji: '🏃', tier: 'Minor', price: 5 },
+  { kind: 'minor', trait: 'FER', label: 'Ferocity · Minor', emoji: '⚔️', tier: 'Minor', price: 5 },
+  { kind: 'minor', trait: 'INT', label: 'Intelligence · Minor', emoji: '🧠', tier: 'Minor', price: 5 },
+  { kind: 'minor', trait: 'LCK', label: 'Luck · Minor', emoji: '🍀', tier: 'Minor', price: 5 },
+  { kind: 'major', trait: 'STR', label: 'Strength · Major', emoji: '💪', tier: 'Major', price: 15 },
+  { kind: 'major', trait: 'VIT', label: 'Vitality · Major', emoji: '❤️', tier: 'Major', price: 15 },
+  { kind: 'major', trait: 'AGI', label: 'Agility · Major',  emoji: '🏃', tier: 'Major', price: 15 },
+  { kind: 'major', trait: 'FER', label: 'Ferocity · Major', emoji: '⚔️', tier: 'Major', price: 15 },
+  { kind: 'major', trait: 'INT', label: 'Intelligence · Major', emoji: '🧠', tier: 'Major', price: 15 },
+  { kind: 'major', trait: 'LCK', label: 'Luck · Major', emoji: '🍀', tier: 'Major', price: 15 },
+  { kind: 'epic',  trait: 'STR', label: 'Strength · Epic',  emoji: '💪', tier: 'Epic',  price: 40 },
+  { kind: 'epic',  trait: 'VIT', label: 'Vitality · Epic',  emoji: '❤️', tier: 'Epic',  price: 40 },
+  { kind: 'epic',  trait: 'AGI', label: 'Agility · Epic',   emoji: '🏃', tier: 'Epic',  price: 40 },
+  { kind: 'epic',  trait: 'FER', label: 'Ferocity · Epic',  emoji: '⚔️', tier: 'Epic',  price: 40 },
+  { kind: 'epic',  trait: 'INT', label: 'Intelligence · Epic', emoji: '🧠', tier: 'Epic',  price: 40 },
+  { kind: 'epic',  trait: 'LCK', label: 'Luck · Epic', emoji: '🍀', tier: 'Epic',  price: 40 },
   // Specials
-  { kind: 'evolution',  trait: null, label: 'Evolution', emoji: '⚡', tier: 'Special', price: 20 },
-  { kind: 'allocation', trait: null, label: 'Blessing',  emoji: '✨', tier: 'Special', price: 25 },
+  { kind: 'evolution',  trait: null, label: 'Evolution Potion', emoji: '⚡', tier: 'Special', price: 20 },
+  { kind: 'allocation', trait: null, label: 'Blessing · 40 pts', emoji: '✨', tier: 'Special', price: 25 },
 ];
 
 let shopCart = {}; // key -> { item, qty }
@@ -6732,6 +6762,28 @@ function closeShop() {
   document.body.style.overflow = '';
 }
 
+// Build a rich hover tooltip for each shop item so keepers can see
+// exactly what they're buying (addresses Trello cards 'In the shop,
+// you should be able to see how much each potion adds to your stats'
+// and 'Evolution and Blessing should have a bit of a description').
+function shopTooltipFor(it) {
+  const info = SHOP_TIER_INFO[it.kind] || {};
+  const desc = SHOP_DESCRIPTIONS[it.kind];
+  const lines = [];
+  lines.push(it.label);
+  if (it.trait && info.statGain) {
+    lines.push(`${it.emoji} ${TRAIT_NAMES[it.trait]}: ${info.statGain}`);
+  } else if (info.statGain && info.statGain !== '—') {
+    lines.push(info.statGain);
+  }
+  if (info.barFill && info.barFill !== '—') {
+    lines.push(`Evolution Bar fill: ${info.barFill} per use`);
+  }
+  if (desc) lines.push(desc);
+  lines.push(`Price: ${it.price} PYR  ·  dummy TX in QA, no PYR deducted`);
+  return lines.join('\n');
+}
+
 function renderShop() {
   const grid = document.getElementById('shopGrid');
   grid.innerHTML = SHOP_ITEMS.map(it => {
@@ -6739,9 +6791,11 @@ function renderShop() {
     const qty = shopCart[key]?.qty || 0;
     const tierCls = it.tier === 'Major' ? 'tier-major' :
                     it.tier === 'Epic'  ? 'tier-epic'  : '';
+    const tip = shopTooltipFor(it).replace(/"/g, '&quot;').replace(/\n/g, '&#10;');
     return `
       <div class="shop-item ${tierCls} ${qty > 0 ? 'in-cart' : ''}"
-           data-key="${key}" onclick="addToCart('${key}')">
+           data-key="${key}" onclick="addToCart('${key}')"
+           title="${tip}">
         ${qty > 0 ? `<div class="si-badge">${qty}</div>` : ''}
         <div class="si-emoji">${it.emoji}</div>
         <div class="si-name">${it.label}</div>
