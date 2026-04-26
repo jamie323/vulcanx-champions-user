@@ -3873,7 +3873,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260426-equip-fit',
+  console.log('%c🛡️ VulcanX Champions · v20260426-trait-names-batch',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -4810,9 +4810,10 @@
           <span class="feed-top-label">🧪 Feed Me!</span>
           <span class="feed-top-count" id="feedCount">0 ready</span>
         </button>
-        <button class="cc-side-btn" id="moreActionBtn" title="More actions" onclick="openTraitPotionModal()">
-          <span class="cc-side-ico">⋯</span>
-          <span class="cc-side-label">More</span>
+        <button class="cc-side-btn" id="batchFeedBtn"
+          title="Feed multiple potions in one go — picks the lowest-fill non-capped trait each time, stops at the gate so you don't overshoot.">
+          <span class="cc-side-ico">⏩</span>
+          <span class="cc-side-label">Batch</span>
         </button>
       </div>
       <button class="evolve-btn-center cc-evolve-btn" id="evolveBtn" disabled>⚡ Evolve (locked)</button>
@@ -4895,6 +4896,43 @@
      visually but the DOM nodes still exist for setText calls). -->
 <div id="aboutBloodlineHint" style="display:none;"></div>
 </div><!-- /view-champion -->
+
+<!-- Phase: batch-feed picker (AngelHorn 2026-04-26) — pick how many
+     potions to pour in a single click instead of spamming Feed Me. -->
+<div class="modal-backdrop" id="batchFeedModal">
+  <div class="modal" style="width: 460px;">
+    <h3>⏩ Batch Feed</h3>
+    <div class="sub">
+      Auto-pours into the lowest-fill non-capped trait each tick.
+      Stops at the gate so you don't overshoot. Out-of-stock traits are skipped.
+    </div>
+    <div id="batchFeedSummary" style="padding:10px;background:rgba(0,0,0,0.3);border-radius:8px;margin:10px 0;font-size:12px;color:var(--muted);">
+      <div>Trait potions in inventory: <b id="batchFeedTotal" style="color:var(--accent);">0</b></div>
+      <div>Bar: <b id="batchFeedBar" style="color:var(--accent);">0</b>%
+        · Level: <b id="batchFeedLevel" style="color:var(--accent);">1</b>
+        · Next gate: <b id="batchFeedGate" style="color:var(--accent);">L3</b></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;">
+      <button class="batch-qty-btn" data-count="5">×5</button>
+      <button class="batch-qty-btn" data-count="25">×25</button>
+      <button class="batch-qty-btn" data-count="50">×50</button>
+      <button class="batch-qty-btn" data-count="200">All</button>
+    </div>
+    <div id="batchFeedResult" style="display:none;padding:12px;background:rgba(125,255,154,0.08);border:1px solid rgba(125,255,154,0.3);border-radius:8px;margin-bottom:10px;font-size:12px;line-height:1.6;color:var(--text);"></div>
+    <button class="btn-primary" onclick="document.getElementById('batchFeedModal').classList.remove('open')" style="width:100%;">Close</button>
+  </div>
+</div>
+
+<style>
+  .batch-qty-btn {
+    padding: 14px 6px; font-size: 16px; font-weight: 800; letter-spacing: 1px;
+    background: rgba(255,205,107,0.1); border: 1px solid rgba(255,205,107,0.4);
+    color: var(--accent); border-radius: 8px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .batch-qty-btn:hover { background: rgba(255,205,107,0.18); transform: translateY(-1px); }
+  .batch-qty-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+</style>
 
 <!-- Phase: trait-potion modal (Compact view 2026-04-26) — full 6-bottle
      grid + special potions + empty state, opened by the POTIONS quick
@@ -5510,9 +5548,17 @@ function openAllocModal(sourceEl) {
     const cap = STAGE_CAPS[state.stageIdx][idx];
     const maxAllowed = Math.min(40, cap - cur);
     const isMaxed = maxAllowed <= 0;
+    // Tester report 2026-04-26: 3-letter codes (STR/VIT/AGI…) were
+    // jargon. Use the full trait names (Strength, Vitality, etc.) with
+    // matching potion emoji so users see at a glance what they're
+    // pouring points into.
+    const fullName = TRAIT_NAMES[t] || t;
+    const emoji = TRAIT_EMOJI[t] || '';
     rows.insertAdjacentHTML('beforeend',
       `<div class="alloc-row" style="${isMaxed?'opacity:0.55;':''}">
-        <div class="alloc-label" style="color:var(--${t.toLowerCase()}-color,var(--accent));">${t}${isMaxed?' · MAX':''}</div>
+        <div class="alloc-label" title="${t}" style="color:var(--${t.toLowerCase()}-color,var(--accent));">
+          <span style="font-size:14px;margin-right:4px;">${emoji}</span>${fullName}${isMaxed?' · MAX':''}
+        </div>
         <input type="range" min="0" max="${Math.max(0,maxAllowed)}" value="0" data-t="${t}" ${isMaxed?'disabled':''}/>
         <div class="alloc-val" id="av-${t}">${isMaxed?'–':'0'}</div>
       </div>`);
@@ -7838,6 +7884,108 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     }
     navTo(btn.dataset.view);
   });
+});
+
+// ============================================================
+// BATCH FEED (AngelHorn 2026-04-26) — server-side N-at-once
+// ============================================================
+// API call. Server loops applyTraitPotion + writes once at the end.
+// Stops early if you hit a gate with full bar (so you don't overshoot
+// into the evolve flow) or run out of eligible potions.
+async function apiFeedBatch({ champion_id, count, mode = 'auto' }) {
+  const res = await apiFetch(`${FN_BASE}/champion_feed_batch`, {
+    method: 'POST',
+    headers: AUTH_HEADERS,
+    body: JSON.stringify({ wallet: getWallet(), champion_id, count, mode }),
+  }, 30000); // 30s timeout — large batches need more time than a single feed
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const code = data.error || `http_${res.status}`;
+    throw new Error(`${code}: ${data.message || ''}`.trim());
+  }
+  return data;
+}
+
+function openBatchFeedModal() {
+  if (!state.championId) return;
+  // Refresh inventory totals + summary numbers
+  const total = TRAITS.reduce((s, t) => s + (state.inv[t] || 0), 0);
+  document.getElementById('batchFeedTotal').textContent = total;
+  document.getElementById('batchFeedBar').textContent = Math.round(state.evoPct || 0);
+  document.getElementById('batchFeedLevel').textContent = state.level;
+  const nextGate = GATE_LEVELS[state.stageIdx + 1] ?? 50;
+  document.getElementById('batchFeedGate').textContent = `L${nextGate}`;
+  document.getElementById('batchFeedResult').style.display = 'none';
+  // Disable buttons if no potions
+  document.querySelectorAll('.batch-qty-btn').forEach(b => {
+    b.disabled = total === 0;
+  });
+  document.getElementById('batchFeedModal').classList.add('open');
+}
+
+let _batchInFlight = false;
+async function runBatchFeed(count) {
+  if (_batchInFlight) return;
+  if (!state.championId) return;
+  _batchInFlight = true;
+  // Disable all qty buttons during the call
+  document.querySelectorAll('.batch-qty-btn').forEach(b => b.disabled = true);
+  const resultEl = document.getElementById('batchFeedResult');
+  resultEl.style.display = 'none';
+  try {
+    const resp = await apiFeedBatch({ champion_id: state.championId, count });
+    // Sync local state from authoritative server response
+    const c = mapChampion(resp.champion);
+    state.stats = { ...c.stats };
+    state.evoPct = c.evoPct;
+    state.level = c.level;
+    state.stageIdx = c.stageIdx;
+    const cached = myChampions.find(m => m.id === c.id);
+    if (cached) Object.assign(cached, c);
+    await reloadPotions();
+    render();
+    // Render result summary
+    const s = resp.summary;
+    const gainsLine = Object.entries(s.stats_delta || {})
+      .map(([t, d]) => `<span style="color:var(--accent);">${TRAIT_EMOJI[t] || ''} +${d} ${t}</span>`)
+      .join(' · ') || '<span style="color:var(--muted);">no stat gains (all capped — bar fill only)</span>';
+    const reasonText = {
+      count_done: `Fed ${s.fed} of ${s.requested} requested.`,
+      ready_to_evolve: `Stopped — ready to evolve! (Bar full at the gate. Click ⚡ Evolve.)`,
+      no_trait_available: `Stopped — no eligible trait left to feed.`,
+      out_of_potions: `Stopped — out of trait potions in inventory.`,
+    }[s.stopped_reason] || `Stopped: ${s.stopped_reason}`;
+    resultEl.innerHTML = `
+      <div style="font-size:14px;font-weight:700;color:var(--accent);margin-bottom:6px;">
+        ⏩ Fed ${s.fed} potion${s.fed === 1 ? '' : 's'}${s.level_delta ? ` · +${s.level_delta} level${s.level_delta === 1 ? '' : 's'}` : ''}
+      </div>
+      <div style="margin-bottom:4px;">${gainsLine}</div>
+      <div style="color:var(--muted);">${reasonText}</div>
+    `;
+    resultEl.style.display = '';
+    // Re-enable buttons (or close if out of potions)
+    const remaining = TRAITS.reduce((acc, t) => acc + (state.inv[t] || 0), 0);
+    document.getElementById('batchFeedTotal').textContent = remaining;
+    document.getElementById('batchFeedBar').textContent = Math.round(state.evoPct);
+    document.getElementById('batchFeedLevel').textContent = state.level;
+    document.querySelectorAll('.batch-qty-btn').forEach(b => { b.disabled = remaining === 0; });
+  } catch (e) {
+    console.error('[batch-feed]', e);
+    resultEl.innerHTML = `<div style="color:#ff9a7d;">Batch feed failed: ${e.message || e}</div>`;
+    resultEl.style.display = '';
+    document.querySelectorAll('.batch-qty-btn').forEach(b => { b.disabled = false; });
+  } finally {
+    _batchInFlight = false;
+  }
+}
+
+bindIf('batchFeedBtn', 'click', openBatchFeedModal);
+document.querySelectorAll('.batch-qty-btn').forEach(b => {
+  b.addEventListener('click', () => runBatchFeed(parseInt(b.dataset.count, 10) || 10));
+});
+// Backdrop dismiss
+document.getElementById('batchFeedModal')?.addEventListener('click', (e) => {
+  if (e.target.id === 'batchFeedModal') e.target.classList.remove('open');
 });
 
 // ============================================================
