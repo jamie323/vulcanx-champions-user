@@ -3794,7 +3794,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260426-compact-v1',
+  console.log('%c🛡️ VulcanX Champions · v20260426-acadian-pass',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -7577,16 +7577,44 @@ async function openRenameModal() {
   }
   try {
     // QA: user signs a dummy 0-value TX on Elysium for the 5 PYR ceremony.
+    console.log('[rename] start', { from: current, to: trimmed });
     await signDummyTx(`rename:${trimmed}`);
-    const updated = await apiRenameChampion({ champion_id: state.championId, new_name: trimmed });
+    const rawUpdated = await apiRenameChampion({ champion_id: state.championId, new_name: trimmed });
+    console.log('[rename] server response', rawUpdated);
+
+    // Bug fix (Trello "Custom name came back to original name", Acadian
+    // 2026-04-26): the previous code Object.assign'd the RAW backend row
+    // onto the cached MAPPED champion, leaving stale snake_case fields
+    // alongside the camelCase ones. Worse: any subsequent Object.assign
+    // from a feed/evolve response that mapped to camelCase wouldn't clear
+    // the snake_case dupes — and certain consumers might read the snake_
+    // case 'name' before the camelCase 'name' was patched. Fix: always
+    // map the response before merging into the cache.
+    if (!rawUpdated || rawUpdated.name !== trimmed) {
+      console.error('[rename] response missing/wrong name', rawUpdated);
+      throw new Error('Server didn\'t return the renamed champion. Try again.');
+    }
+    const updated = mapChampion(rawUpdated);
     const cached = myChampions.find(m => m.id === updated.id);
-    if (cached) Object.assign(cached, updated);
+    if (cached) {
+      // Replace fields cleanly — Object.assign over-mapped object keeps
+      // shape consistent. No mixed snake_case/camelCase residue.
+      Object.assign(cached, updated);
+    } else {
+      // Defensive: if cache lost the entry, push it back so the next
+      // render() finds it
+      myChampions.push(updated);
+    }
     render();
-    // update top nav title + left-panel name right away
     document.getElementById('aboutName').textContent = updated.name;
-    document.getElementById('topChampTitle').textContent =
-      `${SPECIES[updated.species_id].label} · ${SPECIES[updated.species_id].bloodlines[updated.bloodline_id].label}`;
+    const topTitle = document.getElementById('topChampTitle');
+    if (topTitle) {
+      topTitle.textContent =
+        `${SPECIES[updated.species_id].label} · ${SPECIES[updated.species_id].bloodlines[updated.bloodline_id].label}`;
+    }
+    console.log('[rename] complete', updated.name);
   } catch (e) {
+    console.error('[rename] failed', e);
     const msg = (e && e.code === 4001) ? 'You rejected the wallet prompt.' : (e.message || String(e));
     vxAlert(msg, {title: 'Rename failed', icon: '✏️', variant: 'error'});
   }
