@@ -660,6 +660,64 @@
   .ar-log-event.info { color: var(--muted); font-style: italic; }
   .ar-log-event.extra { color: #80cdff; }
 
+  /* ── Phase 5: animated battle reveal ─────────────────────── */
+  .ar-fighter { position: relative; }
+  .ar-fighter.hit  { animation: ar-shake 0.32s ease; }
+  .ar-fighter.crit { animation: ar-shake-big 0.45s ease; }
+  .ar-fighter.dodge .ar-fighter-meta { animation: ar-flash-blue 0.5s ease; }
+  .ar-fighter.stun .ar-fighter-meta { animation: ar-flash-purple 0.5s ease; }
+  @keyframes ar-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+  @keyframes ar-shake-big {
+    0%, 100% { transform: translateX(0) scale(1); }
+    20% { transform: translateX(-9px) scale(1.04); }
+    50% { transform: translateX(8px) scale(1.04); }
+    80% { transform: translateX(-4px) scale(1.02); }
+  }
+  @keyframes ar-flash-blue {
+    0%   { color: #5d8eff; transform: scale(1.2); }
+    100% { color: var(--muted); transform: scale(1); }
+  }
+  @keyframes ar-flash-purple {
+    0%   { color: #b169ff; transform: scale(1.2); }
+    100% { color: var(--muted); transform: scale(1); }
+  }
+
+  .ar-damage-num {
+    position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
+    font-size: 22px; font-weight: 900; color: #ff9a7d;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+    pointer-events: none; z-index: 10;
+    animation: ar-dmg-pop 0.85s ease-out forwards;
+  }
+  .ar-damage-num.crit { color: #ffcd6b; font-size: 28px; text-shadow: 0 2px 8px rgba(255,205,107,0.6); }
+  .ar-damage-num.dodge { color: #5d8eff; font-size: 18px; }
+  .ar-damage-num.heal { color: #7dff9a; }
+  @keyframes ar-dmg-pop {
+    0%   { opacity: 0; transform: translate(-50%, 0) scale(0.7); }
+    20%  { opacity: 1; transform: translate(-50%, -8px) scale(1.15); }
+    100% { opacity: 0; transform: translate(-50%, -38px) scale(1); }
+  }
+
+  .ar-banner.reveal { animation: ar-banner-pop 0.6s ease-out; }
+  @keyframes ar-banner-pop {
+    0%   { opacity: 0; transform: scale(0.7); letter-spacing: 14px; }
+    60%  { opacity: 1; transform: scale(1.08); letter-spacing: 8px; }
+    100% { opacity: 1; transform: scale(1);    letter-spacing: 6px; }
+  }
+
+  .ar-skip-btn {
+    position: absolute; top: 14px; right: 14px;
+    background: transparent; border: 1px solid var(--border);
+    color: var(--muted); font-size: 11px; font-weight: 700;
+    letter-spacing: 1px; padding: 4px 10px; border-radius: 4px;
+    cursor: pointer; text-transform: uppercase;
+  }
+  .ar-skip-btn:hover { color: var(--accent); border-color: var(--accent-dim); }
+
   /* ── Phase 3b equipment slots + inventory ─────────────────── */
   .equip-slots { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 6px; }
   .equip-slot {
@@ -3503,7 +3561,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260426-arena-mvp',
+  console.log('%c🛡️ VulcanX Champions · v20260426-arena-anim',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -4269,7 +4327,8 @@
 
 <!-- Arena result modal — shown after a match resolves -->
 <div class="modal-backdrop" id="arenaResultModal">
-  <div class="modal arena-result-modal">
+  <div class="modal arena-result-modal" style="position:relative;">
+    <button class="ar-skip-btn" id="arSkipBtn" style="display:none;">⏭ Skip</button>
     <div class="ar-banner" id="arResultBanner">VICTORY</div>
     <div class="ar-vs-row">
       <div class="ar-fighter">
@@ -7522,33 +7581,66 @@ bindIf('arenaFindBtn', 'click', async () => {
   _arenaInFlight = false;
 });
 
-function showArenaResult(resp, champ) {
-  const battle = resp.battle;
-  const banner = document.getElementById('arResultBanner');
-  banner.classList.remove('win', 'loss', 'draw');
-  banner.classList.add(resp.result);
-  banner.textContent = resp.result === 'win' ? 'VICTORY'
-                     : resp.result === 'loss' ? 'DEFEAT' : 'DRAW';
+// Phase 5 (2026-04-26): the result modal now plays the battle as an
+// animated reveal — each event ticks in with HP updates, damage popups,
+// crit shakes, dodge fades. Skip button jumps straight to the final
+// state. Player can still re-open the static log via the toggle.
+let _arenaPlayback = { timers: [], cancelled: false };
 
+function _clearPlayback() {
+  _arenaPlayback.timers.forEach(t => clearTimeout(t));
+  _arenaPlayback.timers = [];
+  _arenaPlayback.cancelled = true;
+}
+
+function _spawnDamagePopup(side, text, kindClass) {
+  const fighter = document.querySelector(`.ar-fighter:nth-child(${side === 'a' ? 1 : 3})`);
+  if (!fighter) return;
+  const span = document.createElement('div');
+  span.className = `ar-damage-num ${kindClass || ''}`;
+  span.textContent = text;
+  fighter.appendChild(span);
+  setTimeout(() => span.remove(), 900);
+}
+
+function _flashFighter(side, kindClass) {
+  const fighter = document.querySelector(`.ar-fighter:nth-child(${side === 'a' ? 1 : 3})`);
+  if (!fighter) return;
+  fighter.classList.remove('hit','crit','dodge','stun');
+  void fighter.offsetWidth; // reflow to restart animation
+  fighter.classList.add(kindClass);
+  setTimeout(() => fighter.classList.remove(kindClass), 500);
+}
+
+function showArenaResult(resp, champ) {
+  window._lastArenaResp = resp;  // stash for Skip button
+  const battle = resp.battle;
+  const modal = document.getElementById('arenaResultModal');
+
+  // Reset state for replay
+  _clearPlayback();
+  _arenaPlayback = { timers: [], cancelled: false };
+
+  // Pre-state: full HP bars, names, hidden banner
   document.getElementById('arPlayerName').textContent = champ.name;
   document.getElementById('arBotName').textContent = resp.opponent.display_name;
-  const aPct = battle.hpStart.a > 0 ? (battle.hpLeft.a / battle.hpStart.a * 100) : 0;
-  const bPct = battle.hpStart.b > 0 ? (battle.hpLeft.b / battle.hpStart.b * 100) : 0;
-  document.getElementById('arPlayerHp').style.width = aPct + '%';
-  document.getElementById('arBotHp').style.width = bPct + '%';
-  document.getElementById('arPlayerMeta').textContent = `HP ${battle.hpLeft.a} / ${battle.hpStart.a}`;
-  document.getElementById('arBotMeta').textContent = `HP ${battle.hpLeft.b} / ${battle.hpStart.b}`;
-  document.getElementById('arSummary').textContent = battle.summary;
+  document.getElementById('arPlayerHp').style.width = '100%';
+  document.getElementById('arBotHp').style.width = '100%';
+  document.getElementById('arPlayerMeta').textContent = `HP ${battle.hpStart.a} / ${battle.hpStart.a}`;
+  document.getElementById('arBotMeta').textContent = `HP ${battle.hpStart.b} / ${battle.hpStart.b}`;
+  document.getElementById('arSummary').textContent = '';
+
+  const banner = document.getElementById('arResultBanner');
+  banner.classList.remove('win','loss','draw','reveal');
+  banner.style.opacity = '0';
+  banner.textContent = '⚔️ VS';
 
   const oldElo = resp.newElo - resp.eloChange;
   document.getElementById('arEloOld').textContent = oldElo;
-  document.getElementById('arEloNew').textContent = resp.newElo;
-  const delta = document.getElementById('arEloDelta');
-  delta.textContent = (resp.eloChange >= 0 ? '+' : '') + resp.eloChange;
-  delta.classList.remove('gain','loss','neutral');
-  delta.classList.add(resp.eloChange > 0 ? 'gain' : resp.eloChange < 0 ? 'loss' : 'neutral');
+  document.getElementById('arEloNew').textContent = oldElo;  // tween at end
+  document.getElementById('arEloDelta').textContent = '';
 
-  // Battle log — collapsed by default
+  // Static log filled immediately so toggle works mid-playback
   const log = document.getElementById('arLog');
   log.style.display = 'none';
   document.getElementById('arLogToggle').textContent = 'Show battle log ▼';
@@ -7556,8 +7648,115 @@ function showArenaResult(resp, champ) {
     `<div class="ar-log-event ${ev.kind}">R${ev.round} · ${ev.msg}</div>`
   ).join('');
 
-  document.getElementById('arenaResultModal').classList.add('open');
+  document.getElementById('arSkipBtn').style.display = '';
+  modal.classList.add('open');
+
+  // Play events sequentially. Track running HP so each tick reflects
+  // the cumulative state, not the final state. Damages live in event.damage;
+  // hpAfter is provided by the server's resolver.
+  let hpA = battle.hpStart.a;
+  let hpB = battle.hpStart.b;
+  let cursor = 800; // initial pre-VS pause
+  const playbackEvents = battle.events.filter(e => e.kind !== 'info');
+
+  playbackEvents.forEach((ev) => {
+    const t = setTimeout(() => {
+      if (_arenaPlayback.cancelled) return;
+      // Update HP from event.hpAfter (server-authoritative) when present
+      if (ev.hpAfter) {
+        hpA = ev.hpAfter.a;
+        hpB = ev.hpAfter.b;
+      } else if (ev.damage && ev.who) {
+        // Defender side = opposite of attacker
+        if (ev.who === 'a') hpB = Math.max(0, hpB - ev.damage);
+        else                hpA = Math.max(0, hpA - ev.damage);
+      }
+      const aPct = battle.hpStart.a > 0 ? (hpA / battle.hpStart.a * 100) : 0;
+      const bPct = battle.hpStart.b > 0 ? (hpB / battle.hpStart.b * 100) : 0;
+      document.getElementById('arPlayerHp').style.width = aPct + '%';
+      document.getElementById('arBotHp').style.width = bPct + '%';
+      document.getElementById('arPlayerMeta').textContent = `HP ${hpA} / ${battle.hpStart.a}`;
+      document.getElementById('arBotMeta').textContent = `HP ${hpB} / ${battle.hpStart.b}`;
+      // Effects per event kind
+      const target = ev.who === 'a' ? 'b' : 'a';
+      if (ev.kind === 'crit') {
+        _flashFighter(target, 'crit');
+        _spawnDamagePopup(target, '-' + ev.damage + ' CRIT!', 'crit');
+      } else if (ev.kind === 'hit' || ev.kind === 'extra') {
+        _flashFighter(target, 'hit');
+        if (ev.damage) _spawnDamagePopup(target, '-' + ev.damage, '');
+      } else if (ev.kind === 'dodge') {
+        _flashFighter(target, 'dodge');
+        _spawnDamagePopup(target, 'MISS', 'dodge');
+      } else if (ev.kind === 'stun') {
+        _flashFighter(ev.who, 'stun');
+      }
+    }, cursor);
+    _arenaPlayback.timers.push(t);
+    cursor += (ev.kind === 'dodge' || ev.kind === 'stun') ? 380 : 540;
+  });
+
+  // Final reveal — banner + summary + ELO tween — after all events
+  const finalT = setTimeout(() => {
+    if (_arenaPlayback.cancelled) return;
+    _revealFinalResult(resp);
+  }, cursor + 250);
+  _arenaPlayback.timers.push(finalT);
 }
+
+function _revealFinalResult(resp) {
+  const battle = resp.battle;
+  // Snap HP to authoritative final state in case events drifted
+  const aPct = battle.hpStart.a > 0 ? (battle.hpLeft.a / battle.hpStart.a * 100) : 0;
+  const bPct = battle.hpStart.b > 0 ? (battle.hpLeft.b / battle.hpStart.b * 100) : 0;
+  document.getElementById('arPlayerHp').style.width = aPct + '%';
+  document.getElementById('arBotHp').style.width = bPct + '%';
+  document.getElementById('arPlayerMeta').textContent = `HP ${battle.hpLeft.a} / ${battle.hpStart.a}`;
+  document.getElementById('arBotMeta').textContent = `HP ${battle.hpLeft.b} / ${battle.hpStart.b}`;
+
+  const banner = document.getElementById('arResultBanner');
+  banner.classList.remove('win','loss','draw','reveal');
+  banner.classList.add(resp.result);
+  banner.classList.add('reveal');
+  banner.style.opacity = '';
+  banner.textContent = resp.result === 'win' ? 'VICTORY'
+                     : resp.result === 'loss' ? 'DEFEAT' : 'DRAW';
+
+  document.getElementById('arSummary').textContent = battle.summary;
+
+  // ELO tween — count up/down over 600ms
+  const oldElo = resp.newElo - resp.eloChange;
+  const eloEl = document.getElementById('arEloNew');
+  const steps = 24;
+  for (let i = 1; i <= steps; i++) {
+    const t = setTimeout(() => {
+      if (_arenaPlayback.cancelled) return;
+      const v = Math.round(oldElo + (resp.eloChange * i / steps));
+      eloEl.textContent = v;
+    }, 25 * i);
+    _arenaPlayback.timers.push(t);
+  }
+  const finishElo = setTimeout(() => {
+    if (_arenaPlayback.cancelled) return;
+    eloEl.textContent = resp.newElo;
+    const delta = document.getElementById('arEloDelta');
+    delta.textContent = (resp.eloChange >= 0 ? '+' : '') + resp.eloChange;
+    delta.classList.remove('gain','loss','neutral');
+    delta.classList.add(resp.eloChange > 0 ? 'gain' : resp.eloChange < 0 ? 'loss' : 'neutral');
+    document.getElementById('arSkipBtn').style.display = 'none';
+  }, 25 * steps + 50);
+  _arenaPlayback.timers.push(finishElo);
+}
+
+bindIf('arSkipBtn', 'click', () => {
+  if (!_arenaPlayback.timers.length) return;
+  // Cancel pending animations and snap to final
+  _clearPlayback();
+  // Re-create state object so subsequent calls don't see cancelled=true
+  _arenaPlayback = { timers: [], cancelled: false };
+  // We need access to last resp — stash it on a module var
+  if (window._lastArenaResp) _revealFinalResult(window._lastArenaResp);
+});
 
 bindIf('arLogToggle', 'click', (e) => {
   e.preventDefault();
@@ -7568,11 +7767,20 @@ bindIf('arLogToggle', 'click', (e) => {
   toggle.textContent = showing ? 'Show battle log ▼' : 'Hide battle log ▲';
 });
 bindIf('arRematchBtn', 'click', () => {
+  _clearPlayback();  // stop in-flight animation
   document.getElementById('arenaResultModal').classList.remove('open');
   document.getElementById('arenaFindBtn').click();
 });
 bindIf('arCloseBtn', 'click', () => {
+  _clearPlayback();  // stop in-flight animation
   document.getElementById('arenaResultModal').classList.remove('open');
+});
+// Backdrop click also dismisses + cancels animation
+document.getElementById('arenaResultModal')?.addEventListener('click', (e) => {
+  if (e.target.id === 'arenaResultModal') {
+    _clearPlayback();
+    e.target.classList.remove('open');
+  }
 });
 
 // ============================================================
