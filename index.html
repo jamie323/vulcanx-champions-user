@@ -528,6 +528,138 @@
   /* Trello UX (2026-04-26): potion-emoji match indicator next to trait name. */
   .trait-potion-match { font-size: 14px; margin-right: 4px; cursor: help; opacity: 0.95; }
 
+  /* ── Phase 4: Arena view ────────────────────────────────────── */
+  .arena-wrap { max-width: 880px; margin: 0 auto; padding: 24px 20px 60px; }
+  .arena-elo-pill {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 10px 18px; background: rgba(255,205,107,0.08);
+    border: 1px solid rgba(255,205,107,0.4); border-radius: 30px;
+    font-size: 13px; font-weight: 700; letter-spacing: 1.5px;
+  }
+  .arena-elo-pill b { color: var(--accent); font-size: 18px; letter-spacing: 1px; }
+  .arena-elo-label { color: var(--muted); text-transform: uppercase; }
+  .arena-card {
+    background: rgba(20,12,20,0.85); border: 1px solid rgba(255,205,107,0.25);
+    border-radius: 14px; padding: 28px; margin-top: 20px;
+    text-align: center;
+  }
+  .arena-champ-summary {
+    font-size: 16px; color: var(--text); margin-bottom: 22px;
+    padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px;
+  }
+  .arena-champ-summary em { color: var(--muted); font-style: italic; }
+  .arena-stance-row { margin: 14px 0 22px; }
+  .arena-stance-label {
+    font-size: 11px; color: var(--muted); letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  .arena-stance-btns { display: flex; gap: 10px; justify-content: center; }
+  .stance-btn {
+    flex: 1; max-width: 200px; padding: 14px; cursor: pointer;
+    background: rgba(20,20,28,0.8); border: 2px solid var(--border);
+    border-radius: 10px; color: var(--muted);
+    font-size: 14px; font-weight: 700; letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+  .stance-btn:hover { border-color: rgba(255,205,107,0.4); color: var(--text); }
+  .stance-btn.active {
+    background: rgba(255,205,107,0.12); border-color: var(--accent);
+    color: var(--accent);
+  }
+  .arena-find-btn { width: 100%; max-width: 360px; margin-top: 6px; }
+  .arena-bracket-hint {
+    margin-top: 14px; font-size: 12px; color: var(--muted);
+  }
+  .arena-history { margin-top: 32px; }
+  .arena-section-label {
+    font-size: 11px; color: var(--muted); letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 12px;
+  }
+  .arena-history-list {
+    background: rgba(20,12,20,0.6); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px; min-height: 80px;
+    max-height: 340px; overflow-y: auto;
+  }
+  .arena-history-empty { color: var(--muted); text-align: center; padding: 20px; font-style: italic; }
+  .ah-row {
+    display: grid; grid-template-columns: auto 1fr auto auto;
+    gap: 12px; padding: 10px 12px; align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .ah-row:last-child { border-bottom: none; }
+  .ah-result {
+    font-weight: 800; font-size: 11px; letter-spacing: 1.5px;
+    padding: 4px 10px; border-radius: 4px;
+  }
+  .ah-result.win  { background: rgba(125,255,154,0.15); color: #7dff9a; }
+  .ah-result.loss { background: rgba(255,107,107,0.15); color: #ff9a7d; }
+  .ah-result.draw { background: rgba(255,205,107,0.15); color: var(--accent); }
+  .ah-vs   { color: var(--text); font-size: 13px; }
+  .ah-elo  { color: var(--accent); font-weight: 700; font-size: 13px; }
+  .ah-time { color: var(--muted); font-size: 11px; }
+
+  /* Arena result modal */
+  .arena-result-modal { width: 540px; max-width: 95vw; }
+  .ar-banner {
+    text-align: center; font-size: 32px; font-weight: 900; letter-spacing: 6px;
+    padding: 12px; margin-bottom: 18px; border-radius: 8px;
+  }
+  .ar-banner.win  { background: linear-gradient(180deg, rgba(125,255,154,0.2), rgba(125,255,154,0.05));
+                    border: 1px solid rgba(125,255,154,0.4); color: #7dff9a; }
+  .ar-banner.loss { background: linear-gradient(180deg, rgba(255,107,107,0.2), rgba(255,107,107,0.05));
+                    border: 1px solid rgba(255,107,107,0.4); color: #ff9a7d; }
+  .ar-banner.draw { background: linear-gradient(180deg, rgba(255,205,107,0.2), rgba(255,205,107,0.05));
+                    border: 1px solid rgba(255,205,107,0.4); color: var(--accent); }
+  .ar-vs-row {
+    display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px;
+    align-items: center; margin-bottom: 18px;
+  }
+  .ar-fighter { text-align: center; }
+  .ar-fighter-name { font-weight: 700; font-size: 14px; color: var(--text); margin-bottom: 6px; }
+  .ar-hp-bar {
+    height: 10px; background: rgba(0,0,0,0.4); border-radius: 5px;
+    overflow: hidden; margin-bottom: 4px;
+  }
+  .ar-hp-fill { height: 100%; transition: width 0.6s ease-out; }
+  .ar-hp-a { background: linear-gradient(90deg, #7dff9a, #4caf50); }
+  .ar-hp-b { background: linear-gradient(90deg, #ff9a7d, #d84444); }
+  .ar-fighter-meta { font-size: 11px; color: var(--muted); }
+  .ar-vs-divider {
+    font-weight: 900; font-size: 16px; color: var(--accent);
+    letter-spacing: 2px;
+  }
+  .ar-summary {
+    text-align: center; padding: 12px; margin: 10px 0;
+    background: rgba(0,0,0,0.3); border-radius: 6px;
+    color: var(--text); font-size: 14px;
+  }
+  .ar-elo-row {
+    display: flex; justify-content: center; align-items: center; gap: 10px;
+    padding: 10px; background: rgba(255,205,107,0.06); border-radius: 6px;
+    font-size: 14px;
+  }
+  .ar-elo-row b { font-size: 18px; color: var(--text); }
+  .ar-elo-row .ar-elo-new { color: var(--accent); }
+  .ar-elo-delta { font-weight: 700; font-size: 14px; padding-left: 6px; }
+  .ar-elo-delta.gain { color: #7dff9a; }
+  .ar-elo-delta.loss { color: #ff9a7d; }
+  .ar-elo-delta.neutral { color: var(--muted); }
+  .ar-log-toggle { text-align: center; margin: 12px 0 4px; }
+  .ar-log-toggle a { color: var(--muted); font-size: 12px; text-decoration: none; }
+  .ar-log-toggle a:hover { color: var(--accent); }
+  .ar-log {
+    max-height: 240px; overflow-y: auto;
+    padding: 10px; background: rgba(0,0,0,0.4); border-radius: 6px;
+    font-family: 'SF Mono', Menlo, monospace; font-size: 11px; line-height: 1.6;
+    color: var(--text);
+  }
+  .ar-log-event { padding: 2px 0; }
+  .ar-log-event.crit { color: #ffcd6b; font-weight: 700; }
+  .ar-log-event.dodge { color: #5d8eff; }
+  .ar-log-event.stun { color: #b169ff; }
+  .ar-log-event.info { color: var(--muted); font-style: italic; }
+  .ar-log-event.extra { color: #80cdff; }
+
   /* ── Phase 3b equipment slots + inventory ─────────────────── */
   .equip-slots { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 6px; }
   .equip-slot {
@@ -3371,7 +3503,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260426-trello-pass',
+  console.log('%c🛡️ VulcanX Champions · v20260426-arena-mvp',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -4093,6 +4225,79 @@
     </div>
     <div class="explore-filters" id="exploreFilters"></div>
     <div id="exploreList"></div>
+  </div>
+</div>
+
+<!-- ======== VIEW: ARENA (Phase 4 MVP — vs bots) ======== -->
+<div class="view view-arena">
+  <div class="arena-wrap">
+    <div class="page-hd">
+      <div>
+        <h2>⚔️ The Arena</h2>
+        <div class="sub">Async stat battles vs bots. Pick your stance, watch the result, climb the ladder. Real PvP coming in a later phase.</div>
+      </div>
+      <div class="arena-elo-pill">
+        <span class="arena-elo-label">Your ELO</span>
+        <b id="arenaEloVal">100</b>
+      </div>
+    </div>
+
+    <div class="arena-card">
+      <div class="arena-champ-summary" id="arenaChampSummary">
+        <em>Open one of your champions to enter the arena.</em>
+      </div>
+      <div class="arena-stance-row" id="arenaStanceRow">
+        <div class="arena-stance-label">Battle Stance</div>
+        <div class="arena-stance-btns">
+          <button class="stance-btn" data-stance="aggressive" title="+15% damage, -15% defense">⚔️ Aggressive</button>
+          <button class="stance-btn active" data-stance="balanced" title="No modifiers">⚖️ Balanced</button>
+          <button class="stance-btn" data-stance="defensive" title="-15% damage, +15% defense">🛡️ Defensive</button>
+        </div>
+      </div>
+      <button class="btn-big arena-find-btn" id="arenaFindBtn">⚔️ Find Opponent + Fight</button>
+      <div class="arena-bracket-hint" id="arenaBracketHint"></div>
+    </div>
+
+    <div class="arena-history">
+      <div class="arena-section-label">Recent Matches</div>
+      <div id="arenaHistory" class="arena-history-list">
+        <div class="arena-history-empty">No matches yet. Click "Find Opponent" to fight your first.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Arena result modal — shown after a match resolves -->
+<div class="modal-backdrop" id="arenaResultModal">
+  <div class="modal arena-result-modal">
+    <div class="ar-banner" id="arResultBanner">VICTORY</div>
+    <div class="ar-vs-row">
+      <div class="ar-fighter">
+        <div class="ar-fighter-name" id="arPlayerName">You</div>
+        <div class="ar-hp-bar"><div class="ar-hp-fill ar-hp-a" id="arPlayerHp" style="width:100%;"></div></div>
+        <div class="ar-fighter-meta" id="arPlayerMeta">HP — / —</div>
+      </div>
+      <div class="ar-vs-divider">VS</div>
+      <div class="ar-fighter">
+        <div class="ar-fighter-name" id="arBotName">Bot</div>
+        <div class="ar-hp-bar"><div class="ar-hp-fill ar-hp-b" id="arBotHp" style="width:100%;"></div></div>
+        <div class="ar-fighter-meta" id="arBotMeta">HP — / —</div>
+      </div>
+    </div>
+    <div class="ar-summary" id="arSummary"></div>
+    <div class="ar-elo-row">
+      <span>ELO</span>
+      <b id="arEloOld">100</b>
+      <span>→</span>
+      <b id="arEloNew" class="ar-elo-new">110</b>
+      <span class="ar-elo-delta" id="arEloDelta">+10</span>
+    </div>
+    <div class="ar-log-toggle"><a href="#" id="arLogToggle">Show battle log ▼</a></div>
+    <div class="ar-log" id="arLog" style="display:none;"></div>
+    <div style="display:flex; gap:8px; margin-top:14px;">
+      <button class="btn-primary" id="arRematchBtn" style="flex:1;">⚔️ Find another opponent</button>
+      <button class="btn-primary" id="arCloseBtn" style="flex:0.4; background:#2a1a22; color:var(--muted); border:1px solid var(--border);">Close</button>
+    </div>
   </div>
 </div>
 
@@ -6322,6 +6527,7 @@ const VIEW_MAP = {
   'champion':          'view-champion',
   'howto':             'view-howto',
   'champion-card':     'view-champion-card',
+  'arena':             'view-arena',
 };
 
 function navTo(viewName, payload) {
@@ -6357,6 +6563,7 @@ function navTo(viewName, payload) {
     case 'explore': renderExplore(); break;
     case 'champion': renderChampionDetail(payload); break;
     case 'champion-card': renderChampionCard(payload); break;
+    case 'arena': renderArena(); break;
   }
 }
 
@@ -7142,11 +7349,230 @@ document.getElementById('adminToggle').addEventListener('change', (e) => {
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     if (btn.id === 'arenaNavBtn') {
-      vxAlert('Async stat battles where your champions fight each other. Deterministic winners based on stats, species affinity, and rank.', {title: 'Arena · coming soon', icon: '⚔️'});
+      navTo('arena');  // Phase 4: real arena view (vs bots)
       return;
     }
     navTo(btn.dataset.view);
   });
+});
+
+// ============================================================
+// PHASE 4 — ARENA (vs bots)
+// ============================================================
+// MVP: per-champion ELO + match history persisted in localStorage
+// (keyed by champion id). Real DB-backed ELO + tournaments come in
+// later phases. Each match calls match_request → server resolves
+// deterministic battle → returns result + new ELO + battle log.
+
+const ARENA_STORAGE_KEY = 'vx_arena_v1'; // { [championId]: { elo, history: [...] } }
+let _arenaStance = 'balanced';
+
+function loadArenaState() {
+  try { return JSON.parse(localStorage.getItem(ARENA_STORAGE_KEY) || '{}'); }
+  catch (_) { return {}; }
+}
+function persistArenaState(s) {
+  try { localStorage.setItem(ARENA_STORAGE_KEY, JSON.stringify(s)); } catch (_) {}
+}
+function getArenaForChamp(championId) {
+  const s = loadArenaState();
+  if (!s[championId]) s[championId] = { elo: 100, history: [] };
+  return s[championId];
+}
+function saveArenaForChamp(championId, data) {
+  const s = loadArenaState();
+  s[championId] = data;
+  persistArenaState(s);
+}
+
+function bracketLabel(stageIdx) {
+  if (stageIdx <= 4)  return 'Whelpling Cup';
+  if (stageIdx <= 9)  return 'Adolescent';
+  if (stageIdx <= 14) return 'Champion';
+  return 'Legendary';
+}
+
+function renderArena() {
+  const champ = myChampions.find(c => c.id === state.championId)
+             || myChampions[0]
+             || null;
+  const summary = document.getElementById('arenaChampSummary');
+  const findBtn = document.getElementById('arenaFindBtn');
+  const eloVal  = document.getElementById('arenaEloVal');
+  const bracketHint = document.getElementById('arenaBracketHint');
+
+  if (!champ) {
+    summary.innerHTML = '<em>You need a champion to enter the arena. <a href="#" onclick="navTo(\'adopt\'); return false;" style="color:var(--accent);">Adopt one first.</a></em>';
+    findBtn.disabled = true;
+    eloVal.textContent = '—';
+    bracketHint.textContent = '';
+    document.getElementById('arenaHistory').innerHTML =
+      '<div class="arena-history-empty">No matches yet.</div>';
+    return;
+  }
+
+  state.championId = champ.id;
+  const arena = getArenaForChamp(champ.id);
+  eloVal.textContent = arena.elo;
+  const bracket = bracketLabel(champ.stage_idx);
+  summary.innerHTML = `
+    <b>${champ.name}</b> · ${SPECIES[champ.species_id]?.label || champ.species_id} ·
+    L${champ.level} · ${SPECIES[champ.species_id]?.bloodlines?.[champ.bloodline_id]?.stages?.[champ.stage_idx]?.name || ('Stage ' + (champ.stage_idx + 1))}
+  `;
+  bracketHint.textContent = `${bracket} bracket — opponents matched to your stage tier.`;
+  findBtn.disabled = false;
+
+  // Stance buttons sync with internal state
+  document.querySelectorAll('.stance-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.stance === _arenaStance);
+  });
+
+  // Render history
+  const histEl = document.getElementById('arenaHistory');
+  if (!arena.history.length) {
+    histEl.innerHTML = '<div class="arena-history-empty">No matches yet. Click "Find Opponent" to fight your first.</div>';
+  } else {
+    histEl.innerHTML = arena.history.slice(0, 20).map(h => `
+      <div class="ah-row">
+        <span class="ah-result ${h.result}">${h.result.toUpperCase()}</span>
+        <span class="ah-vs">vs ${h.opponentName}</span>
+        <span class="ah-elo">${h.eloChange >= 0 ? '+' : ''}${h.eloChange} ELO</span>
+        <span class="ah-time">${formatRelativeTime(h.timestamp)}</span>
+      </div>
+    `).join('');
+  }
+}
+
+function formatRelativeTime(ts) {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return s + 's ago';
+  if (s < 3600) return Math.floor(s / 60) + 'm ago';
+  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  return Math.floor(s / 86400) + 'd ago';
+}
+
+// Stance picker click handlers
+document.querySelectorAll('.stance-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    _arenaStance = btn.dataset.stance;
+    document.querySelectorAll('.stance-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+async function apiRequestMatch({ champion_id, stance, current_elo }) {
+  const res = await apiFetch(`${FN_BASE}/match_request`, {
+    method: 'POST',
+    headers: AUTH_HEADERS,
+    body: JSON.stringify({ wallet: getWallet(), champion_id, stance, current_elo }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const code = data.error || `http_${res.status}`;
+    throw new Error(`${code}: ${data.message || ''}`.trim());
+  }
+  return data;
+}
+
+// Bind Find Opponent — runs the match end-to-end and shows the result modal
+let _arenaInFlight = false;
+bindIf('arenaFindBtn', 'click', async () => {
+  if (_arenaInFlight) return;
+  const champ = myChampions.find(c => c.id === state.championId);
+  if (!champ) return vxAlert('No champion selected.', { title: 'Pick a champion', icon: '⚔️' });
+
+  _arenaInFlight = true;
+  const findBtn = document.getElementById('arenaFindBtn');
+  findBtn.disabled = true;
+  findBtn.textContent = '⚔️ Matching opponent…';
+
+  const arena = getArenaForChamp(champ.id);
+  let resp;
+  try {
+    resp = await apiRequestMatch({
+      champion_id: champ.id,
+      stance: _arenaStance,
+      current_elo: arena.elo,
+    });
+  } catch (e) {
+    findBtn.disabled = false;
+    findBtn.textContent = '⚔️ Find Opponent + Fight';
+    _arenaInFlight = false;
+    vxAlert(e.message || 'Unknown error', { title: 'Match failed', icon: '⚔️', variant: 'error' });
+    return;
+  }
+
+  // Persist new ELO + history entry
+  arena.elo = resp.newElo;
+  arena.history.unshift({
+    timestamp: Date.now(),
+    result: resp.result,
+    opponentName: resp.opponent.display_name,
+    eloChange: resp.eloChange,
+    seed: resp.seed,
+  });
+  arena.history = arena.history.slice(0, 50); // cap history
+  saveArenaForChamp(champ.id, arena);
+
+  // Show result modal + re-render arena
+  showArenaResult(resp, champ);
+  renderArena();
+  findBtn.disabled = false;
+  findBtn.textContent = '⚔️ Find Opponent + Fight';
+  _arenaInFlight = false;
+});
+
+function showArenaResult(resp, champ) {
+  const battle = resp.battle;
+  const banner = document.getElementById('arResultBanner');
+  banner.classList.remove('win', 'loss', 'draw');
+  banner.classList.add(resp.result);
+  banner.textContent = resp.result === 'win' ? 'VICTORY'
+                     : resp.result === 'loss' ? 'DEFEAT' : 'DRAW';
+
+  document.getElementById('arPlayerName').textContent = champ.name;
+  document.getElementById('arBotName').textContent = resp.opponent.display_name;
+  const aPct = battle.hpStart.a > 0 ? (battle.hpLeft.a / battle.hpStart.a * 100) : 0;
+  const bPct = battle.hpStart.b > 0 ? (battle.hpLeft.b / battle.hpStart.b * 100) : 0;
+  document.getElementById('arPlayerHp').style.width = aPct + '%';
+  document.getElementById('arBotHp').style.width = bPct + '%';
+  document.getElementById('arPlayerMeta').textContent = `HP ${battle.hpLeft.a} / ${battle.hpStart.a}`;
+  document.getElementById('arBotMeta').textContent = `HP ${battle.hpLeft.b} / ${battle.hpStart.b}`;
+  document.getElementById('arSummary').textContent = battle.summary;
+
+  const oldElo = resp.newElo - resp.eloChange;
+  document.getElementById('arEloOld').textContent = oldElo;
+  document.getElementById('arEloNew').textContent = resp.newElo;
+  const delta = document.getElementById('arEloDelta');
+  delta.textContent = (resp.eloChange >= 0 ? '+' : '') + resp.eloChange;
+  delta.classList.remove('gain','loss','neutral');
+  delta.classList.add(resp.eloChange > 0 ? 'gain' : resp.eloChange < 0 ? 'loss' : 'neutral');
+
+  // Battle log — collapsed by default
+  const log = document.getElementById('arLog');
+  log.style.display = 'none';
+  document.getElementById('arLogToggle').textContent = 'Show battle log ▼';
+  log.innerHTML = battle.events.map(ev =>
+    `<div class="ar-log-event ${ev.kind}">R${ev.round} · ${ev.msg}</div>`
+  ).join('');
+
+  document.getElementById('arenaResultModal').classList.add('open');
+}
+
+bindIf('arLogToggle', 'click', (e) => {
+  e.preventDefault();
+  const log = document.getElementById('arLog');
+  const toggle = document.getElementById('arLogToggle');
+  const showing = log.style.display !== 'none';
+  log.style.display = showing ? 'none' : 'block';
+  toggle.textContent = showing ? 'Show battle log ▼' : 'Hide battle log ▲';
+});
+bindIf('arRematchBtn', 'click', () => {
+  document.getElementById('arenaResultModal').classList.remove('open');
+  document.getElementById('arenaFindBtn').click();
+});
+bindIf('arCloseBtn', 'click', () => {
+  document.getElementById('arenaResultModal').classList.remove('open');
 });
 
 // ============================================================
