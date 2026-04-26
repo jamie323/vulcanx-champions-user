@@ -3794,7 +3794,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260426-acadian-pass',
+  console.log('%c🛡️ VulcanX Champions · v20260426-arena-render-fix',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -7833,7 +7833,9 @@ function renderArena() {
     const cat = Equipment.CATALOG[equipped.weapon_id];
     const rar = Equipment.RARITY[equipped.weapon_rarity];
     if (cat && rar) {
-      const wname = cat.id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      // CATALOG entries are keyed by id but don't carry an id field on
+      // the value; use the input weapon_id directly to format the name.
+      const wname = String(equipped.weapon_id).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
       equippedLine = `<div style="margin-top:8px; font-size:13px;">⚔️ <span style="color:${rar.color};">${rar.label} ${wname}</span></div>`;
     }
   } else {
@@ -8031,7 +8033,8 @@ function showArenaResult(resp, champ) {
     const cat = Equipment.CATALOG[id];
     const rar = rarity ? Equipment.RARITY[rarity] : null;
     if (!cat) return '';
-    const wname = cat.id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    // CATALOG entries don't carry an id field; key IS the id. Use input.
+    const wname = String(id).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     const rarTxt = rar ? `<span style="color:${rar.color};">${rar.label}</span> ` : '';
     return `<div style="font-size:11px; color:var(--muted); margin-top:2px;">⚔️ ${rarTxt}${wname}</div>`;
   };
