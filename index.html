@@ -860,9 +860,13 @@
   .ar-fighter-context .level { color: var(--accent); font-weight: 700; margin: 0 4px; }
   .ar-fighter-context .stage { color: var(--text); }
 
-  /* Live event ticker — last events stream below portraits */
+  /* Live event ticker — last events stream below portraits.
+     Trello "Text cut off after battling in arena" (Acadian 2026-04-26):
+     was max-height: 56px which couldn't fit 3 lines (3 × 18px line-height
+     + 16px padding ≈ 70px), clipping the oldest (top) line. Bumped to
+     fit 3 lines comfortably with a small buffer. */
   .ar-ticker {
-    min-height: 56px; max-height: 56px; overflow: hidden;
+    min-height: 60px; max-height: 88px;
     margin: 14px 0 8px;
     padding: 8px 12px;
     background: rgba(0,0,0,0.35);
@@ -870,6 +874,7 @@
     font-size: 12px; line-height: 1.5;
     color: var(--text);
     display: flex; flex-direction: column-reverse; gap: 2px;
+    overflow: hidden;
   }
   .ar-ticker-line { animation: ar-ticker-in 0.4s ease-out; }
   .ar-ticker-line.crit { color: #ffcd6b; font-weight: 700; }
@@ -3873,7 +3878,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260426-sign-not-tx',
+  console.log('%c🛡️ VulcanX Champions · v20260426-ticker-fit',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
