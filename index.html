@@ -88,6 +88,10 @@
     border: 1px solid rgba(255,205,107,0.18);
     border-radius: 12px;
     padding: 14px 16px;
+    /* Always span the column — Ric O. report 2026-04-26: "Everything
+       should have the same width." Without this, content-defined
+       widths could let cards drift narrower than their column. */
+    width: 100%; box-sizing: border-box;
   }
   .cc-card-title {
     font-size: 11px; color: var(--muted); letter-spacing: 2px;
@@ -304,10 +308,18 @@
   .cc-pot-count { font-size: 13px; font-weight: 800; color: var(--accent); }
 
   /* Story */
+  /* Story text: capped on desktop so the right column doesn't grow
+     forever, but FULL HEIGHT on mobile — tester report 2026-04-26
+     ("3 different areas to scroll through, sometimes you can't get
+     any further"). Mobile users were getting trapped in the inner
+     scroll container instead of scrolling the page. */
   .cc-story-text {
     font-size: 12px; line-height: 1.5;
     color: #d8cdb8; font-family: Georgia, serif;
     max-height: 90px; overflow-y: auto; padding-right: 4px;
+  }
+  @media (max-width: 1280px) {
+    .cc-story-text { max-height: none; overflow-y: visible; padding-right: 0; }
   }
 
   /* Make sure the portrait image never busts its column even if the
@@ -315,8 +327,12 @@
   body.view-champion .stage-frame img,
   body.view-champion .stage-frame { max-width: 100%; }
 
-  /* Narrow viewports — stack to single column */
-  @media (max-width: 1280px) {
+  /* Narrow viewports — stack to single column. Bumped from 1280 to
+     1400 (2026-04-26): on 1300-1400px desktops the 3 columns crammed
+     together with mismatched widths and the 5-slot equipment row
+     looked narrower than the rest. Single-column gives every card
+     the same full-width treatment from 1400px down. */
+  @media (max-width: 1400px) {
     .cc-grid {
       grid-template-columns: minmax(0, 1fr);
       max-width: 720px;
@@ -1334,8 +1350,13 @@
     0%,100% { box-shadow: 0 0 30px rgba(192,132,252,0.6), 0 10px 30px rgba(0,0,0,0.4); }
     50%     { box-shadow: 0 0 50px rgba(192,132,252,0.9), 0 10px 30px rgba(0,0,0,0.4); }
   }
+  /* Trait potion grid — 3 columns × 2 rows so the 6 bottles fit any
+     reasonable screen without horizontal scroll. Tester report 2026-04-26
+     (Ric O.): "Everything should fit on one page without having to scroll
+     horizontally. Perhaps it could be arranged in two rows, one above the
+     other, 3 and 3." */
   .feed-potion-grid {
-    display: grid; grid-template-columns: repeat(6, 1fr);
+    display: grid; grid-template-columns: repeat(3, 1fr);
     gap: 10px; margin-top: 18px;
   }
   .feed-bottle {
@@ -4008,7 +4029,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260426-mobile-pass',
+  console.log('%c🛡️ VulcanX Champions · v20260427-tester-pass',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -6423,8 +6444,15 @@ function render() {
   // ── RIGHT PANEL: Level & Progress
   document.getElementById('levelBig').textContent = String(state.level).padStart(2, '0');
   document.getElementById('currentStageName').textContent = stage.name;
+  // "Next: Pup (evolve at L5)" reads more clearly than "Pup at L5" —
+  // tester confusion 2026-04-26 (Ric O.: "I don't quite understand the
+  // levels"). The minLevel is the EVOLVE THRESHOLD; after evolving you
+  // become L(minLevel+1) of the next stage. Older label looked like
+  // "Pup at L5" while you were already AT L5, suggesting you stay L5 —
+  // but +1-on-evolve actually bumps you to L6. New label removes the
+  // ambiguity.
   document.getElementById('nextStageMeta').textContent =
-    next ? `${next.name} at L${next.minLevel}` : 'Max form reached';
+    next ? `${next.name} (evolve at L${next.minLevel})` : 'Max form reached';
 
   // Label under the bar adapts to state so the keeper sees the right
   // next step:
@@ -6587,10 +6615,16 @@ function render() {
     const total = TRAITS.reduce((s, t) => s + (state.inv?.[t] || 0), 0);
     ccTraitTotal.textContent = '×' + total;
   }
-  // Boosts side-button count = special potions stash (evo + alloc)
+  // Boosts side-button count — tester report 2026-04-26 (Ric O.):
+  // "The red number always shows 15, no matter how many you actually
+  // have." Cause: was counting only evo+alloc (which doesn't change
+  // when you feed regular trait potions). Now counts EVERYTHING in
+  // the modal — trait potions + Evolution + Blessing — so the badge
+  // visibly ticks down on every feed.
   const ccBoosts = document.getElementById('ccBoostsCount');
   if (ccBoosts) {
-    const total = (state.inv?.evo || 0) + (state.inv?.alloc || 0);
+    const traitTotal = TRAITS.reduce((s, t) => s + (state.inv?.[t] || 0), 0);
+    const total = traitTotal + (state.inv?.evo || 0) + (state.inv?.alloc || 0);
     ccBoosts.textContent = total;
     ccBoosts.dataset.empty = total === 0 ? '1' : '0';
   }
