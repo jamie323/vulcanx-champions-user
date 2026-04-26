@@ -3794,7 +3794,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260426-arena-render-fix',
+  console.log('%c🛡️ VulcanX Champions · v20260426-arena-render-fix-2',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -7978,7 +7978,9 @@ bindIf('arenaFindBtn', 'click', async () => {
     renderArena();
   } catch (e) {
     console.error('[arena] render failed after successful match', e);
-    vxAlert(`Match resolved but the UI couldn't render it: ${e.message}\n\nCheck the console.`,
+    // Include the stack so the next tester report can pinpoint the line.
+    const stack = (e && e.stack ? String(e.stack).split('\n').slice(0, 4).join('\n') : '(no stack)');
+    vxAlert(`Match resolved but the UI couldn't render it:\n${e.message}\n\n${stack}\n\n(check console for details)`,
       { title: 'Render error', icon: '⚔️', variant: 'error' });
   } finally {
     resetButton();
