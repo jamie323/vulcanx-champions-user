@@ -473,28 +473,25 @@
         const recovered = await this.tryAutoReconnect();
         if (!recovered) throw new Error('Wallet session expired — please reconnect.');
       }
-      await this.ensureElysium();
-      const dataHex = '0x' + Array.from(new TextEncoder().encode(`VulcanX:${label}`))
-        .map(b => b.toString(16).padStart(2, '0')).join('');
-      // Self-send the 0-value tx — MetaMask 11+ now blocks sends to
-      // canonical burn addresses (0x…dead, 0x…0000) with an
-      // unacknowledgeable "you will lose your assets" warning that
-      // can't be bypassed (tester report 2026-04-26). Since value is
-      // 0x0, the destination doesn't matter for funds — we just need
-      // a signed on-chain tx with the "VulcanX:<label>" tag for the
-      // ceremony. Self-sends carry no warning and produce the same
-      // explorer entry. Mainnet adoption (5 PYR real fee) will need
-      // a treasury address but that's a launch-time change.
-      const txHash = await this._provider.request({
-        method: 'eth_sendTransaction',
-        params: [{
-          from: this.address,
-          to: this.address,
-          value: '0x0',
-          data: dataHex,
-        }],
-      });
-      return txHash;
+      // QA "ceremony" — proves the user signed off on the action
+      // (adopt / rename / shop) without moving any value or touching
+      // chain state. Pivoted to personal_sign after two distinct on-
+      // chain failures (tester 2026-04-26):
+      //   1. burn-address block on 0x…dEaD (MetaMask 11+ unacknowledgeable warning)
+      //   2. "External transactions to internal accounts cannot include data"
+      //      rejection on Elysium for self-send-with-data
+      // personal_sign has no gas, no chain rules, no wallet warnings —
+      // every wallet implements it cleanly and the user still sees a
+      // wallet prompt with the VulcanX-tagged message. Returns the
+      // signature (callers don't read it; was txHash before).
+      // Mainnet (real 5 PYR adoption fee) will swap back to a real tx
+      // against a treasury contract — flagged in the launch checklist.
+      const message =
+        `VulcanX: ${label}\n` +
+        `Wallet: ${this.address}\n` +
+        `Time:   ${new Date().toISOString()}`;
+      const signature = await this.personalSign(message);
+      return signature;
     }
 
     explorerTx(hash) { return `${ELYSIUM_EXPLORER}/tx/${hash}`; }
