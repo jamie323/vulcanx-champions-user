@@ -1,0 +1,6 @@
+# Local-only Claude Code scratch (worktrees, session metadata)
+.claude/
+
+# OS / editor cruft
+.DS_Store
+*.swp

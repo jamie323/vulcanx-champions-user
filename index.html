@@ -60,10 +60,19 @@
   .view { display: none; }
   .view.active { display: block; }
 
-  /* champion view keeps the 3-column grid — wider panels, bigger hero */
+  /* champion view keeps the 3-column grid — wider panels, bigger hero.
+     Phase Trello fix (2026-04-26): columns are now shrinkable with sensible
+     mins so the right-hand stats panel doesn't get clipped at 100% zoom on
+     1366/1440 laptops. Stacks to single-column under 1100px (tablets). */
   body.view-champion .view-champion { display: grid;
-    grid-template-columns: 560px 1fr 560px;
+    grid-template-columns: minmax(360px, 560px) minmax(0, 1fr) minmax(360px, 560px);
+    gap: 24px;
     align-items: start; }
+  @media (max-width: 1100px) {
+    body.view-champion .view-champion {
+      grid-template-columns: 1fr;
+    }
+  }
 
   /* nav bar */
   .main-nav {
@@ -501,6 +510,79 @@
     font-style: italic;
   }
 
+  /* Passive ability — bloodline's signature combat trait. */
+  .about-passive-name {
+    font-size: 18px; font-weight: 700; color: var(--accent, #ffcd6b);
+    letter-spacing: 0.3px; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .about-passive-name::before { content: '✦'; font-size: 14px; opacity: 0.8; }
+  .about-passive-desc {
+    font-size: 13px; color: var(--muted); line-height: 1.55;
+  }
+
+  /* Stat-lean chevrons next to TRAIT name on the stat card. */
+  .trait-lean { font-size: 11px; margin-left: 6px; opacity: 0.85; letter-spacing: 1px; }
+  .trait-lean.up   { color: #7dff9a; }
+  .trait-lean.down { color: #ff9a7d; }
+  /* Trello UX (2026-04-26): potion-emoji match indicator next to trait name. */
+  .trait-potion-match { font-size: 14px; margin-right: 4px; cursor: help; opacity: 0.95; }
+
+  /* ── Phase 3b equipment slots + inventory ─────────────────── */
+  .equip-slots { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 6px; }
+  .equip-slot {
+    background: rgba(20,20,28,0.9); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 6px; text-align: center;
+    cursor: pointer; transition: all 0.15s; position: relative;
+    min-height: 78px;
+  }
+  .equip-slot:hover { border-color: var(--accent-dim); transform: translateY(-1px); }
+  .equip-slot.filled { border-color: var(--rarity-color, var(--accent-dim)); }
+  .equip-slot .es-icon { font-size: 22px; line-height: 1; opacity: 0.85; }
+  .equip-slot .es-label { font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase;
+    color: var(--muted); margin-top: 4px; }
+  .equip-slot .es-name { font-size: 11px; font-weight: 700; margin-top: 4px;
+    color: var(--rarity-color, var(--text)); line-height: 1.2;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .equip-slot .es-empty { font-size: 11px; color: rgba(255,255,255,0.25); margin-top: 6px; }
+  .equip-slot .es-pwr { position: absolute; top: 4px; right: 6px;
+    font-size: 9px; font-weight: 700; color: var(--accent); opacity: 0.8; }
+
+  .inv-btn-row { display: flex; gap: 8px; margin-top: 8px; }
+  .inv-btn { flex: 1; padding: 8px 10px; background: rgba(255,205,107,0.08);
+    border: 1px solid rgba(255,205,107,0.3); color: var(--accent);
+    border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase; }
+  .inv-btn:hover { background: rgba(255,205,107,0.15); }
+
+  /* Equipment picker modal — shares modal-backdrop */
+  .equip-picker-list { max-height: 60vh; overflow-y: auto; padding: 4px 2px; }
+  .equip-picker-item {
+    display: grid; grid-template-columns: 36px 1fr auto; gap: 12px;
+    padding: 12px; margin-bottom: 6px;
+    background: rgba(20,20,28,0.85); border: 1px solid var(--border);
+    border-radius: 8px; cursor: pointer; transition: all 0.15s;
+    border-left: 3px solid var(--rarity-color, var(--accent-dim));
+  }
+  .equip-picker-item:hover { background: rgba(40,40,55,0.9); transform: translateX(2px); }
+  .equip-picker-item.equipped { opacity: 0.55; cursor: default; }
+  .equip-picker-item.equipped:hover { transform: none; }
+  .epi-icon { font-size: 24px; align-self: center; text-align: center; }
+  .epi-info { min-width: 0; }
+  .epi-name { font-weight: 700; color: var(--rarity-color, var(--text)); font-size: 14px; }
+  .epi-desc { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+  .epi-pwr { align-self: center; text-align: right;
+    font-size: 13px; font-weight: 700; color: var(--accent); }
+  .epi-pwr small { display: block; font-size: 9px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 1px; }
+  .equip-empty-msg { text-align: center; color: var(--muted); padding: 30px 0;
+    font-style: italic; font-size: 13px; }
+  .equip-unequip { display: block; width: 100%; margin-top: 10px;
+    padding: 8px; background: rgba(255,107,107,0.12); color: #ff9a7d;
+    border: 1px solid rgba(255,107,107,0.4); border-radius: 6px;
+    cursor: pointer; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+  .equip-unequip:hover { background: rgba(255,107,107,0.25); }
+
   .about-block-story .about-story {
     font-size: 15px; line-height: 1.8;
     color: #d8cdb8;
@@ -700,6 +782,14 @@
     padding: 5px 10px; border-radius: 14px;
     font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
     text-transform: uppercase; color: var(--accent-dim); }
+  /* Phase 2: Power Score pill — sits below rank, same visual rhythm. */
+  .stage-frame .power-pill { position: absolute; top: 44px; left: 14px;
+    background: rgba(10,6,8,0.9); border: 1px solid rgba(255,205,107,0.4);
+    padding: 5px 10px; border-radius: 14px;
+    font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--accent);
+    cursor: help; }
+  .stage-frame .power-pill b { color: var(--accent); margin-left: 4px; }
 
   .stage-name { margin-top: 16px; color: var(--muted);
     font-size: 11px; letter-spacing: 3px; text-transform: uppercase; }
@@ -3274,13 +3364,14 @@
 <!-- Cache-bust on each deploy so stale wallet.js/stories.js can't hold
      testers on yesterday's bug. Bump the version string when either
      file changes (every commit is fine — it's just a cache key). -->
-<script src="wallet.js?v=20260425-a"></script>
+<script src="wallet.js?v=20260426-b"></script>
 <script src="stories.js?v=20260425-a"></script>
+<script src="equipment.js?v=20260426-a"></script>
 <script>
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260425-a',
+  console.log('%c🛡️ VulcanX Champions · v20260426-trello-pass',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -3299,7 +3390,10 @@
       signed but free.
     </p>
     <div class="wg-choose" id="wgChoose">
-      <button class="wg-btn wg-btn-mm" id="connectBtnMM" onclick="connectWallet('injected')">
+      <!-- onclick wired by boot() to either connectWallet('injected') for desktop+injected
+           or to a MetaMask universal-link anchor click for mobile-without-injected.
+           Inline handler removed (was racing with the boot rebind). -->
+      <button class="wg-btn wg-btn-mm" id="connectBtnMM">
         <span class="wg-btn-ico">🦊</span>
         <span class="wg-btn-body">
           <span class="wg-btn-title">MetaMask</span>
@@ -4081,6 +4175,23 @@
     <div class="about-bloodline-hint" id="aboutBloodlineHint">The heavy-armor path — unshakeable defence, iron-forged tusks.</div>
   </div>
 
+  <div class="about-block" id="aboutPassiveBlock">
+    <div class="about-section-label">Passive Ability</div>
+    <div class="about-passive-name" id="aboutPassiveName">Iron Will</div>
+    <div class="about-passive-desc" id="aboutPassiveDesc">+5% damage reduction while below 30% HP</div>
+  </div>
+
+  <!-- ── EQUIPMENT (Phase 3b) — 5 slots, click to equip from inventory ── -->
+  <div class="about-block" id="aboutEquipBlock">
+    <div class="about-section-label">Equipment</div>
+    <div class="equip-slots" id="equipSlots">
+      <!-- 5 slots rendered by renderEquipSlots() -->
+    </div>
+    <div class="inv-btn-row">
+      <button class="inv-btn" id="inventoryBtn">View Inventory</button>
+    </div>
+  </div>
+
   <!-- ── LEVEL & PROGRESS (inline, matches other about-blocks) ── -->
   <div class="about-block">
     <div class="about-section-label">Level &amp; Progress</div>
@@ -4171,6 +4282,7 @@
     <div class="evo-burst" id="stageBurst"></div>
     <div class="level-badge" id="levelBadge">L 01</div>
     <div class="rank-pill" id="rankPill">Iron III</div>
+    <div class="power-pill" id="powerPill" title="Power Score — stage × 5000 + stats × bloodline weight + ELO">⚡<b id="powerPillVal">0</b></div>
   </div>
 
   <!-- Feed Me bar (below portrait) -->
@@ -4230,6 +4342,17 @@
       <button class="btn-primary" id="allocCancel"
         style="flex:0.3; background:#2a1a22; color:var(--muted); border:1px solid var(--border);">Cancel</button>
     </div>
+  </div>
+</div>
+
+<!-- Phase 3b: equipment picker modal — opens when slot or "View Inventory" clicked -->
+<div class="modal-backdrop" id="equipPickerModal">
+  <div class="modal" style="width: 520px;">
+    <h3 id="equipPickerTitle">Equip Weapon</h3>
+    <div class="sub" id="equipPickerSub">Choose a weapon for this champion.</div>
+    <div class="equip-picker-list" id="equipPickerList"></div>
+    <button class="equip-unequip" id="equipUnequipBtn" style="display:none;">Unequip current item</button>
+    <button class="btn-primary" id="equipPickerClose" style="margin-top:10px;">Close</button>
   </div>
 </div>
 
@@ -4499,10 +4622,36 @@ async function usePotion(trait, sourceEl) {
   try {
     resp = await apiFeedPotion({ champion_id: state.championId, potion_id: potion.id });
   } catch (e) {
-    clearTimeout(safetyRelease);
-    _feedInFlight = false;
-    vxAlert(e.message || 'Unknown error', {title: 'Feed failed', icon: '🧪', variant: 'error'});
-    return;
+    // Stale-cache recovery: if the potion ID is gone (already consumed) or
+    // empty, refresh inventory and retry ONCE silently. Catches the case
+    // where the frontend's cached potion row no longer exists server-side
+    // (Trello "Keep getting feeding fail error after a few potions").
+    const msg = (e && e.message) || '';
+    const stale = /potion_not_found|potion_empty/i.test(msg);
+    if (stale) {
+      console.warn('[feed] stale potion id, reloading + retrying:', msg);
+      try {
+        await reloadPotions();
+        const retryPotion = findPotion({ trait });
+        if (retryPotion && retryPotion.id !== potion.id) {
+          resp = await apiFeedPotion({ champion_id: state.championId, potion_id: retryPotion.id });
+        } else {
+          throw new Error(`No fresh ${trait} potion available — try Shop for more.`);
+        }
+      } catch (e2) {
+        clearTimeout(safetyRelease);
+        _feedInFlight = false;
+        vxAlert(`${e2.message || 'Unknown error'}\n\n(trait: ${trait}, code: ${msg})`,
+          {title: 'Feed failed', icon: '🧪', variant: 'error'});
+        return;
+      }
+    } else {
+      clearTimeout(safetyRelease);
+      _feedInFlight = false;
+      vxAlert(`${msg || 'Unknown error'}\n\n(trait: ${trait})`,
+        {title: 'Feed failed', icon: '🧪', variant: 'error'});
+      return;
+    }
   }
   // Pull the authoritative state from the server response.
   const c = mapChampion(resp.champion);
@@ -4947,20 +5096,27 @@ const TRAIT_HELP = {
 
 // ============================================================
 // FAKE LEADERBOARD DATA
+//
+// Stage values bumped to the 20-stage system in Phase 2 (was 6-8 from
+// the old 9-stage system, now 14/17/19 for Warlord/Ascendant/Legendary).
+// `power` values are eyeball-tuned stubs from before the formula lock —
+// they remain as stored numbers so the visible leaderboard stays stable
+// during dev. Phase 4 (Arena MVP vs bots) replaces this with real
+// champion records whose PowerScore is computed via Combat.powerScore().
 // ============================================================
 const LEADERBOARD = [
-  { rank:1, name:'Ashdor the Unbroken', species:'orc', stage:8, level:50, elo:2840, power:98200, owner:'@ashdor.eth' },
-  { rank:2, name:'Velenia Moonsong',    species:'elf', stage:8, level:50, elo:2710, power:95100, owner:'@veleniamoon' },
-  { rank:3, name:'Kragg Oneyed',        species:'orc', stage:8, level:50, elo:2655, power:93700, owner:'@kragg99' },
-  { rank:4, name:'Silvanas Greenbough', species:'elf', stage:7, level:49, elo:2580, power:82400, owner:'@silvanas' },
-  { rank:5, name:'Snikrit the Cruel',   species:'goblin', stage:8, level:50, elo:2510, power:79200, owner:'@snikrit' },
-  { rank:6, name:'Vorhak Ironjaw',      species:'orc', stage:7, level:48, elo:2420, power:73800, owner:'@vorhak' },
-  { rank:7, name:'Illyaris Dawnspire',  species:'elf', stage:7, level:47, elo:2380, power:70100, owner:'@illyaris' },
-  { rank:8, name:'Grizzlemaw',          species:'goblin', stage:7, level:46, elo:2290, power:65700, owner:'@grizz.vx' },
-  { rank:9, name:'Tharok the Red',      species:'orc', stage:6, level:44, elo:2180, power:58200, owner:'@tharokvx' },
-  { rank:10,name:'Thaelrion of the Vale', species:'elf', stage:6, level:43, elo:2150, power:55400, owner:'@thaelrion' },
-  { rank:11,name:'Scutter',             species:'goblin', stage:6, level:42, elo:2090, power:52100, owner:'@scutter' },
-  { rank:12,name:'Mogar Deathfang',     species:'orc', stage:6, level:41, elo:2030, power:49800, owner:'@mogar' },
+  { rank:1, name:'Ashdor the Unbroken', species:'orc', stage:19, level:50, elo:2840, power:98200, owner:'@ashdor.eth' },
+  { rank:2, name:'Velenia Moonsong',    species:'elf', stage:19, level:50, elo:2710, power:95100, owner:'@veleniamoon' },
+  { rank:3, name:'Kragg Oneyed',        species:'orc', stage:19, level:50, elo:2655, power:93700, owner:'@kragg99' },
+  { rank:4, name:'Silvanas Greenbough', species:'elf', stage:17, level:49, elo:2580, power:82400, owner:'@silvanas' },
+  { rank:5, name:'Snikrit the Cruel',   species:'goblin', stage:19, level:50, elo:2510, power:79200, owner:'@snikrit' },
+  { rank:6, name:'Vorhak Ironjaw',      species:'orc', stage:17, level:48, elo:2420, power:73800, owner:'@vorhak' },
+  { rank:7, name:'Illyaris Dawnspire',  species:'elf', stage:17, level:47, elo:2380, power:70100, owner:'@illyaris' },
+  { rank:8, name:'Grizzlemaw',          species:'goblin', stage:17, level:46, elo:2290, power:65700, owner:'@grizz.vx' },
+  { rank:9, name:'Tharok the Red',      species:'orc', stage:14, level:44, elo:2180, power:58200, owner:'@tharokvx' },
+  { rank:10,name:'Thaelrion of the Vale', species:'elf', stage:14, level:43, elo:2150, power:55400, owner:'@thaelrion' },
+  { rank:11,name:'Scutter',             species:'goblin', stage:14, level:42, elo:2090, power:52100, owner:'@scutter' },
+  { rank:12,name:'Mogar Deathfang',     species:'orc', stage:14, level:41, elo:2030, power:49800, owner:'@mogar' },
   // ... (truncated — just enough for demo)
 ];
 
@@ -4976,8 +5132,10 @@ function renderLeaderboard(filter = 'all') {
   };
   const rows = filter === 'all' ? LEADERBOARD : LEADERBOARD.filter(r => r.species === filter);
   list.innerHTML = '';
-  // Insert user somewhere based on power, for demo
-  const withMe = [...rows];
+  // Phase 2: explicit sort by PowerScore desc, then insert the user
+  // in the correct slot. The user's power comes from Combat.powerScore;
+  // mock rows still use their stored stub power until real PvP lands.
+  const withMe = [...rows].sort((a, b) => b.power - a.power);
   const meRank = withMe.findIndex(r => r.power < currentPower);
   if (meRank === -1) withMe.push(myEntry); else withMe.splice(meRank, 0, myEntry);
   withMe.forEach((r, i) => {
@@ -4997,10 +5155,72 @@ function renderLeaderboard(filter = 'all') {
   });
 }
 
+// ============================================================
+// Combat primitives — Phase 2 (2026-04-25)
+// Client mirror of backend/_shared/champions_combat.ts. Pure functions,
+// deterministic. Authoritative formulas in GDD_ARENA.md §7.
+// ============================================================
+
+const HP_STAGE_MULT = [
+  1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.8, 2.0, 2.2,
+  2.4, 2.6, 2.9, 3.2, 3.5, 3.8, 4.2, 4.6, 5.0, 5.5,
+];
+
+const Combat = {
+  hp(vit, stageIdx, armorMod = 1.0) {
+    const m = HP_STAGE_MULT[stageIdx] ?? HP_STAGE_MULT[HP_STAGE_MULT.length - 1];
+    return Math.round(50 + vit * m * armorMod);
+  },
+  initiative(agi, d20Roll) { return agi + d20Roll; },
+  // Dodge soft-capped at 55% (Phase 3a.5 sim found 99% dodge at endgame AGI).
+  dodgeChance(agi) { return agi <= 0 ? 0 : Math.min(55, (agi / (agi + 200)) * 100); },
+  critChance(fer) { return fer <= 0 ? 0 : Math.min(50, fer / 4); },
+  // Crit mult hard-capped at 3.0x (Phase 3a.5 sim found 40x at endgame FER).
+  critMultiplier(fer) { return Math.min(3.0, 1.5 + Math.max(0, fer) / 200); },
+  physDamage(str, weaponMod = 1.0, stanceMod = 1.0) {
+    return Math.round(Math.max(0, str) * weaponMod * stanceMod);
+  },
+  magicDamage(int, weaponMod = 1.0, stanceMod = 1.0) {
+    return Math.round(Math.max(0, int) * weaponMod * stanceMod);
+  },
+  procChance(lck, baseProc) {
+    return Math.max(0, Math.min(100, baseProc + Math.max(0, lck) / 5));
+  },
+  // PowerScore — single number for matchmaking + leaderboard sort.
+  // Formula:
+  //   stageIdx × 5000
+  //   + Σ(stats) × bloodline_avg_weight
+  //   + equipmentTotal
+  //   + max(0, elo - 100) / 10
+  powerScore({ stageIdx, stats, statWeights = null, equipmentTotal = 0, elo = 100 }) {
+    let avgWeight = 1.0;
+    if (statWeights) {
+      let sum = 0;
+      TRAITS.forEach(t => { sum += (statWeights[t] ?? 1.0); });
+      avgWeight = sum / TRAITS.length;
+    }
+    let statSum = 0;
+    TRAITS.forEach(t => { statSum += (stats[t] ?? 0); });
+    const eloBonus = Math.max(0, elo - 100) / 10;
+    return Math.round(stageIdx * 5000 + statSum * avgWeight + equipmentTotal + eloBonus);
+  },
+};
+
+// Wrapper that computes PowerScore for the active champion in `state`,
+// pulling stat_weights from the current bloodline AND equipmentTotal
+// from any items equipped on the active champion (Phase 3b).
 function computePowerScore() {
-  const stage = state.stageIdx;
-  const statSum = Object.values(state.stats).reduce((a,b)=>a+b, 0);
-  return Math.round(stage * 5000 + statSum + state.level * 100);
+  const bl = SPECIES?.[currentSpecies]?.bloodlines?.[currentBloodline];
+  const equipmentTotal = window.Equipment
+    ? Equipment.totalPowerFromEquipped(getEquippedForActive())
+    : 0;
+  return Combat.powerScore({
+    stageIdx: state.stageIdx,
+    stats: state.stats,
+    statWeights: bl?.stat_weights || null,
+    equipmentTotal,
+    elo: state.rank?.elo ?? 100,
+  });
 }
 
 function showLeaderboard() {
@@ -5009,6 +5229,261 @@ function showLeaderboard() {
 }
 function closeLeaderboard() {
   document.getElementById('leaderboardModal').classList.remove('open');
+}
+
+// ============================================================
+// PHASE 3B — EQUIPMENT STATE + UI
+// ============================================================
+// Inventory is wallet-level (NFT model — items belong to wallet, equipped
+// to one champion at a time). For Phase 3b we mock-grant a starter set
+// on first boot per wallet; real backend (NFT mint + chest drops + ecosystem
+// rewards from broader Vulcan Forged) lands in a later phase.
+
+let myInventory = []; // [{ id, catalogId, rarity, rolledStat?, equippedOn? }]
+
+const INV_STORAGE_KEY = 'vx_inventory';
+
+function loadInventory() {
+  try {
+    const raw = localStorage.getItem(INV_STORAGE_KEY);
+    myInventory = raw ? JSON.parse(raw) : [];
+  } catch (_) { myInventory = []; }
+}
+function persistInventory() {
+  try { localStorage.setItem(INV_STORAGE_KEY, JSON.stringify(myInventory)); } catch (_) {}
+}
+
+// Grant a starter set if inventory is empty. Picks weapons matching the
+// active champion's species so users can immediately equip + see PowerScore
+// move. Idempotent: if there's already inventory, no-op.
+function grantStarterInventoryIfEmpty() {
+  if (myInventory.length > 0) return;
+  const sp = currentSpecies || 'orc';
+  // Find the species' three weapons in the catalog
+  const weapons = Object.entries(Equipment.CATALOG)
+    .filter(([_, c]) => c.slot === 'weapon' && c.species === sp)
+    .map(([id]) => id);
+  const starters = [
+    { catalogId: weapons[0], rarity: 'common' },
+    { catalogId: weapons[1], rarity: 'rare' },
+    { catalogId: weapons[2], rarity: 'epic' },
+    { catalogId: 'battle_mail',   rarity: 'common' },
+    { catalogId: 'light_plate',   rarity: 'rare' },
+    { catalogId: 'lucky_charm',   rarity: 'rare' },
+    { catalogId: 'power_ring',    rarity: 'epic',  rolledStat: 'STR' },
+    { catalogId: 'swift_boots',   rarity: 'common' },
+    { catalogId: 'aura_of_power', rarity: 'rare' },
+  ].filter(s => s.catalogId); // safety guard
+  myInventory = starters.map(s => ({
+    id: 'inv_' + Math.random().toString(36).slice(2, 10),
+    equippedOn: null,
+    ...s,
+  }));
+  persistInventory();
+}
+
+// Items currently equipped on the active champion.
+function getEquippedForActive() {
+  const id = state.championId || activeChampionId;
+  if (!id) return [];
+  return myInventory.filter(inst => inst.equippedOn === id);
+}
+
+// Items in inventory that COULD be equipped to active champion's slot.
+// Includes the currently-equipped item for that slot (so the picker shows it).
+function getInventoryForSlot(slot) {
+  const id = state.championId || activeChampionId;
+  if (!id) return [];
+  return myInventory.filter(inst => {
+    const cat = Equipment.CATALOG[inst.catalogId];
+    if (!cat || cat.slot !== slot) return false;
+    if (Equipment.SLOTS[slot].speciesLocked && cat.species !== currentSpecies) return false;
+    // Either unequipped (anywhere) or already equipped to this champion
+    return inst.equippedOn == null || inst.equippedOn === id;
+  });
+}
+
+// Render the 5 slot pills under "Equipment" on the champion view.
+function renderEquipSlots() {
+  const root = document.getElementById('equipSlots');
+  if (!root || !window.Equipment) return;
+  const equipped = getEquippedForActive();
+  const slotKeys = ['weapon', 'armor', 'trinket', 'boots', 'aura'];
+  root.innerHTML = '';
+  for (const slot of slotKeys) {
+    const slotDef = Equipment.SLOTS[slot];
+    const inst = equipped.find(i => Equipment.CATALOG[i.catalogId]?.slot === slot);
+    const cat = inst ? Equipment.CATALOG[inst.catalogId] : null;
+    const rarColor = inst ? Equipment.RARITY[inst.rarity]?.color : null;
+    const pwr = inst ? Equipment.powerValue(inst) : 0;
+    const filled = !!inst;
+    root.insertAdjacentHTML('beforeend', `
+      <div class="equip-slot ${filled ? 'filled' : ''}" data-slot="${slot}"
+           ${rarColor ? `style="--rarity-color:${rarColor};"` : ''}>
+        ${filled ? `<div class="es-pwr">+${pwr}</div>` : ''}
+        <div class="es-icon">${slotDef.icon}</div>
+        <div class="es-label">${slotDef.label}</div>
+        ${filled
+          ? `<div class="es-name">${Equipment.itemDisplayName(inst).split(' ').slice(1).join(' ')}</div>`
+          : `<div class="es-empty">— empty —</div>`}
+      </div>
+    `);
+  }
+  // Click handler: open picker for clicked slot
+  root.querySelectorAll('.equip-slot').forEach(el => {
+    el.addEventListener('click', () => openEquipPicker(el.dataset.slot));
+  });
+}
+
+let _activePickerSlot = null;
+
+function openEquipPicker(slot) {
+  _activePickerSlot = slot;
+  const slotDef = Equipment.SLOTS[slot];
+  const items = getInventoryForSlot(slot);
+  const equipped = getEquippedForActive().find(i => Equipment.CATALOG[i.catalogId]?.slot === slot);
+
+  document.getElementById('equipPickerTitle').textContent = `Equip ${slotDef.label}`;
+  document.getElementById('equipPickerSub').textContent =
+    slotDef.speciesLocked
+      ? `${SPECIES[currentSpecies].label}-only items shown.`
+      : `Cross-species — any owned ${slotDef.label.toLowerCase()} fits.`;
+
+  const list = document.getElementById('equipPickerList');
+  list.innerHTML = '';
+  if (items.length === 0) {
+    list.insertAdjacentHTML('beforeend',
+      `<div class="equip-empty-msg">No ${slotDef.label.toLowerCase()} items in inventory yet.</div>`);
+  } else {
+    for (const inst of items) {
+      const cat = Equipment.CATALOG[inst.catalogId];
+      const rar = Equipment.RARITY[inst.rarity];
+      const isEquipped = inst.equippedOn === (state.championId || activeChampionId);
+      const pwr = Equipment.powerValue(inst);
+      list.insertAdjacentHTML('beforeend', `
+        <div class="equip-picker-item ${isEquipped ? 'equipped' : ''}"
+             data-inst-id="${inst.id}"
+             style="--rarity-color:${rar.color};">
+          <div class="epi-icon">${slotDef.icon}</div>
+          <div class="epi-info">
+            <div class="epi-name">${Equipment.itemDisplayName(inst)}${isEquipped ? ' · equipped' : ''}</div>
+            <div class="epi-desc">${cat.description}</div>
+          </div>
+          <div class="epi-pwr">+${pwr}<small>power</small></div>
+        </div>
+      `);
+    }
+    list.querySelectorAll('.equip-picker-item').forEach(el => {
+      if (el.classList.contains('equipped')) return;
+      el.addEventListener('click', () => {
+        equipItem(el.dataset.instId, _activePickerSlot);
+        closeEquipPicker();
+      });
+    });
+  }
+
+  // Show unequip button if something equipped
+  const unequipBtn = document.getElementById('equipUnequipBtn');
+  if (equipped) {
+    unequipBtn.style.display = '';
+    unequipBtn.textContent = `Unequip ${Equipment.itemDisplayName(equipped)}`;
+    unequipBtn.onclick = () => { unequipSlot(slot); closeEquipPicker(); };
+  } else {
+    unequipBtn.style.display = 'none';
+  }
+
+  document.getElementById('equipPickerModal').classList.add('open');
+}
+
+function closeEquipPicker() {
+  document.getElementById('equipPickerModal').classList.remove('open');
+  _activePickerSlot = null;
+}
+
+function equipItem(instId, slot) {
+  const id = state.championId || activeChampionId;
+  if (!id) return;
+  // Unequip any current item in this slot for this champion
+  for (const inst of myInventory) {
+    if (inst.equippedOn === id && Equipment.CATALOG[inst.catalogId]?.slot === slot) {
+      inst.equippedOn = null;
+    }
+  }
+  const target = myInventory.find(i => i.id === instId);
+  if (!target) return;
+  target.equippedOn = id;
+  persistInventory();
+  render(); // re-render champion view → updates PowerScore + slot
+}
+
+function unequipSlot(slot) {
+  const id = state.championId || activeChampionId;
+  if (!id) return;
+  for (const inst of myInventory) {
+    if (inst.equippedOn === id && Equipment.CATALOG[inst.catalogId]?.slot === slot) {
+      inst.equippedOn = null;
+    }
+  }
+  persistInventory();
+  render();
+}
+
+function showFullInventory() {
+  // Same modal, but list ALL slots (no slot filter). Reuse picker UI by
+  // showing items across all slots; click still equips to that slot.
+  _activePickerSlot = null;
+  const list = document.getElementById('equipPickerList');
+  document.getElementById('equipPickerTitle').textContent = 'Inventory';
+  document.getElementById('equipPickerSub').textContent =
+    `${myInventory.length} item${myInventory.length === 1 ? '' : 's'} owned. Click to equip.`;
+  list.innerHTML = '';
+  if (myInventory.length === 0) {
+    list.insertAdjacentHTML('beforeend', `<div class="equip-empty-msg">Inventory empty. Win arena matches or open chests in the Vulcan Forged ecosystem to earn items.</div>`);
+  } else {
+    // Sort: equipped first, then by rarity desc, then by slot
+    const order = ['legendary', 'epic', 'rare', 'common'];
+    const sorted = [...myInventory].sort((a, b) => {
+      const ea = a.equippedOn ? 0 : 1;
+      const eb = b.equippedOn ? 0 : 1;
+      if (ea !== eb) return ea - eb;
+      return order.indexOf(a.rarity) - order.indexOf(b.rarity);
+    });
+    for (const inst of sorted) {
+      const cat = Equipment.CATALOG[inst.catalogId];
+      if (!cat) continue;
+      const rar = Equipment.RARITY[inst.rarity];
+      const slotDef = Equipment.SLOTS[cat.slot];
+      const isEquipped = inst.equippedOn === (state.championId || activeChampionId);
+      const compatible = !slotDef.speciesLocked || cat.species === currentSpecies;
+      const pwr = Equipment.powerValue(inst);
+      list.insertAdjacentHTML('beforeend', `
+        <div class="equip-picker-item ${isEquipped ? 'equipped' : ''}"
+             data-inst-id="${inst.id}" data-slot="${cat.slot}"
+             style="--rarity-color:${rar.color}; ${!compatible ? 'opacity:0.4;' : ''}">
+          <div class="epi-icon">${slotDef.icon}</div>
+          <div class="epi-info">
+            <div class="epi-name">${Equipment.itemDisplayName(inst)}${isEquipped ? ' · equipped' : (compatible ? '' : ' · wrong species')}</div>
+            <div class="epi-desc">${cat.description}</div>
+          </div>
+          <div class="epi-pwr">+${pwr}<small>power</small></div>
+        </div>
+      `);
+    }
+    list.querySelectorAll('.equip-picker-item').forEach(el => {
+      if (el.classList.contains('equipped')) return;
+      const slot = el.dataset.slot;
+      const cat = Equipment.CATALOG[myInventory.find(i => i.id === el.dataset.instId)?.catalogId];
+      if (!cat) return;
+      const slotDef = Equipment.SLOTS[cat.slot];
+      if (slotDef.speciesLocked && cat.species !== currentSpecies) return;
+      el.addEventListener('click', () => {
+        equipItem(el.dataset.instId, slot);
+        closeEquipPicker();
+      });
+    });
+  }
+  document.getElementById('equipUnequipBtn').style.display = 'none';
+  document.getElementById('equipPickerModal').classList.add('open');
 }
 
 const STAGE_LORE_MAP = {
@@ -5067,6 +5542,13 @@ function render() {
     state.rank.tier + ' ' + state.rank.division;
   document.getElementById('topChampTitle').textContent =
     `${speciesCfg.label} · ${bloodlineCfg.label}`;
+  // Phase 2: live PowerScore pill — recomputed every render so it
+  // updates immediately after feed/blessing/evolve.
+  const _pwrEl = document.getElementById('powerPillVal');
+  if (_pwrEl) _pwrEl.textContent = computePowerScore().toLocaleString();
+  // Phase 3b: refresh equipment slots whenever the champion view re-renders
+  // so equipping/unequipping shows immediately and PowerScore stays in sync.
+  if (typeof renderEquipSlots === 'function') renderEquipSlots();
 
   // ── LEFT PANEL: Identity
   // Prefer the persisted champion name (what the user typed on adopt or
@@ -5082,6 +5564,19 @@ function render() {
     document.getElementById('aboutBloodlineName').textContent = bloodlineCfg.label;
     document.getElementById('aboutBloodlineHint').textContent =
       BLOODLINE_HINT[currentBloodline] || 'A unique bloodline with its own story.';
+
+    // Passive ability — bloodline's signature combat trait. Hidden if the
+    // bloodline data hasn't been migrated to Phase 1 schema (defensive).
+    const passiveBlock = document.getElementById('aboutPassiveBlock');
+    if (passiveBlock) {
+      if (bloodlineCfg.passive) {
+        passiveBlock.style.display = '';
+        document.getElementById('aboutPassiveName').textContent = bloodlineCfg.passive.name;
+        document.getElementById('aboutPassiveDesc').textContent = bloodlineCfg.passive.description;
+      } else {
+        passiveBlock.style.display = 'none';
+      }
+    }
 
     // Story chapter — use bloodline story if available, fall back to stage lore.
     const stageName = (STAGES[state.stageIdx]?.name || `Stage ${state.stageIdx+1}`);
@@ -5146,16 +5641,37 @@ function render() {
   // ── TRAITS (in right panel stats card)
   const tBox = document.getElementById('traits');
   tBox.innerHTML = '';
+  // Stat-lean indicator from bloodline weights (Phase 1):
+  //   weight ≥ 1.15 → ▲▲ favored (green)
+  //   weight ≥ 1.05 → ▲ slight favor
+  //   weight ≤ 0.85 → ▼▼ deficit (orange)
+  //   weight ≤ 0.95 → ▼ slight deficit
+  //   else neutral, no chevron
+  // Tells the player "this bloodline grows STR fast / INT slow" at a glance.
+  const sw = bloodlineCfg.stat_weights || null;
+  const leanFor = (t) => {
+    if (!sw || sw[t] == null) return '';
+    const w = sw[t];
+    if (w >= 1.15) return '<span class="trait-lean up" title="Bloodline favors this stat strongly">▲▲</span>';
+    if (w >= 1.05) return '<span class="trait-lean up" title="Bloodline favors this stat">▲</span>';
+    if (w <= 0.85) return '<span class="trait-lean down" title="Bloodline grows this stat slowly">▼▼</span>';
+    if (w <= 0.95) return '<span class="trait-lean down" title="Bloodline grows this stat below average">▼</span>';
+    return '';
+  };
   TRAITS.forEach((t,i) => {
     const cap = STAGE_CAPS[state.stageIdx][i];
     const val = state.stats[t] || STAGE_FLOORS[state.stageIdx][i];
     const atCap = val >= cap;
     const pct = Math.round((val/cap)*100);
+    // Trello UX request (2026-04-26): show the potion emoji next to each
+    // stat so the keeper can visually match "this stat" → "that potion bottle"
+    // in the feed grid below. Same TRAIT_EMOJI map the bottles use.
+    const potionEmoji = TRAIT_EMOJI[t] || '🧪';
     tBox.insertAdjacentHTML('beforeend',
       `<div class="trait-row">
         <div class="trait-icon icon-${t}">${t}</div>
         <div class="trait-info">
-          <div class="trait-name">${TRAIT_NAMES[t]}
+          <div class="trait-name"><span class="trait-potion-match" title="Matches the ${potionEmoji} potion in the feed grid below">${potionEmoji}</span> ${TRAIT_NAMES[t]}${leanFor(t)}
             <span class="info-dot" data-help="${t}">?</span></div>
           <div class="trait-bar"><div class="trait-fill ${atCap?'cap':''}"
             style="width:${pct}%"></div></div>
@@ -5206,15 +5722,21 @@ function render() {
   const grid = document.getElementById('feedPotionGrid');
   if (grid) {
     grid.innerHTML = '';
+    // When the champion is at the gate with bar full, lock ALL feed buttons —
+    // not just the big "Feed Me!" hero. Per-trait clicks were leaking through
+    // (commit a32371e #3 only locked the hero button). Trello "Fix Feed Me
+    // button behavior when evolution is required" — second-pass fix 2026-04-26.
+    const evoReady = canEvolve();
     TRAITS.forEach((t, i) => {
       const cap = STAGE_CAPS[state.stageIdx][i];
       const val = state.stats[t] || 0;
       const atCap = val >= cap;
       const count = state.inv[t] || 0;
-      // Only disable when there's no potion left. Capped traits remain
-      // clickable: the backend consumes the potion and fills the bar so
-      // keepers aren't dead-ended when every stat caps before a gate.
-      const disabled = count <= 0;
+      // Only disable when there's no potion left OR an evolution is required
+      // (in which case clicking would waste a potion). Capped traits remain
+      // clickable otherwise: the backend consumes the potion and fills the bar
+      // so keepers aren't dead-ended when every stat caps before a gate.
+      const disabled = count <= 0 || evoReady;
       const emoji = TRAIT_EMOJI[t] || '🧪';
       // Break down stock by tier — the tester complaint (Trello) was
       // that the tooltip only talked about Minor even when they also
@@ -5387,6 +5909,13 @@ bindIf('animateBtn', 'click', () => {
 bindIf('leaderboardBtn', 'click', showLeaderboard);
 bindIf('adminLeaderboardBtn', 'click', showLeaderboard);
 bindIf('lbCloseBtn', 'click', closeLeaderboard);
+// Phase 3b: equipment picker bindings
+bindIf('inventoryBtn', 'click', showFullInventory);
+bindIf('equipPickerClose', 'click', closeEquipPicker);
+// Click backdrop to dismiss picker
+document.getElementById('equipPickerModal')?.addEventListener('click', (e) => {
+  if (e.target.id === 'equipPickerModal') closeEquipPicker();
+});
 bindIf('allocPotionRow', 'click', (e) => {
   useAllocationPotion(e.currentTarget);
 });
@@ -5839,7 +6368,12 @@ let _ccCurrent = null; // last loaded public champion (for play button)
 
 async function renderChampionCard(payload) {
   const id = (payload && payload.id) || (new URLSearchParams(location.search).get('champion'));
-  if (!id) { navTo('landing'); return; }
+  console.log('[share] renderChampionCard start, id=', id, 'authed=', isAuthenticated(), 'speciesLoaded=', Object.keys(SPECIES).length);
+  if (!id) {
+    console.warn('[share] no champion id in payload or URL — falling to landing');
+    navTo('landing');
+    return;
+  }
 
   const set = (k, v) => { const el = document.getElementById(k); if (el) el.textContent = v; };
   set('ccName', 'Loading…');
@@ -5847,19 +6381,33 @@ async function renderChampionCard(payload) {
   let champ;
   try {
     champ = await apiGetPublicChampion(id);
+    console.log('[share] fetched champion:', champ?.species_id, champ?.bloodline_id, 'L' + champ?.level);
   } catch (e) {
-    console.error('[champion-card] fetch failed', e);
-    vxAlert('We couldn\'t load that champion. The share link may be old or the champion was removed.',
+    console.error('[share] champion_public fetch failed', e);
+    vxAlert(`We couldn't load that champion (${e.message || 'network error'}). The share link may be old, the champion was removed, or the API is temporarily unreachable.`,
       {title: 'Champion not found', icon: '🦊', variant: 'error'});
     navTo('landing');
     return;
   }
   _ccCurrent = champ;
 
+  // Defensive: SPECIES may not be populated yet on the unauthenticated share
+  // path if bloodlines.json failed silently earlier. Surface that explicitly
+  // instead of silently bouncing to landing — Trello "Need for Refixing"
+  // regression report from tester ("Sharing just goes to homepage").
+  if (Object.keys(SPECIES).length === 0) {
+    console.error('[share] SPECIES not loaded — bloodlines.json may have failed');
+    vxAlert("The champion data didn't finish loading. Please refresh the page and try the link again.",
+      {title: 'Page not ready', icon: '🦊', variant: 'error'});
+    navTo('landing');
+    return;
+  }
   const sp = SPECIES[champ.species_id];
   const bl = sp?.bloodlines?.[champ.bloodline_id];
   if (!sp || !bl) {
-    console.warn('[champion-card] unknown species/bloodline', champ.species_id, champ.bloodline_id);
+    console.warn('[share] unknown species/bloodline:', champ.species_id, '/', champ.bloodline_id, '— available:', Object.keys(SPECIES));
+    vxAlert(`This champion belongs to a species (${champ.species_id}) that's not in the current catalog. The link may be from an older version of the app.`,
+      {title: 'Champion data mismatch', icon: '🦊', variant: 'error'});
     navTo('landing');
     return;
   }
@@ -6403,12 +6951,20 @@ async function openChampion(championId) {
 // ---- Derive state.inv from backend potion rows ----
 function deriveInv() {
   const inv = { evo: 0, alloc: 0, STR: 0, VIT: 0, AGI: 0, FER: 0, INT: 0, LCK: 0 };
+  let _ignored = []; // diagnostic — Trello "doesn't detect AGI potion" report
   (state.potions || []).forEach(p => {
     if (p.kind === 'evolution') inv.evo += p.quantity;
     else if (p.kind === 'allocation') inv.alloc += p.quantity;
     else if (p.trait && inv[p.trait] !== undefined) inv[p.trait] += p.quantity;
+    else _ignored.push({ id: p.id, kind: p.kind, trait: p.trait, quantity: p.quantity, species_id: p.species_id });
   });
   state.inv = inv;
+  if (_ignored.length) {
+    // Surface stray rows (wrong-case trait, unknown kind, etc.) so we can
+    // diagnose "doesn't detect X potion" reports — Trello 2026-04-26.
+    console.warn('[inv] ignored potion rows (trait/kind not recognised):', _ignored);
+  }
+  console.log('[inv]', inv);
 }
 
 // Find the first potion row matching (kind, trait). Preference: minor → major → epic.
@@ -6553,7 +7109,9 @@ function setExploreFilter(id) {
 function renderLeaderboardInline(filter) {
   const list = document.getElementById('exploreList');
   const SPECIES_ICON = { orc:'🟢', elf:'🌙', goblin:'👺', demon:'🔥', drakkin:'🐉', dwarf:'⚒️', beastkin:'🐺', wraith:'👻' };
-  const rows = filter === 'all' ? LEADERBOARD : LEADERBOARD.filter(r => r.species === filter);
+  // Phase 2: sort by PowerScore desc explicitly.
+  const rows = (filter === 'all' ? [...LEADERBOARD] : LEADERBOARD.filter(r => r.species === filter))
+    .sort((a, b) => b.power - a.power);
   list.innerHTML = '<div style="max-width:720px; margin:0 auto;">' + rows.map((r,i) => {
     const isTop3 = i < 3;
     const icon = SPECIES_ICON[r.species] || '⭐';
@@ -6619,6 +7177,8 @@ async function boot() {
             label: bl.label, heroName: hero, nameByStage,
             stages: bl.stages.map((s, idx) => ({ ...s, name: sp.stageNames[idx] || `Stage ${idx+1}`, minLevel: GATE_LEVELS[idx] })),
             adoptable: bl.adoptable,
+            stat_weights: bl.stat_weights || null,
+            passive: bl.passive || null,
           };
         });
       });
@@ -6658,27 +7218,60 @@ async function boot() {
     const mmBtn = document.getElementById('connectBtnMM');
     const mmSub = mmBtn?.querySelector('.wg-btn-sub');
     const wcBtn = document.getElementById('connectBtnWC');
-    if (!hasInjected && mmBtn) {
-      mmBtn.classList.add('wg-btn-disabled');
-      if (isMobile) {
-        // Direct deep-link into MetaMask mobile app's in-app browser.
-        // The dapp= param is what the MM browser opens after launching.
+    if (mmBtn) {
+      // Always rebind. If injected (desktop ext or MM in-app browser), wire to
+      // the normal connect path. Otherwise: mobile → universal link, desktop →
+      // install-extension nudge. Inline HTML onclick removed for this reason.
+      if (hasInjected) {
+        mmBtn.disabled = false;
+        mmBtn.onclick = () => connectWallet('injected');
+      } else if (isMobile) {
+        // MetaMask mobile universal link. Tester report (Trello "Need for
+        // Refixing"): tapping did nothing in some sessions. The earlier fix
+        // used `window.location.href = ...` which iOS Safari sometimes
+        // refuses to navigate from a button click without a real anchor
+        // gesture. Switched to the anchor-click pattern — creates a real
+        // <a> in the user-gesture context and clicks it. Universally
+        // works for iOS Safari + Android Chrome universal-link routing.
         const dappUrl = location.host + location.pathname.replace(/^\//, '');
         const mmDeepLink = `https://metamask.app.link/dapp/${dappUrl}`;
         mmBtn.disabled = false;
-        mmBtn.onclick = () => { window.location.href = mmDeepLink; };
+        mmBtn.classList.remove('wg-btn-disabled');
+        mmBtn.onclick = (ev) => {
+          ev.preventDefault();
+          const a = document.createElement('a');
+          a.href = mmDeepLink;
+          a.rel = 'noopener noreferrer';
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          // Soft fallback: if we're still here after 2s, the universal link
+          // didn't bounce (no MM app installed, or iOS blocked it). Nudge to
+          // WalletConnect instead. Cleared if the page actually navigates away.
+          const fallback = setTimeout(() => {
+            vxAlert(
+              "MetaMask didn't open. Either it's not installed on this device, or iOS blocked the deep link. Try the WalletConnect option below — it works with most mobile wallets.",
+              { title: 'MetaMask not opening?', icon: '🦊', okLabel: 'Use WalletConnect' }
+            );
+          }, 2000);
+          // If document hides (page backgrounded → app launched), cancel fallback
+          document.addEventListener('visibilitychange', function once() {
+            if (document.hidden) { clearTimeout(fallback); document.removeEventListener('visibilitychange', once); }
+          });
+        };
         if (mmSub) mmSub.textContent = 'opens MetaMask mobile app ↗';
-        mmBtn.classList.remove('wg-btn-disabled');  // re-enable visually
       } else {
         mmBtn.disabled = true;
+        mmBtn.classList.add('wg-btn-disabled');
         mmBtn.onclick = () => vxAlert(
           'MetaMask requires the browser extension on desktop. Install it from metamask.io, then refresh this page.',
           {title: 'No browser extension detected', icon: '🦊'}
         );
         if (mmSub) mmSub.textContent = 'install the desktop extension';
       }
-      // Subtly nudge WC as the secondary mobile path
-      if (wcBtn) wcBtn.classList.add('wg-btn-primary');
+      // Subtly nudge WC as the secondary mobile path when no injected provider
+      if (!hasInjected && wcBtn) wcBtn.classList.add('wg-btn-primary');
     }
 
     // Reflect the readiness state on the WC button sublabel so the keeper
@@ -6734,6 +7327,8 @@ async function boot() {
           stages: bl.stages,
           adoptable: !!bl.adoptable,
           complete: !!bl.complete,
+          stat_weights: bl.stat_weights || null,
+          passive: bl.passive || null,
         };
       });
     });
@@ -6747,6 +7342,14 @@ async function boot() {
     await loadMyChampions();
     adminMode = false;
     document.body.classList.remove('admin-on');
+
+    // Phase 3b: load equipment inventory from localStorage and grant a
+    // starter set if empty (mock — real NFT-backed items + ecosystem-side
+    // chest drops land in a later phase).
+    if (window.Equipment) {
+      loadInventory();
+      grantStarterInventoryIfEmpty();
+    }
 
     // ── Deep-link: handle ?champion=<id> share URLs ──
     // If you own that champion → jump into your full champion view.
