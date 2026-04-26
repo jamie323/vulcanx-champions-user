@@ -476,11 +476,20 @@
       await this.ensureElysium();
       const dataHex = '0x' + Array.from(new TextEncoder().encode(`VulcanX:${label}`))
         .map(b => b.toString(16).padStart(2, '0')).join('');
+      // Self-send the 0-value tx — MetaMask 11+ now blocks sends to
+      // canonical burn addresses (0x…dead, 0x…0000) with an
+      // unacknowledgeable "you will lose your assets" warning that
+      // can't be bypassed (tester report 2026-04-26). Since value is
+      // 0x0, the destination doesn't matter for funds — we just need
+      // a signed on-chain tx with the "VulcanX:<label>" tag for the
+      // ceremony. Self-sends carry no warning and produce the same
+      // explorer entry. Mainnet adoption (5 PYR real fee) will need
+      // a treasury address but that's a launch-time change.
       const txHash = await this._provider.request({
         method: 'eth_sendTransaction',
         params: [{
           from: this.address,
-          to: '0x000000000000000000000000000000000000dEaD',
+          to: this.address,
           value: '0x0',
           data: dataHex,
         }],
