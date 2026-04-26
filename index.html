@@ -826,7 +826,70 @@
   .ah-time { color: var(--muted); font-size: 11px; }
 
   /* Arena result modal */
-  .arena-result-modal { width: 540px; max-width: 95vw; }
+  .arena-result-modal { width: 580px; max-width: 95vw; }
+  /* Phase 5.7: portraits in the result modal — the orc baby is the
+     game's identity, can't have a battle screen without it. */
+  .ar-portrait {
+    width: 140px; height: 140px; border-radius: 12px;
+    object-fit: cover; display: block; margin: 0 auto 10px;
+    background: rgba(20,12,20,0.6);
+    border: 2px solid var(--border);
+  }
+  .ar-fighter.crit .ar-portrait { box-shadow: 0 0 24px rgba(255,205,107,0.7); border-color: var(--accent); }
+  .ar-fighter.hit  .ar-portrait { border-color: rgba(255,107,107,0.5); }
+  .ar-fighter.dodge .ar-portrait { border-color: rgba(93,142,255,0.6); }
+  .ar-fighter.stun .ar-portrait { border-color: rgba(177,105,255,0.6); }
+  .ar-fighter-context { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .ar-fighter-context .emoji { font-size: 13px; vertical-align: middle; }
+  .ar-fighter-context .level { color: var(--accent); font-weight: 700; margin: 0 4px; }
+  .ar-fighter-context .stage { color: var(--text); }
+
+  /* Live event ticker — last events stream below portraits */
+  .ar-ticker {
+    min-height: 56px; max-height: 56px; overflow: hidden;
+    margin: 14px 0 8px;
+    padding: 8px 12px;
+    background: rgba(0,0,0,0.35);
+    border-radius: 6px;
+    font-size: 12px; line-height: 1.5;
+    color: var(--text);
+    display: flex; flex-direction: column-reverse; gap: 2px;
+  }
+  .ar-ticker-line { animation: ar-ticker-in 0.4s ease-out; }
+  .ar-ticker-line.crit { color: #ffcd6b; font-weight: 700; }
+  .ar-ticker-line.dodge { color: #5d8eff; }
+  .ar-ticker-line.stun { color: #b169ff; }
+  .ar-ticker-line.extra { color: #80cdff; }
+  .ar-ticker-line.info { color: var(--muted); font-style: italic; }
+  @keyframes ar-ticker-in {
+    0%   { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Stat-compare panel shown after the battle resolves */
+  .ar-stats { padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px;
+    margin-top: 10px; }
+  .ar-stats-title { font-size: 11px; color: var(--muted); letter-spacing: 1.5px;
+    text-transform: uppercase; margin-bottom: 8px; }
+  .ar-stat-row {
+    display: grid; grid-template-columns: 1fr 32px 1fr;
+    gap: 8px; align-items: center; padding: 3px 0; font-size: 11px;
+  }
+  .ar-stat-row .ar-stat-bar-l, .ar-stat-row .ar-stat-bar-r {
+    height: 6px; border-radius: 3px; background: rgba(255,255,255,0.06);
+    position: relative;
+  }
+  .ar-stat-row .ar-stat-bar-l { transform: scaleX(-1); }  /* mirror for left side */
+  .ar-stat-row .ar-stat-bar-l div, .ar-stat-row .ar-stat-bar-r div {
+    height: 100%; border-radius: 3px; background: var(--accent-dim);
+  }
+  .ar-stat-row .ar-stat-bar-l div { background: linear-gradient(90deg, #7dff9a, #4caf50); }
+  .ar-stat-row .ar-stat-bar-r div { background: linear-gradient(90deg, #ff9a7d, #d84444); }
+  .ar-stat-row .ar-stat-name { text-align: center; color: var(--muted); font-weight: 700; letter-spacing: 0.5px; }
+  .ar-stat-row .ar-stat-l-val, .ar-stat-row .ar-stat-r-val {
+    font-size: 10px; color: var(--muted); }
+  .ar-stat-row .ar-stat-l-val { text-align: right; padding-right: 4px; }
+  .ar-stat-row .ar-stat-r-val { text-align: left; padding-left: 4px; }
   .ar-banner {
     text-align: center; font-size: 32px; font-weight: 900; letter-spacing: 6px;
     padding: 12px; margin-bottom: 18px; border-radius: 8px;
@@ -3794,7 +3857,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260426-arena-render-fix-2',
+  console.log('%c🛡️ VulcanX Champions · v20260426-real-battles',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -4564,19 +4627,27 @@
     <button class="ar-skip-btn" id="arSkipBtn" style="display:none;">⏭ Skip</button>
     <div class="ar-banner" id="arResultBanner">VICTORY</div>
     <div class="ar-vs-row">
-      <div class="ar-fighter">
+      <div class="ar-fighter" id="arPlayerFighter">
+        <img class="ar-portrait" id="arPlayerPortrait" src="" alt="" />
         <div class="ar-fighter-name" id="arPlayerName">You</div>
+        <div class="ar-fighter-context" id="arPlayerContext">—</div>
         <div class="ar-hp-bar"><div class="ar-hp-fill ar-hp-a" id="arPlayerHp" style="width:100%;"></div></div>
         <div class="ar-fighter-meta" id="arPlayerMeta">HP — / —</div>
       </div>
       <div class="ar-vs-divider">VS</div>
-      <div class="ar-fighter">
+      <div class="ar-fighter" id="arBotFighter">
+        <img class="ar-portrait" id="arBotPortrait" src="" alt="" />
         <div class="ar-fighter-name" id="arBotName">Bot</div>
+        <div class="ar-fighter-context" id="arBotContext">—</div>
         <div class="ar-hp-bar"><div class="ar-hp-fill ar-hp-b" id="arBotHp" style="width:100%;"></div></div>
         <div class="ar-fighter-meta" id="arBotMeta">HP — / —</div>
       </div>
     </div>
+    <!-- Live battle event ticker — last 3 lines stream in during playback -->
+    <div class="ar-ticker" id="arTicker"></div>
     <div class="ar-summary" id="arSummary"></div>
+    <!-- Stat comparison: compact bars showing why you won/lost -->
+    <div class="ar-stats" id="arStats" style="display:none;"></div>
     <div class="ar-elo-row">
       <span>ELO</span>
       <b id="arEloOld">100</b>
@@ -7824,7 +7895,10 @@ function renderArena() {
   state.championId = champ.id;
   const arena = getArenaForChamp(champ.id);
   eloVal.textContent = arena.elo;
-  const bracket = bracketLabel(champ.stage_idx);
+  // mapChampion renames stage_idx → stageIdx; using snake_case here
+  // produced "Stage NaN" in the summary line. Tester report 2026-04-26.
+  const stageIdx = champ.stageIdx ?? 0;
+  const bracket = bracketLabel(stageIdx);
   // Phase 5.5: show equipped weapon (if any) so players know what they're
   // bringing to the fight. Tells them to gear up if naked.
   const equipped = getEquippedWeaponForArena(champ.id);
@@ -7841,9 +7915,11 @@ function renderArena() {
   } else {
     equippedLine = `<div style="margin-top:8px; font-size:12px; color:var(--muted); font-style:italic;">⚠️ No weapon equipped — you'll fight with your species' default. Equip something from your inventory for a meaningful boost.</div>`;
   }
+  const stageName = SPECIES[champ.species_id]?.bloodlines?.[champ.bloodline_id]?.stages?.[stageIdx]?.name
+                 || ('Stage ' + (stageIdx + 1));
   summary.innerHTML = `
     <b>${champ.name}</b> · ${SPECIES[champ.species_id]?.label || champ.species_id} ·
-    L${champ.level} · ${SPECIES[champ.species_id]?.bloodlines?.[champ.bloodline_id]?.stages?.[champ.stage_idx]?.name || ('Stage ' + (champ.stage_idx + 1))}
+    L${champ.level} · ${stageName}
     ${equippedLine}
   `;
   bracketHint.textContent = `${bracket} bracket — opponents matched to your stage tier.`;
@@ -7999,8 +8075,10 @@ function _clearPlayback() {
   _arenaPlayback.cancelled = true;
 }
 
+// Phase 5.7: target by ID (more robust than nth-child after the modal
+// HTML was extended with portraits + context + ticker)
 function _spawnDamagePopup(side, text, kindClass) {
-  const fighter = document.querySelector(`.ar-fighter:nth-child(${side === 'a' ? 1 : 3})`);
+  const fighter = document.getElementById(side === 'a' ? 'arPlayerFighter' : 'arBotFighter');
   if (!fighter) return;
   const span = document.createElement('div');
   span.className = `ar-damage-num ${kindClass || ''}`;
@@ -8010,12 +8088,41 @@ function _spawnDamagePopup(side, text, kindClass) {
 }
 
 function _flashFighter(side, kindClass) {
-  const fighter = document.querySelector(`.ar-fighter:nth-child(${side === 'a' ? 1 : 3})`);
+  const fighter = document.getElementById(side === 'a' ? 'arPlayerFighter' : 'arBotFighter');
   if (!fighter) return;
   fighter.classList.remove('hit','crit','dodge','stun');
   void fighter.offsetWidth; // reflow to restart animation
   fighter.classList.add(kindClass);
   setTimeout(() => fighter.classList.remove(kindClass), 500);
+}
+
+// Phase 5.7: live event ticker — keeps last 3 events visible during playback
+function _pushTicker(msg, kindClass) {
+  const ticker = document.getElementById('arTicker');
+  if (!ticker) return;
+  const line = document.createElement('div');
+  line.className = `ar-ticker-line ${kindClass || ''}`;
+  line.textContent = msg;
+  ticker.insertBefore(line, ticker.firstChild);
+  // Trim to last 3
+  while (ticker.children.length > 3) ticker.removeChild(ticker.lastChild);
+}
+
+// Stage portrait URL for a (species, bloodline, stage) — falls back to a
+// placeholder for non-orc-ironfang species which don't have art yet.
+function _portraitFor(speciesId, bloodlineId, stageIdx) {
+  const stage = SPECIES?.[speciesId]?.bloodlines?.[bloodlineId]?.stages?.[stageIdx];
+  return stage?.img || 'evolution/L01_whelp_final.jpg';  // legacy fallback
+}
+
+const _SPECIES_EMOJI = { orc:'🟢', elf:'🌙', goblin:'👺', demon:'🔥', drakkin:'🐉', dwarf:'⚒️', beastkin:'🐺', wraith:'👻' };
+
+// Build stage band label for a stage_idx
+function _stageBand(stageIdx) {
+  if (stageIdx <= 4)  return 'Whelpling';
+  if (stageIdx <= 9)  return 'Adolescent';
+  if (stageIdx <= 14) return 'Champion';
+  return 'Legendary';
 }
 
 function showArenaResult(resp, champ) {
@@ -8027,15 +8134,12 @@ function showArenaResult(resp, champ) {
   _clearPlayback();
   _arenaPlayback = { timers: [], cancelled: false };
 
-  // Pre-state: full HP bars, names, hidden banner
-  // Phase 5.5: append weapon + rarity to fighter names so the loadout
-  // contrast is visible at a glance.
+  // Pre-state: full HP bars, names, hidden banner. Portraits + context.
   const fmtWeapon = (id, rarity) => {
     if (!id || !window.Equipment) return '';
     const cat = Equipment.CATALOG[id];
     const rar = rarity ? Equipment.RARITY[rarity] : null;
     if (!cat) return '';
-    // CATALOG entries don't carry an id field; key IS the id. Use input.
     const wname = String(id).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     const rarTxt = rar ? `<span style="color:${rar.color};">${rar.label}</span> ` : '';
     return `<div style="font-size:11px; color:var(--muted); margin-top:2px;">⚔️ ${rarTxt}${wname}</div>`;
@@ -8045,6 +8149,29 @@ function showArenaResult(resp, champ) {
     champ.name + fmtWeapon(playerEquipped?.weapon_id, playerEquipped?.weapon_rarity);
   document.getElementById('arBotName').innerHTML =
     resp.opponent.display_name + fmtWeapon(resp.opponent.weapon_id, resp.opponent.weapon_rarity);
+
+  // Phase 5.7: portraits + context labels per fighter
+  const playerStageIdx = champ.stageIdx ?? 0;
+  const botStageIdx = resp.opponent.stage_idx ?? 0;
+  document.getElementById('arPlayerPortrait').src =
+    _portraitFor(champ.species_id, champ.bloodline_id, playerStageIdx);
+  document.getElementById('arBotPortrait').src =
+    _portraitFor(resp.opponent.species_id, resp.opponent.bloodline_id, botStageIdx);
+
+  const playerSpEmoji = _SPECIES_EMOJI[champ.species_id] || '⭐';
+  const botSpEmoji   = _SPECIES_EMOJI[resp.opponent.species_id] || '⭐';
+  const playerStageName = SPECIES?.[champ.species_id]?.bloodlines?.[champ.bloodline_id]?.stages?.[playerStageIdx]?.name
+                       || _stageBand(playerStageIdx);
+  const botStageName = SPECIES?.[resp.opponent.species_id]?.bloodlines?.[resp.opponent.bloodline_id]?.stages?.[botStageIdx]?.name
+                     || _stageBand(botStageIdx);
+  document.getElementById('arPlayerContext').innerHTML =
+    `<span class="emoji">${playerSpEmoji}</span> <span class="level">L${champ.level}</span> · <span class="stage">${playerStageName}</span>`;
+  document.getElementById('arBotContext').innerHTML =
+    `<span class="emoji">${botSpEmoji}</span> <span class="level">L${champ.level}</span> · <span class="stage">${botStageName}</span>`;
+
+  // Reset ticker + stats panel
+  document.getElementById('arTicker').innerHTML = '';
+  document.getElementById('arStats').style.display = 'none';
   document.getElementById('arPlayerHp').style.width = '100%';
   document.getElementById('arBotHp').style.width = '100%';
   document.getElementById('arPlayerMeta').textContent = `HP ${battle.hpStart.a} / ${battle.hpStart.a}`;
@@ -8098,19 +8225,25 @@ function showArenaResult(resp, champ) {
       document.getElementById('arBotHp').style.width = bPct + '%';
       document.getElementById('arPlayerMeta').textContent = `HP ${hpA} / ${battle.hpStart.a}`;
       document.getElementById('arBotMeta').textContent = `HP ${hpB} / ${battle.hpStart.b}`;
-      // Effects per event kind
+      // Effects per event kind — both visual flash AND ticker line
       const target = ev.who === 'a' ? 'b' : 'a';
       if (ev.kind === 'crit') {
         _flashFighter(target, 'crit');
         _spawnDamagePopup(target, '-' + ev.damage + ' CRIT!', 'crit');
+        _pushTicker(`R${ev.round} · ${ev.msg}`, 'crit');
       } else if (ev.kind === 'hit' || ev.kind === 'extra') {
         _flashFighter(target, 'hit');
         if (ev.damage) _spawnDamagePopup(target, '-' + ev.damage, '');
+        _pushTicker(`R${ev.round} · ${ev.msg}`, ev.kind);
       } else if (ev.kind === 'dodge') {
         _flashFighter(target, 'dodge');
         _spawnDamagePopup(target, 'MISS', 'dodge');
+        _pushTicker(`R${ev.round} · ${ev.msg}`, 'dodge');
       } else if (ev.kind === 'stun') {
         _flashFighter(ev.who, 'stun');
+        _pushTicker(`R${ev.round} · ${ev.msg}`, 'stun');
+      } else if (ev.kind === 'info') {
+        _pushTicker(`R${ev.round} · ${ev.msg}`, 'info');
       }
     }, cursor);
     _arenaPlayback.timers.push(t);
@@ -8165,8 +8298,40 @@ function _revealFinalResult(resp) {
     delta.classList.remove('gain','loss','neutral');
     delta.classList.add(resp.eloChange > 0 ? 'gain' : resp.eloChange < 0 ? 'loss' : 'neutral');
     document.getElementById('arSkipBtn').style.display = 'none';
+    // Phase 5.7: show stat-compare panel so player understands the matchup
+    _renderStatCompare(resp);
   }, 25 * steps + 50);
   _arenaPlayback.timers.push(finishElo);
+}
+
+// Render the stats panel: side-by-side bars for each of the 6 traits.
+// Helps the player see "I lost because their INT was 4× mine" etc.
+function _renderStatCompare(resp) {
+  const panel = document.getElementById('arStats');
+  const champ = myChampions.find(c => c.id === state.championId);
+  const playerStats = champ?.stats || state.stats;
+  const botStats = resp.opponent?.stats;
+  if (!panel || !playerStats || !botStats) return;
+
+  const TRAIT_LABELS = { STR:'STR', VIT:'VIT', AGI:'AGI', FER:'FER', INT:'INT', LCK:'LCK' };
+  const rows = TRAITS.map(t => {
+    const a = Math.round(playerStats[t] || 0);
+    const b = Math.round(botStats[t] || 0);
+    const max = Math.max(1, a, b);
+    return `
+      <div class="ar-stat-row">
+        <div class="ar-stat-bar-l"><div style="width:${(a/max*100).toFixed(0)}%;"></div></div>
+        <div class="ar-stat-name">${TRAIT_LABELS[t]}</div>
+        <div class="ar-stat-bar-r"><div style="width:${(b/max*100).toFixed(0)}%;"></div></div>
+      </div>
+      <div class="ar-stat-row" style="font-size:9px; padding-top:0; padding-bottom:6px;">
+        <div class="ar-stat-l-val">${a}</div>
+        <div></div>
+        <div class="ar-stat-r-val">${b}</div>
+      </div>`;
+  }).join('');
+  panel.innerHTML = `<div class="ar-stats-title">Stat Matchup (you vs opponent)</div>${rows}`;
+  panel.style.display = '';
 }
 
 bindIf('arSkipBtn', 'click', () => {
