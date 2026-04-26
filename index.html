@@ -3873,7 +3873,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260426-self-send',
+  console.log('%c🛡️ VulcanX Champions · v20260426-ranking-bless',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -4607,7 +4607,7 @@
         <div class="sub">Async stat battles vs bots. Pick your stance, watch the result, climb the ladder. Real PvP coming in a later phase.</div>
       </div>
       <div class="arena-elo-pill">
-        <span class="arena-elo-label">Your ELO</span>
+        <span class="arena-elo-label">Your Ranking</span>
         <b id="arenaEloVal">100</b>
       </div>
     </div>
@@ -4665,7 +4665,7 @@
     <!-- Stat comparison: compact bars showing why you won/lost -->
     <div class="ar-stats" id="arStats" style="display:none;"></div>
     <div class="ar-elo-row">
-      <span>ELO</span>
+      <span>Ranking</span>
       <b id="arEloOld">100</b>
       <span>→</span>
       <b id="arEloNew" class="ar-elo-new">110</b>
@@ -4970,14 +4970,19 @@
 
 <!-- allocation potion modal -->
 <div class="modal-backdrop" id="allocModal">
-  <div class="modal" style="width: 420px;">
-    <h3>✨ Allocation Potion</h3>
-    <div class="sub">Distribute 40 points across your traits. Caps still
-      apply — surplus returns to essence.</div>
+  <div class="modal" style="width: 460px;">
+    <h3>✨ Blessing — Distribute 40 Points</h3>
+    <div class="sub">Drag the sliders to assign points across your traits. Caps still apply — surplus returns to essence. The Blessing also fills your Evolution Bar by 10–25% regardless of distribution.</div>
     <div class="alloc-remaining">
       Points left: <b id="allocLeft">40</b>
     </div>
     <div id="allocRows"></div>
+    <!-- Tester feedback (Acadian + AngelHorn 2026-04-26): users were
+         confused why APPLY worked with 0 points distributed (only fills
+         bar). Status line below makes it explicit + APPLY label changes. -->
+    <div id="allocStatus" style="font-size:12px;color:var(--muted);padding:8px 10px;background:rgba(0,0,0,0.3);border-radius:6px;margin:6px 0 10px;line-height:1.5;">
+      <span id="allocStatusText">Move sliders to distribute the 40 points.</span>
+    </div>
     <div style="display:flex; gap:8px;">
       <button class="btn-primary" id="allocApply" style="flex:1;">Apply</button>
       <button class="btn-primary" id="allocCancel"
@@ -5000,7 +5005,7 @@
 <div class="modal-backdrop" id="leaderboardModal">
   <div class="modal" style="width: 480px;">
     <h3>🏆 Champion Leaderboard</h3>
-    <div class="sub">Ranked by Power Score: stage × stage-multiplier + total stats + rank ELO</div>
+    <div class="sub">Ranked by Power Score: stage × stage-multiplier + total stats + arena ranking</div>
     <div style="display:flex; gap:4px; margin-bottom:14px;">
       <button class="sp-btn lb-filter active" data-sp="all">All Species</button>
       <button class="sp-btn lb-filter" data-sp="orc">🟢 Orc</button>
@@ -5581,11 +5586,41 @@ function updateAllocRemaining() {
   const sum = Object.values(allocState.values).reduce((a,b)=>a+b, 0);
   allocState.remaining = 40 - sum;
   document.getElementById('allocLeft').textContent = allocState.remaining;
-  // update value labels + clamp sliders to what's available
   TRAITS.forEach(t => {
     document.getElementById('av-' + t).textContent = allocState.values[t];
   });
-  document.getElementById('allocApply').disabled = allocState.remaining < 0;
+  // Status line + APPLY label tells the user EXACTLY what's about to
+  // happen. Tester report 2026-04-26 (Acadian/AngelHorn): the silent
+  // bar-only behaviour with 0 points was confusing.
+  const statusText = document.getElementById('allocStatusText');
+  const applyBtn = document.getElementById('allocApply');
+  const allCapped = TRAITS.every(t => {
+    const idx = TRAITS.indexOf(t);
+    const cur = state.stats[t] || STAGE_FLOORS[state.stageIdx][idx];
+    const cap = STAGE_CAPS[state.stageIdx][idx];
+    return cap - cur <= 0;
+  });
+  if (statusText && applyBtn) {
+    if (allocState.remaining < 0) {
+      statusText.textContent = `⚠️ Over by ${-allocState.remaining} pts — pull a slider back.`;
+      applyBtn.disabled = true;
+      applyBtn.textContent = 'Apply';
+    } else if (sum === 0 && !allCapped) {
+      statusText.innerHTML = `<b style="color:#ffcd6b;">No stats distributed.</b> Apply will only fill your Evolution Bar by 10–25%. Pull sliders to actually grow your stats.`;
+      applyBtn.disabled = false;
+      applyBtn.textContent = 'Apply (bar fill only · 10–25%)';
+    } else if (sum === 0 && allCapped) {
+      statusText.innerHTML = `Every stat is at this stage's cap — Blessing fills your Evolution Bar by 10–25% so you can still progress to the next gate.`;
+      applyBtn.disabled = false;
+      applyBtn.textContent = 'Apply (bar fill · 10–25%)';
+    } else {
+      statusText.textContent = `Distributing ${sum}/40 points + 10–25% Evolution Bar fill.`;
+      applyBtn.disabled = false;
+      applyBtn.textContent = sum < 40 ? `Apply (${sum} pts + bar)` : 'Apply (40 pts + bar)';
+    }
+  } else if (applyBtn) {
+    applyBtn.disabled = allocState.remaining < 0;
+  }
 }
 // Apply the Blessing: sends the distribution to the champion_allocate
 // edge function, consumes the potion server-side, and uses the returned
@@ -8109,7 +8144,7 @@ function renderArena() {
       <div class="ah-row">
         <span class="ah-result ${h.result}">${h.result.toUpperCase()}</span>
         <span class="ah-vs">vs ${h.opponentName}</span>
-        <span class="ah-elo">${h.eloChange >= 0 ? '+' : ''}${h.eloChange} ELO</span>
+        <span class="ah-elo">${h.eloChange >= 0 ? '+' : ''}${h.eloChange} rank</span>
         <span class="ah-time">${formatRelativeTime(h.timestamp)}</span>
       </div>
     `).join('');
