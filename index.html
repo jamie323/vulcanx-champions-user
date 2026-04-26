@@ -61,16 +61,25 @@
   .view.active { display: block; }
 
   /* champion view keeps the 3-column grid — wider panels, bigger hero.
-     Phase Trello fix (2026-04-26): columns are now shrinkable with sensible
-     mins so the right-hand stats panel doesn't get clipped at 100% zoom on
-     1366/1440 laptops. Stacks to single-column under 1100px (tablets). */
+     Trello fix v2 (2026-04-26): keep the original 560/1fr/560 layout
+     intact so the portrait + ladder + cards land in their designed
+     positions. Only switch to single-column on actual narrow viewports
+     (< 1280px). The previous "minmax(360, 560)" attempt let the center
+     column shrink and the portrait image overflowed onto the right
+     panel — visible regression in tester screenshot. */
   body.view-champion .view-champion { display: grid;
-    grid-template-columns: minmax(360px, 560px) minmax(0, 1fr) minmax(360px, 560px);
-    gap: 24px;
+    grid-template-columns: 560px 1fr 560px;
     align-items: start; }
-  @media (max-width: 1100px) {
+  /* Make sure the portrait image never busts its column even if the
+     source asset is wider than the column width. */
+  body.view-champion .stage-frame img,
+  body.view-champion .stage-frame { max-width: 100%; }
+  /* Narrow viewports (< 1280px): stack to single column so nothing
+     overflows or hides off-screen at 100% zoom on smaller laptops. */
+  @media (max-width: 1280px) {
     body.view-champion .view-champion {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
+      max-width: 720px; margin: 0 auto;
     }
   }
 
@@ -1928,6 +1937,12 @@
     border-color: var(--accent-dim);
   }
   .ladder-rung.past .rung-name { color: var(--text); opacity: 0.7; }
+  /* Collapsed-ladder hint rows (Trello fix v2) — short, muted, italic */
+  .ladder-rung.ladder-collapsed {
+    justify-content: center; padding: 6px 12px;
+    font-size: 11px; color: var(--muted); font-style: italic;
+    opacity: 0.65; letter-spacing: 0.5px;
+  }
   .ladder-rung.current {
     background: linear-gradient(90deg, rgba(255,205,107,0.18), rgba(255,140,40,0.06));
     border-left: 3px solid var(--accent);
@@ -3561,7 +3576,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260426-equip-in-battle',
+  console.log('%c🛡️ VulcanX Champions · v20260426-layout-fix',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -5961,16 +5976,24 @@ function render() {
   const ladder = document.getElementById('stageLadder');
   if (ladder) {
     ladder.innerHTML = '';
-    STAGES.forEach((s, i) => {
+    // Trello fix v2 (2026-04-26): showing all 20 stages was a wall of
+    // text. Window to current ± 2 (5 rungs total) with a small "+N more"
+    // hint at top/bottom so players still feel the arc length.
+    const center = state.stageIdx;
+    const windowSize = 2;
+    const startIdx = Math.max(0, center - windowSize);
+    const endIdx   = Math.min(STAGES.length - 1, center + windowSize);
+    if (startIdx > 0) {
+      ladder.insertAdjacentHTML('beforeend',
+        `<div class="ladder-rung ladder-collapsed">+${startIdx} earlier stage${startIdx === 1 ? '' : 's'}</div>`);
+    }
+    for (let i = startIdx; i <= endIdx; i++) {
+      const s = STAGES[i];
       const cls = i < state.stageIdx ? 'past'
               : i === state.stageIdx ? 'current'
               : i === state.stageIdx + 1 ? 'next' : '';
       const badge = cls === 'next' ? '<span class="rung-badge">Next</span>' : '';
-      // Lower bound: L1 for stage 0, otherwise the gate-of-this-stage + 1
-      // (because evolving INTO stage i bumps the level by 1).
       const lo = i === 0 ? 1 : (GATE_LEVELS[i] + 1);
-      // Upper bound: the next stage's gate level (where you can evolve out)
-      // — or L50 for the last stage.
       const hi = i < STAGES.length - 1 ? GATE_LEVELS[i + 1] : 50;
       const range = lo === hi ? `L${lo}` : `L${lo}–L${hi}`;
       ladder.insertAdjacentHTML('beforeend',
@@ -5979,7 +6002,12 @@ function render() {
           <div class="rung-name">${s.name} ${badge}</div>
           <div class="rung-levels">${range}</div>
         </div>`);
-    });
+    }
+    if (endIdx < STAGES.length - 1) {
+      const remaining = STAGES.length - 1 - endIdx;
+      ladder.insertAdjacentHTML('beforeend',
+        `<div class="ladder-rung ladder-collapsed">+${remaining} more stage${remaining === 1 ? '' : 's'} → Legendary</div>`);
+    }
   }
 
   // ── CENTER: Feed panel (under portrait)
@@ -7572,7 +7600,15 @@ bindIf('arenaFindBtn', 'click', async () => {
   findBtn.textContent = '⚔️ Matching opponent…';
 
   const arena = getArenaForChamp(champ.id);
-  const equipped = getEquippedWeaponForArena(champ.id);  // Phase 5.5
+  const equipped = getEquippedWeaponForArena(champ.id);
+  console.log('[arena] requesting match', { champion_id: champ.id, stance: _arenaStance, current_elo: arena.elo, equipped });
+
+  const resetButton = () => {
+    findBtn.disabled = false;
+    findBtn.textContent = '⚔️ Find Opponent + Fight';
+    _arenaInFlight = false;
+  };
+
   let resp;
   try {
     resp = await apiRequestMatch({
@@ -7581,32 +7617,47 @@ bindIf('arenaFindBtn', 'click', async () => {
       current_elo: arena.elo,
       equipped,
     });
+    console.log('[arena] response', resp);
   } catch (e) {
-    findBtn.disabled = false;
-    findBtn.textContent = '⚔️ Find Opponent + Fight';
-    _arenaInFlight = false;
-    vxAlert(e.message || 'Unknown error', { title: 'Match failed', icon: '⚔️', variant: 'error' });
+    console.error('[arena] match request failed', e);
+    resetButton();
+    vxAlert(`${e.message || 'Unknown error'}\n\n(check the console for details)`,
+      { title: 'Match failed', icon: '⚔️', variant: 'error' });
     return;
   }
 
-  // Persist new ELO + history entry
-  arena.elo = resp.newElo;
-  arena.history.unshift({
-    timestamp: Date.now(),
-    result: resp.result,
-    opponentName: resp.opponent.display_name,
-    eloChange: resp.eloChange,
-    seed: resp.seed,
-  });
-  arena.history = arena.history.slice(0, 50); // cap history
-  saveArenaForChamp(champ.id, arena);
+  // Defensive: validate the response shape before consuming it. Server
+  // could 200 with bad JSON or missing fields — catch that here instead
+  // of crashing inside showArenaResult and leaving the UI stuck.
+  if (!resp || !resp.battle || !resp.opponent || resp.newElo == null) {
+    console.error('[arena] malformed response', resp);
+    resetButton();
+    vxAlert('Server returned an unexpected response. Check the console for the raw payload.',
+      { title: 'Bad response', icon: '⚔️', variant: 'error' });
+    return;
+  }
 
-  // Show result modal + re-render arena
-  showArenaResult(resp, champ);
-  renderArena();
-  findBtn.disabled = false;
-  findBtn.textContent = '⚔️ Find Opponent + Fight';
-  _arenaInFlight = false;
+  // Wrap the post-API code so any rendering throw still resets the button.
+  try {
+    arena.elo = resp.newElo;
+    arena.history.unshift({
+      timestamp: Date.now(),
+      result: resp.result,
+      opponentName: resp.opponent.display_name || 'Bot',
+      eloChange: resp.eloChange,
+      seed: resp.seed,
+    });
+    arena.history = arena.history.slice(0, 50);
+    saveArenaForChamp(champ.id, arena);
+    showArenaResult(resp, champ);
+    renderArena();
+  } catch (e) {
+    console.error('[arena] render failed after successful match', e);
+    vxAlert(`Match resolved but the UI couldn't render it: ${e.message}\n\nCheck the console.`,
+      { title: 'Render error', icon: '⚔️', variant: 'error' });
+  } finally {
+    resetButton();
+  }
 });
 
 // Phase 5 (2026-04-26): the result modal now plays the battle as an
