@@ -60,26 +60,244 @@
   .view { display: none; }
   .view.active { display: block; }
 
-  /* champion view keeps the 3-column grid — wider panels, bigger hero.
-     Trello fix v2 (2026-04-26): keep the original 560/1fr/560 layout
-     intact so the portrait + ladder + cards land in their designed
-     positions. Only switch to single-column on actual narrow viewports
-     (< 1280px). The previous "minmax(360, 560)" attempt let the center
-     column shrink and the portrait image overflowed onto the right
-     panel — visible regression in tester screenshot. */
-  body.view-champion .view-champion { display: grid;
-    grid-template-columns: 560px 1fr 560px;
-    align-items: start; }
+  /* ─── COMPACT CHAMPION VIEW (2026-04-26 redesign) ────────
+     Single-screen, no scroll. 3-column grid that fits ~1500px wide.
+     Stacks to single-column under 1280px. Per Jamie's reference mockup. */
+  body.view-champion .view-champion {
+    display: block;
+    padding: 10px 16px 0;
+  }
+  .cc-grid {
+    display: grid;
+    grid-template-columns: 360px 1fr 360px;
+    gap: 14px;
+    align-items: start;
+    max-width: 1500px;
+    margin: 0 auto;
+  }
+  .cc-col { display: flex; flex-direction: column; gap: 12px; }
+
+  .cc-card {
+    background: rgba(20,12,20,0.85);
+    border: 1px solid rgba(255,205,107,0.18);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .cc-card-title {
+    font-size: 11px; color: var(--muted); letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 10px;
+    font-weight: 700;
+  }
+  .cc-card-title-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .cc-card-title-row .cc-card-title { margin-bottom: 0; }
+
+  /* Identity */
+  .cc-identity { padding-bottom: 12px; }
+  .cc-eyebrow {
+    font-size: 10px; color: var(--accent); letter-spacing: 2.5px;
+    text-transform: uppercase; font-weight: 800;
+    background: rgba(255,205,107,0.08);
+    border: 1px solid rgba(255,205,107,0.3);
+    border-radius: 4px;
+    padding: 3px 8px; display: inline-block; margin-bottom: 10px;
+  }
+  .cc-name-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+  .cc-name { font-size: 26px; font-weight: 800; letter-spacing: 0.3px; color: var(--text); flex: 1; line-height: 1.15; }
+  .cc-species-row { display: flex; align-items: center; gap: 6px; font-size: 13px; flex-wrap: wrap; }
+  .cc-species-emoji { font-size: 18px; }
+  .cc-species-name { color: var(--text); font-weight: 700; }
+  .cc-bl-divider { color: var(--muted); opacity: 0.5; }
+  .cc-bl-label { color: var(--muted); }
+  .cc-bl-name { color: var(--accent); font-weight: 700; }
+
+  /* Passive (compact) */
+  .cc-passive .cc-passive-row { display: flex; gap: 10px; align-items: flex-start; }
+  .cc-passive-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(255,205,107,0.15);
+    border: 1px solid rgba(255,205,107,0.4);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent); font-size: 16px; flex-shrink: 0;
+  }
+  .cc-passive-text { flex: 1; min-width: 0; }
+  .cc-passive-name { color: var(--accent); font-weight: 700; font-size: 14px; margin-bottom: 2px; }
+  .cc-passive-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+  /* Equipment 5 slots compact */
+  .cc-equip-slots { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 8px; }
+  .cc-equip-slots .equip-slot { padding: 8px 4px; min-height: 64px; }
+  .cc-equip-slots .equip-slot .es-icon { font-size: 18px; }
+  .cc-equip-slots .equip-slot .es-label { font-size: 8px; margin-top: 3px; }
+  .cc-equip-slots .equip-slot .es-name { font-size: 9px; margin-top: 2px; }
+  .cc-equip-slots .equip-slot .es-empty { font-size: 9px; margin-top: 4px; }
+  .cc-equip-slots .equip-slot .es-pwr { font-size: 8px; top: 2px; right: 4px; }
+  .cc-inv-btn { width: 100%; }
+
+  /* Level card */
+  .cc-level-row { display: flex; align-items: baseline; gap: 6px; font-size: 14px; margin-bottom: 4px; }
+  .cc-level-num { color: var(--text); }
+  .cc-level-num b { color: var(--accent); font-size: 18px; }
+  .cc-stage-name { color: var(--accent); font-weight: 700; }
+  .cc-next-line { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .cc-evo-bar .evo-bar { height: 8px; }
+  .cc-evo-pct { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .cc-evo-pct b { color: var(--accent); font-size: 14px; }
+
+  /* Center column */
+  .cc-col-center { gap: 10px; }
+  .cc-stage-frame {
+    width: 100%; aspect-ratio: 1; max-height: 380px;
+    border-radius: 16px; overflow: hidden; position: relative;
+  }
+  .cc-stage-frame img { width: 100%; height: 100%; object-fit: cover; }
+  .cc-action-block {
+    background: rgba(20,12,20,0.85);
+    border: 1px solid rgba(255,205,107,0.25);
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+  .cc-action-eyebrow {
+    font-size: 10px; color: var(--accent); letter-spacing: 2.5px;
+    text-transform: uppercase; font-weight: 800; text-align: center;
+    margin-bottom: 8px;
+  }
+  .cc-action-row {
+    display: grid; grid-template-columns: 90px 1fr 90px;
+    gap: 8px; align-items: stretch;
+  }
+  .cc-feed-big { width: 100%; margin: 0 !important; min-height: 56px; }
+  .cc-side-btn {
+    background: rgba(20,20,28,0.8);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 6px 4px;
+    color: var(--muted);
+    font-size: 11px; font-weight: 700;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; cursor: pointer;
+    position: relative;
+  }
+  .cc-side-btn:hover { border-color: var(--accent-dim); color: var(--text); }
+  .cc-side-ico { font-size: 18px; }
+  .cc-side-label { letter-spacing: 1px; text-transform: uppercase; font-size: 9px; }
+  .cc-side-count {
+    position: absolute; top: 2px; right: 4px;
+    background: rgba(255,107,107,0.85); color: #fff;
+    font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 7px;
+    min-width: 14px; text-align: center;
+  }
+  .cc-side-count[data-empty="1"] { display: none; }
+  .cc-evolve-btn { width: 100%; margin-top: 8px; }
+
+  /* Milestones 3-node ring */
+  .cc-milestones-card { padding: 14px 16px 12px; }
+  .cc-milestones-ring {
+    display: grid; grid-template-columns: 1fr auto 1fr auto 1fr;
+    align-items: center; gap: 6px; padding: 6px 4px;
+  }
+  .cc-ms-node {
+    display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0;
+  }
+  .cc-ms-circle {
+    width: 56px; height: 56px; border-radius: 50%;
+    border: 2px solid var(--border);
+    background: rgba(20,12,20,0.6);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800; color: var(--muted);
+    position: relative;
+  }
+  .cc-ms-node.past .cc-ms-circle {
+    border-color: var(--accent-dim); color: var(--accent-dim);
+    background: rgba(255,205,107,0.08);
+  }
+  .cc-ms-node.past .cc-ms-circle::after {
+    content: '✓'; position: absolute; top: -6px; right: -6px;
+    background: var(--accent); color: #1a0f05;
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 900;
+  }
+  .cc-ms-node.current .cc-ms-circle {
+    border-color: var(--accent); color: var(--accent);
+    background: rgba(255,205,107,0.12);
+    box-shadow: 0 0 16px rgba(255,205,107,0.35);
+    width: 64px; height: 64px; font-size: 14px;
+  }
+  .cc-ms-node.future .cc-ms-circle::after {
+    content: '🔒'; position: absolute; bottom: -2px; right: -2px;
+    font-size: 12px;
+  }
+  .cc-ms-name { font-size: 11px; font-weight: 700; color: var(--text); text-align: center; max-width: 80px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cc-ms-range { font-size: 9px; color: var(--muted); letter-spacing: 0.5px; }
+  .cc-ms-line {
+    height: 2px; background: linear-gradient(90deg, var(--accent-dim), rgba(255,205,107,0.3));
+    border-radius: 1px; margin: 0 -2px;
+  }
+
+  /* Right column: stats compact */
+  .cc-stats-card #traits .trait-row { padding: 8px 0; }
+  .cc-stats-card #traits .trait-icon { width: 28px; height: 28px; font-size: 9px; }
+  .cc-stats-card #traits .trait-name { font-size: 12px; }
+  .cc-stats-card #traits .trait-bar { height: 6px; }
+  .cc-stats-card #traits .trait-value { font-size: 12px; }
+
+  /* Quick Actions */
+  .cc-quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .cc-qa-btn {
+    background: rgba(20,20,28,0.8);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 4px;
+    color: var(--text);
+    font-size: 11px; font-weight: 700; letter-spacing: 0.8px;
+    text-transform: uppercase;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .cc-qa-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .cc-qa-btn.cc-qa-feed {
+    background: rgba(255,205,107,0.1);
+    border-color: rgba(255,205,107,0.4);
+    color: var(--accent);
+  }
+  .cc-qa-ico { font-size: 18px; }
+
+  /* Special Potions cards */
+  .cc-special-pot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .cc-pot-card {
+    background: rgba(20,20,28,0.8);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 4px;
+    text-align: center;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .cc-pot-card:hover { border-color: var(--accent-dim); transform: translateY(-1px); }
+  .cc-pot-ico { font-size: 22px; }
+  .cc-pot-name { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin: 2px 0; }
+  .cc-pot-count { font-size: 13px; font-weight: 800; color: var(--accent); }
+
+  /* Story */
+  .cc-story-text {
+    font-size: 12px; line-height: 1.5;
+    color: #d8cdb8; font-family: Georgia, serif;
+    max-height: 90px; overflow-y: auto; padding-right: 4px;
+  }
+
   /* Make sure the portrait image never busts its column even if the
      source asset is wider than the column width. */
   body.view-champion .stage-frame img,
   body.view-champion .stage-frame { max-width: 100%; }
-  /* Narrow viewports (< 1280px): stack to single column so nothing
-     overflows or hides off-screen at 100% zoom on smaller laptops. */
+
+  /* Narrow viewports — stack to single column */
   @media (max-width: 1280px) {
-    body.view-champion .view-champion {
+    .cc-grid {
       grid-template-columns: minmax(0, 1fr);
-      max-width: 720px; margin: 0 auto;
+      max-width: 720px;
     }
   }
 
@@ -3576,7 +3794,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260426-layout-fix',
+  console.log('%c🛡️ VulcanX Champions · v20260426-compact-v1',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -4422,184 +4640,203 @@
 
 <!-- ======== VIEW: CHAMPION DETAIL (wraps all existing UI) ======== -->
 <div class="view view-champion">
-<!-- bloodline sub-picker -->
+<!-- bloodline sub-picker (admin only) -->
 <div class="bloodline-bar" id="bloodlineBar">
   <span class="lbl">Bloodline:</span>
   <span id="bloodlineBtns"></span>
 </div>
 
-<!-- ═══════════════════════════════════════════════════
-     LEFT PANEL — IDENTITY + INVENTORY
-     ═══════════════════════════════════════════════════ -->
-<div class="about-panel" id="aboutPanel">
-  <div class="about-head">
-    <div class="about-section-label">Champion</div>
-    <div class="about-name-row">
-      <div class="about-name" id="aboutName">Grokk the Whelp</div>
-      <button class="name-edit-btn" onclick="openRenameModal()" title="Rename this champion (5 PYR)">✏️</button>
-    </div>
-  </div>
+<!-- Compact champion grid (2026-04-26): single-screen, no scroll.
+     Three columns at desktop, stacks responsively under 1280px. -->
+<div class="cc-grid">
 
-  <div class="about-block">
-    <div class="about-section-label">Species</div>
-    <div class="about-species" id="aboutSpecies">
-      <span class="about-emoji" id="aboutSpeciesEmoji">🟢</span>
-      <span class="about-species-name" id="aboutSpeciesName">Orc</span>
+  <!-- ═══════ LEFT COLUMN ═══════ -->
+  <aside class="cc-col cc-col-left">
+    <div class="cc-card cc-identity">
+      <div class="cc-eyebrow">Champion</div>
+      <div class="cc-name-row">
+        <div class="cc-name" id="aboutName">Grokk the Whelp</div>
+        <button class="name-edit-btn" onclick="openRenameModal()" title="Rename (5 PYR)">✏️</button>
+      </div>
+      <div class="cc-species-row">
+        <span class="cc-species-emoji" id="aboutSpeciesEmoji">🟢</span>
+        <span class="cc-species-name" id="aboutSpeciesName">Orc</span>
+        <span class="cc-bl-divider">·</span>
+        <span class="cc-bl-label">Bloodline:</span>
+        <span class="cc-bl-name" id="aboutBloodlineName">Ironfang</span>
+      </div>
     </div>
-  </div>
 
-  <div class="about-block">
-    <div class="about-section-label">Bloodline</div>
-    <div class="about-bloodline-name" id="aboutBloodlineName">Ironfang</div>
-    <div class="about-bloodline-hint" id="aboutBloodlineHint">The heavy-armor path — unshakeable defence, iron-forged tusks.</div>
-  </div>
-
-  <div class="about-block" id="aboutPassiveBlock">
-    <div class="about-section-label">Passive Ability</div>
-    <div class="about-passive-name" id="aboutPassiveName">Iron Will</div>
-    <div class="about-passive-desc" id="aboutPassiveDesc">+5% damage reduction while below 30% HP</div>
-  </div>
-
-  <!-- ── EQUIPMENT (Phase 3b) — 5 slots, click to equip from inventory ── -->
-  <div class="about-block" id="aboutEquipBlock">
-    <div class="about-section-label">Equipment</div>
-    <div class="equip-slots" id="equipSlots">
-      <!-- 5 slots rendered by renderEquipSlots() -->
-    </div>
-    <div class="inv-btn-row">
-      <button class="inv-btn" id="inventoryBtn">View Inventory</button>
-    </div>
-  </div>
-
-  <!-- ── LEVEL & PROGRESS (inline, matches other about-blocks) ── -->
-  <div class="about-block">
-    <div class="about-section-label">Level &amp; Progress</div>
-    <div class="about-level-row">
-      <span class="about-level-num">Lvl <span id="levelBig">01</span></span>
-      <span class="about-level-sep">·</span>
-      <span class="about-level-stage" id="currentStageName">Whelp</span>
-      <span class="about-level-sep">·</span>
-      <span class="about-level-next">Next: <span id="nextStageMeta">Pup at L5</span></span>
-    </div>
-    <div class="about-level-bar">
-      <div class="evo-bar"><div class="evo-fill" id="evoFill" style="width:0%"></div></div>
-      <div class="about-level-pct"><b id="evoPct">0</b>% <span id="evoPctLabel">to Level <span id="nextLevelNum">02</span></span></div>
-    </div>
-  </div>
-
-  <div class="about-block about-block-story">
-    <div class="about-section-label" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-      <span>Chapter <span id="storyChapterNum">—</span> · <span id="storyStageName" style="color:var(--accent);">Whelp</span></span>
-      <button class="story-play-btn" id="storyPlayBtn" onclick="toggleStoryNarration()" title="Narrate this chapter">
-        <span class="sp-icon">▶</span>
-        <span class="sp-label">Play</span>
-      </button>
-    </div>
-    <div class="about-story" id="aboutStory">
-      Born beneath the twin moons of Elysium, every champion carries a story only their keeper will uncover. As they grow, chapter by chapter, their legend unfolds.
-    </div>
-  </div>
-
-  <!-- ── YOUR POTIONS (feed bottles) ── -->
-  <div class="about-block about-potions">
-    <div class="about-section-label" style="display:flex;align-items:center;justify-content:space-between;">
-      <span>🧪 Your Potions</span>
-      <a href="javascript:void(0)" onclick="openPotionGuide()"
-         style="font-size:11px;letter-spacing:1px;color:var(--accent);text-decoration:none;opacity:0.85;cursor:pointer;"
-         title="Learn what each potion does">📖 Guide</a>
-    </div>
-    <div id="potionsSection">
-      <div class="feed-potion-grid" id="feedPotionGrid"></div>
-      <div class="special-potions-inline">
-        <div class="special-potion" id="specEvoRow" style="cursor:pointer;"
-             onclick="tryEvolveFromPotion()"
-             title="Evolution Potion — Consumed at a stage gate (L3, 5, 7, 10, 13…) with a full Evolution Bar to advance your champion to the next life stage. One potion per evolution.">
-          <div class="sp-ico sp-ico-evo">⚡</div>
-          <div class="sp-body">
-            <div class="sp-name">Evolution Potion</div>
-            <div class="sp-hint" id="evoPotionHint">Unlocks the next life stage · click when ready to evolve</div>
-          </div>
-          <div class="sp-count" id="invEvo">0</div>
-        </div>
-        <div class="special-potion" id="allocPotionRow" style="cursor:pointer;"
-             title="Blessing — Grants 40 stat points you distribute freely across any traits. Ideal for rebalancing after heavy specialisation. Consumed on use. Also fills 10-25% of the Evolution Bar.">
-          <div class="sp-ico sp-ico-alloc">✨</div>
-          <div class="sp-body">
-            <div class="sp-name">Blessing (40 pts)</div>
-            <div class="sp-hint">Click to split 40 points across any stats you choose</div>
-          </div>
-          <div class="sp-count" id="invAlloc">0</div>
+    <div class="cc-card cc-passive" id="aboutPassiveBlock">
+      <div class="cc-card-title">Passive Ability</div>
+      <div class="cc-passive-row">
+        <div class="cc-passive-icon">✦</div>
+        <div class="cc-passive-text">
+          <div class="cc-passive-name" id="aboutPassiveName">Iron Will</div>
+          <div class="cc-passive-desc" id="aboutPassiveDesc">+5% damage reduction while below 30% HP</div>
         </div>
       </div>
     </div>
-    <!-- Empty state — rendered by JS when no potions -->
-    <div class="potions-empty" id="potionsEmpty" style="display:none;">
-      <div class="empty-icon">🍽️</div>
-      <div class="empty-title">Your champion's hungry</div>
-      <div class="empty-text">
-        You don't have any potions yet. Buy some from the <b>🛒 Shop</b>, or earn chests from <b>Quests</b> across the Vulcan Forged ecosystem.
+
+    <div class="cc-card cc-equip-card">
+      <div class="cc-card-title">Equipment</div>
+      <div class="equip-slots cc-equip-slots" id="equipSlots"></div>
+      <button class="inv-btn cc-inv-btn" id="inventoryBtn">View Inventory</button>
+    </div>
+
+    <div class="cc-card cc-level-card">
+      <div class="cc-card-title">Level &amp; Progression</div>
+      <div class="cc-level-row">
+        <span class="cc-level-num">Lvl <b id="levelBig">01</b></span>
+        <span class="cc-bl-divider">·</span>
+        <span class="cc-stage-name" id="currentStageName">Whelp</span>
       </div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
-        <button class="empty-cta" onclick="openShop()">🛒 Open Shop</button>
-        <button class="empty-cta" style="background: rgba(255,255,255,0.06); color:var(--text); border:1px solid rgba(255,255,255,0.18);"
-          onclick="vxAlert('Complete dungeon runs, daily tasks, and PvP matches across VulcanVerse, Runner, and Forge Arena to earn treasure chests. Each chest drops potions for your champion.', {title: 'Quests · coming soon', icon: '⚔️'})">
-          ⚔️ Quests
+      <div class="cc-next-line">Next: <span id="nextStageMeta">Pup at L5</span></div>
+      <div class="cc-evo-bar">
+        <div class="evo-bar"><div class="evo-fill" id="evoFill" style="width:0%"></div></div>
+        <div class="cc-evo-pct"><b id="evoPct">0</b>% <span id="evoPctLabel">to Level <span id="nextLevelNum">02</span></span></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══════ CENTER COLUMN ═══════ -->
+  <main class="cc-col cc-col-center">
+    <div class="stage-frame cc-stage-frame" id="stageFrame">
+      <img id="stageImgPrev" class="stageImgPrev" src="" alt="" aria-hidden="true" />
+      <img id="stageImg" src="evolution/L01_whelp_final.jpg" />
+      <div class="aura"></div>
+      <div class="evo-burst" id="stageBurst"></div>
+      <div class="level-badge" id="levelBadge">L 01</div>
+      <div class="rank-pill" id="rankPill">Iron III</div>
+      <div class="power-pill" id="powerPill" title="Power Score">⚡<b id="powerPillVal">0</b></div>
+    </div>
+
+    <div class="cc-action-block">
+      <div class="cc-action-eyebrow">Recommended Action</div>
+      <div class="cc-action-row">
+        <button class="cc-side-btn" id="boostsBtn" title="Open special potions">
+          <span class="cc-side-ico">🧪</span>
+          <span class="cc-side-label">Boosts</span>
+          <span class="cc-side-count" id="ccBoostsCount">0</span>
+        </button>
+        <button class="feed-top-bar cc-feed-big" id="feedHero">
+          <span class="feed-top-label">🧪 Feed Me!</span>
+          <span class="feed-top-count" id="feedCount">0 ready</span>
+        </button>
+        <button class="cc-side-btn" id="moreActionBtn" title="More actions" onclick="openTraitPotionModal()">
+          <span class="cc-side-ico">⋯</span>
+          <span class="cc-side-label">More</span>
+        </button>
+      </div>
+      <button class="evolve-btn-center cc-evolve-btn" id="evolveBtn" disabled>⚡ Evolve (locked)</button>
+    </div>
+
+    <div class="cc-card cc-milestones-card">
+      <div class="cc-card-title">Evolution Milestones</div>
+      <div class="cc-milestones-ring" id="milestonesRing"></div>
+    </div>
+  </main>
+
+  <!-- ═══════ RIGHT COLUMN ═══════ -->
+  <aside class="cc-col cc-col-right">
+    <div class="cc-card cc-stats-card">
+      <div class="cc-card-title-row">
+        <div class="cc-card-title">Stats</div>
+      </div>
+      <div id="traits"></div>
+    </div>
+
+    <div class="cc-card cc-quick-card">
+      <div class="cc-card-title">Quick Actions</div>
+      <div class="cc-quick-grid">
+        <button class="cc-qa-btn" onclick="document.getElementById('inventoryBtn')?.click()">
+          <span class="cc-qa-ico">⚔️</span><span>Equip</span>
+        </button>
+        <button class="cc-qa-btn cc-qa-feed" onclick="document.getElementById('feedHero')?.click()">
+          <span class="cc-qa-ico">🥄</span><span>Feed</span>
+        </button>
+        <button class="cc-qa-btn" onclick="openTraitPotionModal()">
+          <span class="cc-qa-ico">🧪</span><span>Potions</span>
+        </button>
+        <button class="cc-qa-btn" onclick="shareChampion()">
+          <span class="cc-qa-ico">🔗</span><span>Share</span>
         </button>
       </div>
     </div>
+
+    <div class="cc-card cc-special-pot-card">
+      <div class="cc-card-title">Potions &amp; Blessings</div>
+      <div class="cc-special-pot-grid">
+        <div class="cc-pot-card" id="specEvoRow" onclick="tryEvolveFromPotion()"
+             title="Evolution Potion — consumed at a gate with full bar to advance to next stage">
+          <div class="cc-pot-ico">⚡</div>
+          <div class="cc-pot-name">Evolution</div>
+          <div class="cc-pot-count" id="invEvo">×0</div>
+        </div>
+        <div class="cc-pot-card" id="allocPotionRow"
+             title="Blessing — distribute 40 stat points freely">
+          <div class="cc-pot-ico">✨</div>
+          <div class="cc-pot-name">Blessing</div>
+          <div class="cc-pot-count" id="invAlloc">×0</div>
+        </div>
+        <div class="cc-pot-card cc-pot-trait" onclick="openTraitPotionModal()"
+             title="Trait potions — open the full bottle grid">
+          <div class="cc-pot-ico">🧪</div>
+          <div class="cc-pot-name">Trait</div>
+          <div class="cc-pot-count" id="ccTraitTotal">×0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cc-card cc-story-card">
+      <div class="cc-card-title-row">
+        <div class="cc-card-title">Chapter <span id="storyChapterNum">—</span> · <span id="storyStageName" style="color:var(--accent);">Whelp</span></div>
+        <button class="story-play-btn" id="storyPlayBtn" onclick="toggleStoryNarration()" title="Narrate">
+          <span class="sp-icon">▶</span>
+          <span class="sp-label">Play</span>
+        </button>
+      </div>
+      <div class="cc-story-text" id="aboutStory">
+        Born beneath the twin moons of Elysium, every champion carries a story only their keeper will uncover.
+      </div>
+    </div>
+  </aside>
+</div><!-- /cc-grid -->
+
+<!-- Hidden legacy-render targets (preserved so existing render() code that
+     touches these IDs doesn't crash; the new compact layout ignores them
+     visually but the DOM nodes still exist for setText calls). -->
+<div id="aboutBloodlineHint" style="display:none;"></div>
+</div><!-- /view-champion -->
+
+<!-- Phase: trait-potion modal (Compact view 2026-04-26) — full 6-bottle
+     grid + special potions + empty state, opened by the POTIONS quick
+     action or the More button next to FEED. The previous always-visible
+     left-panel block was eating too much screen real estate. -->
+<div class="modal-backdrop" id="traitPotionModal">
+  <div class="modal" style="width: 540px;">
+    <h3 style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <span>🧪 Your Potions</span>
+      <a href="javascript:void(0)" onclick="openPotionGuide()"
+         style="font-size:11px;letter-spacing:1px;color:var(--accent);text-decoration:none;opacity:0.85;cursor:pointer;font-weight:400;"
+         title="Learn what each potion does">📖 Guide</a>
+    </h3>
+    <div id="potionsSection">
+      <div class="feed-potion-grid" id="feedPotionGrid"></div>
+    </div>
+    <div class="potions-empty" id="potionsEmpty" style="display:none;text-align:center;padding:30px 12px;">
+      <div class="empty-icon" style="font-size:32px;">🍽️</div>
+      <div class="empty-title" style="font-weight:700;margin-top:8px;">Your champion's hungry</div>
+      <div class="empty-text" style="color:var(--muted);font-size:13px;margin:8px 0 14px;">
+        No potions yet. Open chests via Quests, or grab some in the Shop.
+      </div>
+      <div style="display:flex; gap:8px; justify-content:center;">
+        <button class="empty-cta" onclick="openShop()">🛒 Open Shop</button>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="document.getElementById('traitPotionModal').classList.remove('open')" style="margin-top:14px;">Close</button>
   </div>
 </div>
-
-<!-- ═══════════════════════════════════════════════════
-     CENTER — FEED BAR + PORTRAIT (only)
-     ═══════════════════════════════════════════════════ -->
-<main class="champion-main">
-  <div class="stage-frame" id="stageFrame">
-    <img id="stageImgPrev" class="stageImgPrev" src="" alt="" aria-hidden="true" />
-    <img id="stageImg" src="evolution/L01_whelp_final.jpg" />
-    <div class="aura"></div>
-    <div class="evo-burst" id="stageBurst"></div>
-    <div class="level-badge" id="levelBadge">L 01</div>
-    <div class="rank-pill" id="rankPill">Iron III</div>
-    <div class="power-pill" id="powerPill" title="Power Score — stage × 5000 + stats × bloodline weight + ELO">⚡<b id="powerPillVal">0</b></div>
-  </div>
-
-  <!-- Feed Me bar (below portrait) -->
-  <button class="feed-top-bar" id="feedHero">
-    <span class="feed-top-label">🧪 Feed Me!</span>
-    <span class="feed-top-count" id="feedCount">0 ready</span>
-  </button>
-
-  <!-- Evolve button appears only when ready -->
-  <button class="evolve-btn-center" id="evolveBtn" disabled>⚡ Evolve (locked)</button>
-
-  <!-- Share row -->
-  <div class="champ-share-row">
-    <button class="share-btn" onclick="shareChampion()" title="Share your champion">
-      🔗 Share
-    </button>
-  </div>
-</main>
-
-<!-- ═══════════════════════════════════════════════════
-     RIGHT PANEL — HOW IT WORKS + STATS & LEVEL + STAGES
-     ═══════════════════════════════════════════════════ -->
-<aside class="champion-side">
-
-  <!-- STATS (bigger) -->
-  <div class="card stats-card-v2">
-    <div class="card-title">💪 Stats</div>
-    <div id="traits"></div>
-  </div>
-
-  <!-- STAGE LADDER -->
-  <div class="card stage-ladder-card">
-    <div class="card-title">🪜 Stage Ladder</div>
-    <div class="stage-ladder" id="stageLadder"></div>
-  </div>
-
-</aside>
-</div><!-- /view-champion -->
 
 <!-- evolve cinematic overlay -->
 <div class="cine-overlay" id="cineOverlay"></div>
@@ -5973,41 +6210,80 @@ function render() {
   //   Pup       L6–L7  ·  Cub L8–L10  ·  ... ·  Legendary L50
   // Previously displayed L1–L2 / L3–L4 / L5–L6 which mismatched the actual
   // gameplay (Trello "Fix level/progress mismatch with stage ladder").
-  const ladder = document.getElementById('stageLadder');
-  if (ladder) {
-    ladder.innerHTML = '';
-    // Trello fix v2 (2026-04-26): showing all 20 stages was a wall of
-    // text. Window to current ± 2 (5 rungs total) with a small "+N more"
-    // hint at top/bottom so players still feel the arc length.
+  // Compact-view milestones ring (replaces the old vertical stage ladder).
+  // Three nodes: previous stage (✓), current (highlighted with % to evolve),
+  // next stage (locked). Compact and fits the no-scroll layout.
+  const ring = document.getElementById('milestonesRing');
+  if (ring) {
+    ring.innerHTML = '';
     const center = state.stageIdx;
-    const windowSize = 2;
-    const startIdx = Math.max(0, center - windowSize);
-    const endIdx   = Math.min(STAGES.length - 1, center + windowSize);
-    if (startIdx > 0) {
-      ladder.insertAdjacentHTML('beforeend',
-        `<div class="ladder-rung ladder-collapsed">+${startIdx} earlier stage${startIdx === 1 ? '' : 's'}</div>`);
-    }
-    for (let i = startIdx; i <= endIdx; i++) {
-      const s = STAGES[i];
-      const cls = i < state.stageIdx ? 'past'
-              : i === state.stageIdx ? 'current'
-              : i === state.stageIdx + 1 ? 'next' : '';
-      const badge = cls === 'next' ? '<span class="rung-badge">Next</span>' : '';
+    const prevIdx = center - 1;
+    const nextIdx = center + 1;
+    const stageName = (i) => STAGES[i]?.name || `Stage ${i + 1}`;
+    const stageRange = (i) => {
+      if (i < 0 || i >= STAGES.length) return '';
       const lo = i === 0 ? 1 : (GATE_LEVELS[i] + 1);
       const hi = i < STAGES.length - 1 ? GATE_LEVELS[i + 1] : 50;
-      const range = lo === hi ? `L${lo}` : `L${lo}–L${hi}`;
-      ladder.insertAdjacentHTML('beforeend',
-        `<div class="ladder-rung ${cls}">
-          <div class="rung-dot"></div>
-          <div class="rung-name">${s.name} ${badge}</div>
-          <div class="rung-levels">${range}</div>
+      return lo === hi ? `L${lo}` : `L${lo}–L${hi}`;
+    };
+
+    // Previous (or empty placeholder if at first stage)
+    if (prevIdx >= 0) {
+      ring.insertAdjacentHTML('beforeend', `
+        <div class="cc-ms-node past">
+          <div class="cc-ms-circle">${prevIdx + 1}</div>
+          <div class="cc-ms-name">${stageName(prevIdx)}</div>
+          <div class="cc-ms-range">${stageRange(prevIdx)}</div>
+        </div>
+        <div class="cc-ms-line"></div>`);
+    } else {
+      ring.insertAdjacentHTML('beforeend', `
+        <div class="cc-ms-node"><div class="cc-ms-circle" style="opacity:0.3;">—</div>
+          <div class="cc-ms-name" style="opacity:0.3;">Born</div>
+          <div class="cc-ms-range">&nbsp;</div></div>
+        <div class="cc-ms-line"></div>`);
+    }
+
+    // Current
+    const pct = Math.round(state.evoPct || 0);
+    ring.insertAdjacentHTML('beforeend', `
+      <div class="cc-ms-node current">
+        <div class="cc-ms-circle">${pct}%</div>
+        <div class="cc-ms-name">${stageName(center)}</div>
+        <div class="cc-ms-range">${stageRange(center)}</div>
+      </div>
+      <div class="cc-ms-line"></div>`);
+
+    // Next (or "Legendary reached" if at last stage)
+    if (nextIdx < STAGES.length) {
+      ring.insertAdjacentHTML('beforeend', `
+        <div class="cc-ms-node future">
+          <div class="cc-ms-circle">${nextIdx + 1}</div>
+          <div class="cc-ms-name">${stageName(nextIdx)}</div>
+          <div class="cc-ms-range">${stageRange(nextIdx)}</div>
+        </div>`);
+    } else {
+      ring.insertAdjacentHTML('beforeend', `
+        <div class="cc-ms-node">
+          <div class="cc-ms-circle" style="border-color:var(--accent);color:var(--accent);">🏆</div>
+          <div class="cc-ms-name">Legendary</div>
+          <div class="cc-ms-range">Reached</div>
         </div>`);
     }
-    if (endIdx < STAGES.length - 1) {
-      const remaining = STAGES.length - 1 - endIdx;
-      ladder.insertAdjacentHTML('beforeend',
-        `<div class="ladder-rung ladder-collapsed">+${remaining} more stage${remaining === 1 ? '' : 's'} → Legendary</div>`);
-    }
+  }
+
+  // Compact view: total trait potion count for the right-panel "Trait" card
+  const ccTraitTotal = document.getElementById('ccTraitTotal');
+  if (ccTraitTotal) {
+    const total = TRAITS.reduce((s, t) => s + (state.inv?.[t] || 0), 0);
+    ccTraitTotal.textContent = '×' + total;
+  }
+  // Boosts side-button count = special potions stash (evo + alloc)
+  const ccBoosts = document.getElementById('ccBoostsCount');
+  if (ccBoosts) {
+    const total = (state.inv?.evo || 0) + (state.inv?.alloc || 0);
+    ccBoosts.textContent = total;
+    ccBoosts.dataset.empty = total === 0 ? '1' : '0';
   }
 
   // ── CENTER: Feed panel (under portrait)
@@ -7442,6 +7718,25 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     navTo(btn.dataset.view);
   });
 });
+
+// ============================================================
+// COMPACT VIEW (2026-04-26) — trait-potion modal opener
+// ============================================================
+// Replaces the always-visible left-panel trait grid. The grid is now
+// inside #traitPotionModal; render() still populates #feedPotionGrid
+// (which lives inside the modal) so when the modal opens, the bottles
+// are already rendered.
+function openTraitPotionModal() {
+  document.getElementById('traitPotionModal')?.classList.add('open');
+}
+// Backdrop dismiss
+document.getElementById('traitPotionModal')?.addEventListener('click', (e) => {
+  if (e.target.id === 'traitPotionModal') e.target.classList.remove('open');
+});
+// Boosts side-button on the FEED row → opens the trait potion modal too
+// (it's where the special potions live). Could split later into a
+// dedicated "Boosts" view if the meta justifies it.
+bindIf('boostsBtn', 'click', openTraitPotionModal);
 
 // ============================================================
 // PHASE 4 — ARENA (vs bots)
