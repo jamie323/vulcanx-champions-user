@@ -3561,7 +3561,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260426-arena-anim',
+  console.log('%c🛡️ VulcanX Champions · v20260426-equip-in-battle',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -7474,9 +7474,24 @@ function renderArena() {
   const arena = getArenaForChamp(champ.id);
   eloVal.textContent = arena.elo;
   const bracket = bracketLabel(champ.stage_idx);
+  // Phase 5.5: show equipped weapon (if any) so players know what they're
+  // bringing to the fight. Tells them to gear up if naked.
+  const equipped = getEquippedWeaponForArena(champ.id);
+  let equippedLine = '';
+  if (equipped && window.Equipment) {
+    const cat = Equipment.CATALOG[equipped.weapon_id];
+    const rar = Equipment.RARITY[equipped.weapon_rarity];
+    if (cat && rar) {
+      const wname = cat.id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      equippedLine = `<div style="margin-top:8px; font-size:13px;">⚔️ <span style="color:${rar.color};">${rar.label} ${wname}</span></div>`;
+    }
+  } else {
+    equippedLine = `<div style="margin-top:8px; font-size:12px; color:var(--muted); font-style:italic;">⚠️ No weapon equipped — you'll fight with your species' default. Equip something from your inventory for a meaningful boost.</div>`;
+  }
   summary.innerHTML = `
     <b>${champ.name}</b> · ${SPECIES[champ.species_id]?.label || champ.species_id} ·
     L${champ.level} · ${SPECIES[champ.species_id]?.bloodlines?.[champ.bloodline_id]?.stages?.[champ.stage_idx]?.name || ('Stage ' + (champ.stage_idx + 1))}
+    ${equippedLine}
   `;
   bracketHint.textContent = `${bracket} bracket — opponents matched to your stage tier.`;
   findBtn.disabled = false;
@@ -7519,11 +7534,11 @@ document.querySelectorAll('.stance-btn').forEach(btn => {
   });
 });
 
-async function apiRequestMatch({ champion_id, stance, current_elo }) {
+async function apiRequestMatch({ champion_id, stance, current_elo, equipped }) {
   const res = await apiFetch(`${FN_BASE}/match_request`, {
     method: 'POST',
     headers: AUTH_HEADERS,
-    body: JSON.stringify({ wallet: getWallet(), champion_id, stance, current_elo }),
+    body: JSON.stringify({ wallet: getWallet(), champion_id, stance, current_elo, equipped }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -7531,6 +7546,17 @@ async function apiRequestMatch({ champion_id, stance, current_elo }) {
     throw new Error(`${code}: ${data.message || ''}`.trim());
   }
   return data;
+}
+
+// Phase 5.5: pull the player's equipped weapon (if any) for arena loadout
+function getEquippedWeaponForArena(championId) {
+  if (!window.Equipment || !myInventory) return null;
+  const inst = myInventory.find(i =>
+    i.equippedOn === championId &&
+    Equipment.CATALOG[i.catalogId]?.slot === 'weapon'
+  );
+  if (!inst) return null;
+  return { weapon_id: inst.catalogId, weapon_rarity: inst.rarity };
 }
 
 // Bind Find Opponent — runs the match end-to-end and shows the result modal
@@ -7546,12 +7572,14 @@ bindIf('arenaFindBtn', 'click', async () => {
   findBtn.textContent = '⚔️ Matching opponent…';
 
   const arena = getArenaForChamp(champ.id);
+  const equipped = getEquippedWeaponForArena(champ.id);  // Phase 5.5
   let resp;
   try {
     resp = await apiRequestMatch({
       champion_id: champ.id,
       stance: _arenaStance,
       current_elo: arena.elo,
+      equipped,
     });
   } catch (e) {
     findBtn.disabled = false;
@@ -7622,8 +7650,22 @@ function showArenaResult(resp, champ) {
   _arenaPlayback = { timers: [], cancelled: false };
 
   // Pre-state: full HP bars, names, hidden banner
-  document.getElementById('arPlayerName').textContent = champ.name;
-  document.getElementById('arBotName').textContent = resp.opponent.display_name;
+  // Phase 5.5: append weapon + rarity to fighter names so the loadout
+  // contrast is visible at a glance.
+  const fmtWeapon = (id, rarity) => {
+    if (!id || !window.Equipment) return '';
+    const cat = Equipment.CATALOG[id];
+    const rar = rarity ? Equipment.RARITY[rarity] : null;
+    if (!cat) return '';
+    const wname = cat.id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    const rarTxt = rar ? `<span style="color:${rar.color};">${rar.label}</span> ` : '';
+    return `<div style="font-size:11px; color:var(--muted); margin-top:2px;">⚔️ ${rarTxt}${wname}</div>`;
+  };
+  const playerEquipped = getEquippedWeaponForArena(champ.id);
+  document.getElementById('arPlayerName').innerHTML =
+    champ.name + fmtWeapon(playerEquipped?.weapon_id, playerEquipped?.weapon_rarity);
+  document.getElementById('arBotName').innerHTML =
+    resp.opponent.display_name + fmtWeapon(resp.opponent.weapon_id, resp.opponent.weapon_rarity);
   document.getElementById('arPlayerHp').style.width = '100%';
   document.getElementById('arBotHp').style.width = '100%';
   document.getElementById('arPlayerMeta').textContent = `HP ${battle.hpStart.a} / ${battle.hpStart.a}`;
