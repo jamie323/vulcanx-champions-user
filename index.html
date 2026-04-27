@@ -87,6 +87,23 @@
   }
   .cc-col { display: flex; flex-direction: column; gap: 12px; }
 
+  /* Override the legacy fixed-height side panel rule (line ~1697) for
+     the compact champion view. The generic `aside { height: 100vh;
+     overflow-y: auto }` from the old layout was capturing scroll wheel
+     events on the left/right columns and preventing the page itself
+     from scrolling on desktop (Trello: "Mouse wheel scrolling not
+     working on desktop"). Compact view uses cc-grid + page-level
+     scroll instead. */
+  body.view-champion aside.cc-col,
+  body.view-champion aside.cc-col-left,
+  body.view-champion aside.cc-col-right {
+    height: auto !important;
+    overflow-y: visible !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border-left: none !important;
+  }
+
   .cc-card {
     background: rgba(20,12,20,0.85);
     border: 1px solid rgba(255,205,107,0.18);
@@ -179,10 +196,21 @@
   /* Center column */
   .cc-col-center { gap: 10px; }
   .cc-stage-frame {
-    width: 100%; aspect-ratio: 1; max-height: 380px;
+    width: 100%; aspect-ratio: 1024 / 1536; max-height: 540px;
     border-radius: 16px; overflow: hidden; position: relative;
+    background: linear-gradient(180deg, #1a0f1a, #0a0608);
   }
-  .cc-stage-frame img { width: 100%; height: 100%; object-fit: cover; }
+  /* Tester report 2026-04-27: feet always missing or head cut off.
+     Root cause: aspect-ratio was 1 (square) but the orc art is 1024×1536
+     (2:3 portrait), so `object-fit: cover` cropped top+bottom. Now the
+     frame matches the art aspect AND uses `contain` as a belt-and-braces
+     fallback so even if a future asset has different dimensions, the
+     full creature stays visible (with subtle letterboxing). */
+  .cc-stage-frame img {
+    width: 100%; height: 100%;
+    object-fit: contain;
+    object-position: center;
+  }
   /* Action block — visually identical to .cc-card so the column reads
      as a uniform stack. Tester report 2026-04-27 (Ric O.): the action
      block had different padding (12px 14px) and a slightly different
@@ -291,17 +319,32 @@
   .cc-stats-card #traits .trait-value { font-size: 12px; }
 
   /* Quick Actions */
-  .cc-quick-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  /* Quick Action grid — 5 buttons (Equip, Feed, Potions, Album, Share).
+     Tester report 2026-04-27: buttons looked cramped with uneven spacing
+     after Album was added (4→5). Tightened padding, smaller letter-
+     spacing, and used minmax(0, 1fr) so each cell can shrink without
+     overflowing the card. Labels truncate cleanly if a future button
+     pushes width tight. */
+  .cc-quick-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 5px;
+  }
   .cc-qa-btn {
     background: rgba(20,20,28,0.8);
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 10px 4px;
+    padding: 9px 2px;
     color: var(--text);
-    font-size: 11px; font-weight: 700; letter-spacing: 0.8px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.4px;
     text-transform: uppercase;
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
     cursor: pointer; transition: all 0.15s;
+    min-width: 0;
+  }
+  .cc-qa-btn span:not(.cc-qa-ico) {
+    max-width: 100%;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .cc-qa-btn:hover { border-color: var(--accent); color: var(--accent); }
   .cc-qa-btn.cc-qa-feed {
@@ -309,7 +352,7 @@
     border-color: rgba(255,205,107,0.4);
     color: var(--accent);
   }
-  .cc-qa-ico { font-size: 18px; }
+  .cc-qa-ico { font-size: 17px; }
 
   /* Special Potions cards */
   .cc-special-pot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
@@ -4713,6 +4756,7 @@
     <button class="shop-btn" onclick="openShop()">🛒 Shop</button>
     <button class="streak-pill" id="streakPill" title="Daily login streak — click to claim today's reward" onclick="VxDaily.openModal()" style="display:none;">
       <span class="streak-flame">🔥</span><b id="streakDay">1</b>
+      <span class="streak-claim-label" id="streakClaimLabel" style="display:none;">CLAIM</span>
       <span class="streak-claim-dot" id="streakClaimDot" style="display:none;">●</span>
     </button>
     <button class="mute-btn" id="muteBtn" title="Toggle sound effects" onclick="VxAudio.toggle()">🔊</button>
@@ -5883,20 +5927,64 @@
 </div>
 
 <style>
+  /* Daily streak pill — bigger + louder when unclaimed.
+     Tester report 2026-04-27 (filed AFTER Phase K shipped the pulsing
+     pill): "too small and feels hidden in the game UI". This iteration
+     keeps the pill compact in the claimed state but transforms it into
+     a clearly attention-grabbing button when a reward is waiting:
+     bigger, gold-accent ring, strong pulse, and an explicit "CLAIM"
+     label so first-time players know what to click. */
   .streak-pill {
     background: rgba(255,107,107,0.10); border: 1px solid rgba(255,107,107,0.4);
     color: #ff9a7d; border-radius: 16px;
-    padding: 4px 10px; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 4px;
+    padding: 5px 12px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px;
     font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
     margin-left: 6px; position: relative;
+    transition: all 0.25s ease;
   }
-  .streak-pill:hover { background: rgba(255,107,107,0.18); }
-  .streak-pill .streak-flame { font-size: 14px; }
+  .streak-pill:hover { background: rgba(255,107,107,0.18); transform: translateY(-1px); }
+  .streak-pill .streak-flame { font-size: 15px; }
   .streak-pill b { color: #ffb088; font-size: 13px; }
   .streak-pill .streak-claim-dot {
     color: #7dff9a; font-size: 12px; margin-left: 2px;
     animation: vx-breathe 1.2s ease-in-out infinite;
+  }
+  .streak-pill .streak-claim-label {
+    background: linear-gradient(135deg, var(--accent), var(--ember));
+    color: #1a0e08;
+    font-size: 11px; font-weight: 800; letter-spacing: 1px;
+    padding: 3px 8px; border-radius: 10px; margin-left: 4px;
+    text-transform: uppercase;
+  }
+  /* Pill has unclaimed state: pulse + glow + bigger */
+  .streak-pill.streak-pill-claimable {
+    background: linear-gradient(135deg, rgba(255,140,40,0.25), rgba(255,107,107,0.18));
+    border-color: var(--accent);
+    color: #ffd28a;
+    padding: 7px 14px;
+    font-size: 13px;
+    box-shadow: 0 0 0 0 rgba(255,205,107,0.6);
+    animation: streakPulse 1.6s ease-in-out infinite;
+  }
+  .streak-pill.streak-pill-claimable .streak-flame {
+    font-size: 17px;
+    animation: streakFlameDance 0.9s ease-in-out infinite alternate;
+    display: inline-block;
+  }
+  @keyframes streakPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,205,107,0.55), 0 0 20px rgba(255,140,40,0.25); }
+    50%      { box-shadow: 0 0 0 8px rgba(255,205,107,0),    0 0 32px rgba(255,140,40,0.55); }
+  }
+  @keyframes streakFlameDance {
+    0%   { transform: rotate(-6deg) scale(1); }
+    100% { transform: rotate(6deg) scale(1.12); }
+  }
+  @media (max-width: 768px) {
+    .streak-pill.streak-pill-claimable {
+      padding: 5px 10px; font-size: 11px;
+    }
+    .streak-pill .streak-claim-label { font-size: 10px; padding: 2px 6px; }
   }
   .daily-ladder {
     display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
@@ -7126,9 +7214,16 @@ const VxDaily = (() => {
     if (!pill) return;
     const day = getStreak();
     const dot = document.getElementById('streakClaimDot');
+    const label = document.getElementById('streakClaimLabel');
     document.getElementById('streakDay').textContent = day || '—';
     pill.style.display = '';
-    if (dot) dot.style.display = canClaimToday() ? '' : 'none';
+    const claimable = canClaimToday();
+    // Visually emphasise unclaimed reward — pulses + adds a CLAIM badge
+    // next to the streak count so beginners notice it (Trello: "Improve
+    // daily reward claim button visibility").
+    pill.classList.toggle('streak-pill-claimable', claimable);
+    if (dot) dot.style.display = claimable ? '' : 'none';
+    if (label) label.style.display = claimable ? '' : 'none';
   }
 
   function renderModal() {
