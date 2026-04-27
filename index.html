@@ -958,6 +958,92 @@
   /* Trello UX (2026-04-26): potion-emoji match indicator next to trait name. */
   .trait-potion-match { font-size: 14px; margin-right: 4px; cursor: help; opacity: 0.95; }
 
+  /* ── PHASE J: JUICE (2026-04-27) ─────────────────────────────
+     Sparks, floating numbers, screen shake, idle breathing.
+     Every spawned element auto-cleans up after its animation. */
+
+  /* Particle layer (created on first use) sits over everything. */
+  #vxFxLayer { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
+
+  /* Spark — spirals out from origin then fades. CSS variable --dx/--dy
+     drive the trajectory so each spark goes a different way. */
+  .vx-spark {
+    position: absolute;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
+    animation: vx-spark-burst 0.7s cubic-bezier(0.2, 0.8, 0.4, 1) forwards;
+    will-change: transform, opacity;
+  }
+  @keyframes vx-spark-burst {
+    0%   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.3); }
+  }
+
+  /* Floating "+N STR" / "-12 HP" text. */
+  .vx-stat-pop {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    font-size: 18px; font-weight: 800;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+    animation: vx-stat-pop-anim 0.9s ease-out forwards;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  @keyframes vx-stat-pop-anim {
+    0%   { opacity: 0; transform: translate(-50%, -10%) scale(0.7); }
+    20%  { opacity: 1; transform: translate(-50%, -40%) scale(1.15); }
+    100% { opacity: 0; transform: translate(-50%, -150%) scale(1); }
+  }
+
+  /* Screen shake — small for hits, large for evolve. */
+  .vx-shake-sm { animation: vx-shake-sm-anim 0.32s ease; }
+  .vx-shake-lg { animation: vx-shake-lg-anim 0.5s ease; }
+  @keyframes vx-shake-sm-anim {
+    0%, 100% { transform: translate(0, 0); }
+    25%      { transform: translate(-3px, 1px); }
+    50%      { transform: translate(2px, -2px); }
+    75%      { transform: translate(-1px, 2px); }
+  }
+  @keyframes vx-shake-lg-anim {
+    0%, 100% { transform: translate(0, 0); }
+    15%      { transform: translate(-7px, -3px); }
+    30%      { transform: translate(8px, 4px); }
+    45%      { transform: translate(-6px, 5px); }
+    60%      { transform: translate(6px, -4px); }
+    80%      { transform: translate(-3px, 2px); }
+  }
+
+  /* Subtle idle breathing on the champion portrait. ~2% scale, 4s
+     cycle — barely perceptible but makes the creature feel alive
+     vs the previous static image. Pause when user hovers (so the
+     image is steady when they're trying to inspect it). */
+  .stage-frame img {
+    animation: vx-breathe 4.2s ease-in-out infinite;
+    transform-origin: center center;
+  }
+  .stage-frame:hover img { animation-play-state: paused; }
+  @keyframes vx-breathe {
+    0%, 100% { transform: scale(1); filter: brightness(1); }
+    50%      { transform: scale(1.018); filter: brightness(1.04); }
+  }
+  /* Legendary bloodlines breathe a bit more dramatically. */
+  .stage-frame.legend img { animation: vx-breathe-legend 3s ease-in-out infinite; }
+  @keyframes vx-breathe-legend {
+    0%, 100% { transform: scale(1);    filter: brightness(1)   drop-shadow(0 0 0 transparent); }
+    50%      { transform: scale(1.025); filter: brightness(1.08) drop-shadow(0 0 18px rgba(255,205,107,0.5)); }
+  }
+
+  /* Mute toggle in the topbar */
+  .mute-btn {
+    background: transparent; border: 1px solid var(--border);
+    border-radius: 8px; padding: 4px 8px;
+    color: var(--muted); font-size: 14px; cursor: pointer;
+    margin-left: 6px;
+  }
+  .mute-btn:hover { color: var(--accent); border-color: var(--accent-dim); }
+
   /* ── Phase 4: Arena view ────────────────────────────────────── */
   .arena-wrap { max-width: 880px; margin: 0 auto; padding: 24px 20px 60px; }
   .arena-elo-pill {
@@ -4076,7 +4162,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260427-landing-focus',
+  console.log('%c🛡️ VulcanX Champions · v20260427-juice',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -4357,6 +4443,7 @@
     <div class="coin gem"><span class="icon">V</span><span id="curGem">15,320</span></div>
     <div class="coin ess"><span class="icon">E</span><span id="curEss">420</span></div>
     <button class="shop-btn" onclick="openShop()">🛒 Shop</button>
+    <button class="mute-btn" id="muteBtn" title="Toggle sound effects" onclick="VxAudio.toggle()">🔊</button>
     <div class="wallet-chip" id="walletChip" title="Your wallet · click to copy" onclick="onWalletChipClick()">
       <span class="dot-live">●</span>
       <span id="walletChipAddr">—</span>
@@ -5536,6 +5623,10 @@ async function usePotion(trait, sourceEl) {
   // show the stat gain as usual.
   const cappedFeed = Math.round(actualGain) === 0;
 
+  // Phase J: audio cue at feed time — gulp on success, dull thud on cap
+  if (cappedFeed) VxAudio.cap();
+  else            VxAudio.feedGulp();
+
   // animate: fly → burst → float text + bar pulse + stat count-up + juice
   potionFlyAndBurst(sourceEl || document.body, (tx, ty) => {
     if (cappedFeed) {
@@ -5543,6 +5634,11 @@ async function usePotion(trait, sourceEl) {
       floatText(`+${Math.max(1, Math.round(barGain))}% BAR`, tx, ty - 12, '#9effc7');
     } else {
       floatText(`+${Math.round(actualGain)} ${trait}`, tx, ty - 20);
+      // Phase J: small stat-up chirp + spark burst on the trait row
+      VxAudio.statUp();
+      const traitRow = document.querySelector('#traits .trait-row .icon-' + trait)
+                    || document.querySelector('#traits .trait-row');
+      if (traitRow) vxSparkBurst(traitRow.parentElement || traitRow, 6, { color: '#7dff9a' });
     }
     pulseBar();
     fireBarSplash();
@@ -5558,6 +5654,11 @@ async function usePotion(trait, sourceEl) {
       floatText(`LEVEL ${state.level}`, tx, ty - 60, '#ffd98a');
       fireScreenFlash();
       fireLevelUpBanner(state.level);
+      // Phase J: level-up tone + screen shake + big spark burst on the portrait
+      VxAudio.levelUp();
+      vxShake('small');
+      const frame = document.getElementById('stageFrame');
+      if (frame) vxSparkBurst(frame, 16, { color: '#ffcd6b' });
     }
   });
 
@@ -5699,6 +5800,14 @@ async function evolve() {
     const newStage = STAGES[state.stageIdx];
     showCinematic('EVOLVED', `${newStage.name.toUpperCase()} · ${newStage.zone.toUpperCase()}`);
     showToast(`⚡ Evolved to ${newStage.name}!`, 'success', 3400);
+    // Phase J: thunder + bright sparkle + heavy screen shake + portrait spark fountain
+    VxAudio.evolve();
+    vxShake('large');
+    const evoFrame = document.getElementById('stageFrame');
+    if (evoFrame) {
+      vxSparkBurst(evoFrame, 28, { color: '#ffcd6b' });
+      setTimeout(() => vxSparkBurst(evoFrame, 20, { color: '#fff8c0' }), 180);
+    }
     // Extra juice: screen flash + level banner + bar reset with splash
     fireScreenFlash();
     fireLevelUpBanner(state.level);
@@ -6040,6 +6149,166 @@ function renderLeaderboard(filter = 'all') {
         <div class="lb-score">${r.power.toLocaleString()}<span class="e"> pwr</span></div>
       </div>`);
   });
+}
+
+// ============================================================
+// PHASE J — JUICE (2026-04-27)
+// Sound effects (synthesized, no asset hosting), particle helpers,
+// screen shake, floating stat popups. Hooked into existing handlers
+// to make every action feel ~3× more satisfying without changing
+// any rules. Web Audio synth = zero external dependencies.
+// ============================================================
+
+const VxAudio = (() => {
+  let ctx = null;
+  let muted = (typeof localStorage !== 'undefined' && localStorage.getItem('vx_muted') === '1');
+
+  function ensure() {
+    if (!ctx) {
+      try { ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch (e) { return null; }
+    }
+    if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+    return ctx;
+  }
+
+  // Single tone primitive — all SFX are layers of these.
+  function tone({ freq, freqEnd, type='sine', dur=0.15, gain=0.2, when=0, attack=0.005 }) {
+    if (muted) return;
+    const c = ensure();
+    if (!c) return;
+    try {
+      const osc = c.createOscillator();
+      const g = c.createGain();
+      const t0 = c.currentTime + when;
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+      if (freqEnd) osc.frequency.exponentialRampToValueAtTime(Math.max(0.01, freqEnd), t0 + dur);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(gain, t0 + attack);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(g).connect(c.destination);
+      osc.start(t0);
+      osc.stop(t0 + dur + 0.05);
+    } catch (e) { /* AudioContext can fail on some browsers — silent */ }
+  }
+
+  return {
+    feedGulp() { tone({ freq: 320, freqEnd: 110, type: 'sine', dur: 0.16, gain: 0.18 }); },
+    statUp()   { tone({ freq: 880, freqEnd: 1320, type: 'triangle', dur: 0.08, gain: 0.12 }); },
+    levelUp()  {
+      [523, 659, 784, 1046].forEach((f, i) =>
+        tone({ freq: f, type: 'triangle', dur: 0.18, gain: 0.16, when: i * 0.07 }));
+    },
+    evolve() {
+      // bass thunder + bright sparkle layer
+      tone({ freq: 90, freqEnd: 50, type: 'sawtooth', dur: 0.7, gain: 0.22 });
+      [880, 1318, 1760].forEach((f, i) =>
+        tone({ freq: f, type: 'triangle', dur: 0.4, gain: 0.12, when: 0.12 + i * 0.06 }));
+    },
+    crit()   { tone({ freq: 1800, freqEnd: 2400, type: 'square', dur: 0.06, gain: 0.14 });
+               tone({ freq: 2400, type: 'sine', dur: 0.10, gain: 0.10, when: 0.03 }); },
+    dodge()  { tone({ freq: 700, freqEnd: 900, type: 'triangle', dur: 0.10, gain: 0.10 }); },
+    cap()    { tone({ freq: 220, type: 'square', dur: 0.06, gain: 0.10 }); },
+    win()    {
+      [659, 784, 988, 1318].forEach((f, i) =>
+        tone({ freq: f, type: 'triangle', dur: 0.22, gain: 0.18, when: i * 0.09 }));
+    },
+    lose()   {
+      [440, 370, 311, 247].forEach((f, i) =>
+        tone({ freq: f, type: 'sawtooth', dur: 0.20, gain: 0.14, when: i * 0.10 }));
+    },
+    click()  { tone({ freq: 1200, type: 'sine', dur: 0.03, gain: 0.06 }); },
+    setMuted(v) {
+      muted = !!v;
+      try { localStorage.setItem('vx_muted', muted ? '1' : '0'); } catch (_) {}
+      const btn = document.getElementById('muteBtn');
+      if (btn) btn.textContent = muted ? '🔇' : '🔊';
+    },
+    isMuted() { return muted; },
+    toggle() { this.setMuted(!muted); },
+  };
+})();
+window.VxAudio = VxAudio;
+
+// Sync the mute-toggle text once the DOM is ready (persisted preference).
+if (typeof document !== 'undefined') {
+  const syncMuteBtn = () => {
+    const btn = document.getElementById('muteBtn');
+    if (btn) btn.textContent = VxAudio.isMuted() ? '🔇' : '🔊';
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', syncMuteBtn);
+  } else {
+    setTimeout(syncMuteBtn, 0);
+  }
+}
+
+// First user interaction unlocks the AudioContext (browsers gate it
+// behind a user gesture). Listen once, resume context, remove listener.
+(() => {
+  function unlock() {
+    try {
+      const c = new (window.AudioContext || window.webkitAudioContext)();
+      if (c.state === 'suspended') c.resume();
+    } catch (e) {}
+    document.removeEventListener('click', unlock);
+    document.removeEventListener('touchstart', unlock);
+  }
+  document.addEventListener('click', unlock, { once: true, passive: true });
+  document.addEventListener('touchstart', unlock, { once: true, passive: true });
+})();
+
+// ─── Particle + screen-shake helpers ───────────────────────────────
+// Spawn N spark particles bursting from an element's center.
+function vxSparkBurst(el, count = 8, opts = {}) {
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const layer = document.getElementById('vxFxLayer') || (() => {
+    const d = document.createElement('div');
+    d.id = 'vxFxLayer';
+    d.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden;';
+    document.body.appendChild(d);
+    return d;
+  })();
+  const color = opts.color || '#ffcd6b';
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2 + Math.random() * 0.4;
+    const dist = 40 + Math.random() * 50;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist;
+    const p = document.createElement('div');
+    p.className = 'vx-spark';
+    p.style.cssText = `left:${cx}px;top:${cy}px;background:${color};
+      --dx:${dx}px;--dy:${dy}px;`;
+    layer.appendChild(p);
+    setTimeout(() => p.remove(), 700);
+  }
+}
+
+// Spawn a "+12 STR" floating number above an element.
+function vxStatPop(el, text, color = '#7dff9a') {
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  const layer = document.getElementById('vxFxLayer');
+  if (!layer) return;
+  const p = document.createElement('div');
+  p.className = 'vx-stat-pop';
+  p.style.cssText = `left:${rect.left + rect.width/2}px;top:${rect.top}px;color:${color};`;
+  p.textContent = text;
+  layer.appendChild(p);
+  setTimeout(() => p.remove(), 900);
+}
+
+// Briefly shake the page (or a target element) for emphasis.
+function vxShake(level = 'small') {
+  const target = document.body;
+  target.classList.remove('vx-shake-sm', 'vx-shake-lg');
+  void target.offsetWidth;  // restart animation
+  target.classList.add(level === 'large' ? 'vx-shake-lg' : 'vx-shake-sm');
+  setTimeout(() => target.classList.remove('vx-shake-sm', 'vx-shake-lg'), 500);
 }
 
 // ============================================================
@@ -8654,20 +8923,24 @@ function showArenaResult(resp, champ) {
       document.getElementById('arBotHp').style.width = bPct + '%';
       document.getElementById('arPlayerMeta').textContent = `HP ${hpA} / ${battle.hpStart.a}`;
       document.getElementById('arBotMeta').textContent = `HP ${hpB} / ${battle.hpStart.b}`;
-      // Effects per event kind — both visual flash AND ticker line
+      // Effects per event kind — both visual flash AND ticker line.
+      // Phase J: audio cues per event type for satisfying combat feel.
       const target = ev.who === 'a' ? 'b' : 'a';
       if (ev.kind === 'crit') {
         _flashFighter(target, 'crit');
         _spawnDamagePopup(target, '-' + ev.damage + ' CRIT!', 'crit');
         _pushTicker(`R${ev.round} · ${ev.msg}`, 'crit');
+        VxAudio.crit();
       } else if (ev.kind === 'hit' || ev.kind === 'extra') {
         _flashFighter(target, 'hit');
         if (ev.damage) _spawnDamagePopup(target, '-' + ev.damage, '');
         _pushTicker(`R${ev.round} · ${ev.msg}`, ev.kind);
+        VxAudio.click();
       } else if (ev.kind === 'dodge') {
         _flashFighter(target, 'dodge');
         _spawnDamagePopup(target, 'MISS', 'dodge');
         _pushTicker(`R${ev.round} · ${ev.msg}`, 'dodge');
+        VxAudio.dodge();
       } else if (ev.kind === 'stun') {
         _flashFighter(ev.who, 'stun');
         _pushTicker(`R${ev.round} · ${ev.msg}`, 'stun');
@@ -8704,6 +8977,16 @@ function _revealFinalResult(resp) {
   banner.style.opacity = '';
   banner.textContent = resp.result === 'win' ? 'VICTORY'
                      : resp.result === 'loss' ? 'DEFEAT' : 'DRAW';
+
+  // Phase J: triumphant fanfare on win, descending dirge on loss + shake
+  if (resp.result === 'win') {
+    VxAudio.win();
+    vxShake('small');
+    const portrait = document.getElementById('arPlayerPortrait');
+    if (portrait) vxSparkBurst(portrait, 20, { color: '#ffcd6b' });
+  } else if (resp.result === 'loss') {
+    VxAudio.lose();
+  }
 
   document.getElementById('arSummary').textContent = battle.summary;
 
