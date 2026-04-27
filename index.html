@@ -200,15 +200,18 @@
     border-radius: 16px; overflow: hidden; position: relative;
     background: linear-gradient(180deg, #1a0f1a, #0a0608);
   }
-  /* Tester report 2026-04-27: feet always missing or head cut off.
-     Root cause: aspect-ratio was 1 (square) but the orc art is 1024×1536
-     (2:3 portrait), so `object-fit: cover` cropped top+bottom. Now the
-     frame matches the art aspect AND uses `contain` as a belt-and-braces
-     fallback so even if a future asset has different dimensions, the
-     full creature stays visible (with subtle letterboxing). */
-  .cc-stage-frame img {
+  /* Tester report 2026-04-27 (Ric O., refixing pass): feet still cut off
+     on mobile after first attempt. Root cause: a LATER rule
+     `.stage-frame img { object-fit: cover }` (legacy compact-view CSS)
+     was beating my `.cc-stage-frame img { object-fit: contain }` because
+     the frame element carries BOTH classes. Bumped specificity with
+     `body.view-champion` so the contain rule wins, and dropped the
+     mobile `max-height` (which was clamping the portrait frame into a
+     wider-than-tall box and forcing the image to letterbox/crop). */
+  body.view-champion .cc-stage-frame img,
+  body.view-champion .stage-frame.cc-stage-frame img {
     width: 100%; height: 100%;
-    object-fit: contain;
+    object-fit: contain !important;
     object-position: center;
   }
   /* Action block — visually identical to .cc-card so the column reads
@@ -462,7 +465,11 @@
     .cc-grid { gap: 10px; }
     .cc-card { padding: 12px 12px; border-radius: 10px; }
     .cc-name { font-size: 22px; }
-    .cc-stage-frame { max-height: 320px; }
+    /* Removed max-height clamp on mobile (Ric O. refix): with
+       aspect-ratio 1024/1536 set, max-height was forcing the frame into
+       a wider-than-tall box and the orc still got cropped. Letting the
+       frame follow its portrait aspect naturally on tablets. */
+    /* .cc-stage-frame { max-height: 320px; } — removed */
     /* BATCH button was clipping off the right edge on mobile because
        1fr expands to fit content (and the FEED button's giant padding
        + letter-spacing was forcing it past column width). Use minmax(0,…)
@@ -545,7 +552,8 @@
     .topbar .wallet-chip span:not(.dot-live) { font-size: 9px; }
     .nav-btn { padding: 8px 10px; font-size: 11px; }
     .cc-name { font-size: 20px; }
-    .cc-stage-frame { max-height: 280px; }
+    /* same fix on small phones — aspect-ratio drives the height now */
+    /* .cc-stage-frame { max-height: 280px; } — removed */
     .ar-portrait { width: 80px; height: 80px; }
   }
 
@@ -8474,14 +8482,20 @@ function render() {
         (atCap ? `\n\n⚠️ ${TRAIT_NAMES[t]} is maxed for this stage — the potion still fills your Evolution Bar.` : '')
       );
       // Tier pills (Trello "tier potions don't give correct stat points"):
-      // give the keeper an explicit way to pour Minor/Major/Epic instead of
-      // always defaulting to minor-first. Pills only appear when there's
-      // ≥1 of that tier; pill click bubbles up via a dataset.tier attr the
-      // outer click handler reads.
+      // Ric O. refixing pass — the original complaint wasn't really UX, it
+      // was that he expected +5/+15/+40 (the early-game numbers shown in
+      // the shop tooltip) but got +1/+3/+7 because of the diminishing-
+      // returns curve. Pills now show the PREDICTED gain at the player's
+      // current invested level so there's no surprise. Math mirrors the
+      // backend statGainForInvestment + statGainForKind exactly, so
+      // numbers match what the server returns.
+      const minorGain = predictPotionGain(t, 'minor');
+      const majorGain = predictPotionGain(t, 'major');
+      const epicGain  = predictPotionGain(t, 'epic');
       const pills = (
-        (minorN > 0 ? `<span class="fb-tier-pill" data-tier="minor" data-t="${t}" title="Pour 1 Minor (+1 stat, 2–6% bar)">M ${minorN}</span>` : '') +
-        (majorN > 0 ? `<span class="fb-tier-pill major" data-tier="major" data-t="${t}" title="Pour 1 Major (+3 stat, 6–12% bar)">★ ${majorN}</span>` : '') +
-        (epicN  > 0 ? `<span class="fb-tier-pill epic"  data-tier="epic"  data-t="${t}" title="Pour 1 Epic (+8 stat, 12–20% bar)">✦ ${epicN}</span>`  : '')
+        (minorN > 0 ? `<span class="fb-tier-pill" data-tier="minor" data-t="${t}" title="Pour 1 Minor — +${minorGain} ${t}, 2–6% bar">M+${minorGain} ×${minorN}</span>` : '') +
+        (majorN > 0 ? `<span class="fb-tier-pill major" data-tier="major" data-t="${t}" title="Pour 1 Major — +${majorGain} ${t}, 6–12% bar">★+${majorGain} ×${majorN}</span>` : '') +
+        (epicN  > 0 ? `<span class="fb-tier-pill epic"  data-tier="epic"  data-t="${t}" title="Pour 1 Epic — +${epicGain} ${t}, 12–20% bar">✦+${epicGain} ×${epicN}</span>`  : '')
       );
       grid.insertAdjacentHTML('beforeend',
         `<button class="feed-bottle ${count===0?'empty':''} ${atCap?'at-cap':''}" data-t="${t}" ${disabled?'disabled':''}
@@ -9717,6 +9731,45 @@ function deriveInv() {
     console.warn('[inv] ignored potion rows (trait/kind not recognised):', _ignored);
   }
   console.log('[inv]', inv);
+}
+
+// Predict the stat gain a player will get from a single potion of the
+// given trait+tier, based on how much they've already invested in that
+// trait this stage. Mirrors the backend curve in champions_progression.ts:
+//   invested 0–9   → base +5
+//   invested 10–24 → base +3
+//   invested 25–49 → base +1.5
+//   invested 50+   → base +1
+// Tier multiplier: minor ×1, major ×3, epic ×8.
+// Bloodline weight is also applied if the active bloodline has one.
+//
+// Used by the trait-bottle tier pills so the displayed +N matches what
+// the server actually awards (Trello "tier potions don't give correct
+// number of stat points" Ric O. refixing pass — players were comparing
+// the shop's headline +5/+15/+40 against late-game +1/+3/+8 and calling
+// the math broken; it isn't, but the UI was hiding the curve).
+function predictPotionGain(trait, tier) {
+  const traitIdx = TRAITS.indexOf(trait);
+  if (traitIdx < 0) return 0;
+  const stageIdx = state.stageIdx ?? 0;
+  const floor = STAGE_FLOORS[stageIdx]?.[traitIdx] ?? 0;
+  const cap   = STAGE_CAPS[stageIdx]?.[traitIdx]   ?? 9999;
+  const current = state.stats[trait] ?? 0;
+  if (current >= cap) return 0;
+  const invested = Math.max(0, current - floor);
+  let baseGain;
+  if (invested < 10)      baseGain = 5;
+  else if (invested < 25) baseGain = 3;
+  else if (invested < 50) baseGain = 1.5;
+  else                    baseGain = 1;
+  const tierMult = tier === 'epic' ? 8 : tier === 'major' ? 3 : 1;
+  // Pull bloodline stat-growth weight if available — defaults to 1.0
+  const bl = SPECIES?.[currentSpecies]?.bloodlines?.[currentBloodline];
+  const bw = bl?.stat_weights?.[trait] ?? 1.0;
+  const raw = baseGain * tierMult * bw;
+  // Clamp to remaining headroom so we never advertise gains the cap won't allow
+  const clamped = Math.min(raw, cap - current);
+  return Math.max(1, Math.round(clamped));
 }
 
 // Find the first potion row matching (kind, trait). Preference: minor → major → epic.
