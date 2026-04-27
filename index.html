@@ -1083,6 +1083,56 @@
     color: var(--accent);
   }
   .arena-find-btn { width: 100%; max-width: 360px; margin-top: 6px; }
+
+  /* Phase M: ability picker */
+  .arena-ability-row { margin: 16px 0 18px; text-align: left; }
+  .al-locked { font-size: 9px; color: var(--muted); letter-spacing: 1px; }
+  .arena-bloodline-sig {
+    background: rgba(255,205,107,0.08); border: 1px solid rgba(255,205,107,0.4);
+    border-radius: 8px; padding: 10px 12px;
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .arena-bloodline-sig .abs-icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: rgba(255,205,107,0.15); display: flex; align-items: center;
+    justify-content: center; color: var(--accent); font-size: 14px;
+    flex-shrink: 0; border: 1px solid rgba(255,205,107,0.4);
+  }
+  .arena-bloodline-sig .abs-text { flex: 1; min-width: 0; }
+  .arena-bloodline-sig .abs-name { color: var(--accent); font-weight: 700; font-size: 13px; }
+  .arena-bloodline-sig .abs-desc { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+
+  .arena-ability-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 6px;
+  }
+  .ability-btn {
+    background: rgba(20,12,20,0.85); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px; cursor: pointer; transition: all 0.15s;
+    text-align: left; display: grid; grid-template-columns: 28px 1fr; gap: 8px;
+    align-items: center; color: var(--text); min-height: 56px;
+  }
+  .ability-btn:hover { border-color: var(--accent-dim); transform: translateY(-1px); }
+  .ability-btn.active {
+    border-color: var(--accent); background: rgba(255,205,107,0.10);
+    box-shadow: 0 0 14px rgba(255,205,107,0.2);
+  }
+  .ability-btn .ab-icon { font-size: 22px; text-align: center; }
+  .ability-btn .ab-info { min-width: 0; }
+  .ability-btn .ab-name { font-weight: 700; font-size: 12px; letter-spacing: 0.3px; }
+  .ability-btn .ab-blurb { font-size: 10px; color: var(--muted); margin-top: 2px; line-height: 1.35;
+    overflow: hidden; }
+  .ability-btn .ab-vibe {
+    display: inline-block; font-size: 8px; padding: 1px 6px; border-radius: 3px;
+    margin-top: 3px; letter-spacing: 1px; text-transform: uppercase;
+  }
+  .ab-vibe.offense  { background: rgba(255,107,107,0.15); color: #ff9a7d; }
+  .ab-vibe.defense  { background: rgba(93,142,255,0.15);  color: #80cdff; }
+  .ab-vibe.sustain  { background: rgba(125,255,154,0.15); color: #7dff9a; }
+  .ab-vibe.evasion  { background: rgba(177,105,255,0.15); color: #b169ff; }
+  .ab-vibe.scaling  { background: rgba(255,205,107,0.15); color: var(--accent); }
+  @media (max-width: 768px) {
+    .arena-ability-grid { grid-template-columns: 1fr; }
+  }
   .arena-bracket-hint {
     margin-top: 14px; font-size: 12px; color: var(--muted);
   }
@@ -4162,7 +4212,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260427-quests',
+  console.log('%c🛡️ VulcanX Champions · v20260427-active-battle',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -5065,6 +5115,15 @@
           <button class="stance-btn active" data-stance="balanced" title="No modifiers">⚖️ Balanced</button>
           <button class="stance-btn" data-stance="defensive" title="-15% damage, +15% defense">🛡️ Defensive</button>
         </div>
+      </div>
+
+      <!-- Phase M: ability picker. Bloodline signature is locked + auto;
+           player picks 1 universal ability from a pool of 8. -->
+      <div class="arena-ability-row" id="arenaAbilityRow">
+        <div class="arena-stance-label">Bloodline Signature <span class="al-locked">(locked)</span></div>
+        <div class="arena-bloodline-sig" id="arenaBloodlineSig"></div>
+        <div class="arena-stance-label" style="margin-top:14px;">Pick an Ability</div>
+        <div class="arena-ability-grid" id="arenaAbilityGrid"></div>
       </div>
       <button class="btn-big arena-find-btn" id="arenaFindBtn">⚔️ Find Opponent + Fight</button>
       <div class="arena-bracket-hint" id="arenaBracketHint"></div>
@@ -9269,6 +9328,50 @@ document.getElementById('traitPotionModal')?.addEventListener('click', (e) => {
 bindIf('boostsBtn', 'click', openTraitPotionModal);
 
 // ============================================================
+// PHASE M — ABILITY DEFS (client mirror of champions_abilities.ts)
+// ============================================================
+const VxAbilities = {
+  power_strike: { name:'Power Strike', emoji:'💥', vibe:'offense',
+    blurb:'Your first two hits this match deal +30% damage.' },
+  iron_skin:    { name:'Iron Skin',    emoji:'🛡️', vibe:'defense',
+    blurb:'Take 25% less damage in rounds 1 and 2.' },
+  rally:        { name:'Rally',        emoji:'🚩', vibe:'scaling',
+    blurb:'+10% damage per crit landed (caps +30%).' },
+  drain_touch:  { name:'Drain Touch',  emoji:'🩸', vibe:'sustain',
+    blurb:'Heal 12% of damage dealt for 3 rounds.' },
+  quickstep:    { name:'Quickstep',    emoji:'💨', vibe:'evasion',
+    blurb:'+20% dodge for the first 2 rounds.' },
+  hunters_mark: { name:"Hunter's Mark", emoji:'🎯', vibe:'offense',
+    blurb:'Your first crit lands +50% damage.' },
+  stone_wall:   { name:'Stone Wall',   emoji:'🪨', vibe:'defense',
+    blurb:'First two hits taken deal 50% damage.' },
+  pact_of_blood:{ name:'Pact of Blood', emoji:'🩹', vibe:'scaling',
+    blurb:'Pay 15% HP at start; gain +25% damage all match.' },
+};
+const VX_ABILITY_ORDER = [
+  'power_strike','iron_skin','rally','drain_touch',
+  'quickstep','hunters_mark','stone_wall','pact_of_blood',
+];
+
+// Per-champion ability preference, stored alongside arena state
+function getAbilityForChamp(championId) {
+  if (!championId) return 'power_strike';
+  try {
+    const all = JSON.parse(localStorage.getItem('vx_arena_v1') || '{}');
+    return (all[championId] && all[championId].ability) || 'power_strike';
+  } catch (_) { return 'power_strike'; }
+}
+function setAbilityForChamp(championId, abilityId) {
+  if (!championId) return;
+  try {
+    const all = JSON.parse(localStorage.getItem('vx_arena_v1') || '{}');
+    if (!all[championId]) all[championId] = { elo: 100, history: [] };
+    all[championId].ability = abilityId;
+    localStorage.setItem('vx_arena_v1', JSON.stringify(all));
+  } catch (_) {}
+}
+
+// ============================================================
 // PHASE 4 — ARENA (vs bots)
 // ============================================================
 // MVP: per-champion ELO + match history persisted in localStorage
@@ -9361,6 +9464,49 @@ function renderArena() {
     btn.classList.toggle('active', btn.dataset.stance === _arenaStance);
   });
 
+  // Phase M: ability picker. Bloodline signature is locked + auto;
+  // player picks 1 from the universal pool.
+  const blPassive = SPECIES?.[champ.species_id]?.bloodlines?.[champ.bloodline_id]?.passive;
+  const sigBox = document.getElementById('arenaBloodlineSig');
+  if (sigBox) {
+    if (blPassive) {
+      sigBox.innerHTML = `
+        <div class="abs-icon">✦</div>
+        <div class="abs-text">
+          <div class="abs-name">${blPassive.name}</div>
+          <div class="abs-desc">${blPassive.description}</div>
+        </div>`;
+    } else {
+      sigBox.innerHTML = '<div class="abs-text"><div class="abs-desc" style="color:var(--muted);">No bloodline data loaded.</div></div>';
+    }
+  }
+  const grid = document.getElementById('arenaAbilityGrid');
+  if (grid) {
+    const currentAbility = getAbilityForChamp(champ.id);
+    grid.innerHTML = '';
+    for (const id of VX_ABILITY_ORDER) {
+      const a = VxAbilities[id];
+      grid.insertAdjacentHTML('beforeend', `
+        <button class="ability-btn ${currentAbility === id ? 'active' : ''}" data-ability="${id}"
+                title="${a.blurb}">
+          <div class="ab-icon">${a.emoji}</div>
+          <div class="ab-info">
+            <div class="ab-name">${a.name}</div>
+            <div class="ab-blurb">${a.blurb}</div>
+            <span class="ab-vibe ${a.vibe}">${a.vibe}</span>
+          </div>
+        </button>`);
+    }
+    grid.querySelectorAll('.ability-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setAbilityForChamp(champ.id, btn.dataset.ability);
+        grid.querySelectorAll('.ability-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        VxAudio.click();
+      });
+    });
+  }
+
   // Render history
   const histEl = document.getElementById('arenaHistory');
   if (!arena.history.length) {
@@ -9394,11 +9540,11 @@ document.querySelectorAll('.stance-btn').forEach(btn => {
   });
 });
 
-async function apiRequestMatch({ champion_id, stance, current_elo, equipped }) {
+async function apiRequestMatch({ champion_id, stance, current_elo, equipped, ability_id }) {
   const res = await apiFetch(`${FN_BASE}/match_request`, {
     method: 'POST',
     headers: AUTH_HEADERS,
-    body: JSON.stringify({ wallet: getWallet(), champion_id, stance, current_elo, equipped }),
+    body: JSON.stringify({ wallet: getWallet(), champion_id, stance, current_elo, equipped, ability_id }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -9433,7 +9579,8 @@ bindIf('arenaFindBtn', 'click', async () => {
 
   const arena = getArenaForChamp(champ.id);
   const equipped = getEquippedWeaponForArena(champ.id);
-  console.log('[arena] requesting match', { champion_id: champ.id, stance: _arenaStance, current_elo: arena.elo, equipped });
+  const ability_id = getAbilityForChamp(champ.id);
+  console.log('[arena] requesting match', { champion_id: champ.id, stance: _arenaStance, current_elo: arena.elo, equipped, ability_id });
 
   const resetButton = () => {
     findBtn.disabled = false;
@@ -9448,6 +9595,7 @@ bindIf('arenaFindBtn', 'click', async () => {
       stance: _arenaStance,
       current_elo: arena.elo,
       equipped,
+      ability_id,
     });
     console.log('[arena] response', resp);
   } catch (e) {
@@ -9576,10 +9724,22 @@ function showArenaResult(resp, champ) {
     return `<div style="font-size:11px; color:var(--muted); margin-top:2px;">⚔️ ${rarTxt}${wname}</div>`;
   };
   const playerEquipped = getEquippedWeaponForArena(champ.id);
+  // Phase M: also show the chosen ability slot for each fighter so the
+  // loadout contrast is fully visible (weapon + ability).
+  const fmtAbility = (id) => {
+    if (!id || !VxAbilities[id]) return '';
+    const a = VxAbilities[id];
+    return `<div style="font-size:11px; color:var(--muted); margin-top:2px;">${a.emoji} <span style="color:var(--accent);">${a.name}</span></div>`;
+  };
+  const playerAbility = getAbilityForChamp(champ.id);
   document.getElementById('arPlayerName').innerHTML =
-    champ.name + fmtWeapon(playerEquipped?.weapon_id, playerEquipped?.weapon_rarity);
+    champ.name
+    + fmtWeapon(playerEquipped?.weapon_id, playerEquipped?.weapon_rarity)
+    + fmtAbility(playerAbility);
   document.getElementById('arBotName').innerHTML =
-    resp.opponent.display_name + fmtWeapon(resp.opponent.weapon_id, resp.opponent.weapon_rarity);
+    resp.opponent.display_name
+    + fmtWeapon(resp.opponent.weapon_id, resp.opponent.weapon_rarity)
+    + fmtAbility(resp.opponent.ability_id);
 
   // Phase 5.7: portraits + context labels per fighter
   const playerStageIdx = champ.stageIdx ?? 0;
