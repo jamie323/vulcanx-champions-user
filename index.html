@@ -54,6 +54,10 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; min-height: 100vh;
     color: var(--text); overflow-x: hidden;
+    /* Prevent iOS rubber-band + scroll-chaining inside inner scroll
+       containers (modal + arena history). Vertical page scroll is the
+       only scroll users should experience on the main views. */
+    overscroll-behavior: contain;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
                  system-ui, sans-serif;
     background:
@@ -318,7 +322,10 @@
     color: #d8cdb8; font-family: Georgia, serif;
     max-height: 90px; overflow-y: auto; padding-right: 4px;
   }
-  @media (max-width: 1280px) {
+  /* Sync this with the .cc-grid stack breakpoint (1400px). Whenever the
+     layout stacks to single column, the story should grow naturally so
+     the page is the only scroll container. */
+  @media (max-width: 1400px) {
     .cc-story-text { max-height: none; overflow-y: visible; padding-right: 0; }
   }
 
@@ -365,21 +372,25 @@
     .topbar .shop-btn { padding: 6px 10px; font-size: 11px; letter-spacing: 0.5px; }
     .topbar .wallet-chip { padding: 4px 8px; font-size: 10px; }
 
-    /* Main nav: horizontal scroll instead of trying to fit 6 items */
+    /* Main nav: icons-only on mobile so all 6 fit without horizontal
+       scroll. Tester report 2026-04-27 (Ric O.): horizontal-scrolling
+       nav was capturing vertical swipes and creating a "stuck scroll"
+       feeling — one of the "3 scroll areas" the user could get trapped
+       in. Now the 6 emoji-only buttons fit ≥320px screens; vertical
+       page scroll is the only scroll on the page. */
     .main-nav {
-      padding: 0 12px;
-      height: 56px;
-      overflow-x: auto;
-      overflow-y: hidden;
-      gap: 8px;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
+      padding: 6px 8px;
+      height: auto; min-height: 52px;
+      gap: 4px;
+      justify-content: space-between;
     }
-    .main-nav::-webkit-scrollbar { display: none; }
     .nav-btn {
-      padding: 9px 14px; font-size: 12px; letter-spacing: 1px;
-      flex-shrink: 0; white-space: nowrap;
+      padding: 8px 0; font-size: 18px; letter-spacing: 0;
+      flex: 1; min-width: 0; white-space: nowrap;
+      gap: 0;
     }
+    .nav-btn .nav-txt { display: none; }
+    .nav-btn .nav-ico { font-size: 20px; }
     .nav-admin { display: none !important; }
 
     /* Compact champion view at mobile width */
@@ -1230,17 +1241,16 @@
     cursor: pointer; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
   .equip-unequip:hover { background: rgba(255,107,107,0.25); }
 
+  /* Legacy .about-block-story styling — kept as visual styling only,
+     dropped the inner max-height + overflow-y: auto that was creating
+     a hidden scroll container on cached/older HTML (Ric O. report
+     2026-04-27: "3 areas where you can scroll, gets stuck"). The
+     compact view uses .cc-story-text instead which has its own
+     responsive overflow rules. */
   .about-block-story .about-story {
     font-size: 15px; line-height: 1.8;
     color: #d8cdb8;
     font-family: Georgia, serif;
-    max-height: 280px; overflow-y: auto;
-    padding-right: 6px;
-    scrollbar-width: thin;
-  }
-  .about-block-story .about-story::-webkit-scrollbar { width: 6px; }
-  .about-block-story .about-story::-webkit-scrollbar-thumb {
-    background: rgba(255,205,107,0.3); border-radius: 3px;
   }
 
   /* Story narration play button */
@@ -4029,7 +4039,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260427-tester-pass',
+  console.log('%c🛡️ VulcanX Champions · v20260427-one-scroll',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -4319,12 +4329,12 @@
 
 <!-- main nav bar -->
 <nav class="main-nav" id="mainNav">
-  <button class="nav-btn" data-view="landing">🏠 Home</button>
-  <button class="nav-btn" data-view="stable">🏛 My Stable</button>
-  <button class="nav-btn" data-view="adopt">✨ Adopt New</button>
-  <button class="nav-btn" data-view="howto">📖 How it Works</button>
-  <button class="nav-btn" data-view="explore">🔎 Explore</button>
-  <button class="nav-btn" id="arenaNavBtn">⚔️ Arena</button>
+  <button class="nav-btn" data-view="landing"><span class="nav-ico">🏠</span><span class="nav-txt">Home</span></button>
+  <button class="nav-btn" data-view="stable"><span class="nav-ico">🏛</span><span class="nav-txt">My Stable</span></button>
+  <button class="nav-btn" data-view="adopt"><span class="nav-ico">✨</span><span class="nav-txt">Adopt New</span></button>
+  <button class="nav-btn" data-view="howto"><span class="nav-ico">📖</span><span class="nav-txt">How it Works</span></button>
+  <button class="nav-btn" data-view="explore"><span class="nav-ico">🔎</span><span class="nav-txt">Explore</span></button>
+  <button class="nav-btn" id="arenaNavBtn"><span class="nav-ico">⚔️</span><span class="nav-txt">Arena</span></button>
   <label class="nav-admin">
     <input type="checkbox" id="adminToggle"/> 🛠 Admin Mode
   </label>
