@@ -2216,7 +2216,7 @@
     font-size: 17px; line-height: 1.6;
   }
 
-  /* ---- LANDING: hide in-app clutter from topbar ---- */
+  /* ---- LANDING: hide in-app clutter from topbar + nav ---- */
   body.view-landing .champ-title,
   body.view-landing .species-picker,
   body.view-landing .currency { display: none !important; }
@@ -2226,6 +2226,13 @@
     font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
     margin-right: 20px; font-weight: 700;
   }
+  /* AngelHorn 2026-04-27: "the top navigation bar kinda steals the
+     show too instead of users to focus on adopting a baby champ."
+     The landing page has its own hero CTAs (Adopt / My Stable / How
+     it Works) — the in-app nav competes for attention. Hide it on
+     landing only; reappears once the user is in the app proper. */
+  body.view-landing .main-nav { display: none !important; }
+  body.view-landing .view-landing { padding-top: 80px !important; }
 
   /* ═══════════════════════════════════════════════════
      RIGHT PANEL — aside.champion-side
@@ -4069,7 +4076,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260427-nav-batch-fit',
+  console.log('%c🛡️ VulcanX Champions · v20260427-landing-focus',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
