@@ -1084,6 +1084,50 @@
   }
   .arena-find-btn { width: 100%; max-width: 360px; margin-top: 6px; }
 
+  /* Stance description card — swaps content as player picks a stance */
+  .stance-detail {
+    margin-top: 12px; padding: 14px 16px;
+    background: rgba(0,0,0,0.28); border: 1px solid var(--border);
+    border-radius: 10px; text-align: left;
+    display: flex; gap: 14px; align-items: flex-start;
+    animation: stanceFade 0.25s ease;
+  }
+  @keyframes stanceFade {
+    from { opacity: 0; transform: translateY(-2px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .stance-detail .sd-icon {
+    font-size: 26px; line-height: 1; flex-shrink: 0; margin-top: 2px;
+  }
+  .stance-detail .sd-body { flex: 1; min-width: 0; }
+  .stance-detail .sd-title {
+    font-family: 'Cinzel', serif; font-size: 14px;
+    color: var(--accent); letter-spacing: 1.5px;
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .stance-detail .sd-blurb {
+    font-size: 13px; color: var(--text); line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .stance-detail .sd-mods {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .stance-detail .sd-chip {
+    padding: 4px 10px; border-radius: 999px; font-size: 11px;
+    font-weight: 700; letter-spacing: 0.5px;
+    background: rgba(255,205,107,0.1);
+    border: 1px solid rgba(255,205,107,0.35);
+    color: var(--accent);
+  }
+  .stance-detail .sd-chip.up   { background: rgba(106,233,138,0.12); border-color: rgba(106,233,138,0.4); color: #6ae98a; }
+  .stance-detail .sd-chip.down { background: rgba(255,107,107,0.12); border-color: rgba(255,107,107,0.4); color: #ff8888; }
+  .stance-detail .sd-chip.flat { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.2); color: var(--muted); }
+  @media (max-width: 768px) {
+    .stance-detail { padding: 12px 14px; gap: 10px; }
+    .stance-detail .sd-icon { font-size: 22px; }
+    .stance-detail .sd-blurb { font-size: 12px; }
+  }
+
   /* Phase M: ability picker */
   .arena-ability-row { margin: 16px 0 18px; text-align: left; }
   .al-locked { font-size: 9px; color: var(--muted); letter-spacing: 1px; }
@@ -5417,6 +5461,7 @@
           <button class="stance-btn active" data-stance="balanced" title="No modifiers">⚖️ Balanced</button>
           <button class="stance-btn" data-stance="defensive" title="-15% damage, +15% defense">🛡️ Defensive</button>
         </div>
+        <div class="stance-detail" id="stanceDetail"></div>
       </div>
 
       <!-- Phase M: ability picker. Bloodline signature is locked + auto;
@@ -9765,6 +9810,7 @@ function renderArena() {
   document.querySelectorAll('.stance-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.stance === _arenaStance);
   });
+  if (typeof renderStanceDetail === 'function') renderStanceDetail();
 
   // Phase M: ability picker. Bloodline signature is locked + auto;
   // player picks 1 from the universal pool.
@@ -9833,14 +9879,66 @@ function formatRelativeTime(ts) {
   return Math.floor(s / 86400) + 'd ago';
 }
 
+// Stance descriptions — drives the explanation card under the buttons.
+// Numbers must match the resolver in champions_battle.ts (stance mods).
+const STANCE_INFO = {
+  aggressive: {
+    icon: '⚔️',
+    name: 'Aggressive',
+    blurb: 'Charge in swinging. Your hits land harder, but you eat more damage when the bot connects. Best when you out-stat your opponent or have a glass-cannon build.',
+    mods: [
+      { label: '+15% damage dealt', kind: 'up' },
+      { label: '−15% damage resist', kind: 'down' },
+    ],
+  },
+  balanced: {
+    icon: '⚖️',
+    name: 'Balanced',
+    blurb: "No tradeoffs — your champion fights at their natural numbers. The safe pick when you're not sure how the matchup will play out, or when your stats are already in good shape.",
+    mods: [
+      { label: 'No modifiers', kind: 'flat' },
+    ],
+  },
+  defensive: {
+    icon: '🛡️',
+    name: 'Defensive',
+    blurb: 'Soak the hits and grind it out. You deal less damage but take less back. Best when you expect to be out-statted, or paired with sustain abilities like Drain Touch / Stone Wall.',
+    mods: [
+      { label: '−15% damage dealt', kind: 'down' },
+      { label: '+15% damage resist', kind: 'up' },
+    ],
+  },
+};
+
+function renderStanceDetail() {
+  const el = document.getElementById('stanceDetail');
+  if (!el) return;
+  const info = STANCE_INFO[_arenaStance] || STANCE_INFO.balanced;
+  const chips = info.mods.map(m =>
+    `<span class="sd-chip ${m.kind}">${m.label}</span>`
+  ).join('');
+  el.innerHTML = `
+    <div class="sd-icon">${info.icon}</div>
+    <div class="sd-body">
+      <div class="sd-title">${info.name} Stance</div>
+      <div class="sd-blurb">${info.blurb}</div>
+      <div class="sd-mods">${chips}</div>
+    </div>
+  `;
+}
+
 // Stance picker click handlers
 document.querySelectorAll('.stance-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     _arenaStance = btn.dataset.stance;
     document.querySelectorAll('.stance-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    renderStanceDetail();
   });
 });
+
+// Initial render so the panel isn't empty on first arena visit
+renderStanceDetail();
 
 async function apiRequestMatch({ champion_id, stance, current_elo, equipped, ability_id }) {
   const res = await apiFetch(`${FN_BASE}/match_request`, {
