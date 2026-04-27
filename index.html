@@ -1663,6 +1663,48 @@
     color: var(--accent); margin-top: 2px;
   }
   .feed-bottle.empty .fb-count { color: var(--muted); }
+
+  /* Tier pills inside the trait bottle — Minor / Major / Epic. Click
+     bypasses the default minor-first auto-pour. */
+  .feed-bottle .fb-tiers {
+    display: flex; gap: 3px; justify-content: center;
+    margin-top: 6px; flex-wrap: wrap;
+  }
+  .fb-tier-pill {
+    display: inline-block;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 999px;
+    padding: 2px 7px;
+    font-size: 9px; font-weight: 800; letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .fb-tier-pill:hover {
+    background: rgba(255,205,107,0.18);
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .fb-tier-pill.major {
+    background: rgba(255,205,107,0.10);
+    border-color: rgba(255,205,107,0.4);
+    color: #ffd28a;
+  }
+  .fb-tier-pill.major:hover {
+    background: rgba(255,205,107,0.25);
+  }
+  .fb-tier-pill.epic {
+    background: rgba(192,132,252,0.12);
+    border-color: rgba(192,132,252,0.4);
+    color: #c084fc;
+  }
+  .fb-tier-pill.epic:hover {
+    background: rgba(192,132,252,0.28);
+  }
+  .feed-bottle:disabled .fb-tier-pill,
+  .feed-bottle.empty .fb-tier-pill { pointer-events: none; opacity: 0.4; }
   .feed-hint {
     font-size: 12px; color: var(--muted);
     line-height: 1.6; margin-top: 14px;
@@ -6392,7 +6434,7 @@ function showCinematic(title, subtitle) {
 // tester from feeling the UI is dead.
 let _feedInFlight = false;
 
-async function usePotion(trait, sourceEl) {
+async function usePotion(trait, sourceEl, tier) {
   if (!state.championId) return;
   if (_feedInFlight) {
     // Gentle wiggle on the source so the user knows the click registered.
@@ -6403,8 +6445,17 @@ async function usePotion(trait, sourceEl) {
     }
     return;
   }
-  const potion = findPotion({ trait });
-  if (!potion) return; // deriveInv guards the button count, this is extra safety
+  // Optional `tier` (Trello "tier potions don't give correct stat points"):
+  // when the player clicks a tier pill (Minor/Major/Epic), pour ONLY that
+  // tier instead of the default minor-first auto-pick.
+  const potion = findPotion({ trait, tier });
+  if (!potion) {
+    if (tier) {
+      vxAlert(`No ${tier} ${trait} potion in stock.`,
+        {title: 'Out of stock', icon: '🧪'});
+    }
+    return; // deriveInv guards the button count for the auto path
+  }
   // NOTE: capped traits are NOT blocked here anymore. The backend will
   // still consume the potion and award a random bar-fill (2-20% by tier)
   // so the keeper isn't dead-ended when every trait caps before the gate.
@@ -7787,6 +7838,22 @@ function persistInventory() {
   try { localStorage.setItem(INV_STORAGE_KEY, JSON.stringify(myInventory)); } catch (_) {}
 }
 
+// Each species has a canonical "lore weapon" — the one the bloodline
+// stories reference. Trello "weapon supposed to be a hammer" was filed
+// because the orc Ironfang lore describes a hammer ("a name heavy as a
+// stone hammer", "the smith laid a small hammer in his palm") but the
+// starter loadout default-equipped a heavy axe.
+//
+// This map is also used by autoEquipDefaultsForChampion() to silently
+// equip the lore weapon when the player hasn't equipped anything yet,
+// so the equipment slot matches the story right out of the gate.
+const SPECIES_DEFAULT_WEAPON = {
+  orc: 'war_maul',           // Maul = heavy hammer. Matches Ironfang lore.
+  dwarf: 'forge_hammer',
+  // For species not listed, autoEquip falls back to the first species
+  // weapon in the catalog (current behaviour pre-2026-04-27).
+};
+
 // Grant a starter set if inventory is empty. Picks weapons matching the
 // active champion's species so users can immediately equip + see PowerScore
 // move. Idempotent: if there's already inventory, no-op.
@@ -7814,6 +7881,41 @@ function grantStarterInventoryIfEmpty() {
     ...s,
   }));
   persistInventory();
+}
+
+// Auto-equip the species' canonical lore weapon onto the given champion
+// if they don't have a weapon equipped yet. Called from the champion
+// view on first render so the equipment slot matches the lore (orc
+// Ironfang gets the war_maul / hammer instead of a default empty slot).
+// Idempotent + silent: no-op if a weapon is already equipped.
+function autoEquipDefaultsForChampion(champ) {
+  if (!champ || !champ.id || !window.Equipment) return;
+  // Already has a weapon? leave alone.
+  const hasWeapon = myInventory.some(i =>
+    i.equippedOn === champ.id &&
+    Equipment.CATALOG[i.catalogId]?.slot === 'weapon'
+  );
+  if (hasWeapon) return;
+  const sp = champ.species_id;
+  const preferredId = SPECIES_DEFAULT_WEAPON[sp];
+  // Search inventory: preferred lore weapon first, then any weapon for
+  // the species. Pick the highest-rarity match so we equip the rare
+  // hammer over a common axe when both are present.
+  const RARITY_ORDER = ['legendary', 'epic', 'rare', 'common'];
+  const weaponsForSp = myInventory.filter(inst => {
+    const cat = Equipment.CATALOG[inst.catalogId];
+    return cat?.slot === 'weapon' && cat?.species === sp && inst.equippedOn == null;
+  });
+  if (weaponsForSp.length === 0) return;
+  let pick = weaponsForSp.find(inst => inst.catalogId === preferredId);
+  if (!pick) {
+    pick = weaponsForSp.sort((a, b) =>
+      RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity)
+    )[0];
+  }
+  pick.equippedOn = champ.id;
+  persistInventory();
+  console.log('[equip] auto-equipped lore weapon', pick.catalogId, '→', champ.id);
 }
 
 // Items currently equipped on the active champion.
@@ -8371,16 +8473,37 @@ function render() {
         `Clicking pours the highest-priority tier you own (Minor first), so stronger tiers save for later stages.` +
         (atCap ? `\n\n⚠️ ${TRAIT_NAMES[t]} is maxed for this stage — the potion still fills your Evolution Bar.` : '')
       );
+      // Tier pills (Trello "tier potions don't give correct stat points"):
+      // give the keeper an explicit way to pour Minor/Major/Epic instead of
+      // always defaulting to minor-first. Pills only appear when there's
+      // ≥1 of that tier; pill click bubbles up via a dataset.tier attr the
+      // outer click handler reads.
+      const pills = (
+        (minorN > 0 ? `<span class="fb-tier-pill" data-tier="minor" data-t="${t}" title="Pour 1 Minor (+1 stat, 2–6% bar)">M ${minorN}</span>` : '') +
+        (majorN > 0 ? `<span class="fb-tier-pill major" data-tier="major" data-t="${t}" title="Pour 1 Major (+3 stat, 6–12% bar)">★ ${majorN}</span>` : '') +
+        (epicN  > 0 ? `<span class="fb-tier-pill epic"  data-tier="epic"  data-t="${t}" title="Pour 1 Epic (+8 stat, 12–20% bar)">✦ ${epicN}</span>`  : '')
+      );
       grid.insertAdjacentHTML('beforeend',
         `<button class="feed-bottle ${count===0?'empty':''} ${atCap?'at-cap':''}" data-t="${t}" ${disabled?'disabled':''}
           title="${tooltipTitle.replace(/"/g,'&quot;').replace(/\n/g,'&#10;')}">
           <div class="fb-emoji">${emoji}</div>
           <div class="fb-count">×${count}</div>
           <div class="fb-name">${TRAIT_NAMES[t]}</div>
+          ${pills ? `<div class="fb-tiers">${pills}</div>` : ''}
         </button>`);
     });
     grid.querySelectorAll('.feed-bottle').forEach(b =>
-      b.addEventListener('click', () => usePotion(b.dataset.t, b)));
+      b.addEventListener('click', (e) => {
+        // Tier pill click: pour that specific tier and stop the click from
+        // bubbling to the parent bottle (which would re-pour minor-first).
+        const pill = e.target.closest('.fb-tier-pill');
+        if (pill) {
+          e.stopPropagation();
+          usePotion(pill.dataset.t, pill, pill.dataset.tier);
+          return;
+        }
+        usePotion(b.dataset.t, b);
+      }));
   }
 
   // ── SPECIAL POTIONS counts
@@ -9562,6 +9685,11 @@ async function openChampion(championId) {
   // Fetch potions for this champion's species — powers the feed UI.
   state.potions = await apiListPotions(champ.species_id);
   deriveInv();
+  // Trello "weapon supposed to be a hammer": if this champion has no
+  // weapon equipped, silently equip the species' lore weapon (war_maul
+  // for orc, forge_hammer for dwarf, etc.). No-op if anything's already
+  // equipped.
+  autoEquipDefaultsForChampion(champ);
   navTo('champion');
 }
 
@@ -9572,12 +9700,19 @@ function deriveInv() {
   (state.potions || []).forEach(p => {
     if (p.kind === 'evolution') inv.evo += p.quantity;
     else if (p.kind === 'allocation') inv.alloc += p.quantity;
-    else if (p.trait && inv[p.trait] !== undefined) inv[p.trait] += p.quantity;
-    else _ignored.push({ id: p.id, kind: p.kind, trait: p.trait, quantity: p.quantity, species_id: p.species_id });
+    else {
+      // Trello "doesn't detect agility potion": backend can return trait
+      // strings with different casing (e.g. 'agi', 'Agi', 'agility').
+      // Normalise to uppercase 3-letter trait key before matching so the
+      // count actually lands.
+      const tNorm = String(p.trait || '').toUpperCase().slice(0, 3);
+      if (tNorm && inv[tNorm] !== undefined) inv[tNorm] += p.quantity;
+      else _ignored.push({ id: p.id, kind: p.kind, trait: p.trait, quantity: p.quantity, species_id: p.species_id });
+    }
   });
   state.inv = inv;
   if (_ignored.length) {
-    // Surface stray rows (wrong-case trait, unknown kind, etc.) so we can
+    // Surface stray rows (unknown kind, malformed trait) so we can
     // diagnose "doesn't detect X potion" reports — Trello 2026-04-26.
     console.warn('[inv] ignored potion rows (trait/kind not recognised):', _ignored);
   }
@@ -9585,18 +9720,27 @@ function deriveInv() {
 }
 
 // Find the first potion row matching (kind, trait). Preference: minor → major → epic.
-function findPotion({ trait, kind } = {}) {
+// Trait match is case-insensitive (see deriveInv comment).
+//
+// `tier` (optional): when set to 'minor' | 'major' | 'epic', only return that
+// specific tier — used by the explicit tier picker on the trait grid (Trello
+// "tier potions don't give the correct number of stat points", which was
+// really about not being able to choose which tier to pour).
+function findPotion({ trait, kind, tier } = {}) {
   const rows = (state.potions || []).filter(p => p.quantity > 0);
   if (kind === 'evolution') return rows.find(p => p.kind === 'evolution');
   if (kind === 'allocation') return rows.find(p => p.kind === 'allocation');
-  // trait potion — prefer minor so player sees gradual progress
-  const byKindOrder = ['minor', 'major', 'epic'];
-  for (const k of byKindOrder) {
-    const hit = rows.find(p => p.kind === k && p.trait === trait);
+  const traitU = String(trait || '').toUpperCase().slice(0, 3);
+  const order = tier ? [tier] : ['minor', 'major', 'epic'];
+  for (const k of order) {
+    const hit = rows.find(p =>
+      p.kind === k && String(p.trait || '').toUpperCase().slice(0, 3) === traitU
+    );
     if (hit) return hit;
   }
   return null;
 }
+
 
 async function reloadPotions() {
   if (!currentSpecies) return;
