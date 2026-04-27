@@ -4108,8 +4108,68 @@
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 200, 90, 0.15);
     border-radius: 14px;
-    padding: 30px 34px;
+    padding: 44px 48px;
     animation: howtoPanelIn 0.25s ease-out;
+  }
+  @media (max-width: 768px) {
+    .howto-panel { padding: 28px 22px; }
+  }
+  /* Hero icon banner at the top of each panel */
+  .howto-panel .panel-icon {
+    font-size: 56px; text-align: center; margin: 0 0 12px;
+    line-height: 1;
+  }
+  /* Feature card grid for breaking down sub-systems */
+  .howto-feature-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px; margin: 22px 0 8px;
+  }
+  .howto-feature-card {
+    background: rgba(255,205,107,0.05); border: 1px solid rgba(255,205,107,0.18);
+    border-radius: 12px; padding: 20px 18px;
+  }
+  .howto-feature-card .ic { font-size: 32px; line-height: 1; margin-bottom: 10px; }
+  .howto-feature-card h4 {
+    font-family: 'Cinzel', serif; font-size: 17px; margin: 0 0 8px;
+    color: var(--accent); letter-spacing: 0.5px;
+  }
+  .howto-feature-card p { font-size: 14px; line-height: 1.55; color: var(--text); margin: 0; }
+  /* Numbered step list with bigger numbers + padding */
+  .howto-numbered { counter-reset: step; padding: 0; list-style: none; margin: 18px 0; }
+  .howto-numbered li {
+    counter-increment: step; position: relative;
+    padding: 16px 18px 16px 64px; margin-bottom: 10px;
+    background: rgba(0,0,0,0.25); border-radius: 10px;
+    font-size: 15px; line-height: 1.6;
+  }
+  .howto-numbered li::before {
+    content: counter(step); position: absolute; left: 18px; top: 14px;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--accent); color: #1a0f05;
+    font-weight: 800; font-size: 16px; font-family: 'Cinzel', serif;
+    display: flex; align-items: center; justify-content: center;
+  }
+  /* Tip / info pill for short asides */
+  .howto-tip {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 14px 16px; margin: 14px 0;
+    background: rgba(125,255,154,0.06); border: 1px solid rgba(125,255,154,0.25);
+    border-left: 4px solid #7dff9a;
+    border-radius: 8px; font-size: 14px; line-height: 1.6;
+  }
+  .howto-tip.warn { background: rgba(255,205,107,0.06); border-color: rgba(255,205,107,0.3);
+    border-left-color: var(--accent); }
+  .howto-tip .ti { font-size: 22px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+  /* Two-column comparison row (e.g., before/after, primary/secondary) */
+  .howto-twocol { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+  @media (max-width: 600px) { .howto-twocol { grid-template-columns: 1fr; } }
+  .howto-twocol .col {
+    padding: 16px; background: rgba(0,0,0,0.25); border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .howto-twocol .col h5 {
+    font-family: 'Cinzel', serif; margin: 0 0 8px; color: var(--accent);
+    font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase;
   }
   .howto-panel.active { display: block; }
   @keyframes howtoPanelIn {
@@ -4618,139 +4678,294 @@
     </div>
 
     <div class="howto-tabs" role="tablist">
-      <button class="howto-tab active" data-tab="ht-overview">Overview</button>
-      <button class="howto-tab" data-tab="ht-connect">1. Connect</button>
-      <button class="howto-tab" data-tab="ht-adopt">2. Adopt</button>
-      <button class="howto-tab" data-tab="ht-feed">3. Feed</button>
-      <button class="howto-tab" data-tab="ht-evolve">4. Evolve</button>
-      <button class="howto-tab" data-tab="ht-ascend">5. Ascend</button>
-      <button class="howto-tab" data-tab="ht-faq">QA Notes</button>
+      <button class="howto-tab active" data-tab="ht-overview">🏛 Overview</button>
+      <button class="howto-tab" data-tab="ht-adopt">🥚 Adopt</button>
+      <button class="howto-tab" data-tab="ht-feed">🧪 Feed</button>
+      <button class="howto-tab" data-tab="ht-equipment">⚔️ Equipment</button>
+      <button class="howto-tab" data-tab="ht-quests">🗺️ Quests</button>
+      <button class="howto-tab" data-tab="ht-arena">🛡️ Arena</button>
+      <button class="howto-tab" data-tab="ht-evolve">⚡ Evolve</button>
+      <button class="howto-tab" data-tab="ht-daily">🔥 Daily</button>
+      <button class="howto-tab" data-tab="ht-faq">❓ QA Notes</button>
     </div>
 
     <!-- OVERVIEW -->
     <section id="ht-overview" class="howto-panel active">
-      <h2>The loop, in 60 seconds</h2>
-      <p class="lead">
-        VulcanX Champions is a creature-raising game. You adopt a baby creature,
-        feed it potions to grow its stats, and evolve it through twenty distinct
-        life stages to Legendary.
+      <div class="panel-icon">🏛</div>
+      <h2 style="text-align:center;">The whole game in one screen</h2>
+      <p class="lead" style="text-align:center;">
+        VulcanX Champions is a creature-raising game with quests, gear, and arena
+        battles. Adopt a baby champion, feed it, send it on adventures, equip it,
+        fight in the arena, and evolve it through 20 life stages to Legendary —
+        a 1-of-1 NFT bound forever to your wallet.
       </p>
-      <div class="howto-steps-grid">
-        <div class="howto-step">
-          <div class="n">STEP 1</div><div class="ic">🔐</div>
-          <h4>Connect</h4>
-          <p>Sign in with your wallet on Elysium. Get 80 free starter potions.</p>
-        </div>
-        <div class="howto-step">
-          <div class="n">STEP 2</div><div class="ic">🥚</div>
-          <h4>Adopt</h4>
-          <p>Pick a bloodline, name your champion, sign the mint TX.</p>
-        </div>
-        <div class="howto-step">
-          <div class="n">STEP 3</div><div class="ic">🧪</div>
-          <h4>Feed</h4>
-          <p>Pour potions to raise stats. The Evolution Bar fills with each feed.</p>
-        </div>
-        <div class="howto-step">
-          <div class="n">STEP 4</div><div class="ic">⚡</div>
-          <h4>Evolve</h4>
-          <p>At each level gate, burn an Evolution Potion to transform.</p>
-        </div>
-      </div>
-      <div class="callout">
-        <b>QA build:</b> Only the Orc <b>Ironfang</b> bloodline is adoptable. You get
-        80 free starter potions on first sign-in. Transactions are signed but
-        <b>no PYR is deducted</b>.
-      </div>
-    </section>
 
-    <!-- CONNECT -->
-    <section id="ht-connect" class="howto-panel">
-      <h2>1. Connect your Wallet</h2>
-      <p class="lead">
-        When you first visit, you'll see a Connect Wallet screen. Tap it — your
-        wallet (MetaMask or similar) will prompt you to:
-      </p>
-      <ul>
-        <li><b>Share your account</b> so the app knows who you are.</li>
-        <li><b>Switch to Elysium</b> (chainId 1339) — added automatically if missing.</li>
-        <li><b>Sign a short sign-in message</b> to prove wallet ownership. This is free — no gas.</li>
-      </ul>
-      <h3>You'll be granted 80 starter potions</h3>
-      <p>
-        On your first sign-in: <b>10 of each trait potion</b> (Strength, Vitality,
-        Agility, Ferocity, Intelligence, Luck) in Minor tier, plus <b>10 Evolution</b>
-        potions and <b>10 Blessings</b>. Enough to test the full 20-stage loop.
-      </p>
-      <div class="callout">
-        💡 <b>Your progress persists.</b> Come back anytime, sign in with the same
-        wallet, and your champions and potions are right where you left them.
+      <div class="howto-feature-grid">
+        <div class="howto-feature-card">
+          <div class="ic">🥚</div>
+          <h4>1. Adopt</h4>
+          <p>Sign in with your wallet, pick a bloodline, name your champion. Get 80 free starter potions.</p>
+        </div>
+        <div class="howto-feature-card">
+          <div class="ic">🧪</div>
+          <h4>2. Feed</h4>
+          <p>Pour potions one at a time, or batch-feed up to 200 at once. Stats grow, the Evolution Bar fills.</p>
+        </div>
+        <div class="howto-feature-card">
+          <div class="ic">🗺️</div>
+          <h4>3. Quest</h4>
+          <p>Send your champion on async adventures (15 min – 4 hr). Returns with stat XP and bar fill.</p>
+        </div>
+        <div class="howto-feature-card">
+          <div class="ic">⚔️</div>
+          <h4>4. Equip</h4>
+          <p>5 gear slots: Weapon, Armor, Trinket, Boots, Aura. Rarity tiers boost stats and unlock procs.</p>
+        </div>
+        <div class="howto-feature-card">
+          <div class="ic">🛡️</div>
+          <h4>5. Battle</h4>
+          <p>Arena vs bots. Pick stance + ability, watch the animated reveal, climb the Ranking ladder.</p>
+        </div>
+        <div class="howto-feature-card">
+          <div class="ic">⚡</div>
+          <h4>6. Evolve</h4>
+          <p>At each gate level (L3, 5, 7, 10…) burn an Evolution Potion to transform to the next stage.</p>
+        </div>
+        <div class="howto-feature-card">
+          <div class="ic">🔥</div>
+          <h4>7. Daily Streak</h4>
+          <p>Log in every day for a 7-day reward ladder. Miss a day → streak resets. Day 7 is the big one.</p>
+        </div>
+        <div class="howto-feature-card">
+          <div class="ic">🏆</div>
+          <h4>8. Legendary</h4>
+          <p>Stage 20 at L50. Your Legendary becomes an animated on-chain NFT. Trade, showcase, pass it down.</p>
+        </div>
+      </div>
+
+      <div class="howto-tip">
+        <span class="ti">💡</span>
+        <div><b>Your progress persists.</b> Sign in with the same wallet anytime — your champions, potions, equipment, ranking, and quest progress are right where you left them.</div>
+      </div>
+      <div class="howto-tip warn">
+        <span class="ti">🧪</span>
+        <div><b>QA build:</b> only Orc <b>Ironfang</b> is adoptable. All transactions are signed in your wallet but <b>no PYR is deducted</b>. The other 23 bloodlines launch with their final art.</div>
       </div>
     </section>
 
     <!-- ADOPT -->
     <section id="ht-adopt" class="howto-panel">
-      <h2>2. Adopt your Champion</h2>
-      <p class="lead">
-        Hit <b>Adopt New</b> in the top nav. You'll see all eight fantasy species,
-        but only <b>Orc</b> is unlockable during QA — and within Orc, only the
-        <b>Ironfang</b> bloodline is ready to hatch.
+      <div class="panel-icon">🥚</div>
+      <h2 style="text-align:center;">Get started</h2>
+      <p class="lead" style="text-align:center;">
+        Three minutes from arrival to your first hatched champion. No app downloads, no email — just your wallet.
       </p>
-      <ul>
-        <li>Other species and bloodlines are greyed out as "Coming soon".</li>
-        <li>Name your champion — the name is permanent and shown on its NFT.</li>
-        <li>Hit Adopt. Your wallet pops up for the <b>dummy 10 PYR receipt TX</b>.</li>
-        <li>Value is zero during QA — only a small Elysium gas fee.</li>
-      </ul>
-      <div class="callout">
-        ⚠️ <b>QA note:</b> You must sign the TX in your wallet to complete adoption.
-        If you cancel, the champion isn't created.
+
+      <ol class="howto-numbered">
+        <li><b>Connect your wallet.</b> The wallet gate prompts MetaMask or WalletConnect. We'll switch you to Elysium (chain 1339) automatically if needed, then ask you to sign a short message to prove wallet ownership. Free — no gas.</li>
+        <li><b>Get 80 free starter potions.</b> First sign-in grants 10 of each trait Minor (STR/VIT/AGI/FER/INT/LCK), 10 Evolution Potions, and 10 Blessings. Enough to test the full 20-stage loop.</li>
+        <li><b>Click "Adopt a Baby Champion".</b> Pick a species (Orc only in QA), then a bloodline (Ironfang only), then name your champion. Names are permanent and shown on the NFT.</li>
+        <li><b>Sign the adoption ceremony.</b> Your wallet pops up to sign a "VulcanX:adopt:&lt;name&gt;" message. No PYR moves, no gas — purely proof you authorized the action.</li>
+        <li><b>Egg cracks open.</b> A 3-second cinematic plays as your Whelp emerges from the nest. You land in the champion view ready to feed, equip, and quest.</li>
+      </ol>
+
+      <div class="howto-tip">
+        <span class="ti">✏️</span>
+        <div><b>Don't love the name?</b> Click the pencil icon next to your champion's name to rename. 5 PYR per rename in production; free in QA.</div>
       </div>
     </section>
 
     <!-- FEED -->
     <section id="ht-feed" class="howto-panel">
-      <h2>3. Feed your Champion</h2>
-      <p class="lead">
-        Open a champion from the Stable. You'll see portrait, level, evolution bar,
-        stats, and your potion inventory in the left panel.
+      <div class="panel-icon">🧪</div>
+      <h2 style="text-align:center;">Feed your champion</h2>
+      <p class="lead" style="text-align:center;">
+        Pouring potions raises stats and fills the Evolution Bar. Feed one at a time for precision, or batch-feed in bulk to skip the grind.
       </p>
-      <p>
-        Tap any potion bottle. Your champion's matching stat rises (with <b>diminishing
-        returns</b> — early pours into a trait are more potent than the 10th), and
-        the <b>Evolution Bar</b> fills by 2-20%.
-      </p>
-      <h3>Six trait potions</h3>
-      <div class="guide-traits">
-        <div class="gt"><span class="gt-e">💪</span><span class="gt-n">Strength</span><span class="gt-d">Raw damage output</span></div>
-        <div class="gt"><span class="gt-e">❤️</span><span class="gt-n">Vitality</span><span class="gt-d">Health &amp; survivability</span></div>
-        <div class="gt"><span class="gt-e">🏃</span><span class="gt-n">Agility</span><span class="gt-d">Speed &amp; dodge</span></div>
-        <div class="gt"><span class="gt-e">⚔️</span><span class="gt-n">Ferocity</span><span class="gt-d">Critical power</span></div>
-        <div class="gt"><span class="gt-e">🧠</span><span class="gt-n">Intelligence</span><span class="gt-d">Magic &amp; cunning</span></div>
-        <div class="gt"><span class="gt-e">🍀</span><span class="gt-n">Luck</span><span class="gt-d">Loot &amp; crit chance</span></div>
+
+      <h3>The six trait potions</h3>
+      <div class="howto-feature-grid">
+        <div class="howto-feature-card"><div class="ic">💪</div><h4>Strength</h4><p>Raw physical damage. Drives melee and weapon swing power.</p></div>
+        <div class="howto-feature-card"><div class="ic">❤️</div><h4>Vitality</h4><p>Hit points and survivability. Tanky champions last longer in the arena.</p></div>
+        <div class="howto-feature-card"><div class="ic">🏃</div><h4>Agility</h4><p>Initiative + dodge. High AGI goes first in combat.</p></div>
+        <div class="howto-feature-card"><div class="ic">⚔️</div><h4>Ferocity</h4><p>Critical hit chance and crit damage. Spike potential.</p></div>
+        <div class="howto-feature-card"><div class="ic">🧠</div><h4>Intelligence</h4><p>Magic damage + spell resist. Primary for casters.</p></div>
+        <div class="howto-feature-card"><div class="ic">🍀</div><h4>Luck</h4><p>Proc chance for gear effects, dodge bonus, lucky drops.</p></div>
       </div>
+
+      <h3>Three feed modes</h3>
+      <div class="howto-feature-grid">
+        <div class="howto-feature-card"><div class="ic">🥄</div><h4>Single Tap</h4><p>Click any trait bottle to feed exactly one potion. Best for fine-tuning a specific stat.</p></div>
+        <div class="howto-feature-card"><div class="ic">✨</div><h4>Feed Me!</h4><p>The big yellow button auto-picks the lowest-fill non-capped trait. Keeps your build balanced.</p></div>
+        <div class="howto-feature-card"><div class="ic">⏩</div><h4>⏩ Batch</h4><p>Pour 5 / 25 / 50 / All in one click. Auto-stops at the gate so you don't overshoot.</p></div>
+      </div>
+
       <h3>Two special potions</h3>
       <ul>
-        <li><b>⚡ Evolution Potion</b> — consumed at a stage-gate level with a full bar to advance to the next life stage.</li>
-        <li><b>✨ Blessing</b> — grants 40 stat points you distribute freely across any traits. Also fills 10-25% of the bar.</li>
+        <li><b>⚡ Evolution Potion</b> — consumed at a stage-gate level with a full Evolution Bar to advance to the next life stage.</li>
+        <li><b>✨ Blessing</b> — distribute 40 stat points freely across any traits. Also fills 10–25% of the Evolution Bar regardless of distribution.</li>
       </ul>
-      <div class="callout">
-        🧪 <b>During QA:</b> every potion is a DB-backed record. After launch,
-        potions become on-chain ERC-1155 NFTs earned from Vulcan Forged quests.
+
+      <div class="howto-tip warn">
+        <span class="ti">⚠️</span>
+        <div><b>Trait at cap?</b> Feeding into a maxed trait still consumes the potion and fills the bar — the stat just doesn't rise. You'll see "TRAIT MAXED · +X% BAR" float over the portrait.</div>
       </div>
-      <p style="text-align:center; margin-top:18px;">
+      <div class="howto-tip">
+        <span class="ti">📈</span>
+        <div><b>Diminishing returns:</b> early pours into a trait give +5 stat each. As you invest more, gains drop to +3, then +1.5, then +1. Mid-game switching to Major (3×) and Epic (8×) tiers keeps progression brisk.</div>
+      </div>
+
+      <p style="text-align:center; margin-top:24px;">
         <button class="welcome-secondary" onclick="openPotionGuide()">📖 Open the Potion Guide</button>
       </p>
     </section>
 
+    <!-- EQUIPMENT -->
+    <section id="ht-equipment" class="howto-panel">
+      <div class="panel-icon">⚔️</div>
+      <h2 style="text-align:center;">Equipment system</h2>
+      <p class="lead" style="text-align:center;">
+        Five gear slots, four rarity tiers, 24 species-locked weapons + cross-species accessories.
+        Equipment boosts your Power Score and unlocks signature combat effects.
+      </p>
+
+      <h3>The five slots</h3>
+      <div class="howto-feature-grid">
+        <div class="howto-feature-card"><div class="ic">⚔️</div><h4>Weapon</h4><p><b>Species-locked.</b> Each species has 3 weapons with unique signature effects (Stunning Crit, Twin Strike, Bulwark, etc.)</p></div>
+        <div class="howto-feature-card"><div class="ic">🛡</div><h4>Armor</h4><p>Cross-species. Light Plate (dodge), Battle Mail (balanced), Heavy Cuirass (damage reduction).</p></div>
+        <div class="howto-feature-card"><div class="ic">💍</div><h4>Trinket</h4><p>Power Ring (random rolled stat) or Lucky Charm (+15% LCK + global proc bonus).</p></div>
+        <div class="howto-feature-card"><div class="ic">👢</div><h4>Boots</h4><p>Swift Boots: +AGI and an initiative bonus that almost always wins ties.</p></div>
+        <div class="howto-feature-card"><div class="ic">✨</div><h4>Aura</h4><p>+5% all stats (Common) up to +20% all stats (Legendary). Endgame flex slot.</p></div>
+      </div>
+
+      <h3>Four rarity tiers</h3>
+      <div class="howto-twocol">
+        <div class="col">
+          <h5>Common · ×1.05</h5>
+          <p>Drop chance: 70% · grey border</p>
+        </div>
+        <div class="col">
+          <h5>Rare · ×1.12</h5>
+          <p>Drop chance: 22% · blue border</p>
+        </div>
+        <div class="col">
+          <h5>Epic · ×1.25</h5>
+          <p>Drop chance: 7% · purple border</p>
+        </div>
+        <div class="col">
+          <h5>Legendary · ×1.50</h5>
+          <p>Drop chance: 1% · gold border + unique proc</p>
+        </div>
+      </div>
+
+      <h3>How to equip</h3>
+      <ol class="howto-numbered">
+        <li><b>Open your champion view.</b> Find the <b>Equipment</b> card in the left column with 5 slot squares.</li>
+        <li><b>Click any slot.</b> A picker modal opens showing only items that fit (species-locked weapons; cross-species for the rest).</li>
+        <li><b>Tap an item to equip.</b> Power Score updates immediately. The slot border tints to its rarity color, with a +N power chip showing the gear's contribution.</li>
+        <li><b>"View Inventory"</b> below the slots opens your full owned set — sortable by rarity, grouped by slot.</li>
+      </ol>
+
+      <div class="howto-tip">
+        <span class="ti">🎒</span>
+        <div><b>Starter set:</b> on first boot you get 9 mock items (3 weapons matching your species, 2 armor, 2 trinkets, boots, aura). Real NFT-backed equipment + chest drops from the Vulcan Forged ecosystem launch in production.</div>
+      </div>
+    </section>
+
+    <!-- QUESTS -->
+    <section id="ht-quests" class="howto-panel">
+      <div class="panel-icon">🗺️</div>
+      <h2 style="text-align:center;">Quests &amp; Adventures</h2>
+      <p class="lead" style="text-align:center;">
+        Send your champion on async expeditions. They're gone for 15 min – 4 hours;
+        when they return, stat XP + Evolution Bar progress is applied directly. Multiple champions
+        can adventure simultaneously.
+      </p>
+
+      <h3>The eight adventure types</h3>
+      <div class="howto-feature-grid">
+        <div class="howto-feature-card"><div class="ic">🏹</div><h4>Hunting Grounds</h4><p>STR + AGI · Stalk wild prey across rolling plains.</p></div>
+        <div class="howto-feature-card"><div class="ic">🏛️</div><h4>Ancient Ruins</h4><p>INT + LCK · Decipher faded glyphs in forgotten halls.</p></div>
+        <div class="howto-feature-card"><div class="ic">👻</div><h4>Spirit Caves</h4><p>INT + VIT · Meditate among watchful spirits.</p></div>
+        <div class="howto-feature-card"><div class="ic">💎</div><h4>Treasure Crypts</h4><p>LCK + FER · Tip-toe past trapped vaults.</p></div>
+        <div class="howto-feature-card"><div class="ic">🔥</div><h4>Forge Pits</h4><p>STR + VIT · Train under hammer and heat.</p></div>
+        <div class="howto-feature-card"><div class="ic">🌙</div><h4>Moonlit Glades</h4><p>AGI + LCK · Hunt by moonlight.</p></div>
+        <div class="howto-feature-card"><div class="ic">🌋</div><h4>Ember Wastes</h4><p>FER + INT · Survive the burning sands.</p></div>
+        <div class="howto-feature-card"><div class="ic">🌿</div><h4>Whisper Marshes</h4><p>VIT + LCK · Tend strange herbs in mist-cloaked bogs.</p></div>
+      </div>
+
+      <h3>Three durations</h3>
+      <div class="howto-twocol">
+        <div class="col"><h5>⚡ Quick · 15 min</h5><p>+1–3 stat to primaries · +2–5% bar fill. Quick stat top-up.</p></div>
+        <div class="col"><h5>⏳ Standard · 1 hour</h5><p>+5–12 stat to primaries · +8–15% bar fill. The everyday quest.</p></div>
+      </div>
+      <div class="howto-twocol">
+        <div class="col"><h5>🌙 Long · 4 hours</h5><p>+15–30 stat to primaries · +20–40% bar fill. Send before bed.</p></div>
+        <div class="col"><h5>🤝 Multi-champion</h5><p>Each champion can adventure independently. No shared cooldown.</p></div>
+      </div>
+
+      <div class="howto-tip">
+        <span class="ti">🎁</span>
+        <div><b>Why no item drops?</b> Rewards are direct stat XP and bar fill, NOT inventory items — by design, so quest rewards don't undermine the NFT marketplace economy. You get the <i>effect</i> of having used a potion, just no tradeable token.</div>
+      </div>
+      <div class="howto-tip warn">
+        <span class="ti">⏰</span>
+        <div><b>You DO need to come back.</b> The timer counts down server-side; the "Claim" button only enables once the duration has elapsed. Close the tab and come back later — the quest doesn't auto-claim.</div>
+      </div>
+    </section>
+
+    <!-- ARENA -->
+    <section id="ht-arena" class="howto-panel">
+      <div class="panel-icon">🛡️</div>
+      <h2 style="text-align:center;">The Arena</h2>
+      <p class="lead" style="text-align:center;">
+        Async stat battles vs bots. Pick your stance and ability, watch the animated reveal,
+        climb the Ranking ladder. Real player-vs-player coming in a later phase.
+      </p>
+
+      <h3>The four-step battle flow</h3>
+      <ol class="howto-numbered">
+        <li><b>Click ⚔️ Arena</b> in the top nav. Your active champion auto-loads with their equipped weapon and current Ranking score.</li>
+        <li><b>Pick your stance:</b> ⚔️ Aggressive (+15% damage, -15% defense), ⚖️ Balanced (no modifiers), or 🛡️ Defensive (-15% damage, +15% defense).</li>
+        <li><b>Pick your ability.</b> Your bloodline signature is locked + automatic; you also pick 1 from a pool of 8 universal abilities (see below).</li>
+        <li><b>Click "Find Opponent + Fight".</b> The server generates a bot of your bracket, runs a deterministic 8-round battle, and streams the result back as an animated reveal — portraits shake on hits, damage popups fly, an event ticker shows the play-by-play.</li>
+      </ol>
+
+      <h3>Eight universal abilities</h3>
+      <div class="howto-feature-grid">
+        <div class="howto-feature-card"><div class="ic">💥</div><h4>Power Strike</h4><p>First two hits this match deal +30% damage.</p></div>
+        <div class="howto-feature-card"><div class="ic">🛡️</div><h4>Iron Skin</h4><p>Take 25% less damage in rounds 1 and 2.</p></div>
+        <div class="howto-feature-card"><div class="ic">🚩</div><h4>Rally</h4><p>+10% damage per crit landed (caps at +30%).</p></div>
+        <div class="howto-feature-card"><div class="ic">🩸</div><h4>Drain Touch</h4><p>Heal 12% of damage dealt for the first 3 rounds.</p></div>
+        <div class="howto-feature-card"><div class="ic">💨</div><h4>Quickstep</h4><p>+20% dodge for the first 2 rounds.</p></div>
+        <div class="howto-feature-card"><div class="ic">🎯</div><h4>Hunter's Mark</h4><p>Your first crit deals +50% damage.</p></div>
+        <div class="howto-feature-card"><div class="ic">🪨</div><h4>Stone Wall</h4><p>First 2 hits taken deal 50% damage (then expires).</p></div>
+        <div class="howto-feature-card"><div class="ic">🩹</div><h4>Pact of Blood</h4><p>Pay 15% HP at start; gain +25% damage all match.</p></div>
+      </div>
+
+      <h3>Four brackets</h3>
+      <ul>
+        <li><b>🥚 Whelpling Cup</b> — stages 0-4 (L1-L10) · starting Ranking 100</li>
+        <li><b>🐺 Adolescent</b> — stages 5-9 (L13-L26) · starting Ranking 200</li>
+        <li><b>🛡️ Champion</b> — stages 10-14 (L30-L44) · starting Ranking 400</li>
+        <li><b>👑 Legendary</b> — stages 15-19 (L46-L50) · starting Ranking 800</li>
+      </ul>
+
+      <div class="howto-tip">
+        <span class="ti">🤖</span>
+        <div><b>Bots match your fill ratio.</b> A fresh L1 player faces a fresh L1 bot — no more 1-shot defeats. Bot equipment rarity scales with bracket: Whelpling matches mostly Common, Legendary fights see real Legendary gear.</div>
+      </div>
+    </section>
+
     <!-- EVOLVE -->
     <section id="ht-evolve" class="howto-panel">
-      <h2>4. Evolve through 20 Life Stages</h2>
-      <p class="lead">
-        Your champion passes through <b>20 distinct life stages</b> — not just age,
-        but armor, scars, equipment, backdrop, and raw power. Each stage looks
-        visibly different.
+      <div class="panel-icon">⚡</div>
+      <h2 style="text-align:center;">Evolve through 20 life stages</h2>
+      <p class="lead" style="text-align:center;">
+        Your champion passes through twenty distinct stages — not just age, but armor, scars,
+        weapons, backdrop. Each stage looks visibly different.
       </p>
+
       <div class="howto-stages">
         <span>Whelp</span><span>→</span>
         <span>Hatchling</span><span>→</span>
@@ -4773,89 +4988,176 @@
         <span>Mythic</span><span>→</span>
         <span class="legendary">Legendary</span>
       </div>
-      <h3>How evolution works</h3>
-      <ol>
-        <li>Fill the Evolution Bar to <b>100%</b> by feeding potions.</li>
-        <li>Hit a <b>stage-gate level</b> (L3, 5, 7, 10, 13, 15, 18, 22, 26, 30, 34, 38, 41, 44, 46, 48, 49, 49, 50).</li>
-        <li>Spend <b>1 Evolution Potion</b>.</li>
-        <li>Hit the Evolve button — your champion transforms.</li>
-        <li>Stats carry up to the new stage's floor; the next cap opens.</li>
+
+      <h3>Three things must align to evolve</h3>
+      <ol class="howto-numbered">
+        <li><b>Hit a stage-gate level.</b> Gates: L3, 5, 7, 10, 13, 15, 18, 22, 26, 30, 34, 38, 41, 44, 46, 48, 49, 49, 50.</li>
+        <li><b>Fill the Evolution Bar to 100%.</b> Feed potions or send out on quests until full.</li>
+        <li><b>Have an Evolution Potion.</b> Each evolution consumes one. You start with 10.</li>
       </ol>
-      <div class="callout">
-        🐛 <b>QA testers:</b> flag any stage where evolution seems stuck, stats drop
-        on evolve, or the new stage art doesn't load.
+
+      <p>
+        When all three line up, both the big <b>Evolve</b> button <i>and</i> the Evolution Potion card light up gold and pulse.
+        Click either to trigger the cinematic — bass thunder, gold spark fountain, screen shake, the new stage art crossfading in.
+        Stats carry over to the new stage's floor; the next cap opens.
+      </p>
+
+      <h3>🏆 Legendary — the prize</h3>
+      <p>
+        Reach stage 20 at Level 50 and your champion ascends to <b>Legendary</b>. In production this becomes an <b>animated on-chain NFT</b> —
+        a fully realised masterpiece, bound forever to your wallet. Each Legendary is 1-of-1; no two keepers will arrive at the same stat
+        distribution, name, equipped gear, and art progression path.
+      </p>
+
+      <div class="howto-tip warn">
+        <span class="ti">📊</span>
+        <div><b>Long road by design:</b> roughly 1,700 Minor potions to reach Legendary on a greedy run. Major (3×) and Epic (8×) tiers cut that significantly. This is the long-term collectible economy — don't expect to Legendary in one QA session.</div>
       </div>
     </section>
 
-    <!-- ASCEND -->
-    <section id="ht-ascend" class="howto-panel">
-      <h2>5. Ascend to Legendary</h2>
-      <p class="lead">
-        Reach stage 20 at Level 50 and your champion unlocks the <b>Legendary</b> tier —
-        a fully realised masterpiece, bound forever to your wallet.
+    <!-- DAILY -->
+    <section id="ht-daily" class="howto-panel">
+      <div class="panel-icon">🔥</div>
+      <h2 style="text-align:center;">Daily login streak</h2>
+      <p class="lead" style="text-align:center;">
+        Log in every day to claim a reward bundle and grow your streak. Miss a day → streak resets to 1.
+        Day 7 is the big one.
       </p>
-      <p>
-        In prod this becomes an <b>animated on-chain NFT</b>. This is the prize:
-        a truly unique champion, raised entirely by you. Share it, showcase it,
-        trade it, pass it down.
-      </p>
-      <div class="callout">
-        🏆 Each Legendary is 1-of-1 — no two keepers will arrive at the same stat
-        distribution, name, and art progression path.
+
+      <h3>The 7-day reward ladder</h3>
+      <div class="howto-feature-grid">
+        <div class="howto-feature-card"><div class="ic">🧪</div><h4>Day 1</h4><p>×3 Minor potions (random trait)</p></div>
+        <div class="howto-feature-card"><div class="ic">🧪</div><h4>Day 2</h4><p>×5 Minor potions</p></div>
+        <div class="howto-feature-card"><div class="ic">⚗️</div><h4>Day 3</h4><p>×1 Major + ×5 Minor</p></div>
+        <div class="howto-feature-card"><div class="ic">⚡</div><h4>Day 4</h4><p>×1 Evolution Potion</p></div>
+        <div class="howto-feature-card"><div class="ic">✨</div><h4>Day 5</h4><p>×1 Blessing</p></div>
+        <div class="howto-feature-card"><div class="ic">🔮</div><h4>Day 6</h4><p>×1 Epic potion</p></div>
+        <div class="howto-feature-card"><div class="ic">🏆</div><h4>Day 7 — BIG</h4><p>×2 Major + ×1 Evo + ×1 Blessing + ×5 Minor</p></div>
+        <div class="howto-feature-card"><div class="ic">🔁</div><h4>Day 8+</h4><p>Cycle restarts. Streak counter keeps climbing forever.</p></div>
+      </div>
+
+      <h3>How to claim</h3>
+      <ol class="howto-numbered">
+        <li><b>The 🔥 pill</b> in the topbar shows your current streak day. A pulsing green dot means today's reward is unclaimed.</li>
+        <li><b>Claim modal auto-opens</b> on your first login of the day. You can also click the pill anytime.</li>
+        <li><b>Click ⚡ Claim.</b> Rewards are granted instantly — sound effect, screen shake, sparks.</li>
+        <li><b>Come back tomorrow</b> to keep your streak alive.</li>
+      </ol>
+
+      <div class="howto-tip warn">
+        <span class="ti">⏰</span>
+        <div><b>Streak rules:</b> you have until end-of-calendar-day to claim. Skip even one day and the streak resets to 1 — you start over. Day 7's big bundle is the carrot for keeping a full week alive.</div>
       </div>
     </section>
 
     <!-- FAQ / QA -->
     <section id="ht-faq" class="howto-panel">
-      <h2>QA Notes &amp; FAQ</h2>
+      <div class="panel-icon">❓</div>
+      <h2 style="text-align:center;">QA notes &amp; FAQ</h2>
+      <p class="lead" style="text-align:center;">
+        Everything you need to know to test the build, plus answers to the questions every tester asks.
+      </p>
+
       <h3>What's real vs dummy in QA?</h3>
-      <ul>
-        <li><b>Wallet auth:</b> real. SIWE on Elysium (chain 1339).</li>
-        <li><b>Adoption TX:</b> real transaction, zero value. Tagged on-chain as VulcanX:adopt.</li>
-        <li><b>Potions:</b> DB-backed for QA. ERC-1155 after launch.</li>
-        <li><b>Champions:</b> DB-backed for QA. ERC-721 after launch.</li>
-        <li><b>Art:</b> final for Orc Ironfang (20 stages). Other bloodlines coming.</li>
-      </ul>
-      <h3>What happens if I run out of potions?</h3>
-      <p>Buy more in the <b>🛒 Shop</b> (top bar) — Minors 5 PYR, Majors 15 PYR, Epics 40 PYR. Dummy TX in QA, no PYR deducted. In prod potions drop from chests across the Vulcan Forged ecosystem.</p>
+      <div class="howto-feature-grid">
+        <div class="howto-feature-card"><div class="ic">🔐</div><h4>Wallet auth</h4><p><b>Real.</b> SIWE on Elysium (chain 1339).</p></div>
+        <div class="howto-feature-card"><div class="ic">📝</div><h4>Adoption TX</h4><p><b>Real signature</b>, zero value. Tagged on-chain as VulcanX:adopt.</p></div>
+        <div class="howto-feature-card"><div class="ic">🧪</div><h4>Potions</h4><p>DB-backed for QA. ERC-1155 after launch.</p></div>
+        <div class="howto-feature-card"><div class="ic">🐲</div><h4>Champions</h4><p>DB-backed for QA. ERC-721 after launch.</p></div>
+        <div class="howto-feature-card"><div class="ic">🎨</div><h4>Art</h4><p>Full 20 stages for <b>Orc Ironfang</b>. Other bloodlines use placeholder art.</p></div>
+        <div class="howto-feature-card"><div class="ic">⚔️</div><h4>Arena</h4><p>Live vs bots. Real PvP arrives in Phase 8.</p></div>
+        <div class="howto-feature-card"><div class="ic">🗺️</div><h4>Quests</h4><p>Live, server-timed. Async — close the tab and come back.</p></div>
+        <div class="howto-feature-card"><div class="ic">🔥</div><h4>Daily streak</h4><p>Live. Resets if you skip a calendar day.</p></div>
+      </div>
 
-      <h3>What if a trait is maxed?</h3>
-      <p>Feeding a potion into a maxed trait still <b>consumes the potion and fills the Evolution Bar</b> — the stat just doesn't rise. You'll see "TRAIT MAXED · +X% BAR" float over the portrait. This keeps you progressing even if you over-invested early.</p>
+      <h3>Feeding &amp; potions</h3>
+      <div class="howto-twocol">
+        <div class="col">
+          <h5>Out of potions?</h5>
+          <p>Buy more in the <b>🛒 Shop</b> (top bar) — Minors 5 PYR, Majors 15 PYR, Epics 40 PYR. Dummy TX in QA, no PYR deducted. In prod, potions drop from chests across the Vulcan Forged ecosystem.</p>
+        </div>
+        <div class="col">
+          <h5>Which trait will Feed Me fire?</h5>
+          <p>The label under the button shows a preview, e.g. <b>🍀 next · 13 ready</b>. Priority: non-capped traits with the lowest fill ratio first (keeps your build balanced).</p>
+        </div>
+        <div class="col">
+          <h5>Trait already maxed?</h5>
+          <p>Feeding still <b>consumes the potion and fills the Evolution Bar</b> — the stat just doesn't rise. You'll see "TRAIT MAXED · +X% BAR" float over the portrait.</p>
+        </div>
+        <div class="col">
+          <h5>Same potions, different bar %?</h5>
+          <p>Bar fill is a <b>random roll</b> inside each tier range (Minor 2–6%, Major 6–12%, Epic 12–20%). Lucky pours fill more. By design.</p>
+        </div>
+        <div class="col">
+          <h5>Different potion counts on two champs?</h5>
+          <p>Potions are shared <b>per wallet + per species</b>. If counts differ, you're on two different wallets (likely the "fresh wallet" dev button).</p>
+        </div>
+        <div class="col">
+          <h5>Potions to reach Legendary?</h5>
+          <p>Roughly <b>1,700 Minors</b> on a greedy play-through. Major/Epic tiers get there faster (3× and 8× stat gain). Long-term collectible economy by design.</p>
+        </div>
+      </div>
 
-      <h3>How do I actually evolve?</h3>
-      <p>Three things must be true at once:</p>
-      <ul>
-        <li>You're at a <b>stage-gate level</b> (L3, 5, 7, 10, 13, 15, 18, 22, 26, 30, 34, 38, 41, 44, 46, 48, 49, 49, 50)</li>
-        <li>Evolution Bar is at <b>100%</b></li>
-        <li>You have <b>≥1 Evolution Potion</b></li>
-      </ul>
-      <p>When all three line up, both the big Evolve button <i>and</i> the Evolution Potion card in your potions panel light up gold and pulse. Click either to evolve. The card's subtitle always tells you exactly what's still missing.</p>
+      <h3>Evolution</h3>
+      <div class="howto-tip">
+        <span class="ti">⚡</span>
+        <div><b>Three things must be true at once:</b> you're at a stage-gate level (L3, 5, 7, 10, 13, 15, 18, 22, 26, 30, 34, 38, 41, 44, 46, 48, 49, 49, 50), your Evolution Bar is at <b>100%</b>, and you hold <b>≥1 Evolution Potion</b>. When all three line up, the Evolve button and the Evo Potion card both pulse gold. Click either to evolve.</div>
+      </div>
 
-      <h3>Why did two of my champions end up at different bar % after identical feeds?</h3>
-      <p>Bar fill is a <b>random roll</b> inside each tier range (Minor 2–6%, Major 6–12%, Epic 12–20%). Two keepers fed the same potions will land on slightly different %. Lucky pours fill more. By design — not a bug.</p>
+      <h3>Arena</h3>
+      <div class="howto-twocol">
+        <div class="col">
+          <h5>Why do I keep losing?</h5>
+          <p>Bots now scale to your stat fill ratio (Phase 5.7 fix). If you're losing 5+ in a row, try a different <b>stance</b> or <b>universal ability</b> — Iron Skin and Stone Wall help under-statted champions punch up.</p>
+        </div>
+        <div class="col">
+          <h5>Where does my ELO live?</h5>
+          <p>localStorage for now (vs-bots MVP). Real PvP + persistent leaderboard arrive in Phase 8.</p>
+        </div>
+        <div class="col">
+          <h5>Can I rematch the same bot?</h5>
+          <p>No — each match generates a fresh bot from your bracket. The seed is logged so disputes can be replayed exactly.</p>
+        </div>
+        <div class="col">
+          <h5>Do equipment + ability stack?</h5>
+          <p>Yes. Weapon rarity multiplies damage, the universal ability fires its trigger, and your bloodline signature passive runs all match.</p>
+        </div>
+      </div>
 
-      <h3>Why do my two champions show different potion counts?</h3>
-      <p>Potions are shared <b>per wallet + per species</b>. Two Orc champions on the same wallet see identical Orc potion inventories — whatever you feed to champion A comes out of champion B's pool too. If your counts differ, you're on two different wallets (likely the "fresh wallet" dev button).</p>
+      <h3>Quests &amp; Daily</h3>
+      <div class="howto-twocol">
+        <div class="col">
+          <h5>Can I close the tab during a quest?</h5>
+          <p>Yes — quests run server-side. Come back any time after the timer ends and click <b>⚡ Claim Rewards</b>.</p>
+        </div>
+        <div class="col">
+          <h5>Can multiple champs quest at once?</h5>
+          <p>Yes. Each champion runs its own quest independently. There's no party limit.</p>
+        </div>
+        <div class="col">
+          <h5>Missed a day — does my streak reset?</h5>
+          <p>Yes. Skip even one calendar day and you go back to Day 1. Day 7 is the big bundle, so a full week matters.</p>
+        </div>
+        <div class="col">
+          <h5>Can I rename my champion?</h5>
+          <p>Yes — click the ✏️ next to the name. 5 PYR per rename in prod, free in QA (dummy TX).</p>
+        </div>
+      </div>
 
-      <h3>Which trait will Feed Me fire?</h3>
-      <p>The little label under the button shows a preview, e.g. <b>🍀 next · 13 ready</b>. Priority: non-capped traits with the lowest fill ratio first (keeps your build balanced); if every trait is capped, it fires whatever's in stock (still fills the bar).</p>
+      <h3>Trading</h3>
+      <div class="howto-tip warn">
+        <span class="ti">🚧</span>
+        <div><b>Not in QA.</b> In prod, both champions and potions live on-chain and move through the Vulcan marketplace.</div>
+      </div>
 
-      <h3>Why did my potion count drop but the trait bar didn't move?</h3>
-      <p>That trait is maxed for the current stage. The potion still did something useful — it filled your Evolution Bar. Look for the green <b>"+X% BAR"</b> float on the portrait.</p>
+      <h3>Found a bug?</h3>
+      <div class="howto-tip">
+        <span class="ti">🐛</span>
+        <div>Screenshot + wallet address + current stage + what you expected vs what happened. Drop it in the QA Discord channel. Even tiny nits are useful.</div>
+      </div>
 
-      <h3>Can I rename my champion?</h3>
-      <p>Yes — click the ✏️ next to the name in the left panel. 5 PYR per rename in prod, free in QA (dummy TX).</p>
-
-      <h3>How many potions to reach Legendary?</h3>
-      <p>Roughly <b>1,700 Minors</b> on a greedy play-through. By design — this is the long-term collectible economy. Major/Epic tiers get there faster (3× and 8× stat gain respectively). Don't expect to Legendary in a single QA session.</p>
-
-      <h3>Can I trade/sell my champion?</h3>
-      <p>Not in QA. In prod, yes — champions and potions both live on-chain and move through the Vulcan marketplace.</p>
-
-      <h3>I found a bug. What do I do?</h3>
-      <p>Screenshot + wallet address + current stage + what you expected vs what happened, drop it in the QA Discord channel. Even tiny nits are useful.</p>
-      <div style="text-align:center; margin-top:24px;">
-        <button class="welcome-cta" onclick="navTo('adopt')">🥚 Adopt your Ironfang</button>
+      <div style="text-align:center; margin-top:32px;">
+        <button class="welcome-cta" onclick="navTo('adopt')">🥚 Adopt your champion</button>
       </div>
     </section>
   </div>
