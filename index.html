@@ -4162,7 +4162,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260427-juice',
+  console.log('%c🛡️ VulcanX Champions · v20260427-daily-streak',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -4443,6 +4443,10 @@
     <div class="coin gem"><span class="icon">V</span><span id="curGem">15,320</span></div>
     <div class="coin ess"><span class="icon">E</span><span id="curEss">420</span></div>
     <button class="shop-btn" onclick="openShop()">🛒 Shop</button>
+    <button class="streak-pill" id="streakPill" title="Daily login streak — click to claim today's reward" onclick="VxDaily.openModal()" style="display:none;">
+      <span class="streak-flame">🔥</span><b id="streakDay">1</b>
+      <span class="streak-claim-dot" id="streakClaimDot" style="display:none;">●</span>
+    </button>
     <button class="mute-btn" id="muteBtn" title="Toggle sound effects" onclick="VxAudio.toggle()">🔊</button>
     <div class="wallet-chip" id="walletChip" title="Your wallet · click to copy" onclick="onWalletChipClick()">
       <span class="dot-live">●</span>
@@ -5186,6 +5190,87 @@
      visually but the DOM nodes still exist for setText calls). -->
 <div id="aboutBloodlineHint" style="display:none;"></div>
 </div><!-- /view-champion -->
+
+<!-- Phase K: Daily login reward modal — opens automatically on first
+     login of the day, shows 7-day ladder + current-day reward + claim CTA. -->
+<div class="modal-backdrop" id="dailyClaimModal">
+  <div class="modal" style="width: 480px;">
+    <h3 style="text-align:center;">🔥 Daily Login Reward</h3>
+    <div class="sub" id="dailyStreakLine" style="text-align:center;">
+      Day <b style="color:var(--accent);">1</b> of your login streak.
+    </div>
+    <div id="dailyLadder" class="daily-ladder"></div>
+    <div id="dailyReward" class="daily-reward-box">
+      <div class="daily-reward-title">Today's reward</div>
+      <div id="dailyRewardItems" class="daily-reward-items"></div>
+    </div>
+    <button class="btn-primary" id="dailyClaimBtn" style="width:100%;margin-top:10px;">⚡ Claim</button>
+    <div id="dailyClaimNote" style="text-align:center;margin-top:8px;font-size:11px;color:var(--muted);">
+      Come back tomorrow to keep your streak going. Miss a day → streak resets to 1.
+    </div>
+  </div>
+</div>
+
+<style>
+  .streak-pill {
+    background: rgba(255,107,107,0.10); border: 1px solid rgba(255,107,107,0.4);
+    color: #ff9a7d; border-radius: 16px;
+    padding: 4px 10px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
+    margin-left: 6px; position: relative;
+  }
+  .streak-pill:hover { background: rgba(255,107,107,0.18); }
+  .streak-pill .streak-flame { font-size: 14px; }
+  .streak-pill b { color: #ffb088; font-size: 13px; }
+  .streak-pill .streak-claim-dot {
+    color: #7dff9a; font-size: 12px; margin-left: 2px;
+    animation: vx-breathe 1.2s ease-in-out infinite;
+  }
+  .daily-ladder {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
+    margin: 14px 0;
+  }
+  .daily-ladder .dl-day {
+    background: rgba(20,12,20,0.85); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 4px; text-align: center;
+    font-size: 10px; color: var(--muted); position: relative;
+    min-height: 64px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 3px;
+  }
+  .daily-ladder .dl-day.past {
+    background: rgba(125,255,154,0.06); border-color: rgba(125,255,154,0.4);
+    color: #7dff9a;
+  }
+  .daily-ladder .dl-day.past::after {
+    content: '✓'; position: absolute; top: 2px; right: 4px;
+    color: #7dff9a; font-weight: 800; font-size: 10px;
+  }
+  .daily-ladder .dl-day.today {
+    background: rgba(255,205,107,0.12); border-color: var(--accent);
+    color: var(--accent); transform: scale(1.05);
+    box-shadow: 0 0 14px rgba(255,205,107,0.3);
+  }
+  .daily-ladder .dl-num { font-weight: 800; font-size: 13px; letter-spacing: 0.5px; }
+  .daily-ladder .dl-icon { font-size: 18px; line-height: 1; }
+  .daily-reward-box {
+    background: rgba(255,205,107,0.08); border: 1px solid rgba(255,205,107,0.3);
+    border-radius: 8px; padding: 12px; margin-top: 6px;
+  }
+  .daily-reward-title {
+    font-size: 11px; letter-spacing: 1.5px; color: var(--muted);
+    text-transform: uppercase; text-align: center; margin-bottom: 8px;
+  }
+  .daily-reward-items {
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+    font-size: 14px; font-weight: 700; color: var(--accent);
+  }
+  .daily-reward-items .dr-item {
+    background: rgba(20,12,20,0.7); padding: 6px 10px; border-radius: 6px;
+    border: 1px solid rgba(255,205,107,0.25);
+    display: flex; align-items: center; gap: 4px;
+  }
+</style>
 
 <!-- Phase: batch-feed picker (AngelHorn 2026-04-26) — pick how many
      potions to pour in a single click instead of spamming Feed Me. -->
@@ -6258,6 +6343,192 @@ if (typeof document !== 'undefined') {
   document.addEventListener('click', unlock, { once: true, passive: true });
   document.addEventListener('touchstart', unlock, { once: true, passive: true });
 })();
+
+// ============================================================
+// PHASE K — DAILY STREAK + LOGIN REWARDS (2026-04-27)
+// Client-side streak tracking; rewards delivered via existing
+// potion_grant edge fn (multiple calls for bundles). Mainnet will
+// add server-side validation; for QA the localStorage source is
+// fine since testers are trusted. Streak resets if you miss a day.
+// ============================================================
+
+const VxDaily = (() => {
+  const KEY = 'vx_daily_v1';
+  // Reward ladder: day-of-cycle → bundle. Cycle is 7 days; after that
+  // it loops but the streak counter keeps climbing. Day 7 bundle is
+  // the big one to incentivize a full week.
+  // Each bundle item: { kind, trait?, qty, label, icon }
+  const LADDER = [
+    { day: 1, items: [{ kind:'minor', trait:'random', qty:3, icon:'🧪', label:'×3 Minor' }] },
+    { day: 2, items: [{ kind:'minor', trait:'random', qty:5, icon:'🧪', label:'×5 Minor' }] },
+    { day: 3, items: [{ kind:'major', trait:'random', qty:1, icon:'⚗️', label:'×1 Major' },
+                       { kind:'minor', trait:'random', qty:5, icon:'🧪', label:'×5 Minor' }] },
+    { day: 4, items: [{ kind:'evolution', trait:null, qty:1, icon:'⚡', label:'×1 Evolution' }] },
+    { day: 5, items: [{ kind:'allocation', trait:null, qty:1, icon:'✨', label:'×1 Blessing' }] },
+    { day: 6, items: [{ kind:'epic', trait:'random', qty:1, icon:'🔮', label:'×1 Epic' }] },
+    { day: 7, items: [{ kind:'major', trait:'random', qty:2, icon:'⚗️', label:'×2 Major' },
+                       { kind:'evolution', trait:null, qty:1, icon:'⚡', label:'×1 Evolution' },
+                       { kind:'allocation', trait:null, qty:1, icon:'✨', label:'×1 Blessing' },
+                       { kind:'minor', trait:'random', qty:5, icon:'🧪', label:'×5 Minor' }] },
+  ];
+  const TRAITS_LIST = ['STR','VIT','AGI','FER','INT','LCK'];
+
+  function todayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY) || '{}'); }
+    catch (_) { return {}; }
+  }
+  function save(s) {
+    try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (_) {}
+  }
+  function dayOfCycle(streak) {
+    // 1-indexed: streak 1 → day 1, streak 8 → day 1 again, streak 14 → day 7
+    const idx = ((streak - 1) % 7) + 1;
+    return idx;
+  }
+  function bundleFor(streak) {
+    return LADDER.find(r => r.day === dayOfCycle(streak))?.items || [];
+  }
+  function dayDiff(fromStr, toStr) {
+    const a = new Date(fromStr + 'T00:00:00');
+    const b = new Date(toStr + 'T00:00:00');
+    return Math.round((b - a) / 86400000);
+  }
+  function canClaimToday() {
+    const s = load();
+    if (!s.lastClaim) return true;
+    return s.lastClaim !== todayStr();
+  }
+  function getStreak() {
+    const s = load();
+    if (!s.streak) return 0;
+    // If the streak was last claimed > 1 day ago, it's broken — display
+    // 0 (next claim will set it to 1). Today/yesterday → display current.
+    const diff = dayDiff(s.lastClaim, todayStr());
+    if (diff > 1) return 0;
+    return s.streak;
+  }
+  // Compute the streak that WILL be after claiming today.
+  function nextStreak() {
+    const s = load();
+    if (!s.lastClaim) return 1;
+    const diff = dayDiff(s.lastClaim, todayStr());
+    if (diff === 0) return s.streak; // already claimed
+    if (diff === 1) return s.streak + 1; // continued
+    return 1; // streak broken, restart
+  }
+
+  function refreshPill() {
+    const pill = document.getElementById('streakPill');
+    if (!pill) return;
+    const day = getStreak();
+    const dot = document.getElementById('streakClaimDot');
+    document.getElementById('streakDay').textContent = day || '—';
+    pill.style.display = '';
+    if (dot) dot.style.display = canClaimToday() ? '' : 'none';
+  }
+
+  function renderModal() {
+    const modal = document.getElementById('dailyClaimModal');
+    if (!modal) return;
+    const upcoming = nextStreak();
+    const todayDayOfCycle = dayOfCycle(upcoming);
+    document.getElementById('dailyStreakLine').innerHTML =
+      `Day <b style="color:var(--accent);">${upcoming}</b> of your login streak${
+        upcoming === 1 && load().streak > 1 ? ' (streak reset — missed a day)' : ''}.`;
+    const ladder = document.getElementById('dailyLadder');
+    ladder.innerHTML = '';
+    for (let d = 1; d <= 7; d++) {
+      const cls = d < todayDayOfCycle ? 'past' : d === todayDayOfCycle ? 'today' : 'future';
+      const ico = LADDER[d-1].items[LADDER[d-1].items.length-1].icon;
+      ladder.insertAdjacentHTML('beforeend',
+        `<div class="dl-day ${cls}"><div class="dl-num">D${d}</div><div class="dl-icon">${ico}</div></div>`);
+    }
+    const items = bundleFor(upcoming);
+    document.getElementById('dailyRewardItems').innerHTML =
+      items.map(i => `<span class="dr-item">${i.icon} ${i.label}</span>`).join('');
+    const btn = document.getElementById('dailyClaimBtn');
+    if (canClaimToday()) {
+      btn.disabled = false;
+      btn.textContent = '⚡ Claim';
+    } else {
+      btn.disabled = true;
+      btn.textContent = '✓ Already claimed today';
+    }
+  }
+
+  async function claim() {
+    if (!canClaimToday()) return;
+    const btn = document.getElementById('dailyClaimBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Claiming…'; }
+    const upcoming = nextStreak();
+    const items = bundleFor(upcoming);
+    const species = (typeof currentSpecies !== 'undefined' && currentSpecies) || 'orc';
+    try {
+      // Grant each item via the existing potion_grant edge function.
+      // Random trait → pick one from TRAITS_LIST per item.
+      for (const it of items) {
+        const trait = it.trait === 'random'
+          ? TRAITS_LIST[Math.floor(Math.random() * TRAITS_LIST.length)]
+          : it.trait;
+        await apiGrantPotion({
+          species_id: species,
+          kind: it.kind,
+          trait: trait,
+          quantity: it.qty,
+        });
+      }
+      // Persist streak
+      save({ lastClaim: todayStr(), streak: upcoming, totalClaims: (load().totalClaims || 0) + 1 });
+      // Refresh inventory + UI
+      if (typeof reloadPotions === 'function') await reloadPotions();
+      if (typeof render === 'function') render();
+      VxAudio.levelUp();
+      vxShake('small');
+      // Spark burst over the streak pill
+      const pill = document.getElementById('streakPill');
+      if (pill) vxSparkBurst(pill, 12, { color: '#ff9a7d' });
+      refreshPill();
+      // Update modal in place to "claimed" state
+      renderModal();
+      const btn2 = document.getElementById('dailyClaimBtn');
+      if (btn2) { btn2.disabled = true; btn2.textContent = '✓ Claimed — see you tomorrow!'; }
+      setTimeout(() => closeModal(), 1800);
+    } catch (e) {
+      console.error('[daily] claim failed', e);
+      if (btn) { btn.disabled = false; btn.textContent = '⚡ Claim'; }
+      vxAlert(`Daily claim failed: ${e.message || e}`, { title: 'Try again', icon: '🔥', variant: 'error' });
+    }
+  }
+
+  function openModal() {
+    renderModal();
+    document.getElementById('dailyClaimModal').classList.add('open');
+  }
+  function closeModal() {
+    document.getElementById('dailyClaimModal').classList.remove('open');
+  }
+  // Auto-open the modal on first authenticated boot of the day.
+  function maybeAutoOpen() {
+    if (canClaimToday() && getStreak() >= 0) {
+      // Tiny delay so the user sees the app has loaded first.
+      setTimeout(() => { if (canClaimToday()) openModal(); }, 1200);
+    }
+  }
+
+  return { canClaimToday, getStreak, nextStreak, claim, openModal, closeModal, refreshPill, maybeAutoOpen };
+})();
+window.VxDaily = VxDaily;
+// Wire claim button + backdrop dismiss
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('dailyClaimBtn')?.addEventListener('click', () => VxDaily.claim());
+  document.getElementById('dailyClaimModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'dailyClaimModal') VxDaily.closeModal();
+  });
+});
 
 // ─── Particle + screen-shake helpers ───────────────────────────────
 // Spawn N spark particles bursting from an element's center.
@@ -9281,6 +9552,14 @@ async function boot() {
     if (window.Equipment) {
       loadInventory();
       grantStarterInventoryIfEmpty();
+    }
+
+    // Phase K: refresh the daily-streak pill + auto-open the claim modal
+    // if today's reward hasn't been claimed yet. Tiny delay so users see
+    // the app fully load first.
+    if (window.VxDaily) {
+      VxDaily.refreshPill();
+      VxDaily.maybeAutoOpen();
     }
 
     // ── Deep-link: handle ?champion=<id> share URLs ──
