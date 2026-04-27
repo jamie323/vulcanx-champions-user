@@ -201,7 +201,7 @@
     margin-bottom: 8px;
   }
   .cc-action-row {
-    display: grid; grid-template-columns: 90px 1fr 90px;
+    display: grid; grid-template-columns: 90px minmax(0, 1fr) 90px;
     gap: 8px; align-items: stretch;
   }
   .cc-feed-big { width: 100%; margin: 0 !important; min-height: 56px; }
@@ -387,25 +387,29 @@
     .topbar .shop-btn { padding: 6px 10px; font-size: 11px; letter-spacing: 0.5px; }
     .topbar .wallet-chip { padding: 4px 8px; font-size: 10px; }
 
-    /* Main nav: icons-only on mobile so all 6 fit without horizontal
-       scroll. Tester report 2026-04-27 (Ric O.): horizontal-scrolling
-       nav was capturing vertical swipes and creating a "stuck scroll"
-       feeling — one of the "3 scroll areas" the user could get trapped
-       in. Now the 6 emoji-only buttons fit ≥320px screens; vertical
-       page scroll is the only scroll on the page. */
+    /* Main nav on mobile: stacked icon + tiny label, mobile-app
+       pattern. Ric O. tester report 2026-04-27: "The headings are
+       now gone" after my icon-only pass made navigation cryptic.
+       Now icons stay on top with a 9px label below; everything fits
+       and users can read what each button does. No horizontal scroll. */
     .main-nav {
-      padding: 6px 8px;
-      height: auto; min-height: 52px;
-      gap: 4px;
+      padding: 4px 6px;
+      height: auto; min-height: 56px;
+      gap: 3px;
       justify-content: space-between;
     }
     .nav-btn {
-      padding: 8px 0; font-size: 18px; letter-spacing: 0;
+      padding: 6px 2px; font-size: 9px; letter-spacing: 0.5px;
       flex: 1; min-width: 0; white-space: nowrap;
-      gap: 0;
+      flex-direction: column; gap: 2px;
+      text-transform: uppercase;
     }
-    .nav-btn .nav-txt { display: none; }
-    .nav-btn .nav-ico { font-size: 20px; }
+    .nav-btn .nav-ico { font-size: 18px; line-height: 1; }
+    .nav-btn .nav-txt {
+      display: block; font-size: 9px; font-weight: 700;
+      overflow: hidden; text-overflow: ellipsis;
+      max-width: 100%;
+    }
     .nav-admin { display: none !important; }
 
     /* Compact champion view at mobile width */
@@ -414,10 +418,21 @@
     .cc-card { padding: 12px 12px; border-radius: 10px; }
     .cc-name { font-size: 22px; }
     .cc-stage-frame { max-height: 320px; }
-    .cc-action-row { grid-template-columns: 78px 1fr 78px; gap: 6px; }
-    .cc-side-btn { padding: 4px 2px; }
+    /* BATCH button was clipping off the right edge on mobile because
+       1fr expands to fit content (and the FEED button's giant padding
+       + letter-spacing was forcing it past column width). Use minmax(0,…)
+       so the FEED column can shrink, plus actually shrink the button. */
+    .cc-action-row { grid-template-columns: 64px minmax(0, 1fr) 64px; gap: 5px; }
+    .cc-side-btn { padding: 4px 2px; min-height: 56px; }
     .cc-side-ico { font-size: 16px; }
     .cc-side-label { font-size: 8px; }
+    /* Shrink the FEED button so its content actually fits the middle
+       column on phones. Was 18px 28px padding + 18px font + 2px letter-
+       spacing, which on mobile blew the row past the card width. */
+    .cc-feed-big { padding: 10px 8px !important; font-size: 13px !important;
+      letter-spacing: 0.5px !important; min-height: 56px; }
+    .cc-feed-big .feed-top-label { gap: 4px; }
+    .cc-feed-big .feed-top-count { font-size: 10px; }
     .cc-quick-grid { gap: 4px; }
     .cc-qa-btn { padding: 8px 2px; font-size: 10px; }
     .cc-qa-ico { font-size: 16px; }
@@ -4054,7 +4069,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260427-card-uniform',
+  console.log('%c🛡️ VulcanX Champions · v20260427-nav-batch-fit',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -6469,15 +6484,21 @@ function render() {
   // ── RIGHT PANEL: Level & Progress
   document.getElementById('levelBig').textContent = String(state.level).padStart(2, '0');
   document.getElementById('currentStageName').textContent = stage.name;
-  // "Next: Pup (evolve at L5)" reads more clearly than "Pup at L5" —
-  // tester confusion 2026-04-26 (Ric O.: "I don't quite understand the
-  // levels"). The minLevel is the EVOLVE THRESHOLD; after evolving you
-  // become L(minLevel+1) of the next stage. Older label looked like
-  // "Pup at L5" while you were already AT L5, suggesting you stay L5 —
-  // but +1-on-evolve actually bumps you to L6. New label removes the
-  // ambiguity.
-  document.getElementById('nextStageMeta').textContent =
-    next ? `${next.name} (evolve at L${next.minLevel})` : 'Max form reached';
+  // Show the LEVEL RANGE of the next stage so this label matches the
+  // milestone ring (which reads "Pup L6-L7"). Tester 2026-04-27 (Ric O.:
+  // "It only becomes a Pup at level 6, right?") — the previous "evolve
+  // at L5" wording confused users who saw "L5" and thought they'd be a
+  // Pup AT L5. Showing "Pup · L6-L7" matches the ring + makes the
+  // resulting level explicit.
+  if (next) {
+    const nextLo = (next.minLevel ?? 0) + 1;
+    const nextNext = STAGES[state.stageIdx + 2];
+    const nextHi = nextNext?.minLevel ?? 50;
+    const range = nextLo === nextHi ? `L${nextLo}` : `L${nextLo}–L${nextHi}`;
+    document.getElementById('nextStageMeta').textContent = `${next.name} · ${range}`;
+  } else {
+    document.getElementById('nextStageMeta').textContent = 'Max form reached';
+  }
 
   // Label under the bar adapts to state so the keeper sees the right
   // next step:
