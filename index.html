@@ -137,6 +137,7 @@
   }
   .cc-name-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
   .cc-name { font-size: 26px; font-weight: 800; letter-spacing: 0.3px; color: var(--text); flex: 1; line-height: 1.15; }
+  .cc-identity-actions { display: flex; gap: 4px; flex-shrink: 0; }
   .cc-species-row { display: flex; align-items: center; gap: 6px; font-size: 13px; flex-wrap: wrap; }
   .cc-species-emoji { font-size: 18px; }
   .cc-species-name { color: var(--text); font-weight: 700; }
@@ -388,6 +389,75 @@
      the page is the only scroll container. */
   @media (max-width: 1400px) {
     .cc-story-text { max-height: none; overflow-y: visible; padding-right: 0; }
+  }
+
+  /* ═══ EVOLUTION + BLESSING LONG BARS (post-refactor) ═══ */
+  .cc-evo-potion-bar,
+  .cc-blessing-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 14px;
+    background: rgba(20,12,20,0.85);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.15s;
+  }
+  .cc-evo-potion-bar { margin-top: 12px; border-color: rgba(255,205,107,0.3); }
+  .cc-evo-potion-bar:hover,
+  .cc-blessing-bar:hover {
+    border-color: var(--accent);
+    background: rgba(255,205,107,0.06);
+    transform: translateX(2px);
+  }
+  .cc-evo-potion-bar .cep-icon,
+  .cc-blessing-bar .cep-icon {
+    font-size: 22px; line-height: 1; flex-shrink: 0;
+  }
+  .cc-evo-potion-bar .cep-label,
+  .cc-blessing-bar .cep-label {
+    font-family: 'Cinzel', serif; font-size: 13px;
+    color: var(--accent); letter-spacing: 1.2px;
+    text-transform: uppercase; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .cc-evo-potion-bar .cep-count,
+  .cc-blessing-bar .cep-count {
+    font-size: 14px; font-weight: 800;
+    color: var(--text);
+    background: rgba(255,255,255,0.06);
+    padding: 2px 8px; border-radius: 999px;
+    flex-shrink: 0;
+  }
+  .cc-evo-potion-bar .cep-hint,
+  .cc-blessing-bar .cep-hint {
+    font-size: 11px; color: var(--muted);
+    flex: 1; min-width: 0; text-align: right;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  /* Evo-ready glow when player can actually evolve. Reuses existing
+     .evo-ready hook from the old card. */
+  .cc-evo-potion-bar.evo-ready {
+    border-color: var(--legend);
+    background: linear-gradient(90deg, rgba(255,140,40,0.12), rgba(255,205,107,0.06));
+    animation: evoReadyPulse 2s ease-in-out infinite;
+    box-shadow: 0 0 24px rgba(255,140,40,0.3);
+  }
+  @keyframes evoReadyPulse {
+    0%,100% { box-shadow: 0 0 14px rgba(255,140,40,0.25); }
+    50%     { box-shadow: 0 0 32px rgba(255,140,40,0.55); }
+  }
+  .cc-evo-potion-bar.empty,
+  .cc-blessing-bar.empty {
+    opacity: 0.55;
+  }
+
+  /* Center action row in two-col mode (after Boosts button removal) */
+  .cc-action-row.two-col {
+    grid-template-columns: minmax(0, 1fr) 80px;
+  }
+  @media (max-width: 768px) {
+    .cc-action-row.two-col { grid-template-columns: minmax(0, 1fr) 64px; }
   }
 
   /* ═══ PHASE N — BOND + MOOD CARD ═══ */
@@ -1955,10 +2025,46 @@
   .feed-hero-btn:disabled .count { color: var(--muted); }
 
   .trait-row { display: grid;
-    grid-template-columns: 30px 1fr auto auto;
+    grid-template-columns: 30px 1fr auto auto auto;
     align-items: center; gap: 10px;
     padding: 10px 0; border-bottom: 1px dashed var(--border); }
   .trait-row:last-child { border: none; }
+
+  /* Inline feed button — Trello "Potions could be in a better spot"
+     (Ric O.). Each trait row gets its own one-tap feed button so the
+     keeper sees stat + potion stock + projected gain together, instead
+     of jumping between stats card and a separate potion grid. */
+  .trait-feed-btn {
+    background: rgba(255,205,107,0.08);
+    border: 1px solid rgba(255,205,107,0.3);
+    border-radius: 8px;
+    padding: 6px 8px;
+    cursor: pointer;
+    color: var(--accent);
+    font-weight: 700; letter-spacing: 0.5px;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 1px; min-width: 50px;
+    transition: all 0.15s;
+  }
+  .trait-feed-btn:hover {
+    background: rgba(255,205,107,0.18);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .trait-feed-btn:disabled,
+  .trait-feed-btn.empty {
+    opacity: 0.35; cursor: not-allowed;
+    background: rgba(255,255,255,0.03);
+  }
+  .trait-feed-btn .tfb-emoji { font-size: 16px; line-height: 1; }
+  .trait-feed-btn .tfb-count { font-size: 11px; color: var(--text); }
+  .trait-feed-btn .tfb-gain  { font-size: 9px; color: #9effc7; letter-spacing: 0.3px; }
+  .trait-feed-btn.empty .tfb-gain { display: none; }
+  .trait-feed-btn.at-cap {
+    border-style: dashed;
+    color: var(--muted);
+  }
+  .trait-feed-btn.at-cap .tfb-gain { color: #ffd28a; }
   .trait-icon { width: 30px; height: 30px; border-radius: 5px;
     display: flex; align-items: center; justify-content: center;
     font-size: 11px; font-weight: 800; }
@@ -5955,7 +6061,11 @@
       <div class="cc-eyebrow">Champion</div>
       <div class="cc-name-row">
         <div class="cc-name" id="aboutName">Grokk the Whelp</div>
-        <button class="name-edit-btn" onclick="openRenameModal()" title="Rename (5 PYR)">✏️</button>
+        <div class="cc-identity-actions">
+          <button class="name-edit-btn" onclick="openRenameModal()" title="Rename (5 PYR)">✏️</button>
+          <button class="name-edit-btn" onclick="openEvolutionAlbum()" title="Evolution Album — see every stage">📸</button>
+          <button class="name-edit-btn" onclick="shareChampion()" title="Share this champion">🔗</button>
+        </div>
       </div>
       <div class="cc-species-row">
         <span class="cc-species-emoji" id="aboutSpeciesEmoji">🟢</span>
@@ -5995,6 +6105,17 @@
         <div class="evo-bar"><div class="evo-fill" id="evoFill" style="width:0%"></div></div>
         <div class="cc-evo-pct"><b id="evoPct">0</b>% <span id="evoPctLabel">to Level <span id="nextLevelNum">02</span></span></div>
       </div>
+      <!-- Evolution potion as a long bar under progression (Trello
+           "Potions could be in a better spot" — Ric O. April 27).
+           Replaces the standalone Evolution card in the Potions &
+           Blessings grid. Same click target, same hint logic. -->
+      <div class="cc-evo-potion-bar" id="specEvoRow" onclick="tryEvolveFromPotion()"
+           title="Evolution Potion — consumed at a gate with a full bar to advance to the next stage">
+        <span class="cep-icon">⚡</span>
+        <span class="cep-label">Evolution Potion</span>
+        <span class="cep-count" id="invEvo">×0</span>
+        <span class="cep-hint" id="evoPotionHint"></span>
+      </div>
     </div>
   </aside>
 
@@ -6012,12 +6133,11 @@
 
     <div class="cc-action-block">
       <div class="cc-action-eyebrow">Recommended Action</div>
-      <div class="cc-action-row">
-        <button class="cc-side-btn" id="boostsBtn" title="Open special potions">
-          <span class="cc-side-ico">🧪</span>
-          <span class="cc-side-label">Boosts</span>
-          <span class="cc-side-count" id="ccBoostsCount">0</span>
-        </button>
+      <!-- Boosts button removed (Trello "Potions could be in a better
+           spot" — Ric O.): it opened the same trait-potion modal that
+           the per-stat inline feed buttons now replace. Center column is
+           cleaner with just FEED + BATCH. -->
+      <div class="cc-action-row two-col">
         <button class="feed-top-bar cc-feed-big" id="feedHero">
           <span class="feed-top-label">🧪 Feed Me!</span>
           <span class="feed-top-count" id="feedCount">0 ready</span>
@@ -6052,49 +6172,24 @@
       <div id="bondPanel"></div>
     </div>
 
-    <div class="cc-card cc-quick-card">
-      <div class="cc-card-title">Quick Actions</div>
-      <div class="cc-quick-grid">
-        <button class="cc-qa-btn" onclick="document.getElementById('inventoryBtn')?.click()">
-          <span class="cc-qa-ico">⚔️</span><span>Equip</span>
-        </button>
-        <button class="cc-qa-btn cc-qa-feed" onclick="document.getElementById('feedHero')?.click()">
-          <span class="cc-qa-ico">🥄</span><span>Feed</span>
-        </button>
-        <button class="cc-qa-btn" onclick="openTraitPotionModal()">
-          <span class="cc-qa-ico">🧪</span><span>Potions</span>
-        </button>
-        <button class="cc-qa-btn" onclick="openEvolutionAlbum()" title="Evolution Album — see every stage">
-          <span class="cc-qa-ico">📸</span><span>Album</span>
-        </button>
-        <button class="cc-qa-btn" onclick="shareChampion()">
-          <span class="cc-qa-ico">🔗</span><span>Share</span>
-        </button>
-      </div>
-    </div>
+    <!-- Quick Actions card removed (Trello "Potions could be in a better
+         spot" — Ric O.). Each button found a better home: Equip →
+         Equipment card on the left, Feed → big FEED button in the centre
+         column action row, Potions → inline per-trait feed buttons in the
+         stats card above, Album + Share → identity card top-right. -->
 
-    <div class="cc-card cc-special-pot-card">
-      <div class="cc-card-title">Potions &amp; Blessings</div>
-      <div class="cc-special-pot-grid">
-        <div class="cc-pot-card" id="specEvoRow" onclick="tryEvolveFromPotion()"
-             title="Evolution Potion — consumed at a gate with full bar to advance to next stage">
-          <div class="cc-pot-ico">⚡</div>
-          <div class="cc-pot-name">Evolution</div>
-          <div class="cc-pot-count" id="invEvo">×0</div>
-        </div>
-        <div class="cc-pot-card" id="allocPotionRow"
-             title="Blessing — distribute 40 stat points freely">
-          <div class="cc-pot-ico">✨</div>
-          <div class="cc-pot-name">Blessing</div>
-          <div class="cc-pot-count" id="invAlloc">×0</div>
-        </div>
-        <div class="cc-pot-card cc-pot-trait" onclick="openTraitPotionModal()"
-             title="Trait potions — open the full bottle grid">
-          <div class="cc-pot-ico">🧪</div>
-          <div class="cc-pot-name">Trait</div>
-          <div class="cc-pot-count" id="ccTraitTotal">×0</div>
-        </div>
-      </div>
+    <!-- Blessing as a long full-width bar (Trello "Potions could be in a
+         better spot" — Ric O.). Blessing now sits right under the stats
+         card, next to where it's actually used. The standalone Trait card
+         is removed (each trait row in stats has its own inline feed
+         button) and the Evolution card moved up into the Level &
+         Progression card on the left column. -->
+    <div class="cc-blessing-bar" id="allocPotionRow"
+         title="Blessing — distribute 40 stat points freely">
+      <span class="cep-icon">✨</span>
+      <span class="cep-label">Blessing</span>
+      <span class="cep-count" id="invAlloc">×0</span>
+      <span class="cep-hint">Distribute 40 free stat points</span>
     </div>
 
     <div class="cc-card cc-story-card">
@@ -8722,26 +8817,55 @@ function render() {
     const val = state.stats[t] || STAGE_FLOORS[state.stageIdx][i];
     const atCap = val >= cap;
     const pct = Math.round((val/cap)*100);
-    // Trello UX request (2026-04-26): show the potion emoji next to each
-    // stat so the keeper can visually match "this stat" → "that potion bottle"
-    // in the feed grid below. Same TRAIT_EMOJI map the bottles use.
     const potionEmoji = TRAIT_EMOJI[t] || '🧪';
+    // Inline feed button (Trello "Potions could be in a better spot",
+    // Ric O. April 27): per-trait feed control sits next to the stat
+    // it affects, so the keeper sees count + projected gain right there
+    // and doesn't have to jump down to the potion grid.
+    const count = state.inv?.[t] || 0;
+    const isLocked = canEvolve();
+    const disabled = count <= 0 || isLocked;
+    const gain = predictPotionGain(t, 'minor');
+    const btnClass = ['trait-feed-btn',
+      count === 0 ? 'empty' : '',
+      atCap ? 'at-cap' : ''].filter(Boolean).join(' ');
+    const btnLabel = atCap ? `+bar` : `+${gain}`;
+    const btnTitle = isLocked
+      ? 'Evolve first — bar is full at the gate'
+      : count === 0
+        ? `No ${TRAIT_NAMES[t]} potions yet — visit the Shop or run a Quest`
+        : atCap
+          ? `${TRAIT_NAMES[t]} maxed for this stage. Feeding still fills the Evolution Bar (no stat gain).`
+          : `Pour 1 ${TRAIT_NAMES[t]} potion → +${gain} ${t}`;
     tBox.insertAdjacentHTML('beforeend',
-      `<div class="trait-row">
+      `<div class="trait-row" data-trait-row="${t}">
         <div class="trait-icon icon-${t}">${t}</div>
         <div class="trait-info">
-          <div class="trait-name"><span class="trait-potion-match" title="Matches the ${potionEmoji} potion in the feed grid below">${potionEmoji}</span> ${TRAIT_NAMES[t]}${leanFor(t)}
+          <div class="trait-name">${TRAIT_NAMES[t]}${leanFor(t)}
             <span class="info-dot" data-help="${t}">?</span></div>
           <div class="trait-bar"><div class="trait-fill ${atCap?'cap':''}"
             style="width:${pct}%"></div></div>
         </div>
         <div class="trait-value">${Math.round(val)}<small>/${cap}</small></div>
+        <button class="${btnClass}" data-feed-trait="${t}"
+          ${disabled?'disabled':''}
+          title="${btnTitle.replace(/"/g,'&quot;')}">
+          <span class="tfb-emoji">${potionEmoji}</span>
+          <span class="tfb-count">×${count}</span>
+          <span class="tfb-gain">${btnLabel}</span>
+        </button>
       </div>`);
   });
   tBox.querySelectorAll('.info-dot').forEach(dot => {
     dot.addEventListener('click', ev => {
       ev.stopPropagation();
       showTooltip(dot, TRAIT_HELP[dot.dataset.help]);
+    });
+  });
+  // Wire up the inline per-trait feed buttons.
+  tBox.querySelectorAll('.trait-feed-btn[data-feed-trait]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      usePotion(btn.dataset.feedTrait, btn);
     });
   });
 
