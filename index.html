@@ -4162,7 +4162,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260427-daily-streak',
+  console.log('%c🛡️ VulcanX Champions · v20260427-quests',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -4462,6 +4462,7 @@
   <button class="nav-btn" data-view="adopt"><span class="nav-ico">✨</span><span class="nav-txt">Adopt New</span></button>
   <button class="nav-btn" data-view="howto"><span class="nav-ico">📖</span><span class="nav-txt">How it Works</span></button>
   <button class="nav-btn" data-view="explore"><span class="nav-ico">🔎</span><span class="nav-txt">Explore</span></button>
+  <button class="nav-btn" data-view="quests"><span class="nav-ico">🗺️</span><span class="nav-txt">Quests</span></button>
   <button class="nav-btn" id="arenaNavBtn"><span class="nav-ico">⚔️</span><span class="nav-txt">Arena</span></button>
   <label class="nav-admin">
     <input type="checkbox" id="adminToggle"/> 🛠 Admin Mode
@@ -4891,6 +4892,153 @@
     <div id="exploreList"></div>
   </div>
 </div>
+
+<!-- ======== VIEW: QUESTS / ADVENTURES (Phase L) ======== -->
+<div class="view view-quests">
+  <div class="quests-wrap">
+    <div class="page-hd">
+      <div>
+        <h2>🗺️ Adventures</h2>
+        <div class="sub">Send your champion away for stat XP + Evolution Bar progress. Multiple champions can adventure simultaneously. Rewards apply directly — no inventory items, no NFT clutter.</div>
+      </div>
+    </div>
+
+    <div class="quests-active-list" id="questsActiveList">
+      <!-- Active quests rendered here by VxQuests.renderActive() -->
+    </div>
+
+    <div class="quests-section-label">🏞️ Browse Adventures</div>
+    <div class="quests-champ-picker" id="questsChampPicker">
+      <span class="qcp-label">For champion:</span>
+      <select id="questsChampSelect" class="qcp-select"></select>
+    </div>
+    <div class="quests-grid" id="questsGrid"></div>
+  </div>
+</div>
+
+<!-- Quest start modal — pick duration after picking adventure -->
+<div class="modal-backdrop" id="questStartModal">
+  <div class="modal" style="width: 460px;">
+    <h3 id="qsmTitle">🏹 Hunting Grounds</h3>
+    <div class="sub" id="qsmBlurb">…</div>
+    <div id="qsmStatTags" style="margin: 10px 0; display:flex; gap:6px; flex-wrap:wrap;"></div>
+    <div class="qsm-duration-label">Pick a duration:</div>
+    <div class="qsm-duration-grid">
+      <button class="qsm-dur-btn" data-tier="quick">
+        <span class="qd-emoji">⚡</span>
+        <span class="qd-name">Quick</span>
+        <span class="qd-time">15 min</span>
+        <span class="qd-reward" id="qsmRewardQuick">+1-3 / +2-5%</span>
+      </button>
+      <button class="qsm-dur-btn" data-tier="standard">
+        <span class="qd-emoji">⏳</span>
+        <span class="qd-name">Standard</span>
+        <span class="qd-time">1 hour</span>
+        <span class="qd-reward" id="qsmRewardStandard">+5-12 / +8-15%</span>
+      </button>
+      <button class="qsm-dur-btn" data-tier="long">
+        <span class="qd-emoji">🌙</span>
+        <span class="qd-name">Long</span>
+        <span class="qd-time">4 hours</span>
+        <span class="qd-reward" id="qsmRewardLong">+15-30 / +20-40%</span>
+      </button>
+    </div>
+    <button class="btn-primary" onclick="document.getElementById('questStartModal').classList.remove('open')" style="margin-top:14px;width:100%;background:#2a1a22;color:var(--muted);border:1px solid var(--border);">Cancel</button>
+  </div>
+</div>
+
+<!-- Quest completion modal — shown when a quest claim resolves -->
+<div class="modal-backdrop" id="questCompleteModal">
+  <div class="modal" style="width: 460px; text-align:center;">
+    <div style="font-size:48px;margin-bottom:8px;" id="qcmEmoji">🏹</div>
+    <h3 style="margin:0 0 4px;" id="qcmTitle">Adventure complete!</h3>
+    <div class="sub" id="qcmSub" style="margin-bottom:14px;">…</div>
+    <div id="qcmRewards" class="qcm-rewards"></div>
+    <button class="btn-primary" id="qcmCloseBtn" style="margin-top:14px;width:100%;">Continue</button>
+  </div>
+</div>
+
+<style>
+  .quests-wrap { max-width: 880px; margin: 0 auto; padding: 24px 20px 80px; }
+  .quests-active-list { margin: 16px 0 28px; display: flex; flex-direction: column; gap: 10px; }
+  .quest-active-row {
+    background: rgba(20,12,20,0.85); border: 1px solid rgba(255,205,107,0.3);
+    border-radius: 10px; padding: 12px 14px;
+    display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center;
+  }
+  .quest-active-row.ready { border-color: var(--accent); box-shadow: 0 0 14px rgba(255,205,107,0.25); }
+  .quest-active-row .qar-emoji { font-size: 28px; line-height: 1; text-align: center; }
+  .quest-active-row .qar-info { min-width: 0; }
+  .quest-active-row .qar-name { font-weight: 700; color: var(--text); font-size: 14px; }
+  .quest-active-row .qar-detail { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .quest-active-row .qar-timer { font-family: monospace; color: var(--accent); font-size: 18px; font-weight: 700; }
+  .quest-active-row .qar-claim {
+    background: linear-gradient(180deg, #ffcd6b, #ff8e2e);
+    color: #1a0a05; border: none; padding: 10px 16px; border-radius: 8px;
+    font-weight: 800; cursor: pointer; letter-spacing: 1px; font-size: 12px;
+    text-transform: uppercase;
+  }
+  .quest-active-row .qar-claim:hover { filter: brightness(1.08); }
+
+  .quests-section-label { font-size: 11px; color: var(--muted); letter-spacing: 2px;
+    text-transform: uppercase; margin: 24px 0 8px; }
+  .quests-champ-picker { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; font-size: 13px; }
+  .qcp-label { color: var(--muted); }
+  .qcp-select {
+    background: rgba(20,12,20,0.85); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px;
+    font-size: 13px; min-width: 200px;
+  }
+
+  .quests-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+  }
+  .quest-card {
+    background: rgba(20,12,20,0.85); border: 1px solid rgba(255,205,107,0.18);
+    border-radius: 12px; padding: 14px; cursor: pointer; transition: all 0.15s;
+  }
+  .quest-card:hover {
+    border-color: rgba(255,205,107,0.5); transform: translateY(-2px);
+    box-shadow: 0 4px 18px rgba(0,0,0,0.4);
+  }
+  .quest-card.disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .quest-card.disabled:hover { border-color: rgba(255,205,107,0.18); transform: none; box-shadow: none; }
+  .quest-card .qc-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .quest-card .qc-emoji { font-size: 22px; }
+  .quest-card .qc-name { font-weight: 700; font-size: 14px; color: var(--text); }
+  .quest-card .qc-blurb { font-size: 11px; color: var(--muted); line-height: 1.5; min-height: 44px; }
+  .quest-card .qc-stats { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; }
+  .qc-stat-pill {
+    background: rgba(255,205,107,0.12); color: var(--accent);
+    padding: 2px 7px; border-radius: 4px;
+    font-size: 9px; letter-spacing: 1px; font-weight: 700;
+  }
+  .qc-stat-pill.secondary { background: rgba(255,255,255,0.05); color: var(--muted); }
+
+  .qsm-duration-label { font-size: 11px; color: var(--muted); letter-spacing: 1.5px;
+    text-transform: uppercase; margin: 14px 0 8px; }
+  .qsm-duration-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .qsm-dur-btn {
+    background: rgba(20,12,20,0.85); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 6px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    transition: all 0.15s; color: var(--text);
+  }
+  .qsm-dur-btn:hover { border-color: var(--accent); background: rgba(255,205,107,0.06); }
+  .qsm-dur-btn .qd-emoji { font-size: 22px; }
+  .qsm-dur-btn .qd-name { font-weight: 700; font-size: 13px; letter-spacing: 0.5px; }
+  .qsm-dur-btn .qd-time { font-size: 11px; color: var(--muted); }
+  .qsm-dur-btn .qd-reward { font-size: 10px; color: var(--accent); font-weight: 700; margin-top: 4px; }
+
+  .qcm-rewards { display: flex; flex-direction: column; gap: 6px;
+    background: rgba(255,205,107,0.06); border-radius: 8px; padding: 12px;
+    border: 1px solid rgba(255,205,107,0.25); }
+  .qcm-rewards .qcr-row { display: flex; justify-content: space-between; align-items: center;
+    font-size: 13px; }
+  .qcm-rewards .qcr-stat { color: var(--text); }
+  .qcm-rewards .qcr-val { color: var(--accent); font-weight: 800; font-family: monospace; }
+</style>
 
 <!-- ======== VIEW: ARENA (Phase 4 MVP — vs bots) ======== -->
 <div class="view view-arena">
@@ -6530,6 +6678,318 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+// ============================================================
+// PHASE L — QUESTS / ADVENTURES (2026-04-27)
+// Async "send your champion away for X minutes/hours" mechanic.
+// Multiple champions can adventure simultaneously. Rewards apply
+// directly to the creature (stat XP + bar fill); no NFT items
+// granted so the marketplace economy stays meaningful.
+//
+// Active quests are tracked in localStorage (vx_quests_v1) keyed by
+// champion id. Server is the source of truth on rewards (deterministic
+// from the quest event id) — client can't cheat the math.
+// ============================================================
+
+const VxQuests = (() => {
+  const KEY = 'vx_quests_v1'; // { [championId]: { eventId, adventureId, durationTier, startedAt, endsAt } }
+  // Mirrors backend ADVENTURES — keep in sync.
+  const ADVENTURES = {
+    hunting_grounds: { name:'Hunting Grounds', emoji:'🏹',
+      blurb:'Stalk wild prey across rolling plains. Sharpens reflexes and raw strength.',
+      primaries:['STR','AGI'], secondaries:['VIT','FER'] },
+    ancient_ruins:   { name:'Ancient Ruins', emoji:'🏛️',
+      blurb:'Decipher faded glyphs in forgotten halls. The air hums with old magic.',
+      primaries:['INT','LCK'], secondaries:['FER','AGI'] },
+    spirit_caves:    { name:'Spirit Caves', emoji:'👻',
+      blurb:'Meditate among watchful spirits. Builds endurance of body and mind.',
+      primaries:['INT','VIT'], secondaries:['LCK','FER'] },
+    treasure_crypts: { name:'Treasure Crypts', emoji:'💎',
+      blurb:'Tip-toe past trapped vaults. Fortune favors the nimble and the bold.',
+      primaries:['LCK','FER'], secondaries:['AGI','INT'] },
+    forge_pits:      { name:'Forge Pits', emoji:'🔥',
+      blurb:'Train under hammer and heat. Forges raw power and resilience.',
+      primaries:['STR','VIT'], secondaries:['FER','INT'] },
+    moonlit_glades:  { name:'Moonlit Glades', emoji:'🌙',
+      blurb:'Hunt by moonlight. Quickens the step and sharpens fortune\'s edge.',
+      primaries:['AGI','LCK'], secondaries:['INT','FER'] },
+    ember_wastes:    { name:'Ember Wastes', emoji:'🌋',
+      blurb:'Survive the burning sands. Tempers focus and ferocity in equal measure.',
+      primaries:['FER','INT'], secondaries:['STR','VIT'] },
+    whisper_marshes: { name:'Whisper Marshes', emoji:'🌿',
+      blurb:'Tend strange herbs in mist-cloaked bogs. Restorative, lucky finds.',
+      primaries:['VIT','LCK'], secondaries:['INT','AGI'] },
+  };
+  const DURATIONS = {
+    quick:    { seconds: 15*60,   label:'Quick · 15 min',    emoji:'⚡', primary:[1,3],   bar:[2,5] },
+    standard: { seconds: 60*60,   label:'Standard · 1 hr',   emoji:'⏳', primary:[5,12],  bar:[8,15] },
+    long:     { seconds: 4*60*60, label:'Long · 4 hrs',      emoji:'🌙', primary:[15,30], bar:[20,40] },
+  };
+
+  let _selectedAdventure = null;
+  let _activeChampForBrowse = null;
+  let _tickInterval = null;
+
+  function load() { try { return JSON.parse(localStorage.getItem(KEY)||'{}'); } catch (_) { return {}; } }
+  function save(o) { try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (_) {} }
+
+  function getActiveQuest(championId) {
+    const all = load();
+    return all[championId] || null;
+  }
+  function setActiveQuest(championId, q) {
+    const all = load();
+    if (q) all[championId] = q;
+    else delete all[championId];
+    save(all);
+  }
+
+  // Format milliseconds as MM:SS or HH:MM:SS
+  function fmtTimer(ms) {
+    if (ms < 0) ms = 0;
+    const s = Math.floor(ms / 1000);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+    return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  }
+
+  async function apiQuestStart(payload) {
+    const res = await apiFetch(`${FN_BASE}/champion_quest_start`, {
+      method: 'POST', headers: AUTH_HEADERS,
+      body: JSON.stringify({ wallet: getWallet(), ...payload }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(`${data.error || 'http_'+res.status}: ${data.message || ''}`.trim());
+    return data;
+  }
+  async function apiQuestComplete(payload) {
+    const res = await apiFetch(`${FN_BASE}/champion_quest_complete`, {
+      method: 'POST', headers: AUTH_HEADERS,
+      body: JSON.stringify({ wallet: getWallet(), ...payload }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(`${data.error || 'http_'+res.status}: ${data.message || ''}`.trim());
+    return data;
+  }
+
+  function renderView() {
+    if (!document.querySelector('.view-quests')) return;
+    // Champion picker
+    const sel = document.getElementById('questsChampSelect');
+    if (sel) {
+      sel.innerHTML = '';
+      myChampions.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = `${c.name} · L${c.level} · ${SPECIES[c.species_id]?.label || c.species_id}`;
+        sel.appendChild(opt);
+      });
+      if (!_activeChampForBrowse || !myChampions.find(c => c.id === _activeChampForBrowse)) {
+        _activeChampForBrowse = myChampions[0]?.id;
+      }
+      if (_activeChampForBrowse) sel.value = _activeChampForBrowse;
+      sel.onchange = () => { _activeChampForBrowse = sel.value; renderGrid(); };
+    }
+    renderActive();
+    renderGrid();
+    // Tick the timers every second while the view is open
+    if (_tickInterval) clearInterval(_tickInterval);
+    _tickInterval = setInterval(() => renderActive(), 1000);
+  }
+
+  function renderActive() {
+    const root = document.getElementById('questsActiveList');
+    if (!root) return;
+    const all = load();
+    const entries = Object.entries(all).map(([cid, q]) => ({ ...q, championId: cid }));
+    if (entries.length === 0) {
+      root.innerHTML = '<div style="color:var(--muted);font-style:italic;padding:8px 4px;font-size:13px;">No active adventures. Pick one below to send a champion out.</div>';
+      return;
+    }
+    root.innerHTML = '';
+    for (const q of entries) {
+      const champ = myChampions.find(c => c.id === q.championId);
+      const champName = champ?.name || 'Champion';
+      const adv = ADVENTURES[q.adventureId] || { name: q.adventureId, emoji: '🗺️' };
+      const dur = DURATIONS[q.durationTier] || { label: q.durationTier };
+      const remaining = (new Date(q.endsAt)).getTime() - Date.now();
+      const ready = remaining <= 0;
+      root.insertAdjacentHTML('beforeend', `
+        <div class="quest-active-row ${ready?'ready':''}" data-cid="${q.championId}" data-event="${q.eventId}">
+          <div class="qar-emoji">${adv.emoji}</div>
+          <div class="qar-info">
+            <div class="qar-name">${champName} — ${adv.name}</div>
+            <div class="qar-detail">${dur.label}${ready ? ' · returned, ready to claim!' : ''}</div>
+          </div>
+          ${ready
+            ? `<button class="qar-claim">⚡ Claim</button>`
+            : `<div class="qar-timer">${fmtTimer(remaining)}</div>`}
+        </div>
+      `);
+    }
+    root.querySelectorAll('.qar-claim').forEach(btn => {
+      const row = btn.closest('.quest-active-row');
+      btn.addEventListener('click', () => claim(row.dataset.cid, row.dataset.event));
+    });
+  }
+
+  function renderGrid() {
+    const root = document.getElementById('questsGrid');
+    if (!root) return;
+    const champId = _activeChampForBrowse;
+    const champBusy = champId && getActiveQuest(champId) != null;
+    root.innerHTML = '';
+    for (const [advId, adv] of Object.entries(ADVENTURES)) {
+      const primaryPills = adv.primaries.map(t => `<span class="qc-stat-pill">${t}</span>`).join('');
+      const secondaryPills = adv.secondaries.map(t => `<span class="qc-stat-pill secondary">${t}</span>`).join('');
+      const disabled = champBusy ? 'disabled' : '';
+      root.insertAdjacentHTML('beforeend', `
+        <div class="quest-card ${disabled}" data-adv="${advId}">
+          <div class="qc-head"><span class="qc-emoji">${adv.emoji}</span><span class="qc-name">${adv.name}</span></div>
+          <div class="qc-blurb">${adv.blurb}</div>
+          <div class="qc-stats">${primaryPills}${secondaryPills}</div>
+        </div>
+      `);
+    }
+    if (champBusy) {
+      root.insertAdjacentHTML('afterbegin',
+        `<div style="grid-column:1/-1;padding:10px 12px;background:rgba(255,205,107,0.06);border:1px dashed var(--accent-dim);border-radius:8px;color:var(--accent);font-size:12px;">
+           ⏳ This champion is already adventuring. Pick another champion above, or wait for the current quest to return.
+         </div>`);
+    } else {
+      root.querySelectorAll('.quest-card').forEach(card => {
+        card.addEventListener('click', () => openStartModal(card.dataset.adv));
+      });
+    }
+  }
+
+  function openStartModal(adventureId) {
+    _selectedAdventure = adventureId;
+    const adv = ADVENTURES[adventureId];
+    if (!adv) return;
+    document.getElementById('qsmTitle').textContent = `${adv.emoji} ${adv.name}`;
+    document.getElementById('qsmBlurb').textContent = adv.blurb;
+    const tags = document.getElementById('qsmStatTags');
+    tags.innerHTML =
+      adv.primaries.map(t => `<span class="qc-stat-pill">PRIMARY · ${t}</span>`).join('') +
+      adv.secondaries.map(t => `<span class="qc-stat-pill secondary">${t}</span>`).join('');
+    // Reward range strings using current adventure
+    const fmtRange = (durK) => {
+      const d = DURATIONS[durK];
+      return `+${d.primary[0]}-${d.primary[1]} stat / +${d.bar[0]}-${d.bar[1]}% bar`;
+    };
+    document.getElementById('qsmRewardQuick').textContent    = fmtRange('quick');
+    document.getElementById('qsmRewardStandard').textContent = fmtRange('standard');
+    document.getElementById('qsmRewardLong').textContent     = fmtRange('long');
+    document.getElementById('questStartModal').classList.add('open');
+  }
+
+  async function startQuest(durationTier) {
+    if (!_selectedAdventure) return;
+    const champId = _activeChampForBrowse;
+    if (!champId) return;
+    if (getActiveQuest(champId)) {
+      vxAlert('This champion is already adventuring.', { title: 'Already on quest', icon: '🗺️' });
+      return;
+    }
+    try {
+      const resp = await apiQuestStart({
+        champion_id: champId,
+        adventure_id: _selectedAdventure,
+        duration_tier: durationTier,
+      });
+      const q = resp.quest;
+      setActiveQuest(champId, {
+        eventId: q.event_id,
+        adventureId: q.adventure_id,
+        durationTier: q.duration_tier,
+        startedAt: q.started_at,
+        endsAt: q.ends_at,
+      });
+      VxAudio.click();
+      document.getElementById('questStartModal').classList.remove('open');
+      renderActive();
+      renderGrid();
+    } catch (e) {
+      vxAlert(e.message || 'Failed to start quest', { title: 'Quest start failed', icon: '🗺️', variant: 'error' });
+    }
+  }
+
+  async function claim(championId, eventId) {
+    try {
+      const resp = await apiQuestComplete({ champion_id: championId, quest_event_id: eventId });
+      // Sync champion state from server
+      const c = mapChampion(resp.champion);
+      const cached = myChampions.find(m => m.id === c.id);
+      if (cached) Object.assign(cached, c);
+      if (state.championId === c.id) {
+        state.stats = { ...c.stats };
+        state.evoPct = c.evoPct;
+        state.level = c.level;
+        state.stageIdx = c.stageIdx;
+        if (typeof render === 'function') render();
+      }
+      setActiveQuest(championId, null);
+      VxAudio.levelUp();
+      vxShake('small');
+      const layer = document.getElementById('vxFxLayer');
+      if (layer) {
+        const center = { left: window.innerWidth/2, width: 0 };
+        // Big sparkle burst from center
+        const fakeEl = { getBoundingClientRect: () => ({ left: center.left, top: window.innerHeight/2, width: 0, height: 0 }) };
+        vxSparkBurst(fakeEl, 18, { color: '#ffcd6b' });
+      }
+      showCompleteModal(resp.rewards, cached?.name || 'Champion');
+      renderActive();
+      renderGrid();
+    } catch (e) {
+      vxAlert(e.message || 'Failed to claim', { title: 'Claim failed', icon: '🗺️', variant: 'error' });
+    }
+  }
+
+  function showCompleteModal(rewards, champName) {
+    document.getElementById('qcmEmoji').textContent = rewards.adventure_emoji || '🏹';
+    document.getElementById('qcmTitle').textContent = `${champName} returned from ${rewards.adventure_name}!`;
+    const dur = DURATIONS[rewards.duration_tier]?.label || rewards.duration_tier;
+    document.getElementById('qcmSub').textContent = dur;
+    const rewardEl = document.getElementById('qcmRewards');
+    const rows = [];
+    for (const [t, v] of Object.entries(rewards.stat_gains || {})) {
+      if (v > 0) rows.push(`<div class="qcr-row"><span class="qcr-stat">${t} (${TRAIT_NAMES[t] || t})</span><span class="qcr-val">+${v}</span></div>`);
+    }
+    if (rewards.bar_fill > 0) {
+      rows.push(`<div class="qcr-row"><span class="qcr-stat">Evolution Bar</span><span class="qcr-val">+${rewards.bar_fill}%</span></div>`);
+    }
+    if (rewards.level_delta > 0) {
+      rows.push(`<div class="qcr-row"><span class="qcr-stat">⭐ Level up!</span><span class="qcr-val">+${rewards.level_delta}</span></div>`);
+    }
+    rewardEl.innerHTML = rows.length ? rows.join('') : '<div style="color:var(--muted);">All stats already at cap — nothing applied.</div>';
+    document.getElementById('questCompleteModal').classList.add('open');
+  }
+
+  return { renderView, renderActive, claim, startQuest, ADVENTURES, DURATIONS, getActiveQuest };
+})();
+window.VxQuests = VxQuests;
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Wire duration buttons in the start modal
+  document.querySelectorAll('.qsm-dur-btn').forEach(btn => {
+    btn.addEventListener('click', () => VxQuests.startQuest(btn.dataset.tier));
+  });
+  // Backdrop dismiss
+  document.getElementById('questStartModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'questStartModal') e.target.classList.remove('open');
+  });
+  // Quest complete modal close
+  document.getElementById('qcmCloseBtn')?.addEventListener('click', () => {
+    document.getElementById('questCompleteModal').classList.remove('open');
+  });
+  document.getElementById('questCompleteModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'questCompleteModal') e.target.classList.remove('open');
+  });
+});
+
 // ─── Particle + screen-shake helpers ───────────────────────────────
 // Spawn N spark particles bursting from an element's center.
 function vxSparkBurst(el, count = 8, opts = {}) {
@@ -7827,6 +8287,7 @@ const VIEW_MAP = {
   'howto':             'view-howto',
   'champion-card':     'view-champion-card',
   'arena':             'view-arena',
+  'quests':            'view-quests',
 };
 
 function navTo(viewName, payload) {
@@ -7863,6 +8324,7 @@ function navTo(viewName, payload) {
     case 'champion': renderChampionDetail(payload); break;
     case 'champion-card': renderChampionCard(payload); break;
     case 'arena': renderArena(); break;
+    case 'quests': VxQuests.renderView(); break;
   }
 }
 
