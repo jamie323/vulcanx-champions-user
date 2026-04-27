@@ -390,6 +390,103 @@
     .cc-story-text { max-height: none; overflow-y: visible; padding-right: 0; }
   }
 
+  /* ═══ PHASE N — BOND + MOOD CARD ═══ */
+  .cc-bond-card { padding: 14px 16px; }
+  .bond-mood {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 12px;
+  }
+  .bond-mood-emoji {
+    font-size: 32px; line-height: 1; flex-shrink: 0;
+    animation: bondMoodIdle 2.6s ease-in-out infinite;
+  }
+  @keyframes bondMoodIdle {
+    0%,100% { transform: translateY(0); }
+    50%     { transform: translateY(-2px); }
+  }
+  .bond-mood-text { flex: 1; min-width: 0; }
+  .bond-mood-label {
+    font-family: 'Cinzel', serif; font-size: 14px;
+    color: var(--accent); letter-spacing: 1.2px;
+    text-transform: uppercase; margin-bottom: 2px;
+  }
+  .bond-mood-blurb {
+    font-size: 12px; color: var(--muted); line-height: 1.4;
+  }
+  .bond-meter-row { padding: 0 2px; }
+  .bond-meter-label {
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: var(--text); font-weight: 700;
+    letter-spacing: 0.8px; text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .bond-meter-label .bond-pct { color: #ff8eb1; }
+  .bond-meter-track {
+    height: 8px; background: rgba(0,0,0,0.5);
+    border-radius: 999px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .bond-meter-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff6b9a, #ff8eb1, var(--accent));
+    box-shadow: 0 0 8px rgba(255,107,154,0.4);
+    transition: width 0.5s ease;
+  }
+
+  /* Stage-frame auras at higher bond tiers — subtle, not gaudy. */
+  .stage-frame.bond-companion { box-shadow: 0 0 0 2px rgba(255,107,154,0.3) inset, 0 8px 30px rgba(255,107,154,0.18); }
+  .stage-frame.bond-devoted   {
+    box-shadow: 0 0 0 2px rgba(255,107,154,0.55) inset, 0 12px 40px rgba(255,107,154,0.32);
+  }
+  .stage-frame.bond-soulbound {
+    box-shadow: 0 0 0 3px var(--legend) inset, 0 0 60px rgba(255,205,107,0.5);
+    animation: soulboundPulse 3s ease-in-out infinite;
+  }
+  @keyframes soulboundPulse {
+    0%,100% { box-shadow: 0 0 0 3px var(--legend) inset, 0 0 50px rgba(255,205,107,0.4); }
+    50%     { box-shadow: 0 0 0 3px var(--legend) inset, 0 0 80px rgba(255,205,107,0.7); }
+  }
+
+  /* Tier-up celebration toast */
+  .bond-tierup-toast {
+    position: fixed; top: 80px; left: 50%;
+    transform: translate(-50%, -20px);
+    background: linear-gradient(135deg, rgba(40,18,28,0.95), rgba(24,10,18,0.95));
+    border: 1px solid #ff8eb1;
+    border-radius: 12px;
+    padding: 14px 22px;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.6),
+                0 0 30px rgba(255,142,177,0.4);
+    z-index: 9000;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+  }
+  .bond-tierup-toast.open {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  .bond-tierup-toast .bt-emoji { font-size: 32px; }
+  .bond-tierup-toast .bt-title {
+    font-family: 'Cinzel', serif; font-size: 14px;
+    color: #ff8eb1; letter-spacing: 1.5px; text-transform: uppercase;
+  }
+  .bond-tierup-toast .bt-sub {
+    font-size: 13px; color: var(--text); font-weight: 700;
+    margin-top: 2px;
+  }
+  @media (max-width: 768px) {
+    .cc-bond-card { padding: 12px 14px; }
+    .bond-mood-emoji { font-size: 26px; }
+    .bond-mood-blurb { font-size: 11px; }
+    .bond-tierup-toast { width: calc(100vw - 24px); top: 70px; }
+  }
+
   /* Make sure the portrait image never busts its column even if the
      source asset is wider than the column width. */
   body.view-champion .stage-frame img,
@@ -4938,6 +5035,7 @@
       <button class="howto-tab" data-tab="ht-arena">🛡️ Arena</button>
       <button class="howto-tab" data-tab="ht-evolve">⚡ Evolve</button>
       <button class="howto-tab" data-tab="ht-daily">🔥 Daily</button>
+      <button class="howto-tab" data-tab="ht-bond">💞 Bond</button>
       <button class="howto-tab" data-tab="ht-faq">❓ QA Notes</button>
     </div>
 
@@ -5299,6 +5397,64 @@
       <div class="howto-tip warn">
         <span class="ti">⏰</span>
         <div><b>Streak rules:</b> you have until end-of-calendar-day to claim. Skip even one day and the streak resets to 1 — you start over. Day 7's big bundle is the carrot for keeping a full week alive.</div>
+      </div>
+    </section>
+
+    <!-- BOND + MOOD (Phase N) -->
+    <section id="ht-bond" class="howto-panel">
+      <div class="panel-icon">💞</div>
+      <h2 style="text-align:center;">Bond &amp; Mood</h2>
+      <p class="lead" style="text-align:center;">
+        Your champion isn't just stats — they have moods, and a bond that grows
+        the more you care for them. Higher bond unlocks visual flourishes and
+        signals that this champion is your <em>real</em> one.
+      </p>
+
+      <h3>Mood — how your champion feels</h3>
+      <div class="howto-feature-grid">
+        <div class="howto-feature-card"><div class="ic">😊</div><h4>Happy</h4><p>Fed within 12h. Ready for adventure.</p></div>
+        <div class="howto-feature-card"><div class="ic">🙂</div><h4>Content</h4><p>Fed in last 24h. Slightly peckish.</p></div>
+        <div class="howto-feature-card"><div class="ic">🥺</div><h4>Hungry</h4><p>1–2 days no feed. Time to stop by.</p></div>
+        <div class="howto-feature-card"><div class="ic">😴</div><h4>Restless</h4><p>2–3 days idle. Feed or fight.</p></div>
+        <div class="howto-feature-card"><div class="ic">😤</div><h4>Neglected</h4><p>3+ days alone. Cosmetic only — no penalty.</p></div>
+      </div>
+
+      <h3>Bond — your shared journey</h3>
+      <p class="lead" style="text-align:left;">
+        Bond is a <b>0–100 meter</b> per champion. Every interaction grows it
+        a little. Hit milestones to unlock visible signs of attachment.
+      </p>
+      <div class="howto-twocol">
+        <div class="col">
+          <h5>Feed Potion · +2</h5>
+          <p>Capped at +20/day per champion so grinding 100 potions doesn't insta-max.</p>
+        </div>
+        <div class="col">
+          <h5>Quest Complete · +5</h5>
+          <p>Coming home from an adventure is real bond fuel.</p>
+        </div>
+        <div class="col">
+          <h5>Arena Win · +6</h5>
+          <p>Fighting alongside builds trust. Losses don't grow bond.</p>
+        </div>
+        <div class="col">
+          <h5>Daily Claim · +3</h5>
+          <p>The currently-active champion shares your daily login reward.</p>
+        </div>
+      </div>
+
+      <h3>Bond tiers + unlocks</h3>
+      <div class="howto-feature-grid">
+        <div class="howto-feature-card"><div class="ic">🤝</div><h4>0–24 · Stranger</h4><p>Nothing yet. Keep going.</p></div>
+        <div class="howto-feature-card"><div class="ic">💝</div><h4>25 · Friend</h4><p>Pink heart pip on your champion's portrait.</p></div>
+        <div class="howto-feature-card"><div class="ic">💗</div><h4>50 · Companion</h4><p>Gentle pink frame glow.</p></div>
+        <div class="howto-feature-card"><div class="ic">💖</div><h4>75 · Devoted</h4><p>Stronger frame aura + tier-up animation.</p></div>
+        <div class="howto-feature-card"><div class="ic">💞</div><h4>100 · Soulbound</h4><p>Pulsing gold aura — unmistakable.</p></div>
+      </div>
+
+      <div class="howto-tip">
+        <span class="ti">✨</span>
+        <div><b>Why it matters:</b> bond is per-champion, so a fresh recruit starts at 0 even if your main is Soulbound. Pick favourites. Real PvP (Phase 8) will let bonded champions display their tier on their public card.</div>
       </div>
     </section>
 
@@ -5888,6 +6044,12 @@
         <div class="cc-card-title">Stats</div>
       </div>
       <div id="traits"></div>
+    </div>
+
+    <!-- Phase N: Mood + Bonding card. Body filled by VxBond.renderPanel(). -->
+    <div class="cc-card cc-bond-card">
+      <div class="cc-card-title">Bond &amp; Mood</div>
+      <div id="bondPanel"></div>
     </div>
 
     <div class="cc-card cc-quick-card">
@@ -6558,6 +6720,13 @@ async function usePotion(trait, sourceEl, tier) {
   // Phase J: audio cue at feed time — gulp on success, dull thud on cap
   if (cappedFeed) VxAudio.cap();
   else            VxAudio.feedGulp();
+
+  // Phase N: bond gain on feed (capped at +20/day per champion).
+  if (window.VxBond) {
+    const result = VxBond.onFeed(state.championId);
+    if (result?.tieredUp) VxBond.celebrateTierUp(result.newTier);
+    VxBond.renderPanel(state.championId);
+  }
 
   // animate: fly → burst → float text + bar pulse + stat count-up + juice
   potionFlyAndBurst(sourceEl || document.body, (tx, ty) => {
@@ -7342,6 +7511,13 @@ const VxDaily = (() => {
       if (typeof render === 'function') render();
       VxAudio.levelUp();
       vxShake('small');
+      // Phase N: bond gain for currently-active champion (only if there
+      // is one) — daily login is a small but meaningful bond signal.
+      if (window.VxBond && typeof state !== 'undefined' && state.championId) {
+        const bondResult = VxBond.onDailyClaim(state.championId);
+        if (bondResult?.tieredUp) VxBond.celebrateTierUp(bondResult.newTier);
+        VxBond.renderPanel(state.championId);
+      }
       // Spark burst over the streak pill
       const pill = document.getElementById('streakPill');
       if (pill) vxSparkBurst(pill, 12, { color: '#ff9a7d' });
@@ -7383,6 +7559,218 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target.id === 'dailyClaimModal') VxDaily.closeModal();
   });
 });
+
+// ============================================================
+// PHASE N — Champion Mood + Bonding (2026-04-27)
+//
+// Mood is a function of time-since-last-feed; Bonding is a 0-100 meter
+// that grows from any positive interaction (feed, quest, arena win,
+// daily claim). Both are per-champion, persisted to localStorage so
+// the loop survives a refresh without backend churn.
+//
+// MOOD STATES:
+//   😊 happy     — fed within 12h, ready to fight
+//   🙂 content   — 12-24h
+//   🥺 hungry    — 24-48h
+//   😴 restless  — 48-72h, no battles
+//   😤 distressed — 72h+, no recent care (cosmetic only — no penalty)
+//
+// BONDING TIERS (cap 100):
+//    0-24  Stranger  — no perks
+//   25-49  Friend    — pink heart pip on portrait
+//   50-74  Companion — gentle pink glow + heart pip
+//   75-99  Devoted   — gold-pink aura + animated hearts
+//      100 Soulbound — full bonded title shown above name
+//
+// Bond gains:
+//   feed potion        +2 (cap +20/day per champion)
+//   quest complete     +5
+//   arena win          +6
+//   daily claim        +3 (one champion only — currently active one)
+// ============================================================
+const VxBond = (() => {
+  const KEY = 'vx_bond_v1';
+  // Daily-cap key suffix
+  const DAILY_FEED_CAP = 20;
+
+  const TIERS = [
+    { min: 100, label: 'Soulbound', emoji: '💞' },
+    { min: 75,  label: 'Devoted',   emoji: '💖' },
+    { min: 50,  label: 'Companion', emoji: '💗' },
+    { min: 25,  label: 'Friend',    emoji: '💝' },
+    { min: 0,   label: 'Stranger',  emoji: '🤝' },
+  ];
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY) || '{}'); }
+    catch (_) { return {}; }
+  }
+  function save(s) {
+    try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (_) {}
+  }
+  function todayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  // Get the per-champion record (creates default if missing)
+  function get(championId) {
+    if (!championId) return null;
+    const all = load();
+    const rec = all[championId] || {
+      bond: 0,
+      lastFedAt: null,
+      lastBattleAt: null,
+      dailyFedKey: '',
+      dailyFedCount: 0,
+    };
+    return rec;
+  }
+  function put(championId, rec) {
+    if (!championId) return;
+    const all = load();
+    all[championId] = rec;
+    save(all);
+  }
+
+  function tierFor(bond) {
+    return TIERS.find(t => bond >= t.min) || TIERS[TIERS.length - 1];
+  }
+
+  // Compute mood from lastFedAt timestamp.
+  // Returns { id, emoji, label, blurb }.
+  function moodFor(championId) {
+    const rec = get(championId);
+    const fed = rec.lastFedAt ? new Date(rec.lastFedAt).getTime() : null;
+    if (!fed) {
+      return { id: 'new', emoji: '🥚', label: 'Newly hatched',
+               blurb: 'Feed me to get started!' };
+    }
+    const hoursSince = (Date.now() - fed) / 3_600_000;
+    if (hoursSince < 12)   return { id: 'happy', emoji: '😊', label: 'Happy',
+      blurb: 'Well-fed and ready for adventure.' };
+    if (hoursSince < 24)   return { id: 'content', emoji: '🙂', label: 'Content',
+      blurb: 'Doing fine. A snack would be nice.' };
+    if (hoursSince < 48)   return { id: 'hungry', emoji: '🥺', label: 'Hungry',
+      blurb: "It's been a while. Feed me?" };
+    if (hoursSince < 72)   return { id: 'restless', emoji: '😴', label: 'Restless',
+      blurb: 'Bored and a bit grumpy. Let\'s fight or eat.' };
+    return { id: 'distressed', emoji: '😤', label: 'Neglected',
+      blurb: 'Where have you been? I miss you.' };
+  }
+
+  // Add bond points and persist. Returns the new total + whether a
+  // tier-up happened so the UI can splash a notification.
+  function addBond(championId, delta, reason) {
+    if (!championId || !delta) return null;
+    const rec = get(championId);
+    const before = rec.bond;
+    const beforeTier = tierFor(before).label;
+    rec.bond = Math.max(0, Math.min(100, before + delta));
+    const afterTier = tierFor(rec.bond).label;
+    put(championId, rec);
+    console.log('[bond]', reason || 'gain', `+${delta}`, '→', rec.bond);
+    return {
+      bond: rec.bond,
+      delta,
+      tieredUp: beforeTier !== afterTier && rec.bond > before,
+      newTier: afterTier,
+    };
+  }
+
+  // Hooks called from feed/quest/arena/daily handlers.
+  function onFeed(championId) {
+    const rec = get(championId);
+    rec.lastFedAt = new Date().toISOString();
+    // Daily-cap: only reward bond up to DAILY_FEED_CAP per day so
+    // grinding 100 potions in one sitting doesn't insta-max bonding.
+    const today = todayStr();
+    if (rec.dailyFedKey !== today) {
+      rec.dailyFedKey = today;
+      rec.dailyFedCount = 0;
+    }
+    let delta = 0;
+    if (rec.dailyFedCount < DAILY_FEED_CAP) {
+      delta = 2;
+      rec.dailyFedCount += delta;
+    }
+    put(championId, rec);
+    if (delta > 0) return addBond(championId, delta, 'feed');
+    return null;
+  }
+  function onQuestComplete(championId) {
+    return addBond(championId, 5, 'quest');
+  }
+  function onArenaWin(championId) {
+    const rec = get(championId);
+    rec.lastBattleAt = new Date().toISOString();
+    put(championId, rec);
+    return addBond(championId, 6, 'arena_win');
+  }
+  function onDailyClaim(championId) {
+    return addBond(championId, 3, 'daily');
+  }
+
+  function renderPanel(championId) {
+    const el = document.getElementById('bondPanel');
+    if (!el || !championId) return;
+    const rec = get(championId);
+    const tier = tierFor(rec.bond);
+    const mood = moodFor(championId);
+    el.innerHTML = `
+      <div class="bond-mood">
+        <div class="bond-mood-emoji">${mood.emoji}</div>
+        <div class="bond-mood-text">
+          <div class="bond-mood-label">${mood.label}</div>
+          <div class="bond-mood-blurb">${mood.blurb}</div>
+        </div>
+      </div>
+      <div class="bond-meter-row">
+        <div class="bond-meter-label">
+          <span>${tier.emoji} ${tier.label}</span>
+          <span class="bond-pct">${rec.bond}/100</span>
+        </div>
+        <div class="bond-meter-track">
+          <div class="bond-meter-fill" style="width:${rec.bond}%"></div>
+        </div>
+      </div>
+    `;
+    // Toggle a class on the champion frame for cosmetic auras at higher tiers.
+    const frame = document.getElementById('stageFrame');
+    if (frame) {
+      frame.classList.toggle('bond-companion', rec.bond >= 50 && rec.bond < 75);
+      frame.classList.toggle('bond-devoted',   rec.bond >= 75 && rec.bond < 100);
+      frame.classList.toggle('bond-soulbound', rec.bond >= 100);
+    }
+  }
+
+  // Show a small celebratory toast when a tier-up happens.
+  function celebrateTierUp(newTier) {
+    if (!newTier) return;
+    const t = TIERS.find(x => x.label === newTier);
+    if (!t) return;
+    const toast = document.createElement('div');
+    toast.className = 'bond-tierup-toast';
+    toast.innerHTML = `
+      <div class="bt-emoji">${t.emoji}</div>
+      <div>
+        <div class="bt-title">Bond level up!</div>
+        <div class="bt-sub">${t.label}</div>
+      </div>
+    `;
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('open'));
+    setTimeout(() => toast.classList.remove('open'), 3200);
+    setTimeout(() => toast.remove(), 3700);
+  }
+
+  return {
+    get, tierFor, moodFor,
+    onFeed, onQuestComplete, onArenaWin, onDailyClaim,
+    renderPanel, celebrateTierUp, TIERS,
+  };
+})();
+window.VxBond = VxBond;
 
 // ============================================================
 // PHASE L — QUESTS / ADVENTURES (2026-04-27)
@@ -7637,6 +8025,12 @@ const VxQuests = (() => {
         if (typeof render === 'function') render();
       }
       setActiveQuest(championId, null);
+      // Phase N: bond gain on quest complete
+      if (window.VxBond) {
+        const bondResult = VxBond.onQuestComplete(championId);
+        if (bondResult?.tieredUp) VxBond.celebrateTierUp(bondResult.newTier);
+        VxBond.renderPanel(state.championId);
+      }
       VxAudio.levelUp();
       vxShake('small');
       const layer = document.getElementById('vxFxLayer');
@@ -8199,6 +8593,8 @@ function render() {
   // Phase 3b: refresh equipment slots whenever the champion view re-renders
   // so equipping/unequipping shows immediately and PowerScore stays in sync.
   if (typeof renderEquipSlots === 'function') renderEquipSlots();
+  // Phase N: refresh mood/bond panel + frame auras
+  if (window.VxBond) VxBond.renderPanel(state.championId);
 
   // ── LEFT PANEL: Identity
   // Prefer the persisted champion name (what the user typed on adopt or
@@ -10532,6 +10928,11 @@ bindIf('arenaFindBtn', 'click', async () => {
     });
     arena.history = arena.history.slice(0, 50);
     saveArenaForChamp(champ.id, arena);
+    // Phase N: bond gain on arena win (loss/draw don't grow bond)
+    if (window.VxBond && resp.result === 'win') {
+      const bondResult = VxBond.onArenaWin(champ.id);
+      if (bondResult?.tieredUp) VxBond.celebrateTierUp(bondResult.newTier);
+    }
     showArenaResult(resp, champ);
     renderArena();
   } catch (e) {
