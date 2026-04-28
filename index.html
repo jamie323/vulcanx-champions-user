@@ -4996,15 +4996,17 @@
       <h3>🎚️ Three tiers — Minor, Major, Epic</h3>
       <p>Same trait, different potency. Stronger tiers drop rarely from chests.</p>
       <table class="guide-table">
-        <tr><th>Tier</th><th>Early stat gain</th><th>Bar fill (random)</th><th>Drop rarity</th></tr>
+        <tr><th>Tier</th><th>Stat gain</th><th>Bar fill (random)</th><th>Drop rarity</th></tr>
         <tr><td><b>Minor</b></td><td>+5 stat</td><td>2–6%</td><td>~70% of chest rolls</td></tr>
         <tr><td><b>Major</b></td><td>+15 stat (×3)</td><td>6–12%</td><td>~25%</td></tr>
         <tr><td><b>Epic</b></td><td>+40 stat (×8)</td><td>12–20%</td><td>~5%</td></tr>
       </table>
       <p style="margin-top:10px;font-size:13px;color:var(--muted);">
-        <b>Heads-up:</b> the bar-fill roll is random within the tier range.
-        Two keepers fed the same potions won't land on the exact same %.
-        Lucky pours fill more, unlucky ones less. That's the potion doing its thing — not a bug.
+        <b>Heads-up:</b> the stat gain is the same at every level — pacing
+        comes from stat caps growing each stage. The bar-fill roll is
+        random within the tier range, so two keepers fed the same potions
+        won't land on the exact same %. Bloodline-aligned traits (e.g.
+        STR for Ironfang) gain a touch more from their matching potion.
       </p>
     </div>
 
@@ -5656,7 +5658,7 @@
         </div>
         <div class="col">
           <h5>Potions to reach Legendary?</h5>
-          <p>Roughly <b>1,700 Minors</b> on a greedy play-through. Major/Epic tiers get there faster (3× and 8× stat gain). Long-term collectible economy by design.</p>
+          <p>Each Minor adds <b>+5 stat</b>, Major <b>+15</b>, Epic <b>+40</b> — same at every level. Mixing tiers, expect a few thousand potions across all six stats to fill from L1 to Legendary. Long-term collectible economy by design.</p>
         </div>
       </div>
 
@@ -9061,9 +9063,9 @@ function render() {
       const tooltipTitle = (
         `${TRAIT_NAMES[t]} Potions — ${count} total` +
         (nextTier ? ` (next pour: ${nextTier})` : '') + `\n\n` +
-        `  • Minor ×${minorN}  ·  +5→+1 stat, 2–6% bar\n` +
-        `  • Major ×${majorN}  ·  +15→+3 stat, 6–12% bar\n` +
-        `  • Epic  ×${epicN}   ·  +40→+8 stat, 12–20% bar\n\n` +
+        `  • Minor ×${minorN}  ·  +5 stat, 2–6% bar\n` +
+        `  • Major ×${majorN}  ·  +15 stat, 6–12% bar\n` +
+        `  • Epic  ×${epicN}   ·  +40 stat, 12–20% bar\n\n` +
         `Clicking pours the highest-priority tier you own (Minor first), so stronger tiers save for later stages.` +
         (atCap ? `\n\n⚠️ ${TRAIT_NAMES[t]} is maxed for this stage — the potion still fills your Evolution Bar.` : '')
       );
@@ -10350,34 +10352,25 @@ function deriveInv() {
 }
 
 // Predict the stat gain a player will get from a single potion of the
-// given trait+tier, based on how much they've already invested in that
-// trait this stage. Mirrors the backend curve in champions_progression.ts:
-//   invested 0–9   → base +5
-//   invested 10–24 → base +3
-//   invested 25–49 → base +1.5
-//   invested 50+   → base +1
-// Tier multiplier: minor ×1, major ×3, epic ×8.
-// Bloodline weight is also applied if the active bloodline has one.
+// given trait+tier. Mirrors the backend curve in champions_progression.ts.
 //
-// Used by the trait-bottle tier pills so the displayed +N matches what
-// the server actually awards (Trello "tier potions don't give correct
-// number of stat points" Ric O. refixing pass — players were comparing
-// the shop's headline +5/+15/+40 against late-game +1/+3/+8 and calling
-// the math broken; it isn't, but the UI was hiding the curve).
+// Phase: flat-gain pass (Trello, Ric O. 28 Apr): the curve is now
+// flat — base +5 regardless of invested level. Pacing across stages
+// is handled purely by STAGE_CAPS growing per stage. Bloodline weight
+// still applies so STR-aligned bloodlines gain a touch more from STR
+// potions.
+//
+//   Minor → +5 base × bloodline weight
+//   Major → +15 base × bloodline weight
+//   Epic  → +40 base × bloodline weight
 function predictPotionGain(trait, tier) {
   const traitIdx = TRAITS.indexOf(trait);
   if (traitIdx < 0) return 0;
   const stageIdx = state.stageIdx ?? 0;
-  const floor = STAGE_FLOORS[stageIdx]?.[traitIdx] ?? 0;
-  const cap   = STAGE_CAPS[stageIdx]?.[traitIdx]   ?? 9999;
+  const cap = STAGE_CAPS[stageIdx]?.[traitIdx] ?? 9999;
   const current = state.stats[trait] ?? 0;
   if (current >= cap) return 0;
-  const invested = Math.max(0, current - floor);
-  let baseGain;
-  if (invested < 10)      baseGain = 5;
-  else if (invested < 25) baseGain = 3;
-  else if (invested < 50) baseGain = 1.5;
-  else                    baseGain = 1;
+  const baseGain = 5;
   const tierMult = tier === 'epic' ? 8 : tier === 'major' ? 3 : 1;
   // Pull bloodline stat-growth weight if available — defaults to 1.0
   const bl = SPECIES?.[currentSpecies]?.bloodlines?.[currentBloodline];
@@ -12441,12 +12434,11 @@ function shopTooltipFor(it) {
   }
   if (desc) lines.push(desc);
   lines.push(`Price: ${it.price} PYR  ·  dummy TX in QA, no PYR deducted`);
-  // Bloodlines + diminishing returns disclaimer so testers don't
-  // file repeat bug reports about "got +6 from a +5 minor" (caused
-  // by bloodline weight 1.2-1.3) or "got +1 from a +15 major" (caused
-  // by invested-level diminishing returns past stage breakpoints).
+  // Bloodline-weight disclaimer (post-flat-gain pass): some bloodlines
+  // gain a bit more from their aligned trait (e.g. STR-aligned might
+  // see +6 from a Minor STR instead of +5). That's a feature.
   if (it.kind === 'minor' || it.kind === 'major' || it.kind === 'epic') {
-    lines.push('Note: gain shrinks as you invest more in a stat (diminishing returns) and varies by bloodline weight.');
+    lines.push('Note: bloodline-aligned traits gain slightly more.');
   }
   return lines.join('\n');
 }
