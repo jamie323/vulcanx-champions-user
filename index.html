@@ -400,6 +400,75 @@
     .cc-story-text { max-height: none; overflow-y: visible; padding-right: 0; }
   }
 
+  /* ═══ PHASE 8.5 — PvP QUEUE OVERLAY + HEALING COOLDOWN ═══ */
+  .queue-overlay {
+    position: fixed; inset: 0; z-index: 9500;
+    background: rgba(8,4,8,0.85);
+    backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center;
+  }
+  .queue-overlay.open { display: flex; animation: queueFade 0.3s ease; }
+  @keyframes queueFade { from { opacity: 0; } to { opacity: 1; } }
+  .qo-card {
+    background: linear-gradient(135deg, rgba(40,18,28,0.96), rgba(20,8,14,0.96));
+    border: 1px solid rgba(255,205,107,0.35);
+    border-radius: 16px;
+    padding: 32px 36px;
+    text-align: center;
+    max-width: 420px; width: calc(100vw - 40px);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+  }
+  .qo-spinner {
+    width: 56px; height: 56px;
+    border: 3px solid rgba(255,205,107,0.18);
+    border-top-color: var(--accent);
+    border-radius: 50%; margin: 0 auto 18px;
+    animation: qoSpin 0.9s linear infinite;
+  }
+  @keyframes qoSpin { to { transform: rotate(360deg); } }
+  .qo-title {
+    font-family: 'Cinzel', serif; font-size: 18px;
+    color: var(--accent); letter-spacing: 1.5px; text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .qo-sub {
+    color: var(--muted); font-size: 12px; line-height: 1.45;
+    margin-bottom: 18px;
+  }
+  .qo-counter {
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    font-size: 22px; font-weight: 800; color: var(--text);
+    margin-bottom: 22px;
+  }
+  .qo-counter .qo-cap { color: var(--muted); font-size: 16px; }
+  .qo-counter .qo-sep { color: var(--muted); margin: 0 6px; }
+  .qo-actions { display: flex; gap: 10px; justify-content: center; }
+  .qo-actions .btn-secondary,
+  .qo-actions .btn-primary { padding: 10px 16px; font-size: 13px; }
+
+  /* Healing cooldown chip on the arena card — shows when a champion
+     is recovering and offers a Heal Now button. */
+  .arena-cooldown-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; margin: 10px 0 14px;
+    background: rgba(125,255,154,0.06);
+    border: 1px solid rgba(125,255,154,0.3);
+    border-radius: 10px;
+  }
+  .arena-cooldown-row .acr-icon { font-size: 22px; }
+  .arena-cooldown-row .acr-text {
+    flex: 1; font-size: 12px; color: var(--muted);
+  }
+  .arena-cooldown-row .acr-time { color: #7dff9a; font-weight: 700; }
+  .arena-cooldown-row .acr-heal {
+    background: linear-gradient(135deg, rgba(255,205,107,0.2), rgba(255,140,40,0.15));
+    border: 1px solid var(--accent);
+    color: var(--accent); border-radius: 8px;
+    padding: 6px 12px; font-size: 12px; font-weight: 700;
+    cursor: pointer; letter-spacing: 0.5px;
+  }
+  .arena-cooldown-row .acr-heal:hover { background: rgba(255,205,107,0.32); }
+
   /* ═══ EVOLUTION + BLESSING LONG BARS (post-refactor) ═══ */
   .cc-evo-potion-bar,
   .cc-blessing-bar {
@@ -5989,6 +6058,14 @@
         <em>Open one of your champions to enter the arena.</em>
       </div>
 
+      <!-- Phase 8.5: healing cooldown chip. Hidden by default; shown
+           when next_battle_at is in the future. -->
+      <div class="arena-cooldown-row" id="arenaCooldownRow" style="display:none;">
+        <span class="acr-icon">🩹</span>
+        <span class="acr-text">Healing — ready in <span class="acr-time" id="arenaCooldownTime">60s</span></span>
+        <button class="acr-heal" id="arenaHealBtn" title="Use 1 Healing Salve to fight now">Heal Now (1 🩹)</button>
+      </div>
+
       <!-- Phase 8: bots vs PvP mode toggle. Defaults to bots so first-
            time players ramp up safely; flipping to PvP pulls a real
            opponent loadout from the pool (falls back to bot if the
@@ -11126,8 +11203,183 @@ function getEquippedWeaponForArena(championId) {
   return { weapon_id: inst.catalogId, weapon_rarity: inst.rarity };
 }
 
-// Bind Find Opponent — runs the match end-to-end and shows the result modal
+// Bind Find Opponent — runs the match end-to-end and shows the result modal.
+// Phase 8.5: PvP mode now goes through a queue. If no opponent is
+// instantly available, the server returns { status: "queued" } and the
+// frontend polls pvp_queue_check every 3s for up to 3 minutes. After
+// the timeout, the player can either cancel or re-issue the request
+// with mode='pvp_force_bot' to fight a bot instead.
 let _arenaInFlight = false;
+let _arenaQueueTimer = null;
+let _arenaQueueAbort = false;
+
+const QUEUE_POLL_INTERVAL_MS = 3000;
+const QUEUE_MAX_WAIT_SEC = 180;  // 3 minutes — chess-style
+
+async function apiQueueCheck(championId) {
+  const res = await apiFetch(`${FN_BASE}/pvp_queue_check`, {
+    method: 'POST', headers: AUTH_HEADERS,
+    body: JSON.stringify({ wallet: getWallet(), champion_id: championId }),
+  });
+  return res.json().catch(() => ({}));
+}
+async function apiQueueLeave(championId) {
+  const res = await apiFetch(`${FN_BASE}/pvp_queue_leave`, {
+    method: 'POST', headers: AUTH_HEADERS,
+    body: JSON.stringify({ wallet: getWallet(), champion_id: championId }),
+  });
+  return res.json().catch(() => ({}));
+}
+async function apiHeal(championId) {
+  const res = await apiFetch(`${FN_BASE}/champion_heal`, {
+    method: 'POST', headers: AUTH_HEADERS,
+    body: JSON.stringify({ wallet: getWallet(), champion_id: championId }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(`${data.error || 'http_'+res.status}: ${data.message || ''}`.trim());
+  return data;
+}
+
+// Phase 8.5: cooldown chip on the arena card. Polls the pool row's
+// next_battle_at via pvp_queue_check (which returns {status: 'idle'}
+// when there's no row, no queue, and no cooldown blocking). We track
+// it via a tick interval so the countdown updates every second.
+let _cooldownTickTimer = null;
+let _cooldownDeadline = 0;
+
+async function refreshCooldownChip(championId) {
+  const row = document.getElementById('arenaCooldownRow');
+  if (!row) return;
+  if (!championId) { row.style.display = 'none'; return; }
+  // Pull cooldown from pool via a lightweight ping. We re-use the
+  // queue-check endpoint which already reads next_battle_at — but it
+  // doesn't return it directly, so we tack on a check via match_request
+  // dry-run. Simplest: fetch via a dedicated query through queue_check
+  // by inspecting the response. (For MVP we just attempt match_request
+  // mode='bots' DRY in a try/catch — too heavy. Instead: use a fresh
+  // tiny endpoint OR read through the pool table indirectly.)
+  // Pragmatic: just react to the healing_cooldown error when it fires
+  // and show the chip then. Set deadline locally from the message.
+}
+
+function showCooldownChip(seconds) {
+  const row = document.getElementById('arenaCooldownRow');
+  if (!row) return;
+  _cooldownDeadline = Date.now() + seconds * 1000;
+  row.style.display = '';
+  if (_cooldownTickTimer) clearInterval(_cooldownTickTimer);
+  const tick = () => {
+    const left = Math.max(0, Math.ceil((_cooldownDeadline - Date.now()) / 1000));
+    const el = document.getElementById('arenaCooldownTime');
+    if (el) el.textContent = left + 's';
+    if (left <= 0) {
+      clearInterval(_cooldownTickTimer);
+      _cooldownTickTimer = null;
+      row.style.display = 'none';
+    }
+  };
+  tick();
+  _cooldownTickTimer = setInterval(tick, 1000);
+}
+
+bindIf('arenaHealBtn', 'click', async () => {
+  const champ = myChampions.find(c => c.id === state.championId);
+  if (!champ) return;
+  const btn = document.getElementById('arenaHealBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Healing…'; }
+  try {
+    const resp = await apiHeal(champ.id);
+    if (_cooldownTickTimer) clearInterval(_cooldownTickTimer);
+    const row = document.getElementById('arenaCooldownRow');
+    if (row) row.style.display = 'none';
+    vxAlert(`Champion is ready to fight. Salves remaining: ${resp.salves_remaining}.`,
+      { title: '🩹 Healed', icon: '🩹' });
+  } catch (e) {
+    const msg = String(e?.message || '');
+    if (msg.includes('no_salve')) {
+      vxAlert('No Healing Salve in stock. Buy one in the 🛒 Shop (3 PYR).',
+        { title: 'Out of salves', icon: '🩹' });
+    } else {
+      vxAlert(msg, { title: 'Heal failed', icon: '🩹', variant: 'error' });
+    }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Heal Now (1 🩹)'; }
+  }
+});
+
+function showQueueOverlay(champId) {
+  let el = document.getElementById('queueOverlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'queueOverlay';
+    el.className = 'queue-overlay';
+    el.innerHTML = `
+      <div class="qo-card">
+        <div class="qo-spinner"></div>
+        <div class="qo-title">Searching for opponent…</div>
+        <div class="qo-sub" id="qoSub">Matching by bracket + ELO. We'll fall back to a bot after 3:00.</div>
+        <div class="qo-counter"><span id="qoElapsed">0:00</span> <span class="qo-sep">·</span> <span class="qo-cap">/ 3:00</span></div>
+        <div class="qo-actions">
+          <button class="btn-secondary" id="qoCancel">Cancel</button>
+          <button class="btn-primary" id="qoFightBot">⚔️ Fight a bot now</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(el);
+  }
+  el.classList.add('open');
+  el.dataset.champ = champId;
+  return el;
+}
+function hideQueueOverlay() {
+  const el = document.getElementById('queueOverlay');
+  if (el) el.classList.remove('open');
+}
+function updateQueueCounter(seconds) {
+  const el = document.getElementById('qoElapsed');
+  if (!el) return;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  el.textContent = `${m}:${String(s).padStart(2,'0')}`;
+}
+
+// Resolve a queued match by polling until we either find a result,
+// the user cancels, or 3 minutes elapse.
+async function pollQueueUntilResolved(champId) {
+  _arenaQueueAbort = false;
+  const start = Date.now();
+  while (!_arenaQueueAbort) {
+    const elapsed = Math.floor((Date.now() - start) / 1000);
+    updateQueueCounter(elapsed);
+    if (elapsed >= QUEUE_MAX_WAIT_SEC) return { status: 'timeout' };
+    await new Promise(r => setTimeout(r, QUEUE_POLL_INTERVAL_MS));
+    if (_arenaQueueAbort) return { status: 'cancelled' };
+    try {
+      const check = await apiQueueCheck(champId);
+      if (check.status === 'matched' && check.match) return { status: 'matched', match: check.match };
+    } catch (e) {
+      console.warn('[queue] poll failed', e);
+      // keep polling; transient blips shouldn't kill the queue
+    }
+  }
+  return { status: 'cancelled' };
+}
+
+// Reformat a champion_events payload into the same { battle, opponent, ... }
+// shape that match_request returns, so showArenaResult works for both
+// instant matches AND queued matches.
+function matchEventToResp(payload) {
+  return {
+    battle: { winner: payload.winner, hpStart: payload.hpStart, hpLeft: payload.hpLeft, summary: payload.summary, events: [] },
+    mode: payload.mode || 'pvp',
+    opponent: payload.opponent,
+    result: payload.winner === 'a' ? 'win' : payload.winner === 'draw' ? 'draw' : 'loss',
+    eloChange: payload.elo_change,
+    newElo: payload.new_elo,
+    seed: payload.seed,
+  };
+}
+
 bindIf('arenaFindBtn', 'click', async () => {
   if (_arenaInFlight) return;
   const champ = myChampions.find(c => c.id === state.championId);
@@ -11141,7 +11393,7 @@ bindIf('arenaFindBtn', 'click', async () => {
   const arena = getArenaForChamp(champ.id);
   const equipped = getEquippedWeaponForArena(champ.id);
   const ability_id = getAbilityForChamp(champ.id);
-  console.log('[arena] requesting match', { champion_id: champ.id, stance: _arenaStance, current_elo: arena.elo, equipped, ability_id });
+  console.log('[arena] requesting match', { champion_id: champ.id, stance: _arenaStance, mode: _arenaMode });
 
   const resetButton = () => {
     findBtn.disabled = false;
@@ -11157,15 +11409,84 @@ bindIf('arenaFindBtn', 'click', async () => {
       current_elo: arena.elo,
       equipped,
       ability_id,
-      mode: _arenaMode,  // Phase 8: 'bots' | 'pvp'
+      mode: _arenaMode,
     });
     console.log('[arena] response', resp);
   } catch (e) {
     console.error('[arena] match request failed', e);
     resetButton();
-    vxAlert(`${e.message || 'Unknown error'}\n\n(check the console for details)`,
-      { title: 'Match failed', icon: '⚔️', variant: 'error' });
+    // Surface healing cooldown specifically — show the chip + a toast
+    // so the keeper sees how long until they can fight + can heal now.
+    const msg = String(e?.message || '');
+    if (msg.includes('healing_cooldown')) {
+      const m = msg.match(/Ready in (\d+)s/);
+      const seconds = m ? parseInt(m[1], 10) : 60;
+      showCooldownChip(seconds);
+      vxAlert(msg.replace(/^healing_cooldown:\s*/, ''),
+        { title: '🩹 Healing', icon: '🩹' });
+    } else {
+      vxAlert(`${e.message || 'Unknown error'}\n\n(check the console for details)`,
+        { title: 'Match failed', icon: '⚔️', variant: 'error' });
+    }
     return;
+  }
+
+  // Phase 8.5 — queued response: poll until matched, cancelled, or timeout
+  if (resp && resp.status === 'queued') {
+    showQueueOverlay(champ.id);
+    findBtn.textContent = '⏳ Searching…';
+    const wireUp = () => {
+      const cancel = document.getElementById('qoCancel');
+      const forceBot = document.getElementById('qoFightBot');
+      if (cancel) cancel.onclick = async () => {
+        _arenaQueueAbort = true;
+        await apiQueueLeave(champ.id).catch(() => {});
+        hideQueueOverlay();
+        resetButton();
+      };
+      if (forceBot) forceBot.onclick = async () => {
+        _arenaQueueAbort = true;
+        await apiQueueLeave(champ.id).catch(() => {});
+        hideQueueOverlay();
+        // Re-fire the click as a bot match
+        try {
+          const botResp = await apiRequestMatch({
+            champion_id: champ.id, stance: _arenaStance, current_elo: arena.elo,
+            equipped, ability_id, mode: 'pvp_force_bot',
+          });
+          handleResolvedMatch(botResp, champ, arena);
+        } catch (e) {
+          vxAlert(`${e.message || 'failed'}`, { title: 'Bot match failed', icon: '⚔️', variant: 'error' });
+        } finally {
+          resetButton();
+        }
+      };
+    };
+    wireUp();
+    const result = await pollQueueUntilResolved(champ.id);
+    hideQueueOverlay();
+    if (result.status === 'cancelled') {
+      resetButton();
+      return;
+    }
+    if (result.status === 'timeout') {
+      // Auto-fall-back to bot
+      await apiQueueLeave(champ.id).catch(() => {});
+      try {
+        const botResp = await apiRequestMatch({
+          champion_id: champ.id, stance: _arenaStance, current_elo: arena.elo,
+          equipped, ability_id, mode: 'pvp_force_bot',
+        });
+        handleResolvedMatch(botResp, champ, arena);
+      } catch (e) {
+        vxAlert(`${e.message || 'failed'}`, { title: 'Bot match failed', icon: '⚔️', variant: 'error' });
+      } finally {
+        resetButton();
+      }
+      return;
+    }
+    // result.status === 'matched' → reshape event payload and continue.
+    resp = matchEventToResp(result.match);
   }
 
   // Defensive: validate the response shape before consuming it. Server
@@ -11179,7 +11500,20 @@ bindIf('arenaFindBtn', 'click', async () => {
     return;
   }
 
-  // Wrap the post-API code so any rendering throw still resets the button.
+  handleResolvedMatch(resp, champ, arena);
+  resetButton();
+});
+
+// Shared post-resolution flow used by instant matches, bot fallbacks,
+// and queued-then-matched results. Updates arena history, fires bond
+// gains on win, and triggers the result modal.
+function handleResolvedMatch(resp, champ, arena) {
+  if (!resp || !resp.battle || !resp.opponent || resp.newElo == null) {
+    console.error('[arena] malformed response', resp);
+    vxAlert('Server returned an unexpected response.',
+      { title: 'Bad response', icon: '⚔️', variant: 'error' });
+    return;
+  }
   try {
     arena.elo = resp.newElo;
     arena.history.unshift({
@@ -11188,14 +11522,11 @@ bindIf('arenaFindBtn', 'click', async () => {
       opponentName: resp.opponent.display_name || 'Bot',
       eloChange: resp.eloChange,
       seed: resp.seed,
-      // Phase 8: track mode + opponent's wallet (truncated) so the
-      // history row can render a 🥊 badge and "vs xxx…yyy".
       mode: resp.mode || 'bots',
       opponentOwner: resp.opponent.owner_short || null,
     });
     arena.history = arena.history.slice(0, 50);
     saveArenaForChamp(champ.id, arena);
-    // Phase N: bond gain on arena win (loss/draw don't grow bond)
     if (window.VxBond && resp.result === 'win') {
       const bondResult = VxBond.onArenaWin(champ.id);
       if (bondResult?.tieredUp) VxBond.celebrateTierUp(bondResult.newTier);
@@ -11204,14 +11535,11 @@ bindIf('arenaFindBtn', 'click', async () => {
     renderArena();
   } catch (e) {
     console.error('[arena] render failed after successful match', e);
-    // Include the stack so the next tester report can pinpoint the line.
     const stack = (e && e.stack ? String(e.stack).split('\n').slice(0, 4).join('\n') : '(no stack)');
-    vxAlert(`Match resolved but the UI couldn't render it:\n${e.message}\n\n${stack}\n\n(check console for details)`,
+    vxAlert(`Match resolved but the UI couldn't render it:\n${e.message}\n\n${stack}`,
       { title: 'Render error', icon: '⚔️', variant: 'error' });
-  } finally {
-    resetButton();
   }
-});
+}
 
 // Phase 5 (2026-04-26): the result modal now plays the battle as an
 // animated reveal — each event ticks in with HP updates, damage popups,
@@ -12354,15 +12682,17 @@ function glowStatRow(trait) {
 // The SHOP_TIER_INFO block below feeds per-tier tooltips (stat gain + bar
 // fill), addressing "how much does each tier add to my stat?".
 const SHOP_TIER_INFO = {
-  minor:      { statGain: '+5 early, tapering to +1 after heavy use', barFill: '2–6%' },
-  major:      { statGain: '+15 early (×3 Minor), tapering to +3', barFill: '6–12%' },
-  epic:       { statGain: '+40 early (×8 Minor), tapering to +8', barFill: '12–20%' },
+  minor:      { statGain: '+5 stat (every level)', barFill: '2–6%' },
+  major:      { statGain: '+15 stat (×3 Minor)',   barFill: '6–12%' },
+  epic:       { statGain: '+40 stat (×8 Minor)',   barFill: '12–20%' },
   evolution:  { statGain: '—', barFill: '—' },
   allocation: { statGain: 'distribute 40 points across any traits', barFill: '10–25%' },
+  healing:    { statGain: '—', barFill: '—' },
 };
 const SHOP_DESCRIPTIONS = {
   evolution:  'Consumed at a stage-gate level (L3, 5, 7, 10, 13, 15, 18, 22, 26, 30, 34, 38, 41, 44, 46, 48, 49, 49, 50) with a full Evolution Bar. Advances your champion to the next life stage — new art, new stat caps, new chapter of the saga.',
   allocation: 'Pours 40 stat points you distribute however you want across the six traits. Great for rebalancing a lopsided build or pushing a single stat. Also fills 10–25% of the Evolution Bar.',
+  healing:    'Skips the post-battle healing cooldown (default 60s) so you can jump straight back into the arena. One-use, sold cheap.',
 };
 
 const SHOP_ITEMS = [
@@ -12389,6 +12719,7 @@ const SHOP_ITEMS = [
   // Specials
   { kind: 'evolution',  trait: null, label: 'Evolution Potion', emoji: '⚡', tier: 'Special', price: 20 },
   { kind: 'allocation', trait: null, label: 'Blessing · 40 pts', emoji: '✨', tier: 'Special', price: 25 },
+  { kind: 'healing',    trait: null, label: 'Healing Salve',    emoji: '🩹', tier: 'Special', price: 3  },
 ];
 
 let shopCart = {}; // key -> { item, qty }
