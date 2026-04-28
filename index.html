@@ -796,11 +796,15 @@
     /* Shop / inventory grids */
     .shop-row, .equip-picker-item { padding: 10px 10px; }
 
-    /* Reduce fixed header height on mobile so views start below cleanly */
-    .stable-wrap, .adopt-wrap, .explore-wrap, .arena-wrap, .howto-wrap {
-      padding-top: 130px;
+    /* Reduce fixed header height on mobile so views start below cleanly.
+       Discord (PegaraX, 28 Apr): "this menu bar is blocking my stats"
+       — bumping the clearance gives the nav more breathing room before
+       page content starts. Topbar 52 + nav 60 + safe-area = 130–140. */
+    .stable-wrap, .adopt-wrap, .explore-wrap, .arena-wrap, .howto-wrap,
+    .view-quests .quests-wrap {
+      padding-top: 140px;
     }
-    body.view-champion .view-champion { padding-top: 120px; }
+    body.view-champion .view-champion { padding-top: 132px; }
   }
 
   /* Small phones (≤480px) — extra tightening for iPhone SE / mini */
@@ -6954,6 +6958,30 @@ const STAGE_FLOORS = [
   [3700,4345,5150,2340,3100,6185],
 ];
 
+// Per-level cap (Discord, Ric O. 28 Apr): "Shouldn't you get a larger
+// stat bar with each level?" Previously the cap was constant within a
+// stage (3-5 levels of no headroom). Now we linearly interpolate
+// between consecutive STAGE_CAPS rows using GATE_LEVELS as anchors:
+//   L1  → STAGE_CAPS[0]
+//   L3  → STAGE_CAPS[1]   (interpolate L2)
+//   L5  → STAGE_CAPS[2]   (interpolate L4)
+//   ...
+//   L50 → STAGE_CAPS[19]
+// Backend mirrors this exactly so client + server caps stay in sync.
+function capAtLevel(level) {
+  const lvl = Math.max(1, Math.min(50, Math.round(level || 1)));
+  for (let s = 0; s < GATE_LEVELS.length - 1; s++) {
+    const a = GATE_LEVELS[s], b = GATE_LEVELS[s + 1];
+    if (lvl >= a && lvl <= b) {
+      if (b === a) return STAGE_CAPS[s].slice();
+      const p = (lvl - a) / (b - a);
+      const next = STAGE_CAPS[s + 1] || STAGE_CAPS[s];
+      return STAGE_CAPS[s].map((c, i) => Math.round(c + (next[i] - c) * p));
+    }
+  }
+  return STAGE_CAPS[STAGE_CAPS.length - 1].slice();
+}
+
 let state = {
   level: 1, stageIdx: 0, evoPct: 0, evoMaxLevel: 5,
   stats: {},
@@ -7160,8 +7188,16 @@ async function usePotion(trait, sourceEl, tier) {
     } else {
       clearTimeout(safetyRelease);
       _feedInFlight = false;
-      vxAlert(`${msg || 'Unknown error'}\n\n(trait: ${trait})`,
-        {title: 'Feed failed', icon: '🧪', variant: 'error'});
+      // trait_at_cap (Discord PegaraX 28 Apr): server rejects feeds
+      // on maxed traits — show a softer "use a different path" message
+      // instead of the generic Feed failed dialog.
+      if (/trait_at_cap/i.test(msg)) {
+        vxAlert(msg.replace(/^trait_at_cap:\s*/, ''),
+          { title: '🧪 Already maxed', icon: '🧪' });
+      } else {
+        vxAlert(`${msg || 'Unknown error'}\n\n(trait: ${trait})`,
+          {title: 'Feed failed', icon: '🧪', variant: 'error'});
+      }
       return;
     }
   }
@@ -7298,7 +7334,7 @@ function evolveRequirementText() {
   // stuck ("stats maxed but not at L3"). Suggest the fastest bar-fill
   // tools they already own.
   const allCapped = TRAITS.every(t =>
-    (state.stats[t] || 0) >= STAGE_CAPS[state.stageIdx][TRAITS.indexOf(t)]);
+    (state.stats[t] || 0) >= capAtLevel(state.level)[TRAITS.indexOf(t)]);
   let bestTip = '';
   if (allCapped) {
     if (state.inv.alloc > 0) {
@@ -7428,7 +7464,7 @@ function openAllocModal(sourceEl) {
   const allCapped = TRAITS.every(t => {
     const idx = TRAITS.indexOf(t);
     const cur = state.stats[t] || STAGE_FLOORS[state.stageIdx][idx];
-    const cap = STAGE_CAPS[state.stageIdx][idx];
+    const cap = capAtLevel(state.level)[idx];
     return cap - cur <= 0;
   });
   if (allCapped) {
@@ -7445,7 +7481,7 @@ function openAllocModal(sourceEl) {
   TRAITS.forEach(t => {
     const idx = TRAITS.indexOf(t);
     const cur = state.stats[t] || STAGE_FLOORS[state.stageIdx][idx];
-    const cap = STAGE_CAPS[state.stageIdx][idx];
+    const cap = capAtLevel(state.level)[idx];
     const maxAllowed = Math.min(40, cap - cur);
     const isMaxed = maxAllowed <= 0;
     // Tester report 2026-04-26: 3-letter codes (STR/VIT/AGI…) were
@@ -7492,7 +7528,7 @@ function updateAllocRemaining() {
   const allCapped = TRAITS.every(t => {
     const idx = TRAITS.indexOf(t);
     const cur = state.stats[t] || STAGE_FLOORS[state.stageIdx][idx];
-    const cap = STAGE_CAPS[state.stageIdx][idx];
+    const cap = capAtLevel(state.level)[idx];
     return cap - cur <= 0;
   });
   if (statusText && applyBtn) {
@@ -9200,7 +9236,7 @@ function render() {
     return '';
   };
   TRAITS.forEach((t,i) => {
-    const cap = STAGE_CAPS[state.stageIdx][i];
+    const cap = capAtLevel(state.level)[i];
     const val = state.stats[t] || STAGE_FLOORS[state.stageIdx][i];
     const atCap = val >= cap;
     const pct = Math.round((val/cap)*100);
@@ -9211,18 +9247,22 @@ function render() {
     // and doesn't have to jump down to the potion grid.
     const count = state.inv?.[t] || 0;
     const isLocked = canEvolve();
-    const disabled = count <= 0 || isLocked;
+    // Trello/Discord (PegaraX, 28 Apr): block clicks on capped traits —
+    // feeding wouldn't move the stat (already at cap) and burning the
+    // potion just for bar fill felt exploitative. Direct keepers to
+    // Quest/Blessing/Evolution Potion paths instead.
+    const disabled = count <= 0 || isLocked || atCap;
     const gain = predictPotionGain(t, 'minor');
     const btnClass = ['trait-feed-btn',
       count === 0 ? 'empty' : '',
       atCap ? 'at-cap' : ''].filter(Boolean).join(' ');
-    const btnLabel = atCap ? `+bar` : `+${gain}`;
+    const btnLabel = atCap ? `MAX` : `+${gain}`;
     const btnTitle = isLocked
       ? 'Evolve first — bar is full at the gate'
       : count === 0
         ? `No ${TRAIT_NAMES[t]} potions yet — visit the Shop or run a Quest`
         : atCap
-          ? `${TRAIT_NAMES[t]} maxed for this stage. Feeding still fills the Evolution Bar (no stat gain).`
+          ? `${TRAIT_NAMES[t]} is maxed for this stage. Use Quests or a Blessing to fill the Evolution Bar instead.`
           : `Pour 1 ${TRAIT_NAMES[t]} potion → +${gain} ${t}`;
     tBox.insertAdjacentHTML('beforeend',
       `<div class="trait-row" data-trait-row="${t}">
@@ -9356,7 +9396,7 @@ function render() {
     // button behavior when evolution is required" — second-pass fix 2026-04-26.
     const evoReady = canEvolve();
     TRAITS.forEach((t, i) => {
-      const cap = STAGE_CAPS[state.stageIdx][i];
+      const cap = capAtLevel(state.level)[i];
       const val = state.stats[t] || 0;
       const atCap = val >= cap;
       const count = state.inv[t] || 0;
@@ -9465,18 +9505,18 @@ function render() {
   const feedBtn = document.getElementById('feedHero');
   if (feedBtn) {
     const totalReady = TRAITS.reduce((sum, t) => sum + (state.inv[t] || 0), 0);
-    const allCapped = TRAITS.every(t => (state.stats[t] || 0) >= STAGE_CAPS[state.stageIdx][TRAITS.indexOf(t)]);
+    const allCapped = TRAITS.every(t => (state.stats[t] || 0) >= capAtLevel(state.level)[TRAITS.indexOf(t)]);
     // Predict the next trait Feed Me will fire, mirroring the click-handler
     // priority (prefer non-capped with stock, lowest ratio first).
     let nextTrait = null;
     const owned = TRAITS.filter(t => state.inv[t] > 0);
     if (owned.length) {
-      const nonCapped = owned.filter(t => (state.stats[t] || 0) < STAGE_CAPS[state.stageIdx][TRAITS.indexOf(t)]);
+      const nonCapped = owned.filter(t => (state.stats[t] || 0) < capAtLevel(state.level)[TRAITS.indexOf(t)]);
       const pool = nonCapped.length ? nonCapped : owned;
       pool.sort((a, b) => {
         const ai = TRAITS.indexOf(a), bi = TRAITS.indexOf(b);
-        return (state.stats[a] || 0) / STAGE_CAPS[state.stageIdx][ai]
-             - (state.stats[b] || 0) / STAGE_CAPS[state.stageIdx][bi];
+        return (state.stats[a] || 0) / capAtLevel(state.level)[ai]
+             - (state.stats[b] || 0) / capAtLevel(state.level)[bi];
       });
       nextTrait = pool[0];
     }
@@ -9540,18 +9580,35 @@ bindIf('feedHero', 'click', () => {
     return;
   }
   const nonCapped = owned.filter(t => {
-    const cap = STAGE_CAPS[state.stageIdx][TRAITS.indexOf(t)];
+    const cap = capAtLevel(state.level)[TRAITS.indexOf(t)];
     return (state.stats[t] || 0) < cap;
   });
-  const pool = nonCapped.length > 0 ? nonCapped : owned;
+  // Trello/Discord (PegaraX, 28 Apr): "we should block completely the
+  // potion-feeding mechanic once traits are full". Previously the
+  // backend still consumed the potion and awarded bar fill, which felt
+  // exploitative. Now: refuse the click + redirect to bar-fill paths
+  // that don't waste trait potions.
+  if (nonCapped.length === 0) {
+    const evoCount = state.inv.evo || 0;
+    const allocCount = state.inv.alloc || 0;
+    const tips = [];
+    if (allocCount > 0) tips.push('• ✨ Use a Blessing (10–25% bar)');
+    if (evoCount > 0)   tips.push('• ⚡ Use an Evolution Potion at the gate');
+    tips.push('• 🗺️ Send your champion on a Quest (free bar progress)');
+    vxAlert(
+      `All six stats are at cap for this stage — feeding more trait potions would just burn them.\n\nFill the Evolution Bar instead:\n\n${tips.join('\n')}`,
+      { title: 'Stats maxed for this stage', icon: '🧪' }
+    );
+    return;
+  }
   // Lowest ratio first (bar furthest from cap) — keeps stats balanced.
-  pool.sort((a, b) => {
+  nonCapped.sort((a, b) => {
     const ai = TRAITS.indexOf(a), bi = TRAITS.indexOf(b);
-    const aRat = (state.stats[a] || 0) / STAGE_CAPS[state.stageIdx][ai];
-    const bRat = (state.stats[b] || 0) / STAGE_CAPS[state.stageIdx][bi];
+    const aRat = (state.stats[a] || 0) / capAtLevel(state.level)[ai];
+    const bRat = (state.stats[b] || 0) / capAtLevel(state.level)[bi];
     return aRat - bRat;
   });
-  usePotion(pool[0], document.getElementById('feedHero'));
+  usePotion(nonCapped[0], document.getElementById('feedHero'));
 });
 
 bindIf('animateBtn', 'click', () => {
@@ -10119,7 +10176,7 @@ async function renderChampionCard(payload) {
   if (statsBox) {
     statsBox.innerHTML = '';
     TRAITS.forEach((t, i) => {
-      const cap = STAGE_CAPS[champ.stage_idx][i];
+      const cap = capAtLevel(champ.level)[i];
       const val = champ.stats?.[t] || 0;
       statsBox.insertAdjacentHTML('beforeend',
         `<div class="cc-stat-row"><span class="lbl">${TRAIT_EMOJI[t]} ${t}</span><span class="val">${Math.round(val)}<span style="color:var(--muted);"> / ${cap}</span></span></div>`);
@@ -10685,8 +10742,9 @@ function deriveInv() {
 function predictPotionGain(trait, tier) {
   const traitIdx = TRAITS.indexOf(trait);
   if (traitIdx < 0) return 0;
-  const stageIdx = state.stageIdx ?? 0;
-  const cap = STAGE_CAPS[stageIdx]?.[traitIdx] ?? 9999;
+  // Per-level cap (Phase: Discord 28 Apr) so the predicted gain
+  // matches what the server will actually award at this level.
+  const cap = capAtLevel(state.level)[traitIdx] ?? 9999;
   const current = state.stats[trait] ?? 0;
   if (current >= cap) return 0;
   const baseGain = 5;
@@ -10989,6 +11047,7 @@ async function runBatchFeed(count) {
       ready_to_evolve: `Stopped — ready to evolve! (Bar full at the gate. Click ⚡ Evolve.)`,
       no_trait_available: `Stopped — no eligible trait left to feed.`,
       out_of_potions: `Stopped — out of trait potions in inventory.`,
+      all_traits_capped: `Stopped — all stats are maxed for this level. Try a Blessing, Evolution Potion, or send your champion on a Quest.`,
     }[s.stopped_reason] || `Stopped: ${s.stopped_reason}`;
     resultEl.innerHTML = `
       <div style="font-size:14px;font-weight:700;color:var(--accent);margin-bottom:6px;">
