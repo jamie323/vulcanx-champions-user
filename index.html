@@ -616,14 +616,28 @@
        no text". Bumped label to 10px, tightened padding, and shortened
        longer labels to fit 7 buttons on a 360px screen. */
     .main-nav {
-      padding: 4px 4px;
+      padding: 4px 6px;
       height: auto; min-height: 60px;
-      gap: 2px;
-      justify-content: space-between;
+      gap: 4px;
+      /* Trello (28 Apr): tester reported Arena + Quests cut off on the
+         right edge of the nav with no way to reach them. flex:1 wasn't
+         shrinking the buttons enough on some phones (and the previous
+         pass shipped with implicit min-widths from button content).
+         Switch to horizontal scroll: each button gets a fixed min-width
+         that's comfortably tap-friendly, and the row scrolls if the
+         viewport can't fit all 7. Hidden scrollbar so it looks clean. */
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      justify-content: flex-start;
     }
+    .main-nav::-webkit-scrollbar { display: none; }
     .nav-btn {
-      padding: 6px 1px; font-size: 10px; letter-spacing: 0.3px;
-      flex: 1; min-width: 0; white-space: nowrap;
+      padding: 6px 6px; font-size: 10px; letter-spacing: 0.3px;
+      flex: 0 0 auto;
+      min-width: 56px;
+      white-space: nowrap;
       flex-direction: column; gap: 3px;
       text-transform: uppercase;
     }
