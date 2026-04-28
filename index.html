@@ -54,6 +54,11 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; min-height: 100vh;
     color: var(--text); overflow-x: hidden;
+    /* Trello (28 Apr — refix): "Mouse wheel does not work" + "scrolling
+       only works when manually dragging the scrollbar". Belt-and-braces:
+       force the page to be the wheel-scroll container and never let a
+       descendant rule override Y-overflow into hidden/clip. */
+    overflow-y: auto;
     /* Prevent iOS rubber-band + scroll-chaining inside inner scroll
        containers (modal + arena history). Vertical page scroll is the
        only scroll users should experience on the main views. */
@@ -540,6 +545,26 @@
 
   /* ═══ PHASE N — BOND + MOOD CARD ═══ */
   .cc-bond-card { padding: 14px 16px; }
+  .cc-bond-card .cc-card-title {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  /* Bond help button — round ? next to the title that opens the
+     guide directly to the Bond panel (Trello 28 Apr). */
+  .bond-help-btn {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(255,142,177,0.12);
+    border: 1px solid rgba(255,142,177,0.4);
+    color: #ff8eb1;
+    font-family: serif; font-size: 13px; font-weight: 700;
+    cursor: pointer; display: inline-flex;
+    align-items: center; justify-content: center;
+    transition: all 0.15s;
+    margin-left: 8px;
+  }
+  .bond-help-btn:hover {
+    background: rgba(255,142,177,0.28);
+    transform: scale(1.05);
+  }
   .bond-mood {
     display: flex; align-items: center; gap: 12px;
     padding: 10px 12px;
@@ -1527,6 +1552,33 @@
   .inbox-empty {
     text-align: center; color: var(--muted); padding: 24px;
     font-style: italic;
+  }
+
+  /* Phase: PvP bracket + ELO pill at the top of the arena card.
+     Trello (28 Apr): "Add champion ranking and PvP bracket visibility
+     in Arena" — testers couldn't see what bracket they'd match in. */
+  .arena-rank-row {
+    display: flex; justify-content: center; margin-bottom: 10px;
+  }
+  .arena-rank-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, rgba(255,205,107,0.15), rgba(255,140,40,0.10));
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.5px;
+  }
+  .arena-rank-pill .arp-emoji { font-size: 16px; line-height: 1; }
+  .arena-rank-pill .arp-label {
+    color: var(--accent); text-transform: uppercase; letter-spacing: 1.2px;
+    font-family: 'Cinzel', serif;
+  }
+  .arena-rank-pill .arp-elo {
+    color: var(--text);
+    background: rgba(0,0,0,0.4);
+    padding: 2px 8px; border-radius: 999px;
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    font-size: 12px;
   }
 
   /* Phase 8.6: challenge + inbox row */
@@ -6617,7 +6669,12 @@
 
     <!-- Phase N: Mood + Bonding card. Body filled by VxBond.renderPanel(). -->
     <div class="cc-card cc-bond-card">
-      <div class="cc-card-title">Bond &amp; Mood</div>
+      <div class="cc-card-title">
+        Bond &amp; Mood
+        <!-- Trello (28 Apr): Bond/Mood help button — tap to open the
+             How It Works guide directly to the 💞 Bond panel. -->
+        <button class="bond-help-btn" onclick="navTo('howto'); setTimeout(()=>document.querySelector('.howto-tab[data-tab=&quot;ht-bond&quot;]')?.click(),100)" title="What is Bond &amp; Mood?">?</button>
+      </div>
       <div id="bondPanel"></div>
     </div>
 
@@ -11350,6 +11407,13 @@ function renderArena() {
   const stageName = SPECIES[champ.species_id]?.bloodlines?.[champ.bloodline_id]?.stages?.[stageIdx]?.name
                  || ('Stage ' + (stageIdx + 1));
   summary.innerHTML = `
+    <div class="arena-rank-row">
+      <span class="arena-rank-pill" title="PvP bracket — opponents are matched to your stage tier">
+        <span class="arp-emoji">🏆</span>
+        <span class="arp-label">${bracket}</span>
+        <span class="arp-elo">${arena.elo} ELO</span>
+      </span>
+    </div>
     <b>${champ.name}</b> · ${SPECIES[champ.species_id]?.label || champ.species_id} ·
     L${champ.level} · ${stageName}
     ${equippedLine}
