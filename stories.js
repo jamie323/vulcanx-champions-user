@@ -80,10 +80,33 @@ function fallbackChapter(speciesLabel, bloodlineLabel, stageIdx, stageName) {
   return `The chronicle of the ${bloodlineLabel} ${speciesLabel} at the stage of ${stageName} has not yet been set to song. A keeper's saga grows with the creature it shelters — this one waits, still, for its first verse. Feed your champion. Evolve it. The story will come.`;
 }
 
-function getStoryChapter(speciesId, bloodlineId, stageIdx, speciesLabel, bloodlineLabel, stageName) {
+// Substitute the bloodline's default hero name with whatever the
+// keeper actually chose. Trello (28 Apr): "Script adaptation: Name
+// change" — testers rename their Baby and expect the story to follow.
+// We do this as a post-process so the prose stays untouched in
+// BLOODLINE_STORIES (the canonical text references the default hero
+// name; this layer customises the read-out).
+//
+// Each species/bloodline registers its default hero name in champion
+// data; we accept it via the `defaultHeroName` arg. If `chosenName`
+// matches the default we no-op.
+function _applyChosenName(text, chosenName, defaultHeroName) {
+  if (!text || !chosenName || !defaultHeroName) return text;
+  const trimmed = String(chosenName).trim();
+  if (!trimmed) return text;
+  if (trimmed === defaultHeroName) return text;
+  // Whole-word replace, case-sensitive — hero names are distinctive
+  // enough that we won't false-positive on common nouns.
+  const re = new RegExp(`\\b${defaultHeroName.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&')}\\b`, 'g');
+  return text.replace(re, trimmed);
+}
+
+function getStoryChapter(speciesId, bloodlineId, stageIdx, speciesLabel, bloodlineLabel, stageName, chosenName, defaultHeroName) {
   const arr = BLOODLINE_STORIES[speciesId]?.[bloodlineId];
-  if (arr && arr[stageIdx]) return arr[stageIdx];
-  return fallbackChapter(speciesLabel || speciesId, bloodlineLabel || bloodlineId, stageIdx, stageName || `stage ${stageIdx+1}`);
+  const raw = arr && arr[stageIdx]
+    ? arr[stageIdx]
+    : fallbackChapter(speciesLabel || speciesId, bloodlineLabel || bloodlineId, stageIdx, stageName || `stage ${stageIdx+1}`);
+  return _applyChosenName(raw, chosenName, defaultHeroName);
 }
 
 // Expose to the main app

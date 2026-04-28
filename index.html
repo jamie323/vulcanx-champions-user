@@ -676,7 +676,16 @@
     .topbar .currency .coin { padding: 4px 8px; font-size: 11px; }
     .topbar .currency .coin .icon { width: 14px; height: 14px; font-size: 10px; }
     .topbar .shop-btn { padding: 6px 10px; font-size: 11px; letter-spacing: 0.5px; }
-    .topbar .wallet-chip { padding: 4px 8px; font-size: 10px; }
+    /* Trello (28 Apr): "Top right of the screen is cut off on mobile —
+       can only see half of wallet". Topbar was overflowing horizontally
+       once we added more chips (streak, mute, wallet-with-balance). On
+       phones we now hide the wallet ADDRESS and keep only the PYR
+       balance + dot, so the chip stays inside the viewport. The
+       address is still copyable by tapping (vxAlert shows it). */
+    .topbar .wallet-chip { padding: 4px 8px; font-size: 10px; gap: 4px; }
+    .topbar .wallet-chip #walletChipAddr { display: none; }
+    .topbar .wallet-chip-bal { margin-left: 0; padding-left: 0; border-left: none; }
+    .topbar .wallet-chip-bal .wcb-num { font-size: 11px; }
 
     /* Main nav on mobile: stacked icon + readable label, mobile-app
        pattern. Updated 2026-04-27 (fun-pass phase): bumped to 7 nav
@@ -1361,7 +1370,10 @@
   .mute-btn:hover { color: var(--accent); border-color: var(--accent-dim); }
 
   /* ── Phase 4: Arena view ────────────────────────────────────── */
-  .arena-wrap { max-width: 880px; margin: 0 auto; padding: 24px 20px 60px; }
+  /* Trello (28 Apr): "Fix menu bar overlapping/blocking page content"
+     — desktop padding-top was 24px which sat behind the fixed topbar
+     (52px) + nav (64px). Bumped to 140px to match the other wraps. */
+  .arena-wrap { max-width: 880px; margin: 0 auto; padding: 140px 20px 60px; }
   .arena-elo-pill {
     display: inline-flex; align-items: center; gap: 10px;
     padding: 10px 18px; background: rgba(255,205,107,0.08);
@@ -2253,11 +2265,16 @@
     text-align: center; text-transform: uppercase; letter-spacing: 0.5px;
     font-weight: 700; z-index: 3; }
 
-  aside { background: linear-gradient(180deg,#15101a,#0a0608);
+  /* Legacy admin-mode aside (full-viewport scrollable side panel).
+     Trello (28 Apr — refix): restricted with `body.admin-on` so the
+     rule no longer fires for the user app, where it was capturing
+     the scroll wheel on any page that happened to render an <aside>
+     and made the whole site feel unscrollable. */
+  body.admin-on aside { background: linear-gradient(180deg,#15101a,#0a0608);
     border-left: 1px solid var(--border);
     padding: 118px 30px 120px; overflow-y: auto; height: 100vh;
     scrollbar-width: none; }
-  aside::-webkit-scrollbar { display: none; }
+  body.admin-on aside::-webkit-scrollbar { display: none; }
   aside .card { padding: 20px 22px; margin-bottom: 18px; }
   aside .card p, aside .card .sub { color: #c8bdb0; }
 
@@ -3704,8 +3721,23 @@
     color: #e2caf9; font-family: monospace; font-size: 11px;
     padding: 5px 10px; border-radius: 14px; cursor: pointer;
     margin-left: 10px; letter-spacing: 0.5px;
+    flex-shrink: 0;
   }
   .wallet-chip:hover { background: rgba(192,132,252,0.2); color: #fff; }
+  /* Phase 28 Apr: PYR balance pill embedded in the wallet chip. */
+  .wallet-chip-bal {
+    display: inline-flex; align-items: baseline; gap: 2px;
+    margin-left: 4px; padding-left: 6px;
+    border-left: 1px solid rgba(192,132,252,0.3);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  .wallet-chip-bal .wcb-num {
+    color: var(--accent); font-weight: 700; font-size: 12px;
+  }
+  .wallet-chip-bal .wcb-unit {
+    color: var(--muted); font-size: 9px; margin-left: 2px;
+    letter-spacing: 0.3px;
+  }
   /* Heartbeat-flagged stale: red border + amber dot so the keeper
      sees something's wrong before they try to transact. */
   .wallet-chip.stale {
@@ -5319,6 +5351,12 @@
     <div class="wallet-chip" id="walletChip" title="Your wallet · click to copy" onclick="onWalletChipClick()">
       <span class="dot-live">●</span>
       <span id="walletChipAddr">—</span>
+      <!-- Trello (28 Apr): "no balance report showing" — surface the
+           PYR balance next to the wallet so keepers know if they can
+           afford a 10-PYR adoption without leaving the app. -->
+      <span class="wallet-chip-bal" id="walletChipBal" style="display:none;">
+        <span class="wcb-num">0</span><span class="wcb-unit">PYR</span>
+      </span>
     </div>
   </div>
 </div>
@@ -9143,9 +9181,14 @@ function render() {
     }
 
     // Story chapter — use bloodline story if available, fall back to stage lore.
+    // Trello (28 Apr): pass the champion's chosen name so the prose
+    // swaps the default hero name for what the keeper actually picked.
     const stageName = (STAGES[state.stageIdx]?.name || `Stage ${state.stageIdx+1}`);
+    const _activeChamp = myChampions.find(c => c.id === state.championId);
     const chapterText = (typeof getStoryChapter === 'function')
-      ? getStoryChapter(currentSpecies, currentBloodline, state.stageIdx, speciesCfg.label, bloodlineCfg.label, stageName)
+      ? getStoryChapter(currentSpecies, currentBloodline, state.stageIdx,
+          speciesCfg.label, bloodlineCfg.label, stageName,
+          _activeChamp?.name, bloodlineCfg.heroName)
       : (STAGE_LORE_MAP[state.stageIdx] || '');
     document.getElementById('aboutStory').textContent = chapterText;
     const cn = document.getElementById('storyChapterNum');
@@ -9247,23 +9290,26 @@ function render() {
     // and doesn't have to jump down to the potion grid.
     const count = state.inv?.[t] || 0;
     const isLocked = canEvolve();
-    // Trello/Discord (PegaraX, 28 Apr): block clicks on capped traits —
-    // feeding wouldn't move the stat (already at cap) and burning the
-    // potion just for bar fill felt exploitative. Direct keepers to
-    // Quest/Blessing/Evolution Potion paths instead.
-    const disabled = count <= 0 || isLocked || atCap;
+    const onQuest = !!(window.VxQuests && state.championId && VxQuests.getActiveQuest(state.championId));
+    // Trello/Discord (PegaraX, 28 Apr): block clicks on capped traits.
+    // Trello (28 Apr "Feeding while on adventure"): also block during a
+    // quest — champion is away, can't be hand-fed.
+    const disabled = count <= 0 || isLocked || atCap || onQuest;
     const gain = predictPotionGain(t, 'minor');
     const btnClass = ['trait-feed-btn',
       count === 0 ? 'empty' : '',
-      atCap ? 'at-cap' : ''].filter(Boolean).join(' ');
-    const btnLabel = atCap ? `MAX` : `+${gain}`;
-    const btnTitle = isLocked
-      ? 'Evolve first — bar is full at the gate'
-      : count === 0
-        ? `No ${TRAIT_NAMES[t]} potions yet — visit the Shop or run a Quest`
-        : atCap
-          ? `${TRAIT_NAMES[t]} is maxed for this stage. Use Quests or a Blessing to fill the Evolution Bar instead.`
-          : `Pour 1 ${TRAIT_NAMES[t]} potion → +${gain} ${t}`;
+      atCap ? 'at-cap' : '',
+      onQuest ? 'on-quest' : ''].filter(Boolean).join(' ');
+    const btnLabel = onQuest ? `🗺️` : (atCap ? `MAX` : `+${gain}`);
+    const btnTitle = onQuest
+      ? `${TRAIT_NAMES[t]} — on adventure, return to feed`
+      : isLocked
+        ? 'Evolve first — bar is full at the gate'
+        : count === 0
+          ? `No ${TRAIT_NAMES[t]} potions yet — visit the Shop or run a Quest`
+          : atCap
+            ? `${TRAIT_NAMES[t]} is maxed for this stage. Use Quests or a Blessing to fill the Evolution Bar instead.`
+            : `Pour 1 ${TRAIT_NAMES[t]} potion → +${gain} ${t}`;
     tBox.insertAdjacentHTML('beforeend',
       `<div class="trait-row" data-trait-row="${t}">
         <div class="trait-icon icon-${t}">${t}</div>
@@ -9574,6 +9620,13 @@ function bindIf(id, event, handler) {
 //      it still consumes the potion and fills the Evolution Bar.
 // Only alerts when the inventory is truly empty.
 bindIf('feedHero', 'click', () => {
+  // Trello (28 Apr): block feeding while the champion is on a quest —
+  // the keeper can't reach a champion who's away on adventure.
+  if (window.VxQuests && state.championId && VxQuests.getActiveQuest(state.championId)) {
+    vxAlert('Your champion is away on an adventure. They\'ll be back soon — quest progress fills the Evolution Bar without potions.',
+      { title: '🗺️ On Adventure', icon: '🗺️' });
+    return;
+  }
   const owned = TRAITS.filter(t => state.inv[t] > 0);
   if (owned.length === 0) {
     vxAlert('Grab some in the 🛒 Shop, or wait for the Quests hub to ship.', {title: 'No trait potions left', icon: '🧪'});
@@ -10191,7 +10244,7 @@ async function renderChampionCard(payload) {
   // Story chapter (if we have one for this bloodline)
   const stageName = stage?.name || `Stage ${champ.stage_idx+1}`;
   const chapter = (typeof getStoryChapter === 'function')
-    ? getStoryChapter(champ.species_id, champ.bloodline_id, champ.stage_idx, sp.label, bl.label, stageName)
+    ? getStoryChapter(champ.species_id, champ.bloodline_id, champ.stage_idx, sp.label, bl.label, stageName, champ.name, bl.heroName)
     : '—';
   set('ccStory', chapter);
 
@@ -10215,7 +10268,7 @@ async function ccPlayChapter() {
   const stage = bl?.stages?.[_ccCurrent.stage_idx];
   if (!sp || !bl || !stage) return;
   const text = (typeof getStoryChapter === 'function')
-    ? getStoryChapter(_ccCurrent.species_id, _ccCurrent.bloodline_id, _ccCurrent.stage_idx, sp.label, bl.label, stage.name)
+    ? getStoryChapter(_ccCurrent.species_id, _ccCurrent.bloodline_id, _ccCurrent.stage_idx, sp.label, bl.label, stage.name, _ccCurrent.name, bl.heroName)
     : null;
   if (!text) return;
   const btn = document.getElementById('ccPlayBtn');
@@ -12877,6 +12930,52 @@ function updateWalletUI() {
     chipEl.title = _walletStale
       ? 'Wallet session expired — click to reconnect'
       : 'Your wallet · click to copy';
+  }
+  // Trello (28 Apr): "no balance report showing" — fetch native PYR
+  // balance from the Elysium chain and display it next to the wallet.
+  // Best-effort; failures just keep the placeholder hidden.
+  if (w) refreshWalletBalance(w);
+}
+
+// PYR balance — Elysium native token, 18 decimals, chainId 1339.
+// Cached for 30s to avoid hammering the RPC on every render.
+let _balanceCache = { wallet: null, pyr: null, fetchedAt: 0 };
+async function refreshWalletBalance(wallet) {
+  const balEl = document.getElementById('walletChipBal');
+  const numEl = balEl?.querySelector('.wcb-num');
+  if (!balEl || !numEl) return;
+  const fresh = _balanceCache.wallet === wallet
+    && Date.now() - _balanceCache.fetchedAt < 30000
+    && _balanceCache.pyr != null;
+  if (fresh) {
+    numEl.textContent = _balanceCache.pyr;
+    balEl.style.display = '';
+    return;
+  }
+  try {
+    const provider = window.ethereum;
+    if (!provider) { balEl.style.display = 'none'; return; }
+    const hex = await provider.request({
+      method: 'eth_getBalance',
+      params: [wallet, 'latest'],
+    });
+    if (!hex) { balEl.style.display = 'none'; return; }
+    // wei → PYR (1e18). Show 0 / int / 2-decimal-trimmed depending on
+    // size so the chip stays compact.
+    const wei = BigInt(hex);
+    const whole = wei / 10n ** 18n;
+    const frac = (wei % 10n ** 18n) / 10n ** 16n; // 2-decimal precision
+    let display;
+    if (whole >= 1000n) display = (Number(whole) / 1000).toFixed(1) + 'k';
+    else if (whole >= 100n) display = String(whole);
+    else display = `${whole}.${String(frac).padStart(2, '0')}`;
+    _balanceCache = { wallet, pyr: display, fetchedAt: Date.now() };
+    numEl.textContent = display;
+    balEl.style.display = '';
+    balEl.title = `${wei} wei · refreshed ${new Date().toLocaleTimeString()}`;
+  } catch (e) {
+    console.warn('[wallet] balance fetch failed', e);
+    balEl.style.display = 'none';
   }
 }
 
