@@ -1284,6 +1284,32 @@
     padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px;
   }
   .arena-champ-summary em { color: var(--muted); font-style: italic; }
+  /* Phase 8: PvP / Bots mode toggle. Two pill buttons sized like the
+     stance row so the picker stack reads as a coherent group. */
+  .arena-mode-row { margin: 6px 0 14px; }
+  .arena-mode-btns { display: flex; gap: 8px; justify-content: center; }
+  .arena-mode-btn {
+    flex: 1; max-width: 200px; padding: 10px 12px;
+    background: rgba(20,20,28,0.8);
+    border: 2px solid var(--border);
+    border-radius: 10px; color: var(--muted);
+    font-size: 13px; font-weight: 700; letter-spacing: 1px;
+    cursor: pointer; transition: all 0.18s;
+  }
+  .arena-mode-btn:hover {
+    border-color: rgba(255,205,107,0.4); color: var(--text);
+  }
+  .arena-mode-btn.active {
+    background: rgba(255,205,107,0.12);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .arena-mode-btn[data-mode="pvp"].active {
+    background: linear-gradient(135deg, rgba(255,140,40,0.18), rgba(255,107,107,0.10));
+    border-color: var(--ember);
+    color: #ffb088;
+  }
+
   .arena-stance-row { margin: 14px 0 22px; }
   .arena-stance-label {
     font-size: 11px; color: var(--muted); letter-spacing: 2px;
@@ -1424,9 +1450,22 @@
   .ah-result.win  { background: rgba(125,255,154,0.15); color: #7dff9a; }
   .ah-result.loss { background: rgba(255,107,107,0.15); color: #ff9a7d; }
   .ah-result.draw { background: rgba(255,205,107,0.15); color: var(--accent); }
-  .ah-vs   { color: var(--text); font-size: 13px; }
+  .ah-vs   { color: var(--text); font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
   .ah-elo  { color: var(--accent); font-weight: 700; font-size: 13px; }
   .ah-time { color: var(--muted); font-size: 11px; }
+  /* Phase 8: PvP badge + opponent wallet snippet */
+  .ah-mode-badge.pvp {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, rgba(255,140,40,0.2), rgba(255,107,107,0.15));
+    border: 1px solid rgba(255,140,40,0.4);
+    border-radius: 999px;
+    padding: 1px 6px; font-size: 11px;
+  }
+  .ah-owner {
+    color: var(--muted); font-size: 11px;
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    margin-left: 4px;
+  }
 
   /* Arena result modal */
   .arena-result-modal { width: 580px; max-width: 95vw; }
@@ -5924,6 +5963,19 @@
       <div class="arena-champ-summary" id="arenaChampSummary">
         <em>Open one of your champions to enter the arena.</em>
       </div>
+
+      <!-- Phase 8: bots vs PvP mode toggle. Defaults to bots so first-
+           time players ramp up safely; flipping to PvP pulls a real
+           opponent loadout from the pool (falls back to bot if the
+           bracket pool is thin). -->
+      <div class="arena-mode-row" id="arenaModeRow">
+        <div class="arena-stance-label">Match Mode</div>
+        <div class="arena-mode-btns">
+          <button class="arena-mode-btn active" data-mode="bots" title="Fight against synthesized bot opponents">🤖 vs Bots</button>
+          <button class="arena-mode-btn" data-mode="pvp" title="Fight against real player loadouts from the global pool">🥊 PvP</button>
+        </div>
+      </div>
+
       <div class="arena-stance-row" id="arenaStanceRow">
         <div class="arena-stance-label">Battle Stance</div>
         <div class="arena-stance-btns">
@@ -10781,6 +10833,12 @@ function setAbilityForChamp(championId, abilityId) {
 
 const ARENA_STORAGE_KEY = 'vx_arena_v1'; // { [championId]: { elo, history: [...] } }
 let _arenaStance = 'balanced';
+// Phase 8: arena mode — bots (default) or pvp. Persisted per-session
+// so tabs survive a page refresh.
+let _arenaMode = (() => {
+  try { return localStorage.getItem('vx_arena_mode') === 'pvp' ? 'pvp' : 'bots'; }
+  catch (_) { return 'bots'; }
+})();
 
 function loadArenaState() {
   try { return JSON.parse(localStorage.getItem(ARENA_STORAGE_KEY) || '{}'); }
@@ -10913,14 +10971,22 @@ function renderArena() {
   if (!arena.history.length) {
     histEl.innerHTML = '<div class="arena-history-empty">No matches yet. Click "Find Opponent" to fight your first.</div>';
   } else {
-    histEl.innerHTML = arena.history.slice(0, 20).map(h => `
-      <div class="ah-row">
-        <span class="ah-result ${h.result}">${h.result.toUpperCase()}</span>
-        <span class="ah-vs">vs ${h.opponentName}</span>
-        <span class="ah-elo">${h.eloChange >= 0 ? '+' : ''}${h.eloChange} rank</span>
-        <span class="ah-time">${formatRelativeTime(h.timestamp)}</span>
-      </div>
-    `).join('');
+    histEl.innerHTML = arena.history.slice(0, 20).map(h => {
+      const modeBadge = h.mode === 'pvp'
+        ? '<span class="ah-mode-badge pvp" title="PvP — real player loadout">🥊</span>'
+        : '';
+      const ownerLine = h.opponentOwner
+        ? `<span class="ah-owner">${h.opponentOwner}</span>`
+        : '';
+      return `
+        <div class="ah-row">
+          <span class="ah-result ${h.result}">${h.result.toUpperCase()}</span>
+          <span class="ah-vs">${modeBadge}vs ${h.opponentName}${ownerLine}</span>
+          <span class="ah-elo">${h.eloChange >= 0 ? '+' : ''}${h.eloChange} rank</span>
+          <span class="ah-time">${formatRelativeTime(h.timestamp)}</span>
+        </div>
+      `;
+    }).join('');
   }
 }
 
@@ -10990,14 +11056,35 @@ document.querySelectorAll('.stance-btn').forEach(btn => {
   });
 });
 
+// Phase 8: PvP / Bots mode toggle
+function syncArenaModeBtns() {
+  document.querySelectorAll('.arena-mode-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === _arenaMode);
+  });
+  const findBtn = document.getElementById('arenaFindBtn');
+  if (findBtn) {
+    findBtn.textContent = _arenaMode === 'pvp'
+      ? '🥊 Find PvP Opponent + Fight'
+      : '⚔️ Find Opponent + Fight';
+  }
+}
+document.querySelectorAll('.arena-mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    _arenaMode = btn.dataset.mode;
+    try { localStorage.setItem('vx_arena_mode', _arenaMode); } catch (_) {}
+    syncArenaModeBtns();
+  });
+});
+syncArenaModeBtns();
+
 // Initial render so the panel isn't empty on first arena visit
 renderStanceDetail();
 
-async function apiRequestMatch({ champion_id, stance, current_elo, equipped, ability_id }) {
+async function apiRequestMatch({ champion_id, stance, current_elo, equipped, ability_id, mode }) {
   const res = await apiFetch(`${FN_BASE}/match_request`, {
     method: 'POST',
     headers: AUTH_HEADERS,
-    body: JSON.stringify({ wallet: getWallet(), champion_id, stance, current_elo, equipped, ability_id }),
+    body: JSON.stringify({ wallet: getWallet(), champion_id, stance, current_elo, equipped, ability_id, mode }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -11037,7 +11124,7 @@ bindIf('arenaFindBtn', 'click', async () => {
 
   const resetButton = () => {
     findBtn.disabled = false;
-    findBtn.textContent = '⚔️ Find Opponent + Fight';
+    syncArenaModeBtns();  // restores the right label per mode
     _arenaInFlight = false;
   };
 
@@ -11049,6 +11136,7 @@ bindIf('arenaFindBtn', 'click', async () => {
       current_elo: arena.elo,
       equipped,
       ability_id,
+      mode: _arenaMode,  // Phase 8: 'bots' | 'pvp'
     });
     console.log('[arena] response', resp);
   } catch (e) {
@@ -11079,6 +11167,10 @@ bindIf('arenaFindBtn', 'click', async () => {
       opponentName: resp.opponent.display_name || 'Bot',
       eloChange: resp.eloChange,
       seed: resp.seed,
+      // Phase 8: track mode + opponent's wallet (truncated) so the
+      // history row can render a 🥊 badge and "vs xxx…yyy".
+      mode: resp.mode || 'bots',
+      opponentOwner: resp.opponent.owner_short || null,
     });
     arena.history = arena.history.slice(0, 50);
     saveArenaForChamp(champ.id, arena);
