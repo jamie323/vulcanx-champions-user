@@ -190,6 +190,15 @@
   .cc-level-num b { color: var(--accent); font-size: 18px; }
   .cc-stage-name { color: var(--accent); font-weight: 700; }
   .cc-next-line { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .cc-evo-hint {
+    font-size: 11px; color: var(--muted);
+    background: rgba(255,205,107,0.05);
+    border: 1px solid rgba(255,205,107,0.18);
+    border-radius: 8px;
+    padding: 6px 10px;
+    margin-top: 10px;
+    line-height: 1.4;
+  }
   .cc-evo-bar .evo-bar { height: 8px; }
   .cc-evo-pct { font-size: 11px; color: var(--muted); margin-top: 4px; }
   .cc-evo-pct b { color: var(--accent); font-size: 14px; }
@@ -6157,6 +6166,13 @@
         <div class="evo-bar"><div class="evo-fill" id="evoFill" style="width:0%"></div></div>
         <div class="cc-evo-pct"><b id="evoPct">0</b>% <span id="evoPctLabel">to Level <span id="nextLevelNum">02</span></span></div>
       </div>
+      <!-- Trello (Ric O., 28 Apr — "should only be ready to evolve when
+           all stat bars are full"): clarify that stats do NOT need to be
+           maxed — evolution only requires (gate level + bar full +
+           Evolution Potion). Stats keep growing across stages. -->
+      <div class="cc-evo-hint" title="Stats keep growing across stages — they don't need to be max for you to evolve.">
+        💡 Evolve when bar is full at a gate level. Stats don't need to be max.
+      </div>
       <!-- Evolution potion as a long bar under progression (Trello
            "Potions could be in a better spot" — Ric O. April 27).
            Replaces the standalone Evolution card in the Potions &
@@ -6218,30 +6234,28 @@
       <div id="traits"></div>
     </div>
 
-    <!-- Phase N: Mood + Bonding card. Body filled by VxBond.renderPanel(). -->
-    <div class="cc-card cc-bond-card">
-      <div class="cc-card-title">Bond &amp; Mood</div>
-      <div id="bondPanel"></div>
-    </div>
-
     <!-- Quick Actions card removed (Trello "Potions could be in a better
          spot" — Ric O.). Each button found a better home: Equip →
          Equipment card on the left, Feed → big FEED button in the centre
          column action row, Potions → inline per-trait feed buttons in the
          stats card above, Album + Share → identity card top-right. -->
 
-    <!-- Blessing as a long full-width bar (Trello "Potions could be in a
-         better spot" — Ric O.). Blessing now sits right under the stats
-         card, next to where it's actually used. The standalone Trait card
-         is removed (each trait row in stats has its own inline feed
-         button) and the Evolution card moved up into the Level &
-         Progression card on the left column. -->
+    <!-- Blessing as a long full-width bar — sits directly below the
+         Stats card so it's grouped with the other stat-related controls
+         (Trello: Ric O. "I would move this box up one level, directly
+         below the stats"). -->
     <div class="cc-blessing-bar" id="allocPotionRow"
          title="Blessing — distribute 40 stat points freely">
       <span class="cep-icon">✨</span>
       <span class="cep-label">Blessing</span>
       <span class="cep-count" id="invAlloc">×0</span>
       <span class="cep-hint">Distribute 40 free stat points</span>
+    </div>
+
+    <!-- Phase N: Mood + Bonding card. Body filled by VxBond.renderPanel(). -->
+    <div class="cc-card cc-bond-card">
+      <div class="cc-card-title">Bond &amp; Mood</div>
+      <div id="bondPanel"></div>
     </div>
 
     <div class="cc-card cc-story-card">
@@ -12395,6 +12409,13 @@ function closeShop() {
 // exactly what they're buying (addresses Trello cards 'In the shop,
 // you should be able to see how much each potion adds to your stats'
 // and 'Evolution and Blessing should have a bit of a description').
+//
+// Trello (Ric O., 28 Apr — "potions don't give correct stat points"):
+// the static "+5 stat" headline confused testers because the actual
+// gain at their invested level + bloodline weight is different. Now
+// the tooltip shows BOTH the headline (early-game baseline) AND the
+// per-trait, per-stat-level prediction for the keeper's active
+// champion when one is loaded.
 function shopTooltipFor(it) {
   const info = SHOP_TIER_INFO[it.kind] || {};
   const desc = SHOP_DESCRIPTIONS[it.kind];
@@ -12405,11 +12426,28 @@ function shopTooltipFor(it) {
   } else if (info.statGain && info.statGain !== '—') {
     lines.push(info.statGain);
   }
+  // Live prediction for the active champion — accounts for invested
+  // level (diminishing returns) AND bloodline stat-growth weight, so
+  // the number matches what the server will actually award.
+  if (it.trait && state?.championId && typeof predictPotionGain === 'function'
+      && (it.kind === 'minor' || it.kind === 'major' || it.kind === 'epic')) {
+    const live = predictPotionGain(it.trait, it.kind);
+    if (live > 0) {
+      lines.push(`Your champion right now: +${live} ${it.trait}`);
+    }
+  }
   if (info.barFill && info.barFill !== '—') {
     lines.push(`Evolution Bar fill: ${info.barFill} per use`);
   }
   if (desc) lines.push(desc);
   lines.push(`Price: ${it.price} PYR  ·  dummy TX in QA, no PYR deducted`);
+  // Bloodlines + diminishing returns disclaimer so testers don't
+  // file repeat bug reports about "got +6 from a +5 minor" (caused
+  // by bloodline weight 1.2-1.3) or "got +1 from a +15 major" (caused
+  // by invested-level diminishing returns past stage breakpoints).
+  if (it.kind === 'minor' || it.kind === 'major' || it.kind === 'epic') {
+    lines.push('Note: gain shrinks as you invest more in a stat (diminishing returns) and varies by bloodline weight.');
+  }
   return lines.join('\n');
 }
 
