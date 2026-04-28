@@ -1378,6 +1378,172 @@
   .arena-champ-summary em { color: var(--muted); font-style: italic; }
   /* Phase 8: PvP / Bots mode toggle. Two pill buttons sized like the
      stance row so the picker stack reads as a coherent group. */
+  /* Phase 8.6: invite modals */
+  .cm-label {
+    display: block; font-size: 11px; color: var(--muted);
+    letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 4px;
+  }
+  .cm-input {
+    width: 100%; padding: 10px 12px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-size: 14px;
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    box-sizing: border-box;
+  }
+  .cm-input:focus {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(255,205,107,0.15);
+  }
+  .cm-summary {
+    margin: 14px 0 0; padding: 10px 12px;
+    background: rgba(255,205,107,0.06);
+    border-radius: 8px; font-size: 12px; color: var(--muted);
+    min-height: 36px;
+  }
+  .cm-summary b { color: var(--accent); }
+  .cm-actions {
+    display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;
+  }
+
+  .inbox-tabs {
+    display: flex; gap: 6px; margin: 14px 0 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .inbox-tab {
+    background: transparent; border: none;
+    padding: 8px 14px;
+    color: var(--muted); font-size: 12px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .inbox-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .inbox-tab span {
+    background: rgba(255,142,177,0.2); color: #ff8eb1;
+    border-radius: 999px; padding: 1px 7px; font-size: 10px;
+    margin-left: 4px;
+  }
+  .inbox-list {
+    display: flex; flex-direction: column; gap: 8px;
+    max-height: 50vh; overflow-y: auto;
+  }
+  .inbox-row {
+    background: rgba(20,12,20,0.85);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .inbox-row .ir-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .inbox-row .ir-from {
+    font-weight: 700; color: var(--text); font-size: 14px;
+  }
+  .inbox-row .ir-from-wallet {
+    font-family: ui-monospace, monospace; font-size: 11px;
+    color: var(--muted); margin-left: 6px;
+  }
+  .inbox-row .ir-time { color: var(--muted); font-size: 11px; }
+  .inbox-row .ir-summary { color: var(--muted); font-size: 12px; }
+  .inbox-row .ir-msg {
+    font-style: italic; color: var(--text);
+    background: rgba(255,205,107,0.06);
+    padding: 6px 10px; border-radius: 6px;
+    border-left: 3px solid var(--accent);
+    font-size: 12px;
+  }
+  .inbox-row .ir-actions {
+    display: flex; gap: 8px; margin-top: 4px;
+  }
+  .inbox-row .ir-accept,
+  .inbox-row .ir-decline {
+    flex: 1; padding: 8px; font-size: 12px; font-weight: 700;
+    letter-spacing: 0.5px; border-radius: 8px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .inbox-row .ir-accept {
+    background: linear-gradient(135deg, rgba(255,205,107,0.2), rgba(255,140,40,0.15));
+    border: 1px solid var(--accent); color: var(--accent);
+  }
+  .inbox-row .ir-accept:hover { background: rgba(255,205,107,0.32); }
+  .inbox-row .ir-decline {
+    background: rgba(255,107,107,0.08); border: 1px solid rgba(255,107,107,0.3);
+    color: #ff8888;
+  }
+  .inbox-row .ir-decline:hover { background: rgba(255,107,107,0.18); }
+
+  .inbox-row.sent .ir-status {
+    font-weight: 700; font-size: 11px; letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 2px 8px; border-radius: 999px;
+  }
+  .inbox-row.sent .ir-status.pending  { background: rgba(255,205,107,0.15); color: var(--accent); }
+  .inbox-row.sent .ir-status.accepted { background: rgba(125,255,154,0.15); color: #7dff9a; }
+  .inbox-row.sent .ir-status.declined { background: rgba(255,107,107,0.15); color: #ff8888; }
+  .inbox-row.sent .ir-status.expired,
+  .inbox-row.sent .ir-status.cancelled { background: rgba(255,255,255,0.06); color: var(--muted); }
+
+  .ai-opponent {
+    padding: 12px 14px;
+    background: rgba(255,205,107,0.06);
+    border: 1px solid rgba(255,205,107,0.3);
+    border-radius: 10px;
+    font-size: 13px;
+  }
+  .ai-opponent .aio-name { font-weight: 800; color: var(--accent); font-size: 16px; }
+  .ai-opponent .aio-detail { color: var(--muted); margin-top: 4px; }
+  .ai-opponent .aio-msg {
+    margin-top: 8px; font-style: italic;
+    padding: 6px 10px; background: rgba(0,0,0,0.3);
+    border-left: 3px solid var(--accent); border-radius: 4px;
+  }
+  .ai-stance-row {
+    display: flex; gap: 8px; margin-top: 4px;
+  }
+  .ai-stance-row .stance-btn { padding: 8px 10px; font-size: 12px; }
+
+  .inbox-empty {
+    text-align: center; color: var(--muted); padding: 24px;
+    font-style: italic;
+  }
+
+  /* Phase 8.6: challenge + inbox row */
+  .arena-invite-row {
+    display: flex; gap: 8px; margin: 6px 0 14px;
+  }
+  .arena-invite-btn, .arena-inbox-btn {
+    flex: 1;
+    background: rgba(20,20,28,0.8);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.5px;
+    cursor: pointer; transition: all 0.15s;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .arena-invite-btn:hover, .arena-inbox-btn:hover {
+    border-color: var(--accent); color: var(--accent);
+  }
+  .arena-inbox-badge {
+    background: linear-gradient(135deg, #ff6b9a, #ff8eb1);
+    color: #1a0e08;
+    font-weight: 800; font-size: 11px;
+    padding: 1px 7px; border-radius: 999px;
+    min-width: 18px; text-align: center;
+    animation: inboxPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes inboxPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(255,142,177,0.5); }
+    50%     { box-shadow: 0 0 0 6px rgba(255,142,177,0); }
+  }
+
   .arena-mode-row { margin: 6px 0 14px; }
   .arena-mode-btns { display: flex; gap: 8px; justify-content: center; }
   .arena-mode-btn {
@@ -6078,6 +6244,14 @@
         </div>
       </div>
 
+      <!-- Phase 8.6: invite a specific wallet to a duel -->
+      <div class="arena-invite-row">
+        <button class="arena-invite-btn" id="arenaInviteBtn" title="Challenge a specific player by wallet">🎯 Challenge Player by Wallet</button>
+        <button class="arena-inbox-btn" id="arenaInboxBtn" title="See challenges sent to you">
+          📬 Inbox <span class="arena-inbox-badge" id="arenaInboxBadge" style="display:none;">0</span>
+        </button>
+      </div>
+
       <div class="arena-stance-row" id="arenaStanceRow">
         <div class="arena-stance-label">Battle Stance</div>
         <div class="arena-stance-btns">
@@ -6105,6 +6279,60 @@
       <div id="arenaHistory" class="arena-history-list">
         <div class="arena-history-empty">No matches yet. Click "Find Opponent" to fight your first.</div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Phase 8.6: Challenge modal — sender enters opponent wallet + message -->
+<div class="modal-backdrop" id="challengeModal">
+  <div class="modal" style="width: 460px;">
+    <h3>🎯 Challenge a Player</h3>
+    <p class="sub">Enter the wallet address of the player you want to duel. They'll see your challenge in their inbox and can pick their own champion + loadout to respond.</p>
+    <label class="cm-label">Opponent wallet (0x…)</label>
+    <input type="text" id="cmWallet" class="cm-input" placeholder="0x1234…abcd" autocomplete="off" />
+    <label class="cm-label" style="margin-top:12px;">Message (optional, ≤120 chars)</label>
+    <input type="text" id="cmMessage" class="cm-input" placeholder="See you in the arena!" maxlength="120" />
+    <div class="cm-summary" id="cmSummary"></div>
+    <div class="cm-actions">
+      <button class="btn-secondary" onclick="closeChallengeModal()">Cancel</button>
+      <button class="btn-primary" id="cmSendBtn">📨 Send Challenge</button>
+    </div>
+  </div>
+</div>
+
+<!-- Phase 8.6: Inbox modal — list pending invites + sent history -->
+<div class="modal-backdrop" id="inboxModal">
+  <div class="modal" style="width: 540px; max-height: 80vh; overflow-y: auto;">
+    <h3 style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <span>📬 Challenge Inbox</span>
+      <button class="btn-secondary" style="padding: 4px 10px; font-size: 11px;" onclick="refreshInbox()">↻ Refresh</button>
+    </h3>
+    <div class="inbox-tabs">
+      <button class="inbox-tab active" data-tab="pending">Pending <span id="inboxPendingCount">0</span></button>
+      <button class="inbox-tab" data-tab="sent">Sent</button>
+    </div>
+    <div id="inboxPendingList" class="inbox-list"></div>
+    <div id="inboxSentList" class="inbox-list" style="display:none;"></div>
+    <button class="btn-primary" onclick="closeInboxModal()" style="margin-top:14px;width:100%;">Close</button>
+  </div>
+</div>
+
+<!-- Phase 8.6: Accept-invite modal — recipient picks loadout + champion -->
+<div class="modal-backdrop" id="acceptInviteModal">
+  <div class="modal" style="width: 520px; max-height: 85vh; overflow-y: auto;">
+    <h3>⚔️ Accept Challenge</h3>
+    <div id="aiOpponentSummary" class="ai-opponent"></div>
+    <div class="cm-label" style="margin-top:14px;">Your champion</div>
+    <select id="aiChampionSelect" class="cm-input"></select>
+    <div class="cm-label" style="margin-top:12px;">Your stance</div>
+    <div class="ai-stance-row">
+      <button class="stance-btn ai-stance" data-stance="aggressive">⚔️ Aggressive</button>
+      <button class="stance-btn ai-stance active" data-stance="balanced">⚖️ Balanced</button>
+      <button class="stance-btn ai-stance" data-stance="defensive">🛡️ Defensive</button>
+    </div>
+    <div class="cm-actions">
+      <button class="btn-secondary" onclick="closeAcceptInviteModal()">Cancel</button>
+      <button class="btn-primary" id="aiAcceptBtn">⚔️ Fight Now</button>
     </div>
   </div>
 </div>
@@ -10685,6 +10913,8 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     if (btn.id === 'arenaNavBtn') {
       navTo('arena');  // Phase 4: real arena view (vs bots)
+      // Phase 8.6: refresh invite badge whenever we hop to the arena
+      if (typeof refreshInbox === 'function') refreshInbox(true);
       return;
     }
     navTo(btn.dataset.view);
@@ -11281,6 +11511,321 @@ function showCooldownChip(seconds) {
   tick();
   _cooldownTickTimer = setInterval(tick, 1000);
 }
+
+// ============================================================
+// PHASE 8.6 — Direct PvP invites (challenge by wallet)
+// ============================================================
+async function apiInviteCreate(payload) {
+  const res = await apiFetch(`${FN_BASE}/pvp_invite_create`, {
+    method: 'POST', headers: AUTH_HEADERS,
+    body: JSON.stringify({ wallet: getWallet(), ...payload }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(`${data.error || 'http_'+res.status}: ${data.message || ''}`.trim());
+  return data;
+}
+async function apiInviteList() {
+  const res = await apiFetch(`${FN_BASE}/pvp_invite_list`, {
+    method: 'POST', headers: AUTH_HEADERS,
+    body: JSON.stringify({ wallet: getWallet() }),
+  });
+  return res.json().catch(() => ({ inbox: [], sent: [] }));
+}
+async function apiInviteAccept(payload) {
+  const res = await apiFetch(`${FN_BASE}/pvp_invite_accept`, {
+    method: 'POST', headers: AUTH_HEADERS,
+    body: JSON.stringify({ wallet: getWallet(), ...payload }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(`${data.error || 'http_'+res.status}: ${data.message || ''}`.trim());
+  return data;
+}
+async function apiInviteDecline(invite_id) {
+  const res = await apiFetch(`${FN_BASE}/pvp_invite_decline`, {
+    method: 'POST', headers: AUTH_HEADERS,
+    body: JSON.stringify({ wallet: getWallet(), invite_id }),
+  });
+  return res.json().catch(() => ({}));
+}
+
+let _inviteListCache = { inbox: [], sent: [] };
+let _inviteAcceptStance = 'balanced';
+let _activeAcceptInvite = null;
+
+function relTime(iso) {
+  if (!iso) return '';
+  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return s + 's ago';
+  if (s < 3600) return Math.floor(s / 60) + 'm ago';
+  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  return Math.floor(s / 86400) + 'd ago';
+}
+
+// Update the badge on the Inbox button
+function updateInboxBadge(count) {
+  const b = document.getElementById('arenaInboxBadge');
+  if (!b) return;
+  if (count > 0) { b.textContent = count; b.style.display = ''; }
+  else { b.style.display = 'none'; }
+}
+
+async function refreshInbox(silent) {
+  if (!getWallet || !getWallet()) return;
+  try {
+    const data = await apiInviteList();
+    _inviteListCache = data;
+    updateInboxBadge((data.inbox || []).length);
+    if (!silent) renderInboxLists();
+  } catch (e) {
+    console.warn('[invite] list failed', e);
+  }
+}
+
+function renderInboxLists() {
+  const pending = document.getElementById('inboxPendingList');
+  const sent = document.getElementById('inboxSentList');
+  const pendingCount = document.getElementById('inboxPendingCount');
+  if (pendingCount) pendingCount.textContent = (_inviteListCache.inbox || []).length;
+  if (pending) {
+    if (!_inviteListCache.inbox?.length) {
+      pending.innerHTML = '<div class="inbox-empty">No challenges right now. Send one with the 🎯 Challenge button.</div>';
+    } else {
+      pending.innerHTML = _inviteListCache.inbox.map(i => {
+        const c = i.from_champion;
+        const summary = c
+          ? `${c.name || c.species_id} · L${c.level} · ${SPECIES[c.species_id]?.bloodlines?.[c.bloodline_id]?.label || c.bloodline_id}`
+          : '(champion data missing)';
+        const stance = i.from_loadout?.stance || '?';
+        const ability = i.from_loadout?.ability_id || 'no ability';
+        return `
+          <div class="inbox-row" data-id="${i.id}">
+            <div class="ir-head">
+              <div>
+                <span class="ir-from">${c?.name || 'Challenger'}</span>
+                <span class="ir-from-wallet">${i.from_wallet_short}</span>
+              </div>
+              <span class="ir-time">${relTime(i.created_at)}</span>
+            </div>
+            <div class="ir-summary">${summary} · ${stance} · ${ability}</div>
+            ${i.message ? `<div class="ir-msg">"${i.message}"</div>` : ''}
+            <div class="ir-actions">
+              <button class="ir-accept" data-action="accept" data-id="${i.id}">⚔️ Accept</button>
+              <button class="ir-decline" data-action="decline" data-id="${i.id}">✕ Decline</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      pending.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id;
+          if (btn.dataset.action === 'accept') openAcceptInviteModal(id);
+          else handleDecline(id);
+        });
+      });
+    }
+  }
+  if (sent) {
+    if (!_inviteListCache.sent?.length) {
+      sent.innerHTML = '<div class="inbox-empty">You haven\'t sent any challenges yet.</div>';
+    } else {
+      sent.innerHTML = _inviteListCache.sent.map(s => {
+        const elo = (s.from_elo_change != null) ? `${s.from_elo_change >= 0 ? '+' : ''}${s.from_elo_change}` : '';
+        return `
+          <div class="inbox-row sent">
+            <div class="ir-head">
+              <div>
+                vs <span class="ir-from-wallet">${s.to_wallet_short}</span>
+                <span class="ir-status ${s.status}">${s.status}</span>
+                ${elo ? `<span style="color:var(--accent);margin-left:6px;font-weight:700;">${elo} ELO</span>` : ''}
+              </div>
+              <span class="ir-time">${relTime(s.created_at)}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+}
+
+// Tabs in the inbox modal
+document.querySelectorAll('.inbox-tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.inbox-tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    const which = t.dataset.tab;
+    document.getElementById('inboxPendingList').style.display = which === 'pending' ? '' : 'none';
+    document.getElementById('inboxSentList').style.display = which === 'sent' ? '' : 'none';
+  });
+});
+
+function openInboxModal() {
+  refreshInbox();
+  document.getElementById('inboxModal')?.classList.add('open');
+}
+function closeInboxModal() {
+  document.getElementById('inboxModal')?.classList.remove('open');
+}
+async function handleDecline(id) {
+  await apiInviteDecline(id);
+  await refreshInbox();
+}
+
+// Send-challenge modal
+function openChallengeModal() {
+  if (!state.championId) {
+    return vxAlert('Open one of your champions first — the challenge sends with their loadout.',
+      { title: 'Pick a champion', icon: '🎯' });
+  }
+  const ch = myChampions.find(c => c.id === state.championId);
+  const summary = document.getElementById('cmSummary');
+  if (ch && summary) {
+    summary.innerHTML = `Sending as <b>${ch.name}</b> · L${ch.level} · ${SPECIES[ch.species_id]?.label || ch.species_id} · ${_arenaStance} stance`;
+  }
+  document.getElementById('cmWallet').value = '';
+  document.getElementById('cmMessage').value = '';
+  document.getElementById('challengeModal')?.classList.add('open');
+}
+function closeChallengeModal() {
+  document.getElementById('challengeModal')?.classList.remove('open');
+}
+
+bindIf('cmSendBtn', 'click', async () => {
+  const ch = myChampions.find(c => c.id === state.championId);
+  if (!ch) return;
+  const toWallet = document.getElementById('cmWallet').value.trim();
+  if (!/^0x[a-fA-F0-9]{40}$/.test(toWallet)) {
+    return vxAlert('Wallet must be a 0x… EVM address (42 chars).',
+      { title: 'Invalid wallet', icon: '🎯' });
+  }
+  const msg = document.getElementById('cmMessage').value.trim();
+  const equipped = getEquippedWeaponForArena(ch.id);
+  const ability_id = getAbilityForChamp(ch.id);
+  const btn = document.getElementById('cmSendBtn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    await apiInviteCreate({
+      champion_id: ch.id, to_wallet: toWallet,
+      stance: _arenaStance, ability_id, equipped,
+      message: msg || undefined,
+    });
+    closeChallengeModal();
+    vxAlert(`Challenge sent to ${toWallet.slice(0,6)}…${toWallet.slice(-4)}. Expires in 24h.`,
+      { title: '🎯 Challenge sent', icon: '🎯' });
+    refreshInbox(true);
+  } catch (e) {
+    vxAlert(String(e?.message || 'Send failed'),
+      { title: 'Challenge failed', icon: '🎯', variant: 'error' });
+  } finally {
+    btn.disabled = false; btn.textContent = '📨 Send Challenge';
+  }
+});
+
+// Accept-invite modal
+function openAcceptInviteModal(inviteId) {
+  const inv = (_inviteListCache.inbox || []).find(i => i.id === inviteId);
+  if (!inv) return;
+  _activeAcceptInvite = inv;
+  _inviteAcceptStance = 'balanced';
+  // Render opponent summary
+  const opp = inv.from_champion;
+  const oppEl = document.getElementById('aiOpponentSummary');
+  if (oppEl && opp) {
+    oppEl.innerHTML = `
+      <div class="aio-name">${opp.name || 'Challenger'}</div>
+      <div class="aio-detail">
+        ${SPECIES[opp.species_id]?.label || opp.species_id} · ${SPECIES[opp.species_id]?.bloodlines?.[opp.bloodline_id]?.label || opp.bloodline_id}
+        · L${opp.level} · stage ${opp.stage_idx + 1}
+      </div>
+      <div class="aio-detail">
+        Stance: ${inv.from_loadout?.stance || '?'} · Ability: ${inv.from_loadout?.ability_id || 'none'}
+        ${inv.from_loadout?.weapon_id ? ` · Weapon: ${inv.from_loadout.weapon_id.replace(/_/g,' ')}` : ''}
+      </div>
+      ${inv.message ? `<div class="aio-msg">"${inv.message}"</div>` : ''}
+    `;
+  }
+  // Populate champion select with the player's owned champions
+  const sel = document.getElementById('aiChampionSelect');
+  if (sel) {
+    sel.innerHTML = myChampions.map(c =>
+      `<option value="${c.id}">${c.name} · L${c.level} · ${SPECIES[c.species_id]?.label || c.species_id}</option>`
+    ).join('');
+    if (state.championId && myChampions.some(c => c.id === state.championId)) {
+      sel.value = state.championId;
+    }
+  }
+  // Reset stance UI
+  document.querySelectorAll('.ai-stance').forEach(b => {
+    b.classList.toggle('active', b.dataset.stance === 'balanced');
+  });
+  document.getElementById('acceptInviteModal')?.classList.add('open');
+}
+function closeAcceptInviteModal() {
+  _activeAcceptInvite = null;
+  document.getElementById('acceptInviteModal')?.classList.remove('open');
+}
+document.querySelectorAll('.ai-stance').forEach(b => {
+  b.addEventListener('click', () => {
+    _inviteAcceptStance = b.dataset.stance;
+    document.querySelectorAll('.ai-stance').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+  });
+});
+
+bindIf('aiAcceptBtn', 'click', async () => {
+  const inv = _activeAcceptInvite;
+  if (!inv) return;
+  const championId = document.getElementById('aiChampionSelect').value;
+  const ch = myChampions.find(c => c.id === championId);
+  if (!ch) return;
+  const equipped = getEquippedWeaponForArena(championId);
+  const ability_id = getAbilityForChamp(championId);
+  const btn = document.getElementById('aiAcceptBtn');
+  btn.disabled = true; btn.textContent = 'Fighting…';
+  try {
+    const resp = await apiInviteAccept({
+      invite_id: inv.id,
+      champion_id: championId,
+      stance: _inviteAcceptStance,
+      ability_id, equipped,
+    });
+    closeAcceptInviteModal();
+    closeInboxModal();
+    // Update local arena state (acceptor's POV)
+    const arena = getArenaForChamp(championId);
+    arena.elo = resp.newElo;
+    handleResolvedMatch(resp, ch, arena);
+    refreshInbox(true);
+  } catch (e) {
+    const msg = String(e?.message || 'Accept failed');
+    if (msg.includes('healing_cooldown')) {
+      const m = msg.match(/Ready in (\d+)s/);
+      const seconds = m ? parseInt(m[1], 10) : 60;
+      showCooldownChip(seconds);
+      vxAlert(msg.replace(/^healing_cooldown:\s*/, ''),
+        { title: '🩹 Healing', icon: '🩹' });
+    } else {
+      vxAlert(msg, { title: 'Accept failed', icon: '⚔️', variant: 'error' });
+    }
+  } finally {
+    btn.disabled = false; btn.textContent = '⚔️ Fight Now';
+  }
+});
+
+bindIf('arenaInviteBtn', 'click', openChallengeModal);
+bindIf('arenaInboxBtn', 'click', openInboxModal);
+
+// Backdrop dismisses for the new modals
+['challengeModal', 'inboxModal', 'acceptInviteModal'].forEach(id => {
+  document.getElementById(id)?.addEventListener('click', (e) => {
+    if (e.target.id === id) e.target.classList.remove('open');
+  });
+});
+
+// Poll the inbox once per minute while the user is on the arena tab
+// so they see new challenges roll in without refreshing.
+setInterval(() => {
+  if (currentView === 'arena' && getWallet && getWallet()) refreshInbox(true);
+}, 60000);
 
 bindIf('arenaHealBtn', 'click', async () => {
   const champ = myChampions.find(c => c.id === state.championId);
