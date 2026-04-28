@@ -9471,17 +9471,47 @@ async function apiGrantPotion({ species_id, kind, trait, quantity = 1 }) {
 }
 
 async function apiFeedPotion({ champion_id, potion_id }) {
-  const res = await apiFetch(`${FN_BASE}/champion_feed_potion`, {
-    method: 'POST',
-    headers: AUTH_HEADERS,
-    body: JSON.stringify({ wallet: getWallet(), champion_id, potion_id }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const code = data.error || `http_${res.status}`;
-    throw new Error(`${code}: ${data.message || ''}`.trim());
+  // Trello "Keep getting feeding fail error after a few potions" (Ric O.):
+  // attached screenshot showed `http_503: Service is temporarily
+  // unavailable` — Supabase edge-function cold start / transient. Retry
+  // 5xx + network blips silently with exponential backoff so the keeper
+  // doesn't see a popup every time the function takes a moment to wake
+  // up. Auth/4xx errors still throw immediately (those won't fix
+  // themselves on retry).
+  const DELAYS = [200, 800, 2000]; // ms — three tries total
+  let lastErr;
+  for (let attempt = 0; attempt <= DELAYS.length; attempt++) {
+    try {
+      const res = await apiFetch(`${FN_BASE}/champion_feed_potion`, {
+        method: 'POST',
+        headers: AUTH_HEADERS,
+        body: JSON.stringify({ wallet: getWallet(), champion_id, potion_id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) return data;  // { champion, result, potionRemaining }
+      const code = data.error || `http_${res.status}`;
+      const err = new Error(`${code}: ${data.message || ''}`.trim());
+      // Retry on 5xx server errors only (4xx = bad input, won't change)
+      if (res.status >= 500 && res.status < 600 && attempt < DELAYS.length) {
+        console.warn(`[feed] ${code} attempt ${attempt+1}, retrying in ${DELAYS[attempt]}ms`);
+        await new Promise(r => setTimeout(r, DELAYS[attempt]));
+        lastErr = err;
+        continue;
+      }
+      throw err;
+    } catch (e) {
+      // Network / timeout fall here — also retryable
+      const isNet = /Failed to fetch|TypeError|timeout|aborted|NetworkError/i.test(String(e?.message || e));
+      if (isNet && attempt < DELAYS.length) {
+        console.warn(`[feed] network blip attempt ${attempt+1}, retrying in ${DELAYS[attempt]}ms`);
+        await new Promise(r => setTimeout(r, DELAYS[attempt]));
+        lastErr = e;
+        continue;
+      }
+      throw e;
+    }
   }
-  return data;  // { champion, result, potionRemaining }
+  throw lastErr || new Error('feed_failed: exhausted retries');
 }
 
 async function apiRenameChampion({ champion_id, new_name }) {
