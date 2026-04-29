@@ -8020,11 +8020,14 @@ if (typeof document !== 'undefined') {
 // ============================================================
 
 const VxDaily = (() => {
-  const KEY = 'vx_daily_v1';
-  // Reward ladder: day-of-cycle → bundle. Cycle is 7 days; after that
-  // it loops but the streak counter keeps climbing. Day 7 bundle is
-  // the big one to incentivize a full week.
-  // Each bundle item: { kind, trait?, qty, label, icon }
+  // Trello (29 Apr) — moved streak state from per-device localStorage to
+  // a server-side `daily_streaks` table keyed by wallet. Fixes:
+  //   • PC and mobile showing different streaks for the same wallet
+  //   • Daily rewards reset after clearing cache
+  // The reward LADDER stays here for client-side display only — actual
+  // potion grants happen server-side in daily_streak_claim (so it stays
+  // tamper-resistant and the bundle for a given day-of-cycle is the
+  // single source of truth).
   const LADDER = [
     { day: 1, items: [{ kind:'minor', trait:'random', qty:3, icon:'🧪', label:'×3 Minor' }] },
     { day: 2, items: [{ kind:'minor', trait:'random', qty:5, icon:'🧪', label:'×5 Minor' }] },
@@ -8038,54 +8041,44 @@ const VxDaily = (() => {
                        { kind:'allocation', trait:null, qty:1, icon:'✨', label:'×1 Blessing' },
                        { kind:'minor', trait:'random', qty:5, icon:'🧪', label:'×5 Minor' }] },
   ];
-  const TRAITS_LIST = ['STR','VIT','AGI','FER','INT','LCK'];
 
-  function todayStr() {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  }
-  function load() {
-    try { return JSON.parse(localStorage.getItem(KEY) || '{}'); }
-    catch (_) { return {}; }
-  }
-  function save(s) {
-    try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (_) {}
-  }
+  // In-memory cache of the server's daily-streak state. Refreshed at
+  // boot (refresh()) and after every claim. All getters are sync, so the
+  // existing UI code that calls VxDaily.getStreak()/canClaimToday()/etc.
+  // doesn't need to become async.
+  let _cache = { streak: 0, total_claims: 0, last_claim_date: null, can_claim_today: true };
+
   function dayOfCycle(streak) {
-    // 1-indexed: streak 1 → day 1, streak 8 → day 1 again, streak 14 → day 7
     const idx = ((streak - 1) % 7) + 1;
     return idx;
   }
   function bundleFor(streak) {
     return LADDER.find(r => r.day === dayOfCycle(streak))?.items || [];
   }
-  function dayDiff(fromStr, toStr) {
-    const a = new Date(fromStr + 'T00:00:00');
-    const b = new Date(toStr + 'T00:00:00');
-    return Math.round((b - a) / 86400000);
-  }
-  function canClaimToday() {
-    const s = load();
-    if (!s.lastClaim) return true;
-    return s.lastClaim !== todayStr();
-  }
-  function getStreak() {
-    const s = load();
-    if (!s.streak) return 0;
-    // If the streak was last claimed > 1 day ago, it's broken — display
-    // 0 (next claim will set it to 1). Today/yesterday → display current.
-    const diff = dayDiff(s.lastClaim, todayStr());
-    if (diff > 1) return 0;
-    return s.streak;
-  }
-  // Compute the streak that WILL be after claiming today.
+  function canClaimToday() { return !!_cache.can_claim_today; }
+  function getStreak() { return _cache.streak || 0; }
   function nextStreak() {
-    const s = load();
-    if (!s.lastClaim) return 1;
-    const diff = dayDiff(s.lastClaim, todayStr());
-    if (diff === 0) return s.streak; // already claimed
-    if (diff === 1) return s.streak + 1; // continued
-    return 1; // streak broken, restart
+    // Mirrors backend logic: brand new or broken → 1, continued → +1,
+    // already-claimed-today → current.
+    if (!_cache.last_claim_date) return 1;
+    if (!_cache.can_claim_today) return _cache.streak; // claimed today
+    return (_cache.streak || 0) + 1; // either continued OR was broken (server returns streak=0)
+  }
+
+  // Pull current state from the server. Called at boot + after claims.
+  async function refresh() {
+    try {
+      const data = await apiDailyGet();
+      _cache = {
+        streak: data.streak || 0,
+        total_claims: data.total_claims || 0,
+        last_claim_date: data.last_claim_date || null,
+        can_claim_today: !!data.can_claim_today,
+      };
+      refreshPill();
+    } catch (e) {
+      console.warn('[daily] refresh failed', e);
+    }
   }
 
   function refreshPill() {
@@ -8097,9 +8090,6 @@ const VxDaily = (() => {
     document.getElementById('streakDay').textContent = day || '—';
     pill.style.display = '';
     const claimable = canClaimToday();
-    // Visually emphasise unclaimed reward — pulses + adds a CLAIM badge
-    // next to the streak count so beginners notice it (Trello: "Improve
-    // daily reward claim button visibility").
     pill.classList.toggle('streak-pill-claimable', claimable);
     if (dot) dot.style.display = claimable ? '' : 'none';
     if (label) label.style.display = claimable ? '' : 'none';
@@ -8110,9 +8100,10 @@ const VxDaily = (() => {
     if (!modal) return;
     const upcoming = nextStreak();
     const todayDayOfCycle = dayOfCycle(upcoming);
+    const wasReset = upcoming === 1 && _cache.streak === 0 && _cache.last_claim_date;
     document.getElementById('dailyStreakLine').innerHTML =
       `Day <b style="color:var(--accent);">${upcoming}</b> of your login streak${
-        upcoming === 1 && load().streak > 1 ? ' (streak reset — missed a day)' : ''}.`;
+        wasReset ? ' (streak reset — missed a day)' : ''}.`;
     const ladder = document.getElementById('dailyLadder');
     ladder.innerHTML = '';
     for (let d = 1; d <= 7; d++) {
@@ -8138,25 +8129,16 @@ const VxDaily = (() => {
     if (!canClaimToday()) return;
     const btn = document.getElementById('dailyClaimBtn');
     if (btn) { btn.disabled = true; btn.textContent = 'Claiming…'; }
-    const upcoming = nextStreak();
-    const items = bundleFor(upcoming);
     const species = (typeof currentSpecies !== 'undefined' && currentSpecies) || 'orc';
     try {
-      // Grant each item via the existing potion_grant edge function.
-      // Random trait → pick one from TRAITS_LIST per item.
-      for (const it of items) {
-        const trait = it.trait === 'random'
-          ? TRAITS_LIST[Math.floor(Math.random() * TRAITS_LIST.length)]
-          : it.trait;
-        await apiGrantPotion({
-          species_id: species,
-          kind: it.kind,
-          trait: trait,
-          quantity: it.qty,
-        });
-      }
-      // Persist streak
-      save({ lastClaim: todayStr(), streak: upcoming, totalClaims: (load().totalClaims || 0) + 1 });
+      // Server grants the bundle atomically + returns new streak state.
+      const result = await apiDailyClaim(species);
+      _cache = {
+        streak: result.streak || 0,
+        total_claims: result.total_claims || 0,
+        last_claim_date: new Date().toISOString().slice(0,10),
+        can_claim_today: false,
+      };
       // Refresh inventory + UI
       if (typeof reloadPotions === 'function') await reloadPotions();
       if (typeof render === 'function') render();
@@ -8169,11 +8151,9 @@ const VxDaily = (() => {
         if (bondResult?.tieredUp) VxBond.celebrateTierUp(bondResult.newTier);
         VxBond.renderPanel(state.championId);
       }
-      // Spark burst over the streak pill
       const pill = document.getElementById('streakPill');
       if (pill) vxSparkBurst(pill, 12, { color: '#ff9a7d' });
       refreshPill();
-      // Update modal in place to "claimed" state
       renderModal();
       const btn2 = document.getElementById('dailyClaimBtn');
       if (btn2) { btn2.disabled = true; btn2.textContent = '✓ Claimed — see you tomorrow!'; }
@@ -8181,6 +8161,12 @@ const VxDaily = (() => {
     } catch (e) {
       console.error('[daily] claim failed', e);
       if (btn) { btn.disabled = false; btn.textContent = '⚡ Claim'; }
+      // already_claimed_today → another device beat us; just resync.
+      if (String(e.message || '').startsWith('already_claimed_today')) {
+        await refresh();
+        renderModal();
+        return;
+      }
       vxAlert(`Daily claim failed: ${e.message || e}`, { title: 'Try again', icon: '🔥', variant: 'error' });
     }
   }
@@ -8194,13 +8180,12 @@ const VxDaily = (() => {
   }
   // Auto-open the modal on first authenticated boot of the day.
   function maybeAutoOpen() {
-    if (canClaimToday() && getStreak() >= 0) {
-      // Tiny delay so the user sees the app has loaded first.
+    if (canClaimToday()) {
       setTimeout(() => { if (canClaimToday()) openModal(); }, 1200);
     }
   }
 
-  return { canClaimToday, getStreak, nextStreak, claim, openModal, closeModal, refreshPill, maybeAutoOpen };
+  return { canClaimToday, getStreak, nextStreak, claim, openModal, closeModal, refreshPill, refresh, maybeAutoOpen };
 })();
 window.VxDaily = VxDaily;
 // Wire claim button + backdrop dismiss
@@ -9386,25 +9371,33 @@ function render() {
     const count = state.inv?.[t] || 0;
     const isLocked = canEvolve();
     const onQuest = !!(window.VxQuests && state.championId && VxQuests.getActiveQuest(state.championId));
+    // Trello (29 Apr): champion at max form (Legendary) → all
+    // progression actions disabled.
+    const isMaxForm = state.stageIdx >= 19;
     // Trello/Discord (PegaraX, 28 Apr): block clicks on capped traits.
     // Trello (28 Apr "Feeding while on adventure"): also block during a
     // quest — champion is away, can't be hand-fed.
-    const disabled = count <= 0 || isLocked || atCap || onQuest;
+    const disabled = count <= 0 || isLocked || atCap || onQuest || isMaxForm;
     const gain = predictPotionGain(t, 'minor');
     const btnClass = ['trait-feed-btn',
       count === 0 ? 'empty' : '',
       atCap ? 'at-cap' : '',
-      onQuest ? 'on-quest' : ''].filter(Boolean).join(' ');
-    const btnLabel = onQuest ? `🗺️` : (atCap ? `MAX` : `+${gain}`);
-    const btnTitle = onQuest
-      ? `${TRAIT_NAMES[t]} — on adventure, return to feed`
-      : isLocked
-        ? 'Evolve first — bar is full at the gate'
-        : count === 0
-          ? `No ${TRAIT_NAMES[t]} potions yet — visit the Shop or run a Quest`
-          : atCap
-            ? `${TRAIT_NAMES[t]} is maxed for this stage. Use Quests or a Blessing to fill the Evolution Bar instead.`
-            : `Pour 1 ${TRAIT_NAMES[t]} potion → +${gain} ${t}`;
+      onQuest ? 'on-quest' : '',
+      isMaxForm ? 'max-form' : ''].filter(Boolean).join(' ');
+    const btnLabel = isMaxForm ? `🏆`
+                  : onQuest ? `🗺️`
+                  : (atCap ? `MAX` : `+${gain}`);
+    const btnTitle = isMaxForm
+      ? `Champion is Legendary — progression complete`
+      : onQuest
+        ? `${TRAIT_NAMES[t]} — on adventure, return to feed`
+        : isLocked
+          ? 'Evolve first — bar is full at the gate'
+          : count === 0
+            ? `No ${TRAIT_NAMES[t]} potions yet — visit the Shop or run a Quest`
+            : atCap
+              ? `${TRAIT_NAMES[t]} is maxed for this stage. Use Quests or a Blessing to fill the Evolution Bar instead.`
+              : `Pour 1 ${TRAIT_NAMES[t]} potion → +${gain} ${t}`;
     tBox.insertAdjacentHTML('beforeend',
       `<div class="trait-row" data-trait-row="${t}">
         <div class="trait-icon icon-${t}">${t}</div>
@@ -9715,6 +9708,14 @@ function bindIf(id, event, handler) {
 //      it still consumes the potion and fills the Evolution Bar.
 // Only alerts when the inventory is truly empty.
 bindIf('feedHero', 'click', () => {
+  // Trello (29 Apr): "Disable feeding and potion actions after champion
+  // reaches max form" — at stage 19 (Legendary, L50) progression is
+  // complete; feeding/blessing/potions shouldn't be clickable.
+  if (state.stageIdx >= 19) {
+    vxAlert('You have reached the peak. Your champion has become the Ultimate Legendary — no further progression possible.',
+      { title: '🏆 Legendary', icon: '🏆' });
+    return;
+  }
   // Trello (28 Apr): block feeding while the champion is on a quest —
   // the keeper can't reach a champion who's away on adventure.
   if (window.VxQuests && state.championId && VxQuests.getActiveQuest(state.championId)) {
@@ -9777,6 +9778,12 @@ document.getElementById('equipPickerModal')?.addEventListener('click', (e) => {
   if (e.target.id === 'equipPickerModal') closeEquipPicker();
 });
 bindIf('allocPotionRow', 'click', (e) => {
+  // Trello (29 Apr): block Blessing at max form
+  if (state.stageIdx >= 19) {
+    vxAlert('You have reached the peak. Your champion has become the Ultimate Legendary — no further progression possible.',
+      { title: '🏆 Legendary', icon: '🏆' });
+    return;
+  }
   useAllocationPotion(e.currentTarget);
 });
 bindIf('allocApply', 'click', applyAllocation);
@@ -10060,6 +10067,36 @@ async function apiGrantPotion({ species_id, kind, trait, quantity = 1 }) {
     throw new Error(`${code}: ${data.message || ''}`.trim());
   }
   return data.potion;
+}
+
+// Daily streak — server-side, keyed by wallet (replaces per-device localStorage).
+// Trello (29 Apr): "Daily streak was different on PC and mobile" + "Daily rewards
+// reset after clearing cache" → both fixed by moving state to Supabase.
+async function apiDailyGet() {
+  const res = await apiFetch(`${FN_BASE}/daily_streak_get`, {
+    method: 'POST',
+    headers: AUTH_HEADERS,
+    body: JSON.stringify({ wallet: getWallet() }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const code = data.error || `http_${res.status}`;
+    throw new Error(`${code}: ${data.message || ''}`.trim());
+  }
+  return data;
+}
+async function apiDailyClaim(species_id) {
+  const res = await apiFetch(`${FN_BASE}/daily_streak_claim`, {
+    method: 'POST',
+    headers: AUTH_HEADERS,
+    body: JSON.stringify({ wallet: getWallet(), species_id }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const code = data.error || `http_${res.status}`;
+    throw new Error(`${code}: ${data.message || ''}`.trim());
+  }
+  return data;
 }
 
 async function apiFeedPotion({ champion_id, potion_id }) {
@@ -11149,6 +11186,12 @@ async function apiFeedBatch({ champion_id, count, mode = 'auto' }) {
 
 function openBatchFeedModal() {
   if (!state.championId) return;
+  // Trello (29 Apr): block at max form
+  if (state.stageIdx >= 19) {
+    vxAlert('You have reached the peak. Your champion has become the Ultimate Legendary — no further progression possible.',
+      { title: '🏆 Legendary', icon: '🏆' });
+    return;
+  }
   // Refresh inventory totals + summary numbers
   const total = TRAITS.reduce((s, t) => s + (state.inv[t] || 0), 0);
   document.getElementById('batchFeedTotal').textContent = total;
@@ -12872,7 +12915,9 @@ async function boot() {
     // Phase K: refresh the daily-streak pill + auto-open the claim modal
     // if today's reward hasn't been claimed yet. Tiny delay so users see
     // the app fully load first.
+    // Phase 8.7: streak state is now server-side — fetch first, then render.
     if (window.VxDaily) {
+      await VxDaily.refresh();
       VxDaily.refreshPill();
       VxDaily.maybeAutoOpen();
     }
