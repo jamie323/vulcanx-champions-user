@@ -77,10 +77,16 @@
 
   /* ─── COMPACT CHAMPION VIEW (2026-04-26 redesign) ────────
      Single-screen, no scroll. 3-column grid that fits ~1500px wide.
-     Stacks to single-column under 1280px. Per Jamie's reference mockup. */
+     Stacks to single-column under 1280px. Per Jamie's reference mockup.
+
+     Trello (29 Apr): "menu bar overlapping/blocking page content" —
+     desktop padding-top was 10px but the fixed topbar (52px) + main-nav
+     (64px, top:52px) cover the first 116px of the viewport. Match the
+     other views' desktop clearance (140px) so the identity card sits
+     below the nav instead of behind it. */
   body.view-champion .view-champion {
     display: block;
-    padding: 10px 16px 0;
+    padding: 140px 16px 0;
   }
   .cc-grid {
     display: grid;
@@ -1216,6 +1222,31 @@
     transform: translateY(-1px);
   }
 
+  /* Trello (29 Apr): labelled Evolution Album CTA — replaces the buried
+     icon-only button so keepers can actually find their gallery. */
+  .cc-album-cta {
+    display: flex; align-items: center; gap: 12px;
+    width: 100%; margin-top: 12px; padding: 10px 14px;
+    background: linear-gradient(135deg, rgba(255,205,107,0.12), rgba(255,140,40,0.06));
+    border: 1px solid rgba(255,205,107,0.35);
+    border-radius: 10px; cursor: pointer; color: var(--text);
+    text-align: left; transition: all 0.15s;
+  }
+  .cc-album-cta:hover {
+    background: linear-gradient(135deg, rgba(255,205,107,0.22), rgba(255,140,40,0.12));
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .cc-album-cta .cc-album-ico { font-size: 22px; line-height: 1; }
+  .cc-album-cta .cc-album-text { flex: 1; display: flex; flex-direction: column; }
+  .cc-album-cta .cc-album-title {
+    font-weight: 700; font-size: 13px;
+    color: var(--accent); letter-spacing: 0.2px;
+  }
+  .cc-album-cta .cc-album-sub {
+    font-size: 11px; color: var(--muted); margin-top: 1px;
+  }
+
   /* Share button under portrait */
   .champ-share-row {
     display: flex; justify-content: center; margin-top: 4px;
@@ -1820,7 +1851,16 @@
   }
 
   /* Arena result modal */
-  .arena-result-modal { width: 580px; max-width: 95vw; }
+  /* Trello (29 Apr): "Cannot see the top and the bottom of the panel"
+     after a fight finishes. Modal had no max-height — when total
+     content (portraits + ticker + summary + stats + ELO + log + CTAs)
+     exceeded the viewport, the centered modal clipped equally on top
+     and bottom and the keeper couldn't reach either edge. Cap height
+     and let the modal scroll internally. */
+  .arena-result-modal {
+    width: 580px; max-width: 95vw;
+    max-height: calc(100vh - 40px); overflow-y: auto;
+  }
   /* Phase 5.7: portraits in the result modal — the orc baby is the
      game's identity, can't have a battle screen without it. */
   .ar-portrait {
@@ -5599,7 +5639,7 @@
         <div class="howto-feature-card">
           <div class="ic">🛡️</div>
           <h4>5. Battle</h4>
-          <p>Arena vs bots. Pick stance + ability, watch the animated reveal, climb the Ranking ladder.</p>
+          <p>Arena vs bots. Pick stance + ability, watch the animated reveal, climb the ELO ladder.</p>
         </div>
         <div class="howto-feature-card">
           <div class="ic">⚡</div>
@@ -5620,7 +5660,7 @@
 
       <div class="howto-tip">
         <span class="ti">💡</span>
-        <div><b>Your progress persists.</b> Sign in with the same wallet anytime — your champions, potions, equipment, ranking, and quest progress are right where you left them.</div>
+        <div><b>Your progress persists.</b> Sign in with the same wallet anytime — your champions, potions, equipment, ELO, and quest progress are right where you left them.</div>
       </div>
       <div class="howto-tip warn">
         <span class="ti">🧪</span>
@@ -5795,12 +5835,12 @@
       <h2 style="text-align:center;">The Arena</h2>
       <p class="lead" style="text-align:center;">
         Async stat battles vs bots. Pick your stance and ability, watch the animated reveal,
-        climb the Ranking ladder. Real player-vs-player coming in a later phase.
+        climb the ELO ladder. Real player-vs-player coming in a later phase.
       </p>
 
       <h3>The four-step battle flow</h3>
       <ol class="howto-numbered">
-        <li><b>Click ⚔️ Arena</b> in the top nav. Your active champion auto-loads with their equipped weapon and current Ranking score.</li>
+        <li><b>Click ⚔️ Arena</b> in the top nav. Your active champion auto-loads with their equipped weapon and current ELO score.</li>
         <li><b>Pick your stance:</b> ⚔️ Aggressive (+15% damage, -15% defense), ⚖️ Balanced (no modifiers), or 🛡️ Defensive (-15% damage, +15% defense).</li>
         <li><b>Pick your ability.</b> Your bloodline signature is locked + automatic; you also pick 1 from a pool of 8 universal abilities (see below).</li>
         <li><b>Click "Find Opponent + Fight".</b> The server generates a bot of your bracket, runs a deterministic 8-round battle, and streams the result back as an animated reveal — portraits shake on hits, damage popups fly, an event ticker shows the play-by-play.</li>
@@ -5820,10 +5860,10 @@
 
       <h3>Four brackets</h3>
       <ul>
-        <li><b>🥚 Whelpling Cup</b> — stages 0-4 (L1-L10) · starting Ranking 100</li>
-        <li><b>🐺 Adolescent</b> — stages 5-9 (L13-L26) · starting Ranking 200</li>
-        <li><b>🛡️ Champion</b> — stages 10-14 (L30-L44) · starting Ranking 400</li>
-        <li><b>👑 Legendary</b> — stages 15-19 (L46-L50) · starting Ranking 800</li>
+        <li><b>🥚 Whelpling Cup</b> — stages 0-4 (L1-L10) · starting ELO 100</li>
+        <li><b>🐺 Adolescent</b> — stages 5-9 (L13-L26) · starting ELO 200</li>
+        <li><b>🛡️ Champion</b> — stages 10-14 (L30-L44) · starting ELO 400</li>
+        <li><b>👑 Legendary</b> — stages 15-19 (L46-L50) · starting ELO 800</li>
       </ul>
 
       <div class="howto-tip">
@@ -6497,7 +6537,7 @@
     <!-- Stat comparison: compact bars showing why you won/lost -->
     <div class="ar-stats" id="arStats" style="display:none;"></div>
     <div class="ar-elo-row">
-      <span>Ranking</span>
+      <span>ELO</span>
       <b id="arEloOld">100</b>
       <span>→</span>
       <b id="arEloNew" class="ar-elo-new">110</b>
@@ -6577,7 +6617,6 @@
         <div class="cc-name" id="aboutName">Grokk the Whelp</div>
         <div class="cc-identity-actions">
           <button class="name-edit-btn" onclick="openRenameModal()" title="Rename (5 PYR)">✏️</button>
-          <button class="name-edit-btn" onclick="openEvolutionAlbum()" title="Evolution Album — see every stage">📸</button>
           <button class="name-edit-btn" onclick="shareChampion()" title="Share this champion">🔗</button>
         </div>
       </div>
@@ -6588,6 +6627,18 @@
         <span class="cc-bl-label">Bloodline:</span>
         <span class="cc-bl-name" id="aboutBloodlineName">Ironfang</span>
       </div>
+      <!-- Trello (29 Apr): "I still cant see the gallery" — the Album
+           was buried as a 38px icon-only button next to Rename. Promote
+           to a labelled CTA inside the identity card so keepers actually
+           find it. -->
+      <button class="cc-album-cta" onclick="openEvolutionAlbum()"
+              title="See your champion at every past stage of evolution">
+        <span class="cc-album-ico">📸</span>
+        <span class="cc-album-text">
+          <span class="cc-album-title">Evolution Album</span>
+          <span class="cc-album-sub">View every past stage</span>
+        </span>
+      </button>
     </div>
 
     <div class="cc-card cc-passive" id="aboutPassiveBlock">
@@ -6999,7 +7050,7 @@
 <div class="modal-backdrop" id="leaderboardModal">
   <div class="modal" style="width: 480px;">
     <h3>🏆 Champion Leaderboard</h3>
-    <div class="sub">Ranked by Power Score: stage × stage-multiplier + total stats + arena ranking</div>
+    <div class="sub">Ranked by Power Score: stage × stage-multiplier + total stats + arena ELO</div>
     <div style="display:flex; gap:4px; margin-bottom:14px;">
       <button class="sp-btn lb-filter active" data-sp="all">All Species</button>
       <button class="sp-btn lb-filter" data-sp="orc">🟢 Orc</button>
@@ -10101,17 +10152,44 @@ async function apiDailyGet() {
   return data;
 }
 async function apiDailyClaim(species_id) {
-  const res = await apiFetch(`${FN_BASE}/daily_streak_claim`, {
-    method: 'POST',
-    headers: AUTH_HEADERS,
-    body: JSON.stringify({ wallet: getWallet(), species_id }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const code = data.error || `http_${res.status}`;
-    throw new Error(`${code}: ${data.message || ''}`.trim());
+  // Trello (29 Apr): "this shows error now when claiming the daily reward"
+  // — daily_streak_claim hit a transient cold-start 503 and surfaced
+  // immediately to the keeper as an error toast. Use the same silent
+  // 5xx-retry-with-backoff pattern as apiFeedPotion so cold starts
+  // resolve themselves without bothering the keeper. 4xx errors
+  // (already_claimed_today, bad_species) still throw on first try.
+  const DELAYS = [200, 800, 2000];
+  let lastErr;
+  for (let attempt = 0; attempt <= DELAYS.length; attempt++) {
+    try {
+      const res = await apiFetch(`${FN_BASE}/daily_streak_claim`, {
+        method: 'POST',
+        headers: AUTH_HEADERS,
+        body: JSON.stringify({ wallet: getWallet(), species_id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) return data;
+      const code = data.error || `http_${res.status}`;
+      const err = new Error(`${code}: ${data.message || ''}`.trim());
+      if (res.status >= 500 && res.status < 600 && attempt < DELAYS.length) {
+        console.warn(`[daily] ${code} attempt ${attempt+1}, retrying in ${DELAYS[attempt]}ms`);
+        await new Promise(r => setTimeout(r, DELAYS[attempt]));
+        lastErr = err;
+        continue;
+      }
+      throw err;
+    } catch (e) {
+      const isNet = /Failed to fetch|TypeError|timeout|aborted|NetworkError/i.test(String(e?.message || e));
+      if (isNet && attempt < DELAYS.length) {
+        console.warn(`[daily] network blip attempt ${attempt+1}, retrying in ${DELAYS[attempt]}ms`);
+        await new Promise(r => setTimeout(r, DELAYS[attempt]));
+        lastErr = e;
+        continue;
+      }
+      throw e;
+    }
   }
-  return data;
+  throw lastErr || new Error('daily_claim_failed: exhausted retries');
 }
 
 async function apiFeedPotion({ champion_id, potion_id }) {
@@ -10270,6 +10348,17 @@ const VIEW_MAP = {
 
 function navTo(viewName, payload) {
   currentView = viewName;
+  // Trello (29 Apr): "Mouse wheel scrolling not working on desktop". An
+  // earlier modal flow that errored before its resolve() ran could leave
+  // body.style.overflow stuck at 'hidden', silently blocking page scroll
+  // forever after. Defensive cleanup: any nav between views means the
+  // user is no longer interacting with a modal — reset the lock if no
+  // modal element is currently visible.
+  const anyModalOpen = !!document.querySelector(
+    '#vxDialog[style*="display: flex"], #shopModal[style*="display: flex"], ' +
+    '#welcomeModal[style*="display: flex"], #potionGuideModal[style*="display: flex"], ' +
+    '.modal-backdrop.open');
+  if (!anyModalOpen) document.body.style.overflow = '';
   // clear ALL views first, activate target
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   const cls = VIEW_MAP[viewName];
@@ -11255,12 +11344,19 @@ async function runBatchFeed(count) {
     // single-feed path calls VxBond.onFeed once per potion. Apply the
     // same gain across the whole batch so x5/x25/x50/All all grow Bond
     // (capped daily by VxBond.onFeed's internal limit).
+    //
+    // Trello (29 Apr refix): "It still not add some bond and mood pts
+    // when batch feed is used" — bond + mood state was being mutated,
+    // but we never re-rendered the Bond/Mood panel after the loop, so
+    // the keeper saw the old values even though the underlying record
+    // changed. Single-feed re-renders inline; batch must too.
     if (window.VxBond && resp?.summary?.fed > 0) {
       let lastTier = null;
       for (let i = 0; i < resp.summary.fed; i++) {
         const r = VxBond.onFeed(state.championId);
         if (r?.tieredUp) lastTier = r.newTier;
       }
+      VxBond.renderPanel(state.championId);
       if (lastTier) VxBond.celebrateTierUp(lastTier);
     }
     render();
