@@ -7513,6 +7513,14 @@ async function evolve() {
     console.warn('[evolve] bailed: already in flight');
     return;
   }
+  // Trello (29 Apr, refix): block evolve while on adventure. The bar may
+  // legitimately be at 100% from quest progress, but the ritual itself
+  // requires the champion to be present.
+  if (window.VxQuests && VxQuests.getActiveQuest(state.championId)) {
+    vxAlert('Your champion is away on an adventure. They\'ll evolve when they return.',
+      { title: '🗺️ On Adventure', icon: '🗺️' });
+    return;
+  }
   const evoPotion = findPotion({ kind: 'evolution' });
   if (!evoPotion) return;
 
@@ -9784,6 +9792,13 @@ bindIf('allocPotionRow', 'click', (e) => {
       { title: '🏆 Legendary', icon: '🏆' });
     return;
   }
+  // Trello (29 Apr, refix): block Blessing while on adventure — same gate
+  // as feeding. Champion is away, can't be touched by a Blessing potion.
+  if (window.VxQuests && state.championId && VxQuests.getActiveQuest(state.championId)) {
+    vxAlert('Your champion is away on an adventure. They\'ll be back soon — quest progress fills the Evolution Bar without potions.',
+      { title: '🗺️ On Adventure', icon: '🗺️' });
+    return;
+  }
   useAllocationPotion(e.currentTarget);
 });
 bindIf('allocApply', 'click', applyAllocation);
@@ -11192,6 +11207,15 @@ function openBatchFeedModal() {
       { title: '🏆 Legendary', icon: '🏆' });
     return;
   }
+  // Trello (29 Apr, refix): block batch feeding while the champion is on a
+  // quest — same reason as single-feed (the keeper can't reach a champion
+  // who's away on adventure). The single-feed handler had this check; the
+  // batch path was missed in the original fix.
+  if (window.VxQuests && state.championId && VxQuests.getActiveQuest(state.championId)) {
+    vxAlert('Your champion is away on an adventure. They\'ll be back soon — quest progress fills the Evolution Bar without potions.',
+      { title: '🗺️ On Adventure', icon: '🗺️' });
+    return;
+  }
   // Refresh inventory totals + summary numbers
   const total = TRAITS.reduce((s, t) => s + (state.inv[t] || 0), 0);
   document.getElementById('batchFeedTotal').textContent = total;
@@ -11536,6 +11560,18 @@ function renderArena() {
   `;
   bracketHint.textContent = `${bracket} bracket — opponents matched to your stage tier.`;
   findBtn.disabled = false;
+
+  // Trello (29 Apr, refix): if this champion is on a quest, visually disable
+  // the Find Opponent button + show an explanation under the bracket hint.
+  // The click-handler check still fires as a safety net for race conditions.
+  const onQuestArena = !!(window.VxQuests && VxQuests.getActiveQuest(champ.id));
+  if (onQuestArena) {
+    findBtn.disabled = true;
+    findBtn.textContent = '🗺️ On Adventure';
+    bracketHint.textContent = `${bracket} bracket — your champion is away on an adventure and can't fight until they return.`;
+  } else {
+    findBtn.textContent = '⚔️ Find Opponent + Fight';
+  }
 
   // Stance buttons sync with internal state
   document.querySelectorAll('.stance-btn').forEach(btn => {
@@ -12221,6 +12257,15 @@ bindIf('arenaFindBtn', 'click', async () => {
   if (_arenaInFlight) return;
   const champ = myChampions.find(c => c.id === state.championId);
   if (!champ) return vxAlert('No champion selected.', { title: 'Pick a champion', icon: '⚔️' });
+
+  // Trello (29 Apr): block arena entry while this champion is on a quest.
+  // Reusing the same on-adventure copy as feed gates so the keeper gets
+  // a consistent message everywhere a busy champion can't act.
+  if (window.VxQuests && VxQuests.getActiveQuest(champ.id)) {
+    vxAlert('Your champion is away on an adventure. They can\'t fight in the arena until they return.',
+      { title: '🗺️ On Adventure', icon: '🗺️' });
+    return;
+  }
 
   _arenaInFlight = true;
   const findBtn = document.getElementById('arenaFindBtn');
