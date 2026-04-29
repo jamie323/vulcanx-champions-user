@@ -1554,6 +1554,32 @@
     font-style: italic;
   }
 
+  /* Champion picker (Trello 29 Apr) — only shown when the keeper has
+     more than one champion. Single-champion players keep the cleaner
+     auto-selected layout. */
+  .arena-champ-picker-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 14px;
+    padding: 8px 12px;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .arena-champ-picker-row .arena-stance-label { margin: 0; flex-shrink: 0; }
+  .arena-champ-select {
+    flex: 1; min-width: 0;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-size: 13px; font-weight: 700;
+    cursor: pointer;
+  }
+  .arena-champ-select:focus {
+    outline: none; border-color: var(--accent);
+  }
+
   /* Phase: PvP bracket + ELO pill at the top of the arena card.
      Trello (28 Apr): "Add champion ranking and PvP bracket visibility
      in Arena" — testers couldn't see what bracket they'd match in. */
@@ -6307,13 +6333,25 @@
         <h2>⚔️ The Arena</h2>
         <div class="sub">Async stat battles vs bots. Pick your stance, watch the result, climb the ladder. Real PvP coming in a later phase.</div>
       </div>
+      <!-- Trello (29 Apr): "Fix Arena ranking/ELO naming inconsistency"
+           — Header pill said "Your Ranking" but the bracket pill below
+           said "ELO". Same number, two names. Unified to "ELO" since
+           that's what the matchmaker actually uses. -->
       <div class="arena-elo-pill">
-        <span class="arena-elo-label">Your Ranking</span>
+        <span class="arena-elo-label">Your ELO</span>
         <b id="arenaEloVal">100</b>
       </div>
     </div>
 
     <div class="arena-card">
+      <!-- Trello (29 Apr): "Add champion selection dropdown before
+           entering Arena" — testers were confused which champion was
+           active. Picker sits at the top of the arena card; switching
+           re-renders the summary + bracket + ELO + healing chip. -->
+      <div class="arena-champ-picker-row" id="arenaChampPickerRow" style="display:none;">
+        <span class="arena-stance-label">Champion</span>
+        <select id="arenaChampSelect" class="arena-champ-select"></select>
+      </div>
       <div class="arena-champ-summary" id="arenaChampSummary">
         <em>Open one of your champions to enter the arena.</em>
       </div>
@@ -11146,6 +11184,18 @@ async function runBatchFeed(count) {
     const cached = myChampions.find(m => m.id === c.id);
     if (cached) Object.assign(cached, c);
     await reloadPotions();
+    // Trello (29 Apr): "Bond progress not updating with Batch Feeding" —
+    // single-feed path calls VxBond.onFeed once per potion. Apply the
+    // same gain across the whole batch so x5/x25/x50/All all grow Bond
+    // (capped daily by VxBond.onFeed's internal limit).
+    if (window.VxBond && resp?.summary?.fed > 0) {
+      let lastTier = null;
+      for (let i = 0; i < resp.summary.fed; i++) {
+        const r = VxBond.onFeed(state.championId);
+        if (r?.tieredUp) lastTier = r.newTier;
+      }
+      if (lastTier) VxBond.celebrateTierUp(lastTier);
+    }
     render();
     // Render result summary
     const s = resp.summary;
@@ -11371,6 +11421,29 @@ function renderArena() {
   const eloVal  = document.getElementById('arenaEloVal');
   const bracketHint = document.getElementById('arenaBracketHint');
 
+  // Trello (29 Apr): champion picker dropdown — only show when the
+  // keeper has 2+ champions. Switch the active arena champion on change.
+  const pickerRow = document.getElementById('arenaChampPickerRow');
+  const pickerSelect = document.getElementById('arenaChampSelect');
+  if (pickerRow && pickerSelect) {
+    if (myChampions.length > 1) {
+      pickerRow.style.display = '';
+      pickerSelect.innerHTML = myChampions.map(c =>
+        `<option value="${c.id}" ${c.id === champ?.id ? 'selected' : ''}>${c.name} · L${c.level} · ${SPECIES[c.species_id]?.label || c.species_id} (${SPECIES[c.species_id]?.bloodlines?.[c.bloodline_id]?.label || c.bloodline_id})</option>`
+      ).join('');
+      pickerSelect.onchange = () => {
+        const newId = pickerSelect.value;
+        if (newId && newId !== state.championId) {
+          state.championId = newId;
+          activeChampionId = newId;
+          renderArena();  // re-render with the new champion
+        }
+      };
+    } else {
+      pickerRow.style.display = 'none';
+    }
+  }
+
   if (!champ) {
     summary.innerHTML = '<em>You need a champion to enter the arena. <a href="#" onclick="navTo(\'adopt\'); return false;" style="color:var(--accent);">Adopt one first.</a></em>';
     findBtn.disabled = true;
@@ -11486,7 +11559,7 @@ function renderArena() {
         <div class="ah-row">
           <span class="ah-result ${h.result}">${h.result.toUpperCase()}</span>
           <span class="ah-vs">${modeBadge}vs ${h.opponentName}${ownerLine}</span>
-          <span class="ah-elo">${h.eloChange >= 0 ? '+' : ''}${h.eloChange} rank</span>
+          <span class="ah-elo">${h.eloChange >= 0 ? '+' : ''}${h.eloChange} ELO</span>
           <span class="ah-time">${formatRelativeTime(h.timestamp)}</span>
         </div>
       `;
