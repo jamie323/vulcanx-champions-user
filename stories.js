@@ -27,7 +27,7 @@ const ORC_IRONFANG = [
   `They gave him to Old Brakh, a warrior with a ruined leg and a voice like stones ground together. Brakh taught him the three rules of the Ironfang: stand when others flee, strike when others flinch, and keep your word when it would be easier to break it. Grokk did not understand the third rule. Brakh only smiled, showing his one gold tooth, and said, "You will."`,
 
   // 7 · Initiate
-  `The forge took him in. For a full season he pumped the bellows, blistered his hands, learned the temper of iron the hard way — by ruining it, again and again, until he did not. On the last day the smith laid a small hammer in his palm and said, "This one you made. It is yours." Grokk held it like a holy thing. He slept with it that night.`,
+  `The forge took him in. For a full season he pumped the bellows, blistered his hands, learned the temper of iron the hard way — by ruining it, again and again, until he did not. On the last day the smith laid a small hammer on the bench and said, "This one you made. It is yours." Grokk held it like a holy thing, then set it back among his tools. The axe he carried was for war. The hammer was for the work.`,
 
   // 8 · Novice
   `First blood came in the sparring ring, not a battlefield. He broke the nose of a boy two heads taller and then, horrified, knelt to staunch it. The master-at-arms pulled him back and shouted, "Never kneel to a man you've bested. You honour him by not pretending the blow did not land." Grokk rose. The lesson went deeper than the blood. Deeper than the bone.`,
