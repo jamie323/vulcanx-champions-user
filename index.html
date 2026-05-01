@@ -9837,8 +9837,17 @@ document.getElementById('equipPickerModal')?.addEventListener('click', (e) => {
   if (e.target.id === 'equipPickerModal') closeEquipPicker();
 });
 bindIf('allocPotionRow', 'click', (e) => {
-  // Trello (29 Apr): block Blessing at max form
-  if (state.stageIdx >= 19) {
+  // Trello (1 May): "Blessing potion gets blocked before all stats are
+  // maxed". Earlier guard (29 Apr) blocked Blessing at any Legendary
+  // stage (stageIdx >= 19), but Blessing's purpose is to spend free
+  // points into stats — players reach the Legendary stage WITHOUT having
+  // every stat fully maxed (you can evolve through gates without filling
+  // every bar). Block only when BOTH the stage is final AND every stat
+  // is at its L50 cap (i.e. there's literally nowhere for points to go).
+  const finalCaps = capAtLevel(50);
+  const allStatsMaxed = TRAITS.every((t, i) =>
+    (state.stats[t] || 0) >= finalCaps[i]);
+  if (state.stageIdx >= 19 && allStatsMaxed) {
     vxAlert('You have reached the peak. Your champion has become the Ultimate Legendary — no further progression possible.',
       { title: '🏆 Legendary', icon: '🏆' });
     return;
