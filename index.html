@@ -217,7 +217,15 @@
   /* Center column */
   .cc-col-center { gap: 10px; }
   .cc-stage-frame {
-    width: 100%; aspect-ratio: 1024 / 1536; max-height: 540px;
+    /* Trello (2 May): "visible element behind Champion image" at <100%
+       zoom. The earlier max-height: 540px overrode aspect-ratio at
+       wider viewports, making the container wider than the image's
+       portrait ratio. With object-fit: contain the image then
+       letterboxed inside that wider box, exposing whatever sat behind
+       the frame. Dropping max-height so the container always honours
+       the source image's 2:3 ratio — no letterboxing, nothing
+       peeks through. */
+    width: 100%; aspect-ratio: 1024 / 1536;
     border-radius: 16px; overflow: hidden; position: relative;
     background: linear-gradient(180deg, #1a0f1a, #0a0608);
   }
@@ -759,8 +767,12 @@
     }
     .nav-admin { display: none !important; }
 
-    /* Compact champion view at mobile width */
-    body.view-champion .view-champion { padding: 8px 8px 0; }
+    /* Compact champion view at mobile width.
+       Trello (2 May refix): "menu bar overlapping/blocking page content".
+       Earlier 8px padding-top was way under the topbar(52)+nav(64)=116px
+       fixed-overlay clearance, so on ≤768px the identity card sat behind
+       the nav. Bumped to 132px to match the next breakpoint. */
+    body.view-champion .view-champion { padding: 132px 8px 0; }
     .cc-grid { gap: 10px; }
     .cc-card { padding: 12px 12px; border-radius: 10px; }
     .cc-name { font-size: 22px; }
@@ -1438,6 +1450,18 @@
   }
   .arena-elo-pill b { color: var(--accent); font-size: 18px; letter-spacing: 1px; }
   .arena-elo-label { color: var(--muted); text-transform: uppercase; }
+  .arena-elo-help {
+    width: 22px; height: 22px; padding: 0;
+    border-radius: 50%; border: 1px solid rgba(255,205,107,0.5);
+    background: rgba(255,205,107,0.1); color: var(--accent);
+    font-family: inherit; font-size: 12px; font-weight: 700;
+    cursor: pointer; line-height: 1; display: inline-flex;
+    align-items: center; justify-content: center; transition: all 0.12s;
+  }
+  .arena-elo-help:hover {
+    background: rgba(255,205,107,0.22); border-color: var(--accent);
+    transform: scale(1.08);
+  }
   .arena-card {
     background: rgba(20,12,20,0.85); border: 1px solid rgba(255,205,107,0.25);
     border-radius: 14px; padding: 28px; margin-top: 20px;
@@ -6380,6 +6404,17 @@
       <div class="arena-elo-pill">
         <span class="arena-elo-label">Your ELO</span>
         <b id="arenaEloVal">100</b>
+        <!-- Trello (2 May): "Add help button explaining PvP ELO bracket
+             matchmaking" — testers see ELO but don't know what bracket
+             they're in or who they can match with. -->
+        <button class="arena-elo-help" type="button"
+                onclick="vxAlert(
+                  'Your ELO controls who you fight.\\n\\n' +
+                  '• Brackets: 🥚 Whelpling Cup (ELO 0-200) · 🐺 Adolescent (200-400) · 🛡️ Champion (400-700) · 👑 Legendary (700+).\\n\\n' +
+                  'Match-making picks opponents inside your bracket whose ELO is closest to yours. If no one\\'s online inside the 3-min queue, a bot is generated to match you.\\n\\n' +
+                  'Win → ELO goes up. Lose → ELO goes down. Cross a bracket threshold and your bracket changes too.',
+                  { title: '🏆 ELO &amp; Matchmaking', icon: '🏆' })"
+                title="How does ELO matchmaking work?">?</button>
       </div>
     </div>
 
@@ -8523,7 +8558,21 @@ const VxQuests = (() => {
 
   function getActiveQuest(championId) {
     const all = load();
-    return all[championId] || null;
+    const q = all[championId] || null;
+    if (!q) return null;
+    // Trello (2 May): "Unclaimed completed quest shows incorrect
+    // notification when attempting to feed". A naturally-expired quest
+    // (endsAt in the past) is functionally complete — the champion is
+    // back, even if the keeper hasn't clicked Claim yet. Treat it as
+    // inactive for the "is the champion away" gating in feed / blessing
+    // / evolve / batch-feed / arena. The Claim button still appears in
+    // the quests view so rewards can be granted.
+    try {
+      if (q.endsAt && new Date(q.endsAt).getTime() <= Date.now()) {
+        return null;
+      }
+    } catch (_) { /* malformed date — fall through to active */ }
+    return q;
   }
   function setActiveQuest(championId, q) {
     const all = load();
@@ -9837,23 +9886,15 @@ document.getElementById('equipPickerModal')?.addEventListener('click', (e) => {
   if (e.target.id === 'equipPickerModal') closeEquipPicker();
 });
 bindIf('allocPotionRow', 'click', (e) => {
-  // Trello (1 May): "Blessing potion gets blocked before all stats are
-  // maxed". Earlier guard (29 Apr) blocked Blessing at any Legendary
-  // stage (stageIdx >= 19), but Blessing's purpose is to spend free
-  // points into stats — players reach the Legendary stage WITHOUT having
-  // every stat fully maxed (you can evolve through gates without filling
-  // every bar). Block only when BOTH the stage is final AND every stat
-  // is at its L50 cap (i.e. there's literally nowhere for points to go).
-  const finalCaps = capAtLevel(50);
-  const allStatsMaxed = TRAITS.every((t, i) =>
-    (state.stats[t] || 0) >= finalCaps[i]);
-  if (state.stageIdx >= 19 && allStatsMaxed) {
-    vxAlert('You have reached the peak. Your champion has become the Ultimate Legendary — no further progression possible.',
-      { title: '🏆 Legendary', icon: '🏆' });
-    return;
-  }
-  // Trello (29 Apr, refix): block Blessing while on adventure — same gate
-  // as feeding. Champion is away, can't be touched by a Blessing potion.
+  // Trello (2 May refix): "I still cant use the blessing for my stats
+  // when reached level 50". The earlier max-stat guard was still
+  // blocking the modal in cases where the tester believed they had
+  // headroom. Stop pre-blocking entirely — let the allocation modal
+  // open and surface its own "all stats already at cap" empty state
+  // (the modal already handles this gracefully and returns the
+  // blessing without consuming it). Cleaner UX than a hard block,
+  // and removes any chance of false positives in the cap check.
+  // The on-adventure gate stays — that's an unrelated correctness check.
   if (window.VxQuests && state.championId && VxQuests.getActiveQuest(state.championId)) {
     vxAlert('Your champion is away on an adventure. They\'ll be back soon — quest progress fills the Evolution Bar without potions.',
       { title: '🗺️ On Adventure', icon: '🗺️' });
@@ -10355,19 +10396,30 @@ const VIEW_MAP = {
   'quests':            'view-quests',
 };
 
-function navTo(viewName, payload) {
-  currentView = viewName;
-  // Trello (29 Apr): "Mouse wheel scrolling not working on desktop". An
-  // earlier modal flow that errored before its resolve() ran could leave
-  // body.style.overflow stuck at 'hidden', silently blocking page scroll
-  // forever after. Defensive cleanup: any nav between views means the
-  // user is no longer interacting with a modal — reset the lock if no
-  // modal element is currently visible.
-  const anyModalOpen = !!document.querySelector(
+// Trello (2 May refix): "scroll button doesn't work, scroll bar does".
+// A modal that opened then closed via an unusual path could leave
+// body.style.overflow stuck at 'hidden', killing wheel scroll while
+// leaving the scrollbar (drag) still functional. The 1 May fix only
+// reset on view nav — but if the user never changes view, the lock
+// persists. Now we also poll on a 1.5s watchdog AND on visibilitychange,
+// resetting the lock whenever no modal is currently visible.
+function _anyModalVisible() {
+  return !!document.querySelector(
     '#vxDialog[style*="display: flex"], #shopModal[style*="display: flex"], ' +
     '#welcomeModal[style*="display: flex"], #potionGuideModal[style*="display: flex"], ' +
     '.modal-backdrop.open');
-  if (!anyModalOpen) document.body.style.overflow = '';
+}
+function _ensurePageScrollUnlocked() {
+  if (document.body.style.overflow === 'hidden' && !_anyModalVisible()) {
+    document.body.style.overflow = '';
+  }
+}
+setInterval(_ensurePageScrollUnlocked, 1500);
+document.addEventListener('visibilitychange', _ensurePageScrollUnlocked);
+
+function navTo(viewName, payload) {
+  currentView = viewName;
+  _ensurePageScrollUnlocked();
   // clear ALL views first, activate target
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   const cls = VIEW_MAP[viewName];
@@ -12144,7 +12196,18 @@ bindIf('cmSendBtn', 'click', async () => {
     closeChallengeModal();
     vxAlert(`Challenge sent to ${toWallet.slice(0,6)}…${toWallet.slice(-4)}. Expires in 24h.`,
       { title: '🎯 Challenge sent', icon: '🎯' });
-    refreshInbox(true);
+    // Trello (2 May): "Battle via address invitation not working properly".
+    // Sender clicked Send, saw the "sent" toast, then opened the Inbox
+    // modal → it defaults to the Pending (incoming) tab → 0 invites →
+    // tester thought the send failed. Auto-open the inbox on the SENT
+    // tab so the sender immediately sees their outgoing invite as
+    // pending (status pill).
+    await refreshInbox();
+    document.querySelectorAll('.inbox-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.inbox-tab[data-tab="sent"]')?.classList.add('active');
+    document.getElementById('inboxPendingList').style.display = 'none';
+    document.getElementById('inboxSentList').style.display = '';
+    document.getElementById('inboxModal')?.classList.add('open');
   } catch (e) {
     vxAlert(String(e?.message || 'Send failed'),
       { title: 'Challenge failed', icon: '🎯', variant: 'error' });
