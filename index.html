@@ -12209,8 +12209,21 @@ bindIf('cmSendBtn', 'click', async () => {
     document.getElementById('inboxSentList').style.display = '';
     document.getElementById('inboxModal')?.classList.add('open');
   } catch (e) {
-    vxAlert(String(e?.message || 'Send failed'),
-      { title: 'Challenge failed', icon: '🎯', variant: 'error' });
+    // Trello (2 May, Farhan): "It would be nice to push specific
+    // messages when error occurs instead giving these kind of errors
+    // of internal working." Map raw backend codes to friendly,
+    // user-actionable messages instead of dumping the db_error string.
+    const raw = String(e?.message || '');
+    let friendly = 'Something went wrong sending your challenge. Try again in a moment.';
+    if (raw.startsWith('recipient_invalid'))   friendly = 'That wallet address looks malformed. Check the 0x… address (42 chars).';
+    else if (raw.startsWith('self_challenge')) friendly = "You can't challenge your own wallet.";
+    else if (raw.startsWith('too_many_pending')) friendly = "You already have 5 open challenges to this player. Wait for them to act.";
+    else if (raw.startsWith('not_owner'))      friendly = 'You don\'t own this champion.';
+    else if (raw.startsWith('db_error') || raw.includes('schema cache')) {
+      friendly = 'PvP invites are temporarily unavailable. The dev team has been notified.';
+      console.error('[invite] backend DB error — likely missing pvp_invites table:', raw);
+    } else if (raw.match(/^http_5\d\d/)) friendly = 'Server hiccup — please try again in a few seconds.';
+    vxAlert(friendly, { title: 'Challenge failed', icon: '🎯', variant: 'error' });
   } finally {
     btn.disabled = false; btn.textContent = '📨 Send Challenge';
   }
