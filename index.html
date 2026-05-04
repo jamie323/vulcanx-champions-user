@@ -6398,7 +6398,12 @@
 </div>
 
 <style>
-  .quests-wrap { max-width: 880px; margin: 0 auto; padding: 24px 20px 80px; }
+  /* Trello (4 May refix): "menu bar overlapping/blocking page content".
+     The other view-wraps (.stable, .adopt, .explore, .arena, .howto) use
+     140px top padding to clear the topbar (52) + nav (64) fixed overlay,
+     but .quests-wrap was stuck at 24px so the Quests heading sat behind
+     the nav. Bumped to match. */
+  .quests-wrap { max-width: 880px; margin: 0 auto; padding: 140px 20px 80px; }
   .quests-active-list { margin: 16px 0 28px; display: flex; flex-direction: column; gap: 10px; }
   .quest-active-row {
     background: rgba(20,12,20,0.85); border: 1px solid rgba(255,205,107,0.3);
@@ -6611,7 +6616,8 @@
   .cmp-howbtn { margin-left: 10px; background: rgba(255,205,107,0.1); color: var(--accent); border: 1px solid rgba(255,205,107,0.3); padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; }
   .cmp-howbtn:hover { background: rgba(255,205,107,0.2); }
 
-  .campaign-wrap { max-width: 1100px; margin: 0 auto; padding: 24px 20px 80px; }
+  /* Same fix as .quests-wrap — clear topbar+nav (140px combined). */
+  .campaign-wrap { max-width: 1100px; margin: 0 auto; padding: 140px 20px 80px; }
 
   .campaign-howitworks { display: none; margin: 18px 0 24px; padding: 18px; background: rgba(20,12,20,0.85); border: 1px solid var(--border); border-radius: 12px; }
   .campaign-howitworks.open { display: block; }
@@ -12621,12 +12627,24 @@ function renderInboxLists() {
     } else {
       sent.innerHTML = _inviteListCache.sent.map(s => {
         const elo = (s.from_elo_change != null) ? `${s.from_elo_change >= 0 ? '+' : ''}${s.from_elo_change}` : '';
+        // Trello (4 May): "Improve PvP challenge inbox result clarity" —
+        // tester couldn't tell win from loss because only ELO was shown.
+        // Now also surface a WIN/LOSS/DRAW badge derived from ELO change
+        // (positive = win, negative = loss, exactly zero with a battle =
+        // draw, no change yet = pending/awaiting fight).
+        let resultBadge = '';
+        if (s.from_elo_change != null && s.status !== 'pending' && s.status !== 'declined' && s.status !== 'expired' && s.status !== 'cancelled') {
+          if (s.from_elo_change > 0)      resultBadge = `<span style="background:rgba(125,255,154,0.18);color:#7dff9a;padding:2px 8px;border-radius:5px;font-weight:800;font-size:11px;letter-spacing:1px;margin-left:6px;">WIN</span>`;
+          else if (s.from_elo_change < 0) resultBadge = `<span style="background:rgba(255,107,107,0.18);color:#ff8888;padding:2px 8px;border-radius:5px;font-weight:800;font-size:11px;letter-spacing:1px;margin-left:6px;">LOSS</span>`;
+          else                             resultBadge = `<span style="background:rgba(255,255,255,0.08);color:var(--muted);padding:2px 8px;border-radius:5px;font-weight:800;font-size:11px;letter-spacing:1px;margin-left:6px;">DRAW</span>`;
+        }
         return `
           <div class="inbox-row sent">
             <div class="ir-head">
               <div>
                 vs <span class="ir-from-wallet">${s.to_wallet_short}</span>
                 <span class="ir-status ${s.status}">${s.status}</span>
+                ${resultBadge}
                 ${elo ? `<span style="color:var(--accent);margin-left:6px;font-weight:700;">${elo} ELO</span>` : ''}
               </div>
               <span class="ir-time">${relTime(s.created_at)}</span>
@@ -14736,27 +14754,37 @@ const VxCampaign = (() => {
   // ---------- battle simulation ----------
   // Hero stats: pulled from the champion's actual STR/VIT/AGI/FER/INT/LCK
   // Foe stats: derived from foe.stage (rough scaling: each stage = ~10% stronger)
+  // Foe stat curve — tracks the champion STAGE_CAPS arc so a stage-N foe
+  // matches a stage-N champion in full kit. Trello (4 May): "Campaign
+  // enemies in stages 1-3 too weak. L3 champion can defeat the boss
+  // easily." Earlier formula (50 + stage*6) capped at ~170 by stage 19,
+  // far below the champion stat ceiling. Now mirrors STAGE_CAPS_MEAN
+  // directly so foes scale with player progression.
+  const STAGE_CAP_MEAN = [
+    28, 41, 60, 79, 105, 130, 155, 175, 195, 215,
+    235, 255, 275, 295, 315, 335, 355, 375, 395, 415,
+  ];
   function statsForStage(stage) {
-    // stage 1 = baseline 50; each stage adds ~6 to each stat
-    const base = 50 + (stage - 1) * 6;
+    const idx = Math.max(0, Math.min(19, (stage | 0) - 1));
+    const base = STAGE_CAP_MEAN[idx];
     return { STR: base, VIT: base, AGI: base, FER: base, INT: base, LCK: base };
   }
   function statsForChamp(champ) {
     // Champions store stats as {STR,VIT,AGI,FER,INT,LCK} (uppercase).
     // Stage stored as champion.stageIdx (camelCase), 0-indexed.
+    // No artificial multiplier — raw stats now match foe stat curve since
+    // both are scaled around STAGE_CAPS. Earlier ×4 lift made champions
+    // ~2× too strong vs equivalently-staged foes.
     const s = champ.stats || {};
     const stage = (champ.stageIdx ?? 0) + 1;
     const fallback = statsForStage(stage);
-    // Stat values in the live schema are smaller (1-50 range) so scale them
-    // up so they're meaningful in our HP-vs-damage math.
-    const lift = (v) => Math.max(10, v * 4);
     return {
-      STR: s.STR != null ? lift(s.STR) : fallback.STR,
-      VIT: s.VIT != null ? lift(s.VIT) : fallback.VIT,
-      AGI: s.AGI != null ? lift(s.AGI) : fallback.AGI,
-      FER: s.FER != null ? lift(s.FER) : fallback.FER,
-      INT: s.INT != null ? lift(s.INT) : fallback.INT,
-      LCK: s.LCK != null ? lift(s.LCK) : fallback.LCK,
+      STR: s.STR != null ? s.STR : fallback.STR,
+      VIT: s.VIT != null ? s.VIT : fallback.VIT,
+      AGI: s.AGI != null ? s.AGI : fallback.AGI,
+      FER: s.FER != null ? s.FER : fallback.FER,
+      INT: s.INT != null ? s.INT : fallback.INT,
+      LCK: s.LCK != null ? s.LCK : fallback.LCK,
     };
   }
   function maxHp(stats) { return 80 + stats.VIT * 2; }
@@ -14946,6 +14974,20 @@ const VxCampaign = (() => {
       card.addEventListener('click', () => {
         const id = parseInt(card.dataset.chapter, 10);
         if (!isChapterUnlocked(id)) return;
+        // Stage-gate guard. Trello (4 May): "Campaign enemies too weak;
+        // L3 hero defeats boss easily" — partly a balance issue (fixed in
+        // statsForStage) and partly because a too-low champion shouldn't
+        // even be able to attempt the chapter. Block the modal open and
+        // explain the requirement.
+        const c = CHAPTERS.find(x => x.id === id);
+        const champ = getSelectedChamp();
+        if (champ && c && (champ.stageIdx ?? 0) + 1 < c.gate_stage) {
+          vxAlert(
+            `${champ.name || 'Your champion'} is stage ${(champ.stageIdx ?? 0) + 1}, but Chapter ${id} requires stage ${c.gate_stage}+. Evolve or pick a stronger champion to attempt this chapter.`,
+            { title: 'Champion too weak', icon: '⚠️' }
+          );
+          return;
+        }
         openChapterModal(id);
       });
     });
