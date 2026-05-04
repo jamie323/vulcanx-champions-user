@@ -15294,7 +15294,7 @@ const VxCampaign = (() => {
   }
 
   // ---------- battle modal + simulation ----------
-  function startBattle(chapId, fightKey) {
+  async function startBattle(chapId, fightKey) {
     const champ = getSelectedChamp();
     if (!champ) {
       vxAlert('Pick a champion first.', { title: 'No champion', icon: '⚠️' });
