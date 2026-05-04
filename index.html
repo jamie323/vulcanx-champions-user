@@ -1884,6 +1884,68 @@
   .arena-result-modal {
     width: 580px; max-width: 95vw;
     max-height: calc(100vh - 40px); overflow-y: auto;
+    /* Battlefield atmosphere — radial dark vignette + animated layers
+       overlaid behind the fighters. (Discord 3 May, neurodrills:
+       "no cinematic reveal" — adding atmosphere + narrative copy
+       to the existing modal so battles feel like fights, not
+       spreadsheets.) */
+    position: relative;
+    background:
+      radial-gradient(ellipse at top, rgba(80,30,20,0.55) 0%, rgba(20,8,10,0.95) 65%),
+      linear-gradient(180deg, rgba(10,6,8,0.9), rgba(20,10,8,0.95));
+  }
+  /* Animated ember layer — drifts up, multiple sizes */
+  .ar-embers {
+    position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+    z-index: 0; opacity: 0.6;
+  }
+  .ar-ember {
+    position: absolute; bottom: -10px;
+    width: 4px; height: 4px; border-radius: 50%;
+    background: radial-gradient(circle, #ffcd6b 0%, #ff6b2e 60%, transparent 100%);
+    animation: arEmberRise linear infinite;
+    box-shadow: 0 0 6px #ff8a4a;
+  }
+  @keyframes arEmberRise {
+    0%   { transform: translateY(0) translateX(0); opacity: 0; }
+    10%  { opacity: 0.9; }
+    100% { transform: translateY(-720px) translateX(var(--ar-drift, 20px));
+           opacity: 0; }
+  }
+  /* Banner silhouettes — flank the fighters */
+  .ar-banners {
+    position: absolute; top: 30px; left: 0; right: 0;
+    height: 200px; z-index: 0; pointer-events: none;
+    opacity: 0.35;
+  }
+  .ar-banner-l, .ar-banner-r {
+    position: absolute; width: 14px; height: 180px;
+    background: linear-gradient(180deg, #6a1a1a 0%, #3a0a0a 60%, transparent 100%);
+    box-shadow: 0 0 12px rgba(255,107,46,0.4);
+    animation: arBannerSway 4s ease-in-out infinite alternate;
+  }
+  .ar-banner-l { left: 12px; transform-origin: top center; }
+  .ar-banner-r { right: 12px; transform-origin: top center;
+    animation-delay: -1.2s; }
+  @keyframes arBannerSway {
+    0%   { transform: rotate(-2deg); }
+    100% { transform: rotate(2deg); }
+  }
+  /* Make fighters render above the atmosphere layers */
+  .ar-vs-row, .ar-ticker, .ar-summary, .ar-stats, .ar-elo-row,
+  .ar-log-toggle, .ar-log, .ar-banner, .ar-skip-btn,
+  .arena-result-modal > div[style*="margin-top"] { position: relative; z-index: 1; }
+  /* Crowd silhouette band along the bottom of the fight area */
+  .ar-crowd {
+    position: absolute; left: 0; right: 0; top: 250px;
+    height: 60px; z-index: 0; pointer-events: none;
+    opacity: 0.3;
+    background-image: repeating-linear-gradient(90deg,
+      transparent 0, transparent 8px,
+      rgba(0,0,0,0.6) 8px, rgba(0,0,0,0.6) 12px,
+      transparent 12px, transparent 24px,
+      rgba(0,0,0,0.4) 24px, rgba(0,0,0,0.4) 30px);
+    mask-image: linear-gradient(180deg, transparent 0%, #000 30%, #000 70%, transparent 100%);
   }
   /* Phase 5.7: portraits in the result modal — the orc baby is the
      game's identity, can't have a battle screen without it. */
@@ -5511,6 +5573,7 @@
   <button class="nav-btn" data-view="howto" title="How it Works — the player guide"><span class="nav-ico">📖</span><span class="nav-txt">Guide</span></button>
   <button class="nav-btn" data-view="explore" title="Explore — top-ranked champions"><span class="nav-ico">🔎</span><span class="nav-txt">Explore</span></button>
   <button class="nav-btn" data-view="quests" title="Quests — send champions on adventures"><span class="nav-ico">🗺️</span><span class="nav-txt">Quests</span></button>
+  <button class="nav-btn" data-view="campaign" title="Campaign — solo PvE story mode (5 chapters)"><span class="nav-ico">🏔</span><span class="nav-txt">Campaign</span></button>
   <button class="nav-btn" id="arenaNavBtn" title="Arena — battle other champions"><span class="nav-ico">⚔️</span><span class="nav-txt">Arena</span></button>
   <label class="nav-admin">
     <input type="checkbox" id="adminToggle"/> 🛠 Admin Mode
@@ -6389,6 +6452,255 @@
   .qcm-rewards .qcr-val { color: var(--accent); font-weight: 800; font-family: monospace; }
 </style>
 
+<!-- ======== VIEW: CAMPAIGN (solo PvE story mode) ======== -->
+<div class="view view-campaign">
+  <div class="campaign-wrap">
+    <div class="page-hd">
+      <div>
+        <h2>🏔 Campaign</h2>
+        <div class="sub">Five chapters. Five bosses. Solo PvE story mode for your champion. <button class="cmp-howbtn" id="cmpHowBtn">📖 How it works</button></div>
+      </div>
+    </div>
+
+    <!-- How-it-works panel (collapsible) -->
+    <div class="campaign-howitworks" id="cmpHowItWorks">
+      <div class="cmp-how-grid">
+        <div class="cmp-how-card">
+          <div class="cmp-how-ico">⚔️</div>
+          <div class="cmp-how-title">3 Mob Fights + 1 Boss</div>
+          <div class="cmp-how-text">Each chapter has 3 quick mob skirmishes leading up to a unique boss fight. Beat them in order to unlock the boss.</div>
+        </div>
+        <div class="cmp-how-card">
+          <div class="cmp-how-ico">🏔</div>
+          <div class="cmp-how-title">5 Chapters, Progressive</div>
+          <div class="cmp-how-text">Chapter 1 is tuned for stage 5+ champions. Each chapter raises the difficulty gate — Chapter 5 is Voidlord Aetheron, the endgame.</div>
+        </div>
+        <div class="cmp-how-card">
+          <div class="cmp-how-ico">📦</div>
+          <div class="cmp-how-title">Chest Rewards</div>
+          <div class="cmp-how-text">Every boss kill awards 1–5 NFT chests scaled to chapter. Plus your champion gains stat XP from each fight (PvE doesn't cost stamina).</div>
+        </div>
+        <div class="cmp-how-card">
+          <div class="cmp-how-ico">💀</div>
+          <div class="cmp-how-title">Defeat = Retry</div>
+          <div class="cmp-how-text">Lose a fight? No penalty — your champion just needs healing back to full HP, then try again. Maybe equip better gear or evolve first.</div>
+        </div>
+        <div class="cmp-how-card">
+          <div class="cmp-how-ico">🔄</div>
+          <div class="cmp-how-title">Replayable</div>
+          <div class="cmp-how-text">Once cleared, replay any chapter for stat XP and bond. Replays don't award the one-off chest reward but still feed the Campaign Push weekly quest.</div>
+        </div>
+        <div class="cmp-how-card">
+          <div class="cmp-how-ico">👥</div>
+          <div class="cmp-how-title">Co-op Coming Soon</div>
+          <div class="cmp-how-text">Phase 2: invite a friend's champion to tag-team boss fights. Shared boss HP, doubled rewards. Stay tuned.</div>
+        </div>
+      </div>
+
+      <!-- Elemental Affinity primer -->
+      <div style="margin-top:18px; padding-top:18px; border-top:1px solid var(--border);">
+        <div style="font-weight:800; font-size:14px; color:var(--accent); margin-bottom:6px;">⚔️ Elemental Affinities (NEW — Phase 4.5)</div>
+        <div style="font-size:12px; color:var(--muted); line-height:1.55; margin-bottom:8px;">
+          Each species has a primary element. When attacking, your element vs the defender's gives a damage tilt:
+          <b style="color:#a4ffb8;">×1.30 super effective</b> if you counter their type,
+          <b style="color:#ffb088;">×0.77 resisted</b> if they counter yours, otherwise neutral. Stack the deck by picking the right champion for the matchup.
+        </div>
+        <div class="aff-chart-grid" id="affChartGrid"></div>
+      </div>
+    </div>
+
+    <!-- Champion picker -->
+    <div class="campaign-champ-picker">
+      <span class="cmp-cp-label">Send champion:</span>
+      <select id="cmpChampSelect" class="cmp-cp-select"></select>
+      <span class="cmp-cp-stats" id="cmpChampStats"></span>
+    </div>
+
+    <!-- Chapter cards -->
+    <div class="campaign-chapters" id="cmpChapters"></div>
+  </div>
+</div>
+
+<!-- Campaign chapter detail modal -->
+<div class="modal-backdrop" id="cmpChapterModal">
+  <div class="modal cmp-chapter-modal">
+    <div class="cmp-cm-banner">
+      <img class="cmp-cm-bossimg" id="cmpCmBossImg" alt=""/>
+      <div class="cmp-cm-banner-overlay">
+        <div class="cmp-cm-chapnum" id="cmpCmChapNum">Chapter 1</div>
+        <h2 class="cmp-cm-chaptitle" id="cmpCmChapTitle">The Pit Trials</h2>
+        <div class="cmp-cm-chapblurb" id="cmpCmChapBlurb">…</div>
+      </div>
+    </div>
+    <div class="cmp-cm-body">
+      <div id="cmpCmMatchup"></div>
+      <div class="cmp-cm-fights" id="cmpCmFights"></div>
+      <div class="cmp-cm-reward-strip" id="cmpCmRewardStrip">
+        <span class="cmp-cm-rs-ico">📦</span>
+        <span class="cmp-cm-rs-text">Boss reward: <b id="cmpCmRewardCount">1</b> chest<span id="cmpCmRewardPlural">s</span></span>
+      </div>
+    </div>
+    <button class="btn-secondary" onclick="document.getElementById('cmpChapterModal').classList.remove('open')" style="width:100%;">Close</button>
+  </div>
+</div>
+
+<!-- Campaign battle resolution modal -->
+<div class="modal-backdrop" id="cmpBattleModal">
+  <div class="modal cmp-battle-modal">
+    <div class="cmp-bm-vs">
+      <div class="cmp-bm-side cmp-bm-hero">
+        <img class="cmp-bm-portrait" id="cmpBmHeroImg" alt=""/>
+        <div class="cmp-bm-name" id="cmpBmHeroName">Hero</div>
+        <div class="cmp-bm-hp"><div class="cmp-bm-hp-fill" id="cmpBmHeroHp" style="width:100%;"></div></div>
+        <div class="cmp-bm-hp-text" id="cmpBmHeroHpText">100/100</div>
+      </div>
+      <div class="cmp-bm-vs-pill">VS</div>
+      <div class="cmp-bm-side cmp-bm-foe">
+        <img class="cmp-bm-portrait" id="cmpBmFoeImg" alt=""/>
+        <div class="cmp-bm-name" id="cmpBmFoeName">Foe</div>
+        <div class="cmp-bm-hp foe"><div class="cmp-bm-hp-fill foe" id="cmpBmFoeHp" style="width:100%;"></div></div>
+        <div class="cmp-bm-hp-text" id="cmpBmFoeHpText">100/100</div>
+      </div>
+    </div>
+    <div class="cmp-bm-log" id="cmpBmLog"></div>
+    <div class="cmp-bm-result" id="cmpBmResult" style="display:none;">
+      <div class="cmp-bm-result-banner" id="cmpBmResultBanner">VICTORY</div>
+      <div class="cmp-bm-result-rewards" id="cmpBmResultRewards"></div>
+      <button class="btn-primary" id="cmpBmContinueBtn">Continue</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .cmp-howbtn { margin-left: 10px; background: rgba(255,205,107,0.1); color: var(--accent); border: 1px solid rgba(255,205,107,0.3); padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; }
+  .cmp-howbtn:hover { background: rgba(255,205,107,0.2); }
+
+  .campaign-wrap { max-width: 1100px; margin: 0 auto; padding: 24px 20px 80px; }
+
+  .campaign-howitworks { display: none; margin: 18px 0 24px; padding: 18px; background: rgba(20,12,20,0.85); border: 1px solid var(--border); border-radius: 12px; }
+  .campaign-howitworks.open { display: block; }
+  .cmp-how-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .cmp-how-card { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,205,107,0.15); border-radius: 10px; padding: 14px; }
+  .cmp-how-ico { font-size: 28px; margin-bottom: 6px; }
+  .cmp-how-title { font-weight: 800; font-size: 13px; color: var(--accent); margin-bottom: 4px; letter-spacing: 0.3px; }
+  .cmp-how-text { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  .campaign-champ-picker { display: flex; gap: 12px; align-items: center; margin: 16px 0 18px; flex-wrap: wrap; font-size: 13px; }
+  .cmp-cp-label { color: var(--muted); }
+  .cmp-cp-select { background: rgba(20,12,20,0.85); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-size: 13px; min-width: 220px; }
+  .cmp-cp-stats { color: var(--muted); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
+
+  .campaign-chapters { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  .cmp-chapter-card {
+    background: rgba(20,12,20,0.85); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden; cursor: pointer; transition: all 0.18s;
+    display: flex; flex-direction: column;
+  }
+  .cmp-chapter-card:hover:not(.locked) { transform: translateY(-3px); box-shadow: 0 8px 26px rgba(0,0,0,0.5); border-color: var(--accent); }
+  .cmp-chapter-card.locked { opacity: 0.55; cursor: not-allowed; filter: grayscale(0.6); }
+  .cmp-chapter-card.completed { border-color: var(--ok); box-shadow: 0 0 18px rgba(125,255,154,0.18); }
+  .cmp-chapter-card.in-progress { border-color: var(--accent); box-shadow: 0 0 14px rgba(255,205,107,0.2); }
+
+  .cmp-cc-art {
+    height: 200px; position: relative; overflow: hidden;
+    background: linear-gradient(135deg, var(--panel), #2a1820);
+  }
+  .cmp-cc-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cmp-cc-art-fallback {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 60px; opacity: 0.4;
+  }
+  .cmp-cc-state-badge {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(0,0,0,0.7); color: var(--accent);
+    border: 1px solid var(--accent); padding: 4px 9px; border-radius: 12px;
+    font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+  }
+  .cmp-cc-state-badge.completed { color: var(--ok); border-color: var(--ok); }
+  .cmp-cc-state-badge.locked { color: var(--muted); border-color: var(--muted); }
+  .cmp-cc-chapnum { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.7); color: var(--accent); padding: 4px 9px; border-radius: 6px; font-size: 10px; letter-spacing: 1.5px; font-weight: 800; }
+
+  .cmp-cc-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+  .cmp-cc-title { font-size: 17px; font-weight: 800; color: var(--text); }
+  .cmp-cc-bossname { font-size: 12px; color: var(--legend); font-weight: 700; }
+  .cmp-cc-blurb { font-size: 12px; color: var(--muted); line-height: 1.45; min-height: 34px; }
+  .cmp-cc-meta { display: flex; gap: 8px; align-items: center; margin-top: 6px; flex-wrap: wrap; }
+  .cmp-cc-meta-pill { background: rgba(255,205,107,0.1); color: var(--accent); padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: 700; letter-spacing: 0.8px; }
+  .cmp-cc-progress-bar { height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+  .cmp-cc-progress-fill { height: 100%; background: linear-gradient(90deg, #ffcd6b, #ff8e2e); transition: width 0.3s; }
+  .cmp-cc-progress-fill.completed { background: var(--ok); }
+
+  /* Chapter detail modal */
+  .cmp-chapter-modal { width: 620px; max-width: 95vw; max-height: calc(100vh - 40px); overflow-y: auto; padding: 0; overflow-x: hidden; }
+  .cmp-cm-banner { position: relative; height: 200px; background: linear-gradient(135deg, var(--panel), #2a1820); }
+  .cmp-cm-bossimg { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cmp-cm-banner-overlay { position: absolute; inset: 0; padding: 20px; display: flex; flex-direction: column; justify-content: flex-end; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, transparent 100%); }
+  .cmp-cm-chapnum { font-size: 11px; color: var(--accent); letter-spacing: 2px; font-weight: 800; }
+  .cmp-cm-chaptitle { margin: 4px 0; font-size: 26px; color: var(--text); text-shadow: 0 2px 6px rgba(0,0,0,0.7); }
+  .cmp-cm-chapblurb { font-size: 13px; color: rgba(255,255,255,0.85); line-height: 1.5; }
+  .cmp-cm-body { padding: 18px 20px; }
+  .cmp-cm-fights { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  .cmp-cm-fight { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 10px 14px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 10px; }
+  .cmp-cm-fight.boss { border-color: var(--legend); background: rgba(255,142,107,0.08); }
+  .cmp-cm-fight.cleared { opacity: 0.6; }
+  .cmp-cm-fight.cleared .cmp-cm-fname { text-decoration: line-through; }
+  .cmp-cm-fnum { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,205,107,0.12); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; }
+  .cmp-cm-fight.boss .cmp-cm-fnum { background: rgba(255,142,107,0.18); color: var(--legend); font-size: 18px; }
+  .cmp-cm-fight.cleared .cmp-cm-fnum { background: rgba(125,255,154,0.15); color: var(--ok); }
+  .cmp-cm-fname { font-weight: 700; font-size: 13px; color: var(--text); }
+  .cmp-cm-fsub { font-size: 10px; color: var(--muted); margin-top: 2px; letter-spacing: 0.5px; }
+  .cmp-cm-fbtn { background: linear-gradient(180deg, #ffcd6b, #ff8e2e); color: #1a0a05; border: none; padding: 8px 14px; border-radius: 7px; font-weight: 800; cursor: pointer; font-size: 12px; letter-spacing: 0.5px; }
+  .cmp-cm-fbtn:disabled { background: rgba(255,255,255,0.06); color: var(--muted); cursor: not-allowed; }
+  .cmp-cm-fbtn.boss-btn { background: linear-gradient(180deg, #ff8e6b, #c0301f); color: #fff; }
+  .cmp-cm-reward-strip { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: rgba(255,205,107,0.08); border: 1px solid rgba(255,205,107,0.3); border-radius: 10px; margin-bottom: 14px; font-size: 13px; color: var(--text); }
+  .cmp-cm-rs-ico { font-size: 22px; }
+
+  /* Battle resolution modal */
+  .cmp-battle-modal { width: 540px; max-width: 95vw; }
+  .cmp-bm-vs { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; margin-bottom: 16px; }
+  .cmp-bm-side { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .cmp-bm-portrait { width: 110px; height: 110px; border-radius: 12px; object-fit: cover; border: 2px solid var(--border); background: var(--panel); }
+  .cmp-bm-foe .cmp-bm-portrait { border-color: var(--legend); }
+  .cmp-bm-name { font-weight: 800; font-size: 13px; color: var(--text); text-align: center; max-width: 130px; }
+  .cmp-bm-hp { width: 130px; height: 10px; background: rgba(255,255,255,0.06); border-radius: 5px; overflow: hidden; }
+  .cmp-bm-hp-fill { height: 100%; background: linear-gradient(90deg, #7dff9a, #4ec070); transition: width 0.4s; }
+  .cmp-bm-hp-fill.foe { background: linear-gradient(90deg, #ff8e6b, #ff4d4d); }
+  .cmp-bm-hp-text { font-size: 10px; color: var(--muted); font-family: monospace; }
+  .cmp-bm-vs-pill { font-size: 18px; font-weight: 900; color: var(--accent); padding: 6px 12px; background: rgba(0,0,0,0.4); border: 1px solid var(--accent); border-radius: 50%; letter-spacing: 1px; }
+  .cmp-bm-log { max-height: 160px; overflow-y: auto; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-family: monospace; font-size: 11px; color: var(--muted); line-height: 1.7; }
+  .cmp-bm-log .log-hit { color: var(--text); }
+  .cmp-bm-log .log-crit { color: var(--accent); font-weight: 700; }
+  .cmp-bm-log .log-miss { color: rgba(255,255,255,0.4); }
+  .cmp-bm-result { text-align: center; padding-top: 10px; }
+  .cmp-bm-result-banner { font-size: 28px; font-weight: 900; letter-spacing: 4px; margin-bottom: 12px; color: var(--ok); text-shadow: 0 0 14px rgba(125,255,154,0.5); }
+  .cmp-bm-result-banner.defeat { color: var(--ember); text-shadow: 0 0 14px rgba(255,107,46,0.5); }
+  .cmp-bm-result-rewards { background: rgba(255,205,107,0.08); border: 1px solid rgba(255,205,107,0.3); border-radius: 8px; padding: 12px; margin-bottom: 12px; font-size: 13px; color: var(--text); }
+
+  /* Elemental affinity chip — used everywhere a species is named */
+  .aff-chip { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.4px; line-height: 1.2; vertical-align: middle; }
+  .aff-chip.lg { padding: 4px 10px; font-size: 12px; }
+
+  /* Matchup preview banner (arena pre-fight + Campaign chapter modal) */
+  .matchup-banner { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 14px; border-radius: 10px; margin: 10px 0; font-size: 12px; font-weight: 700; letter-spacing: 0.3px; }
+  .matchup-banner.strong { background: rgba(125,255,154,0.1); border: 1px solid rgba(125,255,154,0.4); color: #a4ffb8; }
+  .matchup-banner.weak   { background: rgba(255,107,46,0.1);  border: 1px solid rgba(255,107,46,0.4);  color: #ffb088; }
+  .matchup-banner.neutral{ background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.15); color: var(--muted); }
+  .matchup-banner .mb-arrow { opacity: 0.5; }
+
+  /* Battle log line styling for super-effective / resisted hits */
+  .ar-log-event.aff-strong { background: rgba(125,255,154,0.06); border-left: 2px solid #7dff9a; padding-left: 6px; }
+  .ar-log-event.aff-weak   { background: rgba(255,107,46,0.06);  border-left: 2px solid #ff8e2e; padding-left: 6px; }
+  .cmp-bm-log .log-strong  { color: #a4ffb8; font-weight: 700; }
+  .cmp-bm-log .log-weak    { color: #ffb088; }
+
+  /* Affinity type-chart card (How-It-Works) */
+  .aff-chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-top: 10px; }
+  .aff-chart-cell { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 12px; font-size: 11px; }
+  .aff-chart-cell .aff-cc-head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-weight: 800; }
+  .aff-chart-cell .aff-cc-row { display: flex; gap: 4px; align-items: center; margin-top: 3px; color: var(--muted); }
+  .aff-chart-cell .aff-cc-row .lbl { font-size: 9px; letter-spacing: 1px; opacity: 0.7; min-width: 36px; }
+</style>
+
 <!-- ======== VIEW: ARENA (Phase 4 MVP — vs bots) ======== -->
 <div class="view view-arena">
   <div class="arena-wrap">
@@ -7128,6 +7440,80 @@ const TRAITS = ['STR','VIT','AGI','FER','INT','LCK'];
 const TRAIT_NAMES = { STR:'Strength',VIT:'Vitality',AGI:'Agility',
   FER:'Ferocity',INT:'Intelligence',LCK:'Luck' };
 const TRAIT_EMOJI = { STR:'💪', VIT:'❤️', AGI:'🏃', FER:'⚔️', INT:'🧠', LCK:'🍀' };
+
+// ─── ELEMENTAL AFFINITY (Phase 4.5 — Pokemon-style type matchups) ───────
+// Mirrors backend champions_battle.ts. Damage multiplier on top of stats:
+// strong matchup ×1.30, weak ×0.77, neutral ×1.0. Each element strong vs 2,
+// weak vs 2 — chart is balanced.
+const SPECIES_AFFINITY = {
+  orc: 'fire',     elf: 'nature',   goblin: 'toxic',  demon: 'shadow',
+  drakkin: 'ice',  dwarf: 'earth',  beastkin: 'storm', wraith: 'light',
+};
+const AFFINITY_STRONG = {
+  fire:   ['nature', 'ice'],     nature: ['earth', 'toxic'],
+  ice:    ['nature', 'storm'],   storm:  ['fire', 'shadow'],
+  earth:  ['fire', 'storm'],     shadow: ['ice', 'light'],
+  light:  ['shadow', 'toxic'],   toxic:  ['light', 'earth'],
+};
+const AFFINITY_INFO = {
+  fire:   { emoji: '🔥', name: 'Fire',   color: '#ff8e2e' },
+  nature: { emoji: '🌿', name: 'Nature', color: '#7dff9a' },
+  ice:    { emoji: '❄️', name: 'Ice',    color: '#9ad8ff' },
+  storm:  { emoji: '⚡', name: 'Storm',  color: '#ffd84a' },
+  earth:  { emoji: '🪨', name: 'Earth',  color: '#c89b6b' },
+  shadow: { emoji: '🌑', name: 'Shadow', color: '#a878d8' },
+  light:  { emoji: '✨', name: 'Light',  color: '#fff5c4' },
+  toxic:  { emoji: '☠️', name: 'Toxic',  color: '#a8ff5e' },
+};
+function affinityFor(speciesId) { return SPECIES_AFFINITY[speciesId] || null; }
+function affinityMatchup(atkSpeciesId, defSpeciesId) {
+  const a = SPECIES_AFFINITY[atkSpeciesId];
+  const d = SPECIES_AFFINITY[defSpeciesId];
+  if (!a || !d) return { mult: 1.0, kind: 'neutral', atkEl: a, defEl: d };
+  if ((AFFINITY_STRONG[a] || []).includes(d)) return { mult: 1.30, kind: 'strong', atkEl: a, defEl: d };
+  if ((AFFINITY_STRONG[d] || []).includes(a)) return { mult: 0.77, kind: 'weak',   atkEl: a, defEl: d };
+  return { mult: 1.0, kind: 'neutral', atkEl: a, defEl: d };
+}
+// Small badge HTML for affinity (used on champion cards, fighter names, etc.)
+function affinityBadgeHtml(speciesId, opts = {}) {
+  const a = SPECIES_AFFINITY[speciesId];
+  if (!a) return '';
+  const info = AFFINITY_INFO[a];
+  const { compact = false, title = `${info.name} affinity` } = opts;
+  if (compact) {
+    return `<span class="aff-chip" title="${title}" style="background:${info.color}22;color:${info.color};border:1px solid ${info.color}66;">${info.emoji}</span>`;
+  }
+  return `<span class="aff-chip" title="${title}" style="background:${info.color}22;color:${info.color};border:1px solid ${info.color}66;">${info.emoji} ${info.name}</span>`;
+}
+// Inline matchup hint pill — used on chapter cards / pre-fight UIs.
+// Returns "" for neutral matchups so the row doesn't get cluttered.
+function _matchupHintHtml(atkSpecies, defSpecies) {
+  const m = affinityMatchup(atkSpecies, defSpecies);
+  if (m.kind === 'neutral') return '';
+  if (m.kind === 'strong') {
+    return `<span class="cmp-cc-meta-pill" style="background:rgba(125,255,154,0.12);color:#a4ffb8;border:1px solid rgba(125,255,154,0.4);">⚡ ×1.30 dmg</span>`;
+  }
+  return `<span class="cmp-cc-meta-pill" style="background:rgba(255,107,46,0.12);color:#ffb088;border:1px solid rgba(255,107,46,0.4);">🛡 ×0.77 dmg</span>`;
+}
+// Larger matchup banner — used in pre-fight modals.
+function matchupBannerHtml(atkSpecies, defSpecies) {
+  const m = affinityMatchup(atkSpecies, defSpecies);
+  const a = SPECIES_AFFINITY[atkSpecies];
+  const d = SPECIES_AFFINITY[defSpecies];
+  if (!a || !d) return '';
+  const ai = AFFINITY_INFO[a];
+  const di = AFFINITY_INFO[d];
+  const txt = m.kind === 'strong' ? `Super effective! ×1.30 damage`
+            : m.kind === 'weak'   ? `Resisted — ×0.77 damage`
+            : `Neutral matchup — ×1.0 damage`;
+  return `<div class="matchup-banner ${m.kind}">
+    ${ai.emoji} ${ai.name}
+    <span class="mb-arrow">→</span>
+    ${di.emoji} ${di.name}
+    <span style="opacity:0.7;">·</span>
+    ${txt}
+  </div>`;
+}
 
 // Trait caps per stage (20 stages). Indices map to stage_idx 0..19.
 // Values log-interpolated from the original 9-stage anchors; must match the
@@ -10143,6 +10529,24 @@ async function apiListChampions() {
   return (data.champions || []).map(mapChampion);
 }
 
+// Phase 4.5 — Campaign-mode fight logging. Trust-client (server doesn't
+// re-simulate the battle yet); endpoint validates ownership + chapter
+// gating + idempotency, then writes the campaign_chapter_complete event
+// that the quest hub reads to award Conquer-the-X chests.
+async function apiCampaignBattle({ champion_id, chapter_id, fight_key, won }) {
+  const res = await apiFetch(`${FN_BASE}/campaign_battle`, {
+    method: 'POST',
+    headers: AUTH_HEADERS,
+    body: JSON.stringify({ wallet: getWallet(), champion_id, chapter_id, fight_key, won }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const code = data.error || `http_${res.status}`;
+    throw new Error(`${code}: ${data.message || ''}`.trim());
+  }
+  return data;  // { ok, progress, event_id?, recorded, awards_chest, chest_count }
+}
+
 async function apiCreateChampion({ species_id, bloodline_id, name }) {
   const res = await apiFetch(`${FN_BASE}/champion_create`, {
     method: 'POST',
@@ -10394,6 +10798,7 @@ const VIEW_MAP = {
   'champion-card':     'view-champion-card',
   'arena':             'view-arena',
   'quests':            'view-quests',
+  'campaign':          'view-campaign',
 };
 
 // Trello (2 May refix): "scroll button doesn't work, scroll bar does".
@@ -10433,7 +10838,8 @@ function navTo(viewName, payload) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const navBtnView = { landing: 'landing', stable: 'stable', adopt: 'adopt',
     'adopt-bloodline': 'adopt', 'adopt-buy': 'adopt', explore: 'explore',
-    howto: 'howto' }[viewName];
+    howto: 'howto', quests: 'quests', arena: 'arena',
+    campaign: 'campaign' }[viewName];
   if (navBtnView) {
     document.querySelector(`.nav-btn[data-view="${navBtnView}"]`)?.classList.add('active');
   }
@@ -10453,6 +10859,7 @@ function navTo(viewName, payload) {
     case 'champion-card': renderChampionCard(payload); break;
     case 'arena': renderArena(); break;
     case 'quests': VxQuests.renderView(); break;
+    case 'campaign': VxCampaign.renderView(); break;
   }
 }
 
@@ -10769,7 +11176,7 @@ function renderStable() {
           <div class="lvl-pill">L${String(c.level).padStart(2,'0')}</div>
           <div class="art"><img src="${stage.img}" /></div>
           <div class="meta">
-            <div class="name">${c.name}</div>
+            <div class="name">${c.name} ${affinityBadgeHtml(c.species_id, { compact: true })}</div>
             <div class="subname">${sp.label} · ${bl.label}</div>
           </div>
         </div>`;
@@ -11449,7 +11856,31 @@ async function runBatchFeed(count) {
     document.querySelectorAll('.batch-qty-btn').forEach(b => { b.disabled = remaining === 0; });
   } catch (e) {
     console.error('[batch-feed]', e);
-    resultEl.innerHTML = `<div style="color:#ff9a7d;">Batch feed failed: ${e.message || e}</div>`;
+    // Trello/Discord (3 May, neurodrills): "not sure if fixed properly,
+    // I just got this message after feeding" — the screenshot showed
+    // "Batch feed failed: nothing_fed: Couldn't feed any potions:
+    // all_traits_capped". The backend returns 400/nothing_fed for
+    // expected end-states (all traits maxed at this level), which the
+    // generic catch path was rendering as a scary "Batch feed failed"
+    // message. Map the known harmless ones to the same friendly copy
+    // used in the success-path stopped_reason map.
+    const msg = String(e?.message || e);
+    let friendly;
+    if (msg.startsWith('nothing_fed')) {
+      // Pull out the underlying reason if present (e.g. "all_traits_capped")
+      const reason = (msg.match(/:\s*([a-z_]+)\s*$/) || [])[1] || '';
+      const friendlyReason = ({
+        all_traits_capped: 'All stats are maxed for this level. Try a Blessing, Evolution Potion, or send your champion on a Quest.',
+        no_trait_available: 'No eligible trait left to feed.',
+        out_of_potions:    'Out of trait potions in inventory.',
+      })[reason] || 'Nothing was fed this batch.';
+      friendly = `<div style="color:var(--muted);">${friendlyReason}</div>`;
+    } else if (msg.match(/^http_5\d\d/)) {
+      friendly = '<div style="color:#ff9a7d;">Server hiccup — please try again in a few seconds.</div>';
+    } else {
+      friendly = `<div style="color:#ff9a7d;">Batch feed failed: ${msg}</div>`;
+    }
+    resultEl.innerHTML = friendly;
     resultEl.style.display = '';
     document.querySelectorAll('.batch-qty-btn').forEach(b => { b.disabled = false; });
   } finally {
@@ -12718,9 +13149,9 @@ function showArenaResult(resp, champ) {
   const botStageName = SPECIES?.[resp.opponent.species_id]?.bloodlines?.[resp.opponent.bloodline_id]?.stages?.[botStageIdx]?.name
                      || _stageBand(botStageIdx);
   document.getElementById('arPlayerContext').innerHTML =
-    `<span class="emoji">${playerSpEmoji}</span> <span class="level">L${champ.level}</span> · <span class="stage">${playerStageName}</span>`;
+    `<span class="emoji">${playerSpEmoji}</span> <span class="level">L${champ.level}</span> · <span class="stage">${playerStageName}</span> ${affinityBadgeHtml(champ.species_id, { compact: true })}`;
   document.getElementById('arBotContext').innerHTML =
-    `<span class="emoji">${botSpEmoji}</span> <span class="level">L${champ.level}</span> · <span class="stage">${botStageName}</span>`;
+    `<span class="emoji">${botSpEmoji}</span> <span class="level">L${champ.level}</span> · <span class="stage">${botStageName}</span> ${affinityBadgeHtml(resp.opponent.species_id, { compact: true })}`;
 
   // Reset ticker + stats panel
   document.getElementById('arTicker').innerHTML = '';
@@ -12745,9 +13176,10 @@ function showArenaResult(resp, champ) {
   const log = document.getElementById('arLog');
   log.style.display = 'none';
   document.getElementById('arLogToggle').textContent = 'Show battle log ▼';
-  log.innerHTML = battle.events.map(ev =>
-    `<div class="ar-log-event ${ev.kind}">R${ev.round} · ${ev.msg}</div>`
-  ).join('');
+  log.innerHTML = battle.events.map(ev => {
+    const affCls = ev.affinity === 'strong' ? ' aff-strong' : ev.affinity === 'weak' ? ' aff-weak' : '';
+    return `<div class="ar-log-event ${ev.kind}${affCls}">R${ev.round} · ${ev.msg}</div>`;
+  }).join('');
 
   document.getElementById('arSkipBtn').style.display = '';
   modal.classList.add('open');
@@ -14082,6 +14514,609 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+
+// ============================================================
+// CAMPAIGN MODE — solo PvE story mode (5 chapters, 5 bosses)
+// MVP: localStorage progress, simple turn-based stat simulation.
+// Backend wiring (campaign_chapter_complete events for quest hub
+// + chest awards) lands in the next pass once testers validate flow.
+// ============================================================
+const VxCampaign = (() => {
+  const LS_KEY = 'vc_campaign_progress';
+  const IMG_BASE = 'img/campaign/';
+
+  // Chapter / boss / mob definitions. Boss target_stage is the stat
+  // tier the boss is built around (matches a champion of that stage in
+  // full kit). Mob fights are scaled progressively below the boss.
+  const CHAPTERS = [
+    { id: 1, title: 'The Pit Trials', emoji_fallback: '🪓',
+      blurb: 'Underground gladiator pits where whelps are sold by the cage. Fight your way out.',
+      gate_stage: 5, target_stage: 6,
+      mobs: [
+        { name: 'Pit Whelp',     stage: 4, fluff: 'A scarred junior gladiator desperate for promotion.' },
+        { name: 'Cage Goblin',   stage: 5, fluff: 'Wields a rusted shiv and a feral grin.' },
+        { name: 'Bone Brawler',  stage: 6, fluff: 'Half-mad pit veteran. Strikes first, asks nothing.' },
+      ],
+      boss: { name: 'Skarn the Whelp-Eater', img: 'boss_ch1_skarn.png',
+              stage: 7,
+              tagline: 'Bloated goblin warlord. Wears chained whelps as trophies.',
+              moves: ['Bone Club Crush', 'Cage Toss', 'Trophy Snatch'] },
+      reward_chests: 1 },
+
+    { id: 2, title: 'The Bone Coliseum', emoji_fallback: '💀',
+      blurb: 'Vexora rules the dead colosseum. Her skeleton champions never tire.',
+      gate_stage: 8, target_stage: 9,
+      mobs: [
+        { name: 'Skeletal Gladiator', stage: 7, fluff: 'Animated by violet necromancy. Won\'t stay down.' },
+        { name: 'Wraith Duelist',     stage: 8, fluff: 'Phases through your strikes mid-swing.' },
+        { name: 'Bone Lieutenant',    stage: 9, fluff: 'Vexora\'s favored captain. Twin blades.' },
+      ],
+      boss: { name: 'Vexora the Bone Empress', img: 'boss_ch2_vexora.png',
+              stage: 10,
+              tagline: 'Lich-witch on a throne of bone. Calm. Eternal. Cruel.',
+              moves: ['Bone Spear Volley', 'Soul Drain', 'Necrotic Crown'] },
+      reward_chests: 2 },
+
+    { id: 3, title: 'The Verdant Wastes', emoji_fallback: '🌿',
+      blurb: 'A cursed forest gone wrong. The trees themselves have grown teeth.',
+      gate_stage: 11, target_stage: 12,
+      mobs: [
+        { name: 'Mossback Sentinel', stage: 10, fluff: 'A wandering wood-golem patrol.' },
+        { name: 'Thorn Spider',      stage: 11, fluff: 'Eight legs of bristling barbed venom.' },
+        { name: 'Cursed Drake',      stage: 12, fluff: 'Bark-skinned reptile, lashes with a vine tongue.' },
+      ],
+      boss: { name: 'Thornwarden Mossback', img: 'boss_ch3_mossback.png',
+              stage: 13,
+              tagline: 'Ancient treant titan. Bleeds black sap, hates flame.',
+              moves: ['Root Snare', 'Bark Slam', 'Wildgrowth Curse'] },
+      reward_chests: 2 },
+
+    { id: 4, title: 'The Obsidian Citadel', emoji_fallback: '🔥',
+      blurb: 'Pyrrhos rules the volcano fortress. The lava itself answers his call.',
+      gate_stage: 14, target_stage: 15,
+      mobs: [
+        { name: 'Lava Hound',     stage: 13, fluff: 'Magma-dripping warbeast. Burns on contact.' },
+        { name: 'Demon Centurion', stage: 14, fluff: 'A horned officer in obsidian plate.' },
+        { name: 'Inferno Herald', stage: 15, fluff: 'Pyrrhos\' herald — announces death by fire.' },
+      ],
+      boss: { name: 'Inferno-King Pyrrhos', img: 'boss_ch4_pyrrhos.png',
+              stage: 16,
+              tagline: 'Twin lava-blade demon-king. Wreathed in molten armor.',
+              moves: ['Twin Lava Cleave', 'Ash Storm', 'Volcanic Rage'] },
+      reward_chests: 3 },
+
+    { id: 5, title: 'The Vulcan Apex', emoji_fallback: '✨',
+      blurb: 'A floating colosseum at the edge of reality. Aetheron waits at the top.',
+      gate_stage: 17, target_stage: 18,
+      mobs: [
+        { name: 'Apex Wraith',         stage: 16, fluff: 'A spectral past-champion still bound to the arena.' },
+        { name: 'Voidlord\'s Herald',  stage: 17, fluff: 'Multi-bloodline acolyte. Speaks in 8 voices.' },
+        { name: 'Cosmic Sentinel',    stage: 18, fluff: 'Guardian carved from a fragment of a dead star.' },
+      ],
+      boss: { name: 'Voidlord Aetheron', img: 'boss_ch5_aetheron.png',
+              stage: 19,
+              tagline: 'Fallen god-champion. Bears every bloodline\'s mark. The end.',
+              moves: ['Reality Spear', 'Halo of Endings', 'Aspect Cascade'] },
+      reward_chests: 5 },
+  ];
+
+  // ---------- progress (localStorage) ----------
+  function loadProgress() {
+    try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); }
+    catch (e) { return {}; }
+  }
+  function saveProgress(p) {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(p)); } catch (e) {}
+  }
+  function getChapterProgress(chapId) {
+    const all = loadProgress();
+    return all[chapId] || { mobs_cleared: [false, false, false], boss_cleared: false, completed_at: null };
+  }
+  function setChapterProgress(chapId, prog) {
+    const all = loadProgress();
+    all[chapId] = prog;
+    saveProgress(all);
+  }
+  function isChapterUnlocked(chapId) {
+    if (chapId === 1) return true;
+    const prev = getChapterProgress(chapId - 1);
+    return !!prev.boss_cleared;
+  }
+  function chapterState(chapId) {
+    const p = getChapterProgress(chapId);
+    if (p.boss_cleared) return 'completed';
+    if (p.mobs_cleared.some(Boolean) || (p.mobs_cleared.every(Boolean) && !p.boss_cleared)) return 'in-progress';
+    return 'unstarted';
+  }
+
+  // ---------- champion picker ----------
+  function getEligibleChampions() {
+    // myChampions is the live array populated post-auth (apiListChampions).
+    return (typeof myChampions !== 'undefined' ? myChampions : []).filter(c => !c._archived);
+  }
+  function getSelectedChamp() {
+    const sel = document.getElementById('cmpChampSelect');
+    if (!sel || !sel.value) return null;
+    return getEligibleChampions().find(c => c.id === sel.value) || null;
+  }
+
+  // ---------- battle simulation ----------
+  // Hero stats: pulled from the champion's actual STR/VIT/AGI/FER/INT/LCK
+  // Foe stats: derived from foe.stage (rough scaling: each stage = ~10% stronger)
+  function statsForStage(stage) {
+    // stage 1 = baseline 50; each stage adds ~6 to each stat
+    const base = 50 + (stage - 1) * 6;
+    return { STR: base, VIT: base, AGI: base, FER: base, INT: base, LCK: base };
+  }
+  function statsForChamp(champ) {
+    // Champions store stats as {STR,VIT,AGI,FER,INT,LCK} (uppercase).
+    // Stage stored as champion.stageIdx (camelCase), 0-indexed.
+    const s = champ.stats || {};
+    const stage = (champ.stageIdx ?? 0) + 1;
+    const fallback = statsForStage(stage);
+    // Stat values in the live schema are smaller (1-50 range) so scale them
+    // up so they're meaningful in our HP-vs-damage math.
+    const lift = (v) => Math.max(10, v * 4);
+    return {
+      STR: s.STR != null ? lift(s.STR) : fallback.STR,
+      VIT: s.VIT != null ? lift(s.VIT) : fallback.VIT,
+      AGI: s.AGI != null ? lift(s.AGI) : fallback.AGI,
+      FER: s.FER != null ? lift(s.FER) : fallback.FER,
+      INT: s.INT != null ? lift(s.INT) : fallback.INT,
+      LCK: s.LCK != null ? lift(s.LCK) : fallback.LCK,
+    };
+  }
+  function maxHp(stats) { return 80 + stats.VIT * 2; }
+
+  function simulateTurn(attacker, defender, attackerName, defenderName, isHero, affMult, affKind) {
+    // Hit chance: 75% + (atk.AGI - def.AGI) * 0.4%
+    const hitChance = Math.max(0.4, Math.min(0.95, 0.75 + (attacker.AGI - defender.AGI) * 0.004));
+    const roll = Math.random();
+    if (roll > hitChance) {
+      return { type: 'miss', text: `${attackerName} swings and misses.` };
+    }
+    // Crit chance: 5% + LCK * 0.15%
+    const critChance = 0.05 + attacker.LCK * 0.0015;
+    const isCrit = Math.random() < critChance;
+    // Damage: STR/2 + FER/3, ×1.7 if crit, ×affinity, reduced by VIT/4
+    let dmg = Math.round(attacker.STR / 2 + attacker.FER / 3);
+    if (isCrit) dmg = Math.round(dmg * 1.7);
+    dmg = Math.round(dmg * (affMult || 1.0));
+    dmg = Math.max(1, dmg - Math.round(defender.VIT / 4));
+    const affTag = affKind === 'strong' ? ' — super effective!' : affKind === 'weak' ? ' — resisted' : '';
+    return {
+      type: isCrit ? 'crit' : 'hit',
+      affinity: (affKind === 'neutral' || !affKind) ? null : affKind,
+      dmg,
+      text: isCrit
+        ? `${attackerName} CRITS ${defenderName} for ${dmg}!${affTag}`
+        : `${attackerName} hits ${defenderName} for ${dmg}.${affTag}`,
+    };
+  }
+
+  function runBattle(heroStats, foeStats, heroName, foeName, heroSpecies, foeSpecies) {
+    // Look up the matchup ONCE — same multiplier each direction depending
+    // on attacker's element vs defender's element.
+    const heroVsFoe = affinityMatchup(heroSpecies, foeSpecies);   // hero attacks
+    const foeVsHero = affinityMatchup(foeSpecies, heroSpecies);   // foe attacks
+    let heroHp = maxHp(heroStats);
+    let foeHp = maxHp(foeStats);
+    const heroMaxHp = heroHp, foeMaxHp = foeHp;
+    const log = [];
+    let heroFirst = heroStats.AGI >= foeStats.AGI;
+    let turn = 0;
+    while (heroHp > 0 && foeHp > 0 && turn < 60) {
+      if ((heroFirst && turn % 2 === 0) || (!heroFirst && turn % 2 === 1)) {
+        const r = simulateTurn(heroStats, foeStats, heroName, foeName, true, heroVsFoe.mult, heroVsFoe.kind);
+        if (r.dmg) foeHp = Math.max(0, foeHp - r.dmg);
+        log.push({ ...r, side: 'hero', heroHp, foeHp });
+      } else {
+        const r = simulateTurn(foeStats, heroStats, foeName, heroName, false, foeVsHero.mult, foeVsHero.kind);
+        if (r.dmg) heroHp = Math.max(0, heroHp - r.dmg);
+        log.push({ ...r, side: 'foe', heroHp, foeHp });
+      }
+      turn++;
+    }
+    return { won: foeHp <= 0 && heroHp > 0, heroHp, foeHp, heroMaxHp, foeMaxHp, log,
+      heroVsFoe, foeVsHero };
+  }
+
+  // ---------- view rendering ----------
+  function renderView() {
+    populateChampPicker();
+    renderChapters();
+    renderAffinityChart();
+    hydrateFromServer();  // best-effort, non-blocking
+    // Wire the howto toggle (idempotent)
+    const howBtn = document.getElementById('cmpHowBtn');
+    if (howBtn && !howBtn._wired) {
+      howBtn.addEventListener('click', () => {
+        const panel = document.getElementById('cmpHowItWorks');
+        panel.classList.toggle('open');
+      });
+      howBtn._wired = true;
+    }
+  }
+
+  // Pull authoritative campaign progress from the backend and merge into
+  // localStorage so the chapter cards reflect the user's true state
+  // (e.g. fights cleared on another device). Best-effort — silent on error.
+  async function hydrateFromServer() {
+    if (typeof apiCampaignBattle !== 'function') return;
+    if (typeof getWallet !== 'function' || !getWallet()) return;
+    try {
+      const resp = await apiCampaignBattle({ query_only: true });
+      if (resp && resp.progress) {
+        try { localStorage.setItem(LS_KEY, JSON.stringify(resp.progress)); } catch(e) {}
+        renderChapters();  // re-render with server-truth state
+      }
+    } catch (e) {
+      // Anonymous users / network blips → keep using local progress
+      console.debug('[campaign] hydrate skipped:', e.message);
+    }
+  }
+
+  // Builds an 8-cell type-chart grid showing each species' affinity +
+  // its strong-against / weak-against picks. Read-only reference UI.
+  function renderAffinityChart() {
+    const grid = document.getElementById('affChartGrid');
+    if (!grid) return;
+    const SPECIES_LABEL = {
+      orc: 'Orc', elf: 'Elf', goblin: 'Goblin', demon: 'Demon',
+      drakkin: 'Drakkin', dwarf: 'Dwarf', beastkin: 'Beastkin', wraith: 'Wraith',
+    };
+    const order = ['orc','elf','drakkin','dwarf','beastkin','goblin','demon','wraith'];
+    grid.innerHTML = order.map(speciesId => {
+      const aff = SPECIES_AFFINITY[speciesId];
+      const info = AFFINITY_INFO[aff];
+      const strongElems = AFFINITY_STRONG[aff] || [];
+      // Weak = elements whose STRONG list contains my affinity
+      const weakElems = Object.entries(AFFINITY_STRONG)
+        .filter(([_, list]) => list.includes(aff))
+        .map(([el]) => el);
+      const fmt = (els) => els.map(e => `${AFFINITY_INFO[e].emoji} ${AFFINITY_INFO[e].name}`).join(', ');
+      return `<div class="aff-chart-cell" style="border-color:${info.color}55;">
+        <div class="aff-cc-head" style="color:${info.color};">${info.emoji} ${info.name} <span style="color:var(--muted);font-weight:600;font-size:10px;">· ${SPECIES_LABEL[speciesId]}</span></div>
+        <div class="aff-cc-row"><span class="lbl" style="color:#7dff9a;">STRONG</span> ${fmt(strongElems)}</div>
+        <div class="aff-cc-row"><span class="lbl" style="color:#ff8e6b;">WEAK</span> ${fmt(weakElems)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function populateChampPicker() {
+    const sel = document.getElementById('cmpChampSelect');
+    const stats = document.getElementById('cmpChampStats');
+    if (!sel) return;
+    const champs = getEligibleChampions();
+    if (champs.length === 0) {
+      sel.innerHTML = '<option value="">— No champions yet — adopt one to start —</option>';
+      sel.disabled = true;
+      stats.textContent = '';
+      return;
+    }
+    sel.disabled = false;
+    sel.innerHTML = champs.map(c => {
+      const sp = (typeof SPECIES !== 'undefined' ? SPECIES : {})[c.species_id];
+      const bl = sp?.bloodlines?.[c.bloodline_id];
+      const st = bl?.stages?.[c.stageIdx];
+      const stageLabel = st?.name || `Stage ${c.stage_idx + 1}`;
+      return `<option value="${c.id}">${c.name || bl?.heroName || 'Nameless'} · ${stageLabel} (L${c.level || 1})</option>`;
+    }).join('');
+    if (!sel._wired) {
+      sel.addEventListener('change', () => { renderChapters(); updateChampStats(); });
+      sel._wired = true;
+    }
+    updateChampStats();
+  }
+  function updateChampStats() {
+    const stats = document.getElementById('cmpChampStats');
+    const c = getSelectedChamp();
+    if (!c || !stats) { if (stats) stats.textContent = ''; return; }
+    const s = statsForChamp(c);
+    stats.textContent = `STR ${s.STR} · VIT ${s.VIT} · AGI ${s.AGI} · FER ${s.FER}`;
+  }
+
+  function renderChapters() {
+    const grid = document.getElementById('cmpChapters');
+    if (!grid) return;
+    const champ = getSelectedChamp();
+    grid.innerHTML = CHAPTERS.map(c => chapterCardHtml(c, champ)).join('');
+    grid.querySelectorAll('.cmp-chapter-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const id = parseInt(card.dataset.chapter, 10);
+        if (!isChapterUnlocked(id)) return;
+        openChapterModal(id);
+      });
+    });
+  }
+
+  function chapterCardHtml(c, champ) {
+    const unlocked = isChapterUnlocked(c.id);
+    const state = chapterState(c.id);
+    const prog = getChapterProgress(c.id);
+    const fightsCleared = prog.mobs_cleared.filter(Boolean).length + (prog.boss_cleared ? 1 : 0);
+    const totalFights = 4;
+    const pct = (fightsCleared / totalFights) * 100;
+    const bossImg = `${IMG_BASE}${c.boss.img}`;
+    const stateBadge = !unlocked ? '<div class="cmp-cc-state-badge locked">🔒 Locked</div>'
+      : state === 'completed' ? '<div class="cmp-cc-state-badge completed">✓ Cleared</div>'
+      : state === 'in-progress' ? '<div class="cmp-cc-state-badge">In Progress</div>'
+      : '<div class="cmp-cc-state-badge">Available</div>';
+    const champStage = champ ? ((champ.stageIdx ?? 0) + 1) : 0;
+    const gateMet = champ && champStage >= c.gate_stage;
+    return `
+      <div class="cmp-chapter-card ${!unlocked ? 'locked' : ''} ${state}" data-chapter="${c.id}">
+        <div class="cmp-cc-art">
+          <img src="${bossImg}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/>
+          <div class="cmp-cc-art-fallback" style="display:none;">${c.emoji_fallback}</div>
+          <div class="cmp-cc-chapnum">CHAPTER ${c.id}</div>
+          ${stateBadge}
+        </div>
+        <div class="cmp-cc-body">
+          <div class="cmp-cc-title">${c.title}</div>
+          <div class="cmp-cc-bossname">Boss: ${c.boss.name}</div>
+          <div class="cmp-cc-blurb">${c.blurb}</div>
+          <div class="cmp-cc-meta">
+            <span class="cmp-cc-meta-pill">Stage ${c.gate_stage}+</span>
+            <span class="cmp-cc-meta-pill">📦 ${c.reward_chests}</span>
+            ${affinityBadgeHtml(_chapterFoeSpecies(c), { compact: false, title: `Boss affinity` })}
+            ${champ && !gateMet ? `<span class="cmp-cc-meta-pill" style="background:rgba(255,107,46,0.15);color:var(--ember);">Champion too low</span>` : ''}
+            ${champ ? _matchupHintHtml(champ.species_id, _chapterFoeSpecies(c)) : ''}
+          </div>
+          <div class="cmp-cc-progress-bar">
+            <div class="cmp-cc-progress-fill ${state === 'completed' ? 'completed' : ''}" style="width:${pct}%;"></div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // ---------- chapter modal ----------
+  let _activeChap = null;
+  function openChapterModal(chapId) {
+    const c = CHAPTERS.find(x => x.id === chapId);
+    if (!c) return;
+    _activeChap = c;
+    const prog = getChapterProgress(chapId);
+    document.getElementById('cmpCmChapNum').textContent = `CHAPTER ${c.id}`;
+    document.getElementById('cmpCmChapTitle').textContent = c.title;
+    document.getElementById('cmpCmChapBlurb').textContent = c.blurb;
+    document.getElementById('cmpCmRewardCount').textContent = c.reward_chests;
+    document.getElementById('cmpCmRewardPlural').textContent = c.reward_chests === 1 ? '' : 's';
+    const bossImgEl = document.getElementById('cmpCmBossImg');
+    bossImgEl.src = `${IMG_BASE}${c.boss.img}`;
+    bossImgEl.onerror = () => { bossImgEl.style.display = 'none'; };
+    bossImgEl.style.display = '';
+    // Matchup banner (hero affinity vs chapter foe affinity) — above fight list
+    const champ = getSelectedChamp();
+    const matchupHost = document.getElementById('cmpCmMatchup');
+    if (champ && matchupHost) {
+      matchupHost.innerHTML = matchupBannerHtml(champ.species_id, _chapterFoeSpecies(c));
+    } else if (matchupHost) {
+      matchupHost.innerHTML = '';
+    }
+    // Build fight list
+    const fightsEl = document.getElementById('cmpCmFights');
+    const allMobsCleared = prog.mobs_cleared.every(Boolean);
+    fightsEl.innerHTML = c.mobs.map((m, i) => {
+      const cleared = prog.mobs_cleared[i];
+      const canFight = !cleared && (i === 0 || prog.mobs_cleared[i - 1]);
+      return `<div class="cmp-cm-fight ${cleared ? 'cleared' : ''}">
+        <div class="cmp-cm-fnum">${cleared ? '✓' : i + 1}</div>
+        <div>
+          <div class="cmp-cm-fname">${m.name}</div>
+          <div class="cmp-cm-fsub">Stage ${m.stage} · ${m.fluff}</div>
+        </div>
+        <button class="cmp-cm-fbtn" data-fight="${i}" ${canFight ? '' : 'disabled'}>
+          ${cleared ? 'Cleared' : 'Fight'}
+        </button>
+      </div>`;
+    }).join('') + `
+      <div class="cmp-cm-fight boss ${prog.boss_cleared ? 'cleared' : ''}">
+        <div class="cmp-cm-fnum">${prog.boss_cleared ? '✓' : '☠'}</div>
+        <div>
+          <div class="cmp-cm-fname">${c.boss.name}</div>
+          <div class="cmp-cm-fsub">BOSS · Stage ${c.boss.stage} · ${c.boss.tagline}</div>
+        </div>
+        <button class="cmp-cm-fbtn boss-btn" data-fight="boss" ${(allMobsCleared && !prog.boss_cleared) ? '' : 'disabled'}>
+          ${prog.boss_cleared ? 'Cleared' : 'Boss Fight'}
+        </button>
+      </div>`;
+    fightsEl.querySelectorAll('.cmp-cm-fbtn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const f = btn.dataset.fight;
+        if (f === 'boss') startBattle(chapId, 'boss');
+        else startBattle(chapId, parseInt(f, 10));
+      });
+    });
+    document.getElementById('cmpChapterModal').classList.add('open');
+  }
+
+  // ---------- battle modal + simulation ----------
+  function startBattle(chapId, fightKey) {
+    const champ = getSelectedChamp();
+    if (!champ) {
+      vxAlert('Pick a champion first.', { title: 'No champion', icon: '⚠️' });
+      return;
+    }
+    const c = CHAPTERS.find(x => x.id === chapId);
+    if (!c) return;
+    const isBoss = fightKey === 'boss';
+    const foe = isBoss ? c.boss : c.mobs[fightKey];
+
+    // Close chapter modal, open battle modal
+    document.getElementById('cmpChapterModal').classList.remove('open');
+
+    const sp = (typeof SPECIES !== 'undefined' ? SPECIES : {})[champ.species_id];
+    const bl = sp?.bloodlines?.[champ.bloodline_id];
+    const st = bl?.stages?.[champ.stageIdx];
+    const heroName = champ.name || bl?.heroName || 'Hero';
+    const heroImg = st?.img || '';
+    const heroStats = statsForChamp(champ);
+    const foeStats = statsForStage(foe.stage);
+
+    // Set up modal
+    document.getElementById('cmpBmHeroName').textContent = heroName;
+    document.getElementById('cmpBmFoeName').textContent = foe.name;
+    document.getElementById('cmpBmHeroImg').src = heroImg;
+    const foeImgEl = document.getElementById('cmpBmFoeImg');
+    foeImgEl.src = isBoss ? `${IMG_BASE}${foe.img}` : '';
+    foeImgEl.onerror = () => { foeImgEl.style.display = 'none'; };
+    foeImgEl.style.display = isBoss ? '' : 'none';
+
+    // Foe species: use the chapter's `foeSpecies` slot if defined; otherwise
+    // derive from the boss tagline (stub for v1 — campaign uses one element
+    // per chapter so all mobs in a chapter share the boss's affinity).
+    const foeSpecies = foe.species_id || c.foe_species || _chapterFoeSpecies(c);
+    const result = runBattle(heroStats, foeStats, heroName, foe.name, champ.species_id, foeSpecies);
+
+    // Reset HP bars
+    document.getElementById('cmpBmHeroHp').style.width = '100%';
+    document.getElementById('cmpBmFoeHp').style.width = '100%';
+    document.getElementById('cmpBmHeroHpText').textContent = `${result.heroMaxHp}/${result.heroMaxHp}`;
+    document.getElementById('cmpBmFoeHpText').textContent = `${result.foeMaxHp}/${result.foeMaxHp}`;
+    document.getElementById('cmpBmLog').innerHTML = '';
+    document.getElementById('cmpBmResult').style.display = 'none';
+
+    document.getElementById('cmpBattleModal').classList.add('open');
+
+    // Animate the log + HP bars
+    animateBattle(result, () => {
+      // On animation complete, show result + persist
+      showBattleResult(chapId, fightKey, result);
+    });
+  }
+
+  function animateBattle(result, onDone) {
+    const logEl = document.getElementById('cmpBmLog');
+    const heroBar = document.getElementById('cmpBmHeroHp');
+    const foeBar = document.getElementById('cmpBmFoeHp');
+    const heroTxt = document.getElementById('cmpBmHeroHpText');
+    const foeTxt = document.getElementById('cmpBmFoeHpText');
+    let i = 0;
+    function step() {
+      if (i >= result.log.length) { onDone(); return; }
+      const e = result.log[i];
+      let cls = e.type === 'crit' ? 'log-crit' : e.type === 'miss' ? 'log-miss' : 'log-hit';
+      if (e.affinity === 'strong') cls += ' log-strong';
+      else if (e.affinity === 'weak') cls += ' log-weak';
+      const div = document.createElement('div');
+      div.className = cls;
+      div.textContent = '› ' + e.text;
+      logEl.appendChild(div);
+      logEl.scrollTop = logEl.scrollHeight;
+      // Update HP bars
+      heroBar.style.width = ((e.heroHp / result.heroMaxHp) * 100) + '%';
+      foeBar.style.width = ((e.foeHp / result.foeMaxHp) * 100) + '%';
+      heroTxt.textContent = `${e.heroHp}/${result.heroMaxHp}`;
+      foeTxt.textContent = `${e.foeHp}/${result.foeMaxHp}`;
+      i++;
+      setTimeout(step, 280);
+    }
+    step();
+  }
+
+  // Helper — every chapter has a thematic affinity for its bosses + mobs.
+  // Tied to the boss species concept so matchups feel coherent within a
+  // chapter (Pit Trials = goblin/toxic, Bone Coliseum = wraith/light, etc.)
+  function _chapterFoeSpecies(c) {
+    return ({
+      1: 'goblin',  // Skarn = goblin warlord → toxic
+      2: 'wraith',  // Vexora = lich → light (or shadow — going light for narrative)
+      3: 'elf',     // Thornwarden = nature treant → nature
+      4: 'demon',   // Pyrrhos = demon king → shadow
+      5: 'drakkin', // Aetheron = void dragon → ice
+    })[c.id] || 'orc';
+  }
+
+  async function showBattleResult(chapId, fightKey, result) {
+    const banner = document.getElementById('cmpBmResultBanner');
+    const rewards = document.getElementById('cmpBmResultRewards');
+    const rEl = document.getElementById('cmpBmResult');
+    const continueBtn = document.getElementById('cmpBmContinueBtn');
+    const c = CHAPTERS.find(x => x.id === chapId);
+    const isBoss = fightKey === 'boss';
+    const champ = getSelectedChamp();
+
+    if (result.won) {
+      banner.textContent = 'VICTORY';
+      banner.classList.remove('defeat');
+      // Persist locally first (instant UI feedback) — then call backend
+      // to log the event for the quest hub. If backend fails we keep
+      // the local progress so testers aren't blocked, but the chest
+      // won't unlock the related quest until the network call succeeds.
+      const prog = getChapterProgress(chapId);
+      if (isBoss) {
+        prog.boss_cleared = true;
+        prog.completed_at = Date.now();
+        rewards.innerHTML = `
+          <div style="font-size:32px;margin-bottom:6px;">📦</div>
+          <div><b>${c.reward_chests}</b> NFT chest${c.reward_chests === 1 ? '' : 's'} earned</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;">Chapter ${c.id} cleared. ${chapId < 5 ? `Chapter ${chapId + 1} unlocked.` : 'You are the Apex Champion.'}</div>
+          <div id="cmpBmServerStatus" style="font-size:10px;color:var(--muted);margin-top:8px;">⏳ Logging to server…</div>
+        `;
+      } else {
+        prog.mobs_cleared[fightKey] = true;
+        const next = c.mobs[fightKey + 1];
+        rewards.innerHTML = `
+          <div style="font-size:11px;color:var(--muted);">Mob defeated. ${next ? `Next: ${next.name}.` : 'Boss unlocked.'}</div>
+          <div id="cmpBmServerStatus" style="font-size:10px;color:var(--muted);margin-top:6px;">⏳ Logging to server…</div>
+        `;
+      }
+      setChapterProgress(chapId, prog);
+      // Fire-and-confirm server log
+      if (champ && typeof apiCampaignBattle === 'function') {
+        try {
+          const resp = await apiCampaignBattle({
+            champion_id: champ.id,
+            chapter_id: chapId,
+            fight_key: isBoss ? 'boss' : fightKey,
+            won: true,
+          });
+          // Reconcile with server progress (in case of cross-device divergence)
+          if (resp && resp.progress) {
+            try { localStorage.setItem(LS_KEY, JSON.stringify(resp.progress)); } catch(e) {}
+          }
+          const status = document.getElementById('cmpBmServerStatus');
+          if (status) {
+            status.textContent = resp.recorded ? '✓ Saved to your account' : (resp.already_complete ? '✓ Already cleared' : '✓ Saved');
+            status.style.color = 'var(--ok)';
+          }
+        } catch (e) {
+          console.warn('[campaign] backend log failed', e);
+          const status = document.getElementById('cmpBmServerStatus');
+          if (status) {
+            status.textContent = '⚠ Backend log failed — progress kept locally; quest credit will sync next session.';
+            status.style.color = 'var(--ember)';
+          }
+        }
+      }
+    } else {
+      banner.textContent = 'DEFEAT';
+      banner.classList.add('defeat');
+      rewards.innerHTML = `
+        <div style="font-size:32px;margin-bottom:6px;">💀</div>
+        <div>Your champion fell.</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">No penalty — heal up, maybe equip better gear, and try again.</div>
+      `;
+    }
+    rEl.style.display = '';
+    continueBtn.onclick = () => {
+      document.getElementById('cmpBattleModal').classList.remove('open');
+      // Re-render the chapters and re-open chapter modal if won + still chapters left
+      renderChapters();
+      if (result.won) {
+        // Brief delay so progress bar repaints, then re-open chapter detail
+        setTimeout(() => {
+          if (isBoss) return; // boss done — back to chapter list
+          openChapterModal(chapId);
+        }, 200);
+      }
+    };
+  }
+
+  return { renderView, CHAPTERS };
+})();
+window.VxCampaign = VxCampaign;
 </script>
 
 <!-- ======== DEBUG PANEL (prod-gated by ?debug=1 / localStorage vx_debug) ======== -->
