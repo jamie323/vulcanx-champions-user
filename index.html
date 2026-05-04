@@ -3102,6 +3102,22 @@
     margin-top: 18px; color: var(--muted); font-size: 11px;
     letter-spacing: 1px; opacity: 0.7;
   }
+  /* Mobile-only stuck-on-signing recovery card. Activates after 30s. */
+  .wg-recover {
+    margin-top: 14px; padding: 14px; border-radius: 10px;
+    background: rgba(255,205,107,0.08);
+    border: 1px solid rgba(255,205,107,0.4);
+    text-align: left;
+  }
+  .wg-recover-title { font-weight: 800; color: var(--accent); font-size: 13px; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .wg-recover-body { font-size: 12px; color: var(--text); margin-bottom: 10px; line-height: 1.5; }
+  .wg-recover-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .wg-recover-btn {
+    flex: 1; min-width: 130px; padding: 10px 12px; border: none; cursor: pointer;
+    background: linear-gradient(90deg, #ffcd6b, #ff8e2e); color: #1a0a05;
+    border-radius: 8px; font-weight: 800; font-size: 12px; letter-spacing: 0.5px;
+  }
+  .wg-recover-btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
 
   .btn-primary { width: 100%; padding: 12px;
     background: linear-gradient(90deg,#ffcd6b,#ff8e2e);
@@ -5282,9 +5298,11 @@
       signed but free.
     </p>
     <div class="wg-choose" id="wgChoose">
-      <!-- onclick wired by boot() to either connectWallet('injected') for desktop+injected
-           or to a MetaMask universal-link anchor click for mobile-without-injected.
-           Inline handler removed (was racing with the boot rebind). -->
+      <!-- onclick wired by boot() — WC button always uses connectWallet('walletconnect');
+           MM button gets either connectWallet('injected') (desktop ext / MM in-app browser)
+           or a universal-link deep link (mobile Safari/Chrome).
+           Boot also reorders these based on platform — mobile sees WC first since the
+           MM mobile deeplink path has been flaky for testers (Trello: ERR_NAME_NOT_RESOLVED). -->
       <button class="wg-btn wg-btn-mm" id="connectBtnMM">
         <span class="wg-btn-ico">🦊</span>
         <span class="wg-btn-body">
@@ -5302,6 +5320,15 @@
     </div>
     <div class="wg-status" id="wgStatus"></div>
     <div class="wg-error" id="connectError"></div>
+    <!-- Stuck-recovery UI — appears after 30s on mobile if signing is stuck. -->
+    <div class="wg-recover" id="wgRecover" style="display:none;">
+      <div class="wg-recover-title">Didn't get a signing prompt?</div>
+      <div class="wg-recover-body">Your wallet app may be in the background. Tap to bring it to the foreground.</div>
+      <div class="wg-recover-btns">
+        <button class="wg-recover-btn" id="wgRecoverOpenWallet">📱 Open Wallet App</button>
+        <button class="wg-recover-btn ghost" id="wgRecoverCancel">Cancel &amp; retry</button>
+      </div>
+    </div>
     <div class="wg-small">Chain auto-switches to Elysium (1339). No PYR is deducted during QA.</div>
   </div>
 </div>
@@ -10458,7 +10485,46 @@ async function connectWallet(method) {
     if (!chRes.ok || !ch.nonce) throw new Error('Challenge failed: ' + JSON.stringify(ch));
 
     setStatus('Check your wallet to sign…');
-    const signature = await window.vxWallet.personalSign(ch.message);
+    // Mobile stuck-watchdog (Trello: "stuck after click"). On mobile the
+    // signing prompt is delivered to a separate app via WC relay or MM
+    // deep-link, and if the user doesn't get a notification they have
+    // no idea the dapp is waiting. After 30s, surface a recovery card
+    // with an "Open Wallet App" button that brings the wallet to the
+    // foreground via metamask.app.link/wc/ universal link.
+    let stuckTimer = null;
+    const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobileUA) {
+      stuckTimer = setTimeout(() => {
+        const card = document.getElementById('wgRecover');
+        if (card) card.style.display = '';
+        const openBtn = document.getElementById('wgRecoverOpenWallet');
+        const cancelBtn = document.getElementById('wgRecoverCancel');
+        if (openBtn) openBtn.onclick = () => {
+          // Universal link that re-foregrounds MM (and most WC-supporting
+          // wallets respect the same scheme). Anchor-click pattern for iOS.
+          const a = document.createElement('a');
+          a.href = 'https://metamask.app.link/';
+          a.rel = 'noopener noreferrer';
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        };
+        if (cancelBtn) cancelBtn.onclick = () => {
+          // Best-effort cancel — disconnect the wallet so the user can retry
+          try { window.vxWallet?.disconnect(); } catch (_) {}
+          location.reload();
+        };
+      }, 30000);
+    }
+    let signature;
+    try {
+      signature = await window.vxWallet.personalSign(ch.message);
+    } finally {
+      if (stuckTimer) clearTimeout(stuckTimer);
+      const card = document.getElementById('wgRecover');
+      if (card) card.style.display = 'none';
+    }
 
     setStatus('Verifying signature…');
     const vRes = await fetch(`${FN_BASE}/auth_verify`, {
@@ -13445,14 +13511,18 @@ async function boot() {
         mmBtn.disabled = false;
         mmBtn.onclick = () => connectWallet('injected');
       } else if (isMobile) {
-        // MetaMask mobile universal link. Tester report (Trello "Need for
-        // Refixing"): tapping did nothing in some sessions. The earlier fix
-        // used `window.location.href = ...` which iOS Safari sometimes
-        // refuses to navigate from a button click without a real anchor
-        // gesture. Switched to the anchor-click pattern — creates a real
-        // <a> in the user-gesture context and clicks it. Universally
-        // works for iOS Safari + Android Chrome universal-link routing.
-        const dappUrl = location.host + location.pathname.replace(/^\//, '');
+        // MetaMask mobile universal link. Tester reports (Trello, 2026-05-04):
+        // - "Tapping did nothing in some sessions" — iOS Safari refuses to
+        //   navigate from a button click without a real anchor gesture, so
+        //   we use the anchor-click pattern below.
+        // - "ERR_NAME_NOT_RESOLVED after MetaMask approval" — earlier
+        //   construction included filename + querystring + hash and MM's
+        //   in-app browser couldn't resolve the resulting URL. Now we
+        //   strip everything past the last directory slash so we always
+        //   pass the dapp's *directory* URL, not a specific file.
+        const lastSlash = location.pathname.lastIndexOf('/');
+        const cleanPath = location.pathname.substring(0, lastSlash + 1);  // always ends with /
+        const dappUrl = (location.host + cleanPath).replace(/\/+/g, '/');  // collapse any //
         const mmDeepLink = `https://metamask.app.link/dapp/${dappUrl}`;
         mmBtn.disabled = false;
         mmBtn.classList.remove('wg-btn-disabled');
@@ -13489,8 +13559,22 @@ async function boot() {
         );
         if (mmSub) mmSub.textContent = 'install the desktop extension';
       }
-      // Subtly nudge WC as the secondary mobile path when no injected provider
-      if (!hasInjected && wcBtn) wcBtn.classList.add('wg-btn-primary');
+      // Mobile-without-injection: WalletConnect is more reliable than the
+      // MM deeplink (testers hit ERR_NAME_NOT_RESOLVED after MM approval).
+      // Move WC to the top of the chooser visually + flag it as primary.
+      // MetaMask stays available below as a secondary option for users
+      // who prefer the deep-link path or are already in MM's in-app browser.
+      if (!hasInjected && isMobile && wcBtn) {
+        wcBtn.classList.add('wg-btn-primary');
+        const choose = document.getElementById('wgChoose');
+        if (choose && choose.firstChild !== wcBtn) {
+          choose.insertBefore(wcBtn, choose.firstChild);  // put WC first
+        }
+        // Update copy so the user understands MM mobile works through WC
+        const wcSubLab = document.getElementById('wcSubLabel');
+        if (wcSubLab) wcSubLab.textContent = '📱 works with MetaMask, Trust, Rainbow, etc.';
+        if (mmSub) mmSub.textContent = 'opens MetaMask app · slower';
+      }
     }
 
     // Reflect the readiness state on the WC button sublabel so the keeper
