@@ -6524,6 +6524,15 @@
         </div>
       </div>
 
+      <!-- Reset (testing) -->
+      <div style="margin-top:18px; padding-top:18px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+        <div>
+          <div style="font-weight:800; font-size:13px; color:var(--accent);">Reset Campaign Progress</div>
+          <div style="font-size:11px; color:var(--muted); margin-top:2px;">Wipes all your chapter clears so you can replay from Chapter 1 (testing).</div>
+        </div>
+        <button id="cmpResetBtn" style="background:rgba(255,107,46,0.15); color:var(--ember); border:1px solid rgba(255,107,46,0.4); padding:8px 14px; border-radius:8px; font-weight:800; font-size:12px; letter-spacing:0.5px; cursor:pointer;">↺ Reset Progress</button>
+      </div>
+
       <!-- Elemental Affinity primer -->
       <div style="margin-top:18px; padding-top:18px; border-top:1px solid var(--border);">
         <div style="font-weight:800; font-size:14px; color:var(--accent); margin-bottom:6px;">⚔️ Elemental Affinities (NEW — Phase 4.5)</div>
@@ -10599,11 +10608,11 @@ async function apiListChampions() {
 // re-simulate the battle yet); endpoint validates ownership + chapter
 // gating + idempotency, then writes the campaign_chapter_complete event
 // that the quest hub reads to award Conquer-the-X chests.
-async function apiCampaignBattle({ champion_id, chapter_id, fight_key, won }) {
+async function apiCampaignBattle({ champion_id, chapter_id, fight_key, won, query_only, reset }) {
   const res = await apiFetch(`${FN_BASE}/campaign_battle`, {
     method: 'POST',
     headers: AUTH_HEADERS,
-    body: JSON.stringify({ wallet: getWallet(), champion_id, chapter_id, fight_key, won }),
+    body: JSON.stringify({ wallet: getWallet(), champion_id, chapter_id, fight_key, won, query_only, reset }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -14819,6 +14828,34 @@ const VxCampaign = (() => {
         panel.classList.toggle('open');
       });
       howBtn._wired = true;
+    }
+    // Wire the reset button (idempotent)
+    const resetBtn = document.getElementById('cmpResetBtn');
+    if (resetBtn && !resetBtn._wired) {
+      resetBtn.addEventListener('click', async () => {
+        const ok = confirm('Reset all Campaign progress?\n\nThis wipes every chapter clear so you can replay from Chapter 1. Cannot be undone.');
+        if (!ok) return;
+        resetBtn.disabled = true;
+        resetBtn.textContent = '↺ Resetting…';
+        try {
+          if (typeof apiCampaignBattle === 'function') {
+            await apiCampaignBattle({ reset: true });
+          }
+          try { localStorage.removeItem(LS_KEY); } catch (e) {}
+          renderChapters();
+          resetBtn.textContent = '✓ Reset · ready to play';
+          setTimeout(() => {
+            resetBtn.disabled = false;
+            resetBtn.textContent = '↺ Reset Progress';
+          }, 2000);
+        } catch (e) {
+          console.warn('[campaign] reset failed', e);
+          resetBtn.disabled = false;
+          resetBtn.textContent = '↺ Reset Progress';
+          vxAlert('Reset failed — ' + (e.message || 'unknown error'), { title: 'Reset error', icon: '⚠️' });
+        }
+      });
+      resetBtn._wired = true;
     }
   }
 
