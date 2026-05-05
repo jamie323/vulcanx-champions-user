@@ -14891,10 +14891,16 @@ const VxCampaign = (() => {
     28, 41, 60, 79, 105, 130, 155, 175, 195, 215,
     235, 255, 275, 295, 315, 335, 355, 375, 395, 415,
   ];
-  function statsForStage(stage) {
+  function statsForStage(stage, isBoss = false) {
     const idx = Math.max(0, Math.min(19, (stage | 0) - 1));
     const base = STAGE_CAP_MEAN[idx];
-    return { STR: base, VIT: base, AGI: base, FER: base, INT: base, LCK: base };
+    // Tester report (AngelHorn + Salmanriyaz, 5 May): "Legendary champions
+    // walk through the entire campaign in under a minute." Bosses need
+    // more presence — bumped +30% across all stats so they take ~2 extra
+    // hits and hit harder. Mob stats stay unchanged so the lead-up fights
+    // remain quick.
+    const m = isBoss ? 1.3 : 1.0;
+    return { STR: base * m, VIT: base * m, AGI: base * m, FER: base * m, INT: base * m, LCK: base * m };
   }
   function statsForChamp(champ) {
     // Champions store stats as {STR,VIT,AGI,FER,INT,LCK} (uppercase).
@@ -15023,28 +15029,36 @@ const VxCampaign = (() => {
           if (kind === 'defend') return cleanup(1.30, 'weak', 'BLOCK FAILED ×1.3 dmg', idx);
           return cleanup(0.0, 'weak', 'WRONG! attack missed', idx);
         }
-        // Correct circle — speed-graded
+        // Correct circle — speed-graded.
+        // Tester report (Ric O., 5 May): "can't reach ×1.3 no matter how
+        // fast I am". Root cause: linear decay from 0 → window meant the
+        // human ~250ms visual-reaction floor put even instant taps at
+        // speedPct ≈ 0.25, capping mults at ~1.30. Now: a flat PERFECT
+        // zone for the first 30% of the window (covers reaction time),
+        // then linear decay through the GOOD zone, so a fast tap reliably
+        // delivers the full ×1.4.
         const speedPct = Math.min(1, elapsed / windowMs);   // 0 = instant, 1 = at the wire
+        const PERFECT_END = 0.30;   // First 30% of window = full credit
         if (kind === 'defend') {
           // Defense: faster = more damage reduction
-          //   instant tap → 0.4× dmg taken (60% block)
-          //   at-the-wire tap → 0.85× dmg taken (15% block)
-          const m = 0.4 + speedPct * 0.45;
-          const grade = speedPct < 0.35 ? 'perfect' : 'good';
-          const lbl = speedPct < 0.35
-            ? `PERFECT BLOCK ×${m.toFixed(2)} dmg`
-            : `BLOCKED ×${m.toFixed(2)} dmg`;
-          return cleanup(Number(m.toFixed(2)), grade, lbl, idx);
+          //   PERFECT zone (0–30% of window) → 0.4× dmg taken (60% block)
+          //   GOOD zone (30–100%) → linear 0.4× → 0.9× dmg taken
+          if (speedPct < PERFECT_END) {
+            return cleanup(0.4, 'perfect', `PERFECT BLOCK ×0.40 dmg`, idx);
+          }
+          const t = (speedPct - PERFECT_END) / (1 - PERFECT_END);
+          const m = 0.4 + t * 0.5;   // 0.4 → 0.9
+          return cleanup(Number(m.toFixed(2)), 'good', `BLOCKED ×${m.toFixed(2)} dmg`, idx);
         }
         // Attack: faster = more damage
-        //   instant tap → 1.4× damage
-        //   at-the-wire tap → 1.0× damage
-        const m = 1.4 - speedPct * 0.4;
-        const grade = speedPct < 0.35 ? 'perfect' : 'good';
-        const lbl = speedPct < 0.35
-          ? `PERFECT! ×${m.toFixed(1)}`
-          : `HIT ×${m.toFixed(1)}`;
-        return cleanup(Number(m.toFixed(2)), grade, lbl, idx);
+        //   PERFECT zone (0–30%) → flat ×1.4
+        //   GOOD zone (30–100%) → linear ×1.4 → ×1.0
+        if (speedPct < PERFECT_END) {
+          return cleanup(1.4, 'perfect', `PERFECT! ×1.4`, idx);
+        }
+        const t = (speedPct - PERFECT_END) / (1 - PERFECT_END);
+        const m = 1.4 - t * 0.4;   // 1.4 → 1.0
+        return cleanup(Number(m.toFixed(2)), 'good', `HIT ×${m.toFixed(1)}`, idx);
       };
 
       const onKey = (ev) => {
@@ -15249,8 +15263,18 @@ const VxCampaign = (() => {
         const c = CHAPTERS.find(x => x.id === id);
         const champ = getSelectedChamp();
         if (champ && c && (champ.stageIdx ?? 0) + 1 < c.gate_stage) {
+          // Tester (neurodrills, 5 May): confused — "My Orc is at Level 06
+          // but it's saying my 'Grokk the Whelp is stage 3'". The earlier
+          // alert just said "stage X required" without explaining what a
+          // stage IS or how it relates to level. Now spells out both.
+          const sp = (typeof SPECIES !== 'undefined' ? SPECIES : {})[champ.species_id];
+          const bl = sp?.bloodlines?.[champ.bloodline_id];
+          const stageName = bl?.stages?.[champ.stageIdx]?.name || `Stage ${(champ.stageIdx ?? 0) + 1}`;
+          const targetStageName = bl?.stages?.[c.gate_stage - 1]?.name || `Stage ${c.gate_stage}`;
           vxAlert(
-            `${champ.name || 'Your champion'} is stage ${(champ.stageIdx ?? 0) + 1}, but Chapter ${id} requires stage ${c.gate_stage}+. Evolve or pick a stronger champion to attempt this chapter.`,
+            `${champ.name || 'Your champion'} is at Level ${champ.level || 1} · ${stageName} (Stage ${(champ.stageIdx ?? 0) + 1}).\n\n` +
+            `Chapter ${id} requires ${targetStageName} (Stage ${c.gate_stage}+).\n\n` +
+            `Stage = evolution tier — separate from Level. Use Evolution Potions to advance through stages once your champion reaches each gate level (L3, L5, L7, L10, L13, L15, …).`,
             { title: 'Champion too weak', icon: '⚠️' }
           );
           return;
@@ -15382,7 +15406,7 @@ const VxCampaign = (() => {
     const heroName = champ.name || bl?.heroName || 'Hero';
     const heroImg = st?.img || '';
     const heroStats = statsForChamp(champ);
-    const foeStats = statsForStage(foe.stage);
+    const foeStats = statsForStage(foe.stage, isBoss);
 
     // Set up modal
     document.getElementById('cmpBmHeroName').textContent = heroName;
