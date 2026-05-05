@@ -125,6 +125,22 @@
        widths could let cards drift narrower than their column. */
     width: 100%; box-sizing: border-box;
   }
+  /* Accordion-card variant — used by Story + Milestones cards.
+     Native <details>; click summary to expand. Collapsed by default
+     to reduce vertical scroll on the champion view (380K char dump
+     was largely below-the-fold panels per 5 May UX audit). */
+  details.cc-card.cc-acc-card { padding: 0; }
+  details.cc-card.cc-acc-card > summary {
+    cursor: pointer; list-style: none; padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    user-select: none;
+  }
+  details.cc-card.cc-acc-card > summary::-webkit-details-marker { display: none; }
+  details.cc-card.cc-acc-card .cc-acc-arrow {
+    color: var(--accent); font-size: 14px; transition: transform 0.18s;
+  }
+  details.cc-card.cc-acc-card[open] > summary .cc-acc-arrow { transform: rotate(90deg); }
+  details.cc-card.cc-acc-card > *:not(summary) { padding: 0 16px 14px; }
   .cc-card-title {
     font-size: 11px; color: var(--muted); letter-spacing: 2px;
     text-transform: uppercase; margin-bottom: 10px;
@@ -7316,10 +7332,18 @@
       <button class="evolve-btn-center cc-evolve-btn" id="evolveBtn" disabled>⚡ Evolve (locked)</button>
     </div>
 
-    <div class="cc-card cc-milestones-card">
-      <div class="cc-card-title">Evolution Milestones</div>
+    <!-- Evolution Milestones — collapsed by default. Tester feedback
+         (Ric/Jamie 5 May): Champion view is too dense (380K chars total).
+         The 20-stage milestone ring is reference info, not constantly
+         needed — collapse it so the action block above stays visible
+         without scrolling on phones. -->
+    <details class="cc-card cc-milestones-card cc-acc-card">
+      <summary class="cc-acc-summary">
+        <span class="cc-card-title">Evolution Milestones</span>
+        <span class="cc-acc-arrow">▸</span>
+      </summary>
       <div class="cc-milestones-ring" id="milestonesRing"></div>
-    </div>
+    </details>
   </main>
 
   <!-- ═══════ RIGHT COLUMN ═══════ -->
@@ -7360,9 +7384,15 @@
       <div id="bondPanel"></div>
     </div>
 
-    <div class="cc-card cc-story-card">
-      <div class="cc-card-title-row">
-        <div class="cc-card-title">Chapter <span id="storyChapterNum">—</span> · <span id="storyStageName" style="color:var(--accent);">Whelp</span></div>
+    <!-- Story card — collapsed by default. Narrative copy is read-once
+         per stage; keepers don't need it expanded every time they open
+         the champion view. -->
+    <details class="cc-card cc-story-card cc-acc-card">
+      <summary class="cc-acc-summary">
+        <span class="cc-card-title">📖 Chapter <span id="storyChapterNum">—</span> · <span id="storyStageName" style="color:var(--accent);">Whelp</span></span>
+        <span class="cc-acc-arrow">▸</span>
+      </summary>
+      <div class="cc-story-actions" style="display:flex;justify-content:flex-end;margin-bottom:8px;">
         <button class="story-play-btn" id="storyPlayBtn" onclick="toggleStoryNarration()" title="Narrate">
           <span class="sp-icon">▶</span>
           <span class="sp-label">Play</span>
@@ -7371,7 +7401,7 @@
       <div class="cc-story-text" id="aboutStory">
         Born beneath the twin moons of Elysium, every champion carries a story only their keeper will uncover.
       </div>
-    </div>
+    </details>
   </aside>
 </div><!-- /cc-grid -->
 
