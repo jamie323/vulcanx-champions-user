@@ -6256,7 +6256,7 @@
     <div class="page-hd">
       <div>
         <h2>My Stable</h2>
-        <div class="sub">All champions you own, ranked by power. Click to manage.</div>
+        <div class="sub">Your champions, ranked by power. Click to manage.</div>
       </div>
       <button class="btn-big" onclick="navTo('adopt')">+ Adopt New</button>
     </div>
@@ -6275,7 +6275,7 @@
     <div class="page-hd">
       <div>
         <h2>Choose Your Species</h2>
-        <div class="sub">Each species has its own archetype and trait affinities. You can own up to 10 champions.</div>
+        <div class="sub">Each species has its own traits. You can own up to 10 champions.</div>
       </div>
     </div>
     <div class="species-grid" id="speciesGrid"></div>
@@ -6296,7 +6296,7 @@
     <div class="page-hd">
       <div>
         <h2 id="bloodlineHeading">Choose Bloodline</h2>
-        <div class="sub">Three distinct visual paths within the species. The bloodline is permanent — it shapes your champion across all 50 levels.</div>
+        <div class="sub">Pick a permanent bloodline — distinct art across all 20 stages.</div>
       </div>
     </div>
     <div class="bloodline-grid" id="bloodlineGrid"></div>
@@ -6324,7 +6324,7 @@
     <div class="page-hd">
       <div>
         <h2>Explore the Realm</h2>
-        <div class="sub">Top-ranked champions across all species. See what others are building.</div>
+        <div class="sub">Top-ranked champions across all species.</div>
       </div>
     </div>
     <div class="explore-filters" id="exploreFilters"></div>
@@ -6338,7 +6338,7 @@
     <div class="page-hd">
       <div>
         <h2>🗺️ Adventures</h2>
-        <div class="sub">Send your champion away for stat XP + Evolution Bar progress. Multiple champions can adventure simultaneously. Rewards apply directly — no inventory items, no NFT clutter.</div>
+        <div class="sub">Send champions on adventures. Rewards apply directly to stats + Evolution Bar.</div>
       </div>
     </div>
 
@@ -6925,7 +6925,7 @@
     <div class="page-hd">
       <div>
         <h2>⚔️ The Arena</h2>
-        <div class="sub">Async stat battles vs bots. Pick your stance, watch the result, climb the ladder. Real PvP coming in a later phase.</div>
+        <div class="sub">Pick your stance, fight, climb the ELO ladder.</div>
       </div>
       <!-- Trello (29 Apr): "Fix Arena ranking/ELO naming inconsistency"
            — Header pill said "Your Ranking" but the bracket pill below
@@ -7024,7 +7024,7 @@
 <div class="modal-backdrop" id="challengeModal">
   <div class="modal" style="width: 460px;">
     <h3>🎯 Challenge a Player</h3>
-    <p class="sub">Enter the wallet address of the player you want to duel. They'll see your challenge in their inbox and can pick their own champion + loadout to respond.</p>
+    <p class="sub">Enter the opponent's wallet. They'll get the challenge in their inbox and pick their own loadout.</p>
     <label class="cm-label">Opponent wallet (0x…)</label>
     <input type="text" id="cmWallet" class="cm-input" placeholder="0x1234…abcd" autocomplete="off" />
     <label class="cm-label" style="margin-top:12px;">Message (optional, ≤120 chars)</label>
@@ -7582,7 +7582,7 @@
 <div class="modal-backdrop" id="allocModal">
   <div class="modal" style="width: 460px;">
     <h3>✨ Blessing — Distribute 40 Points</h3>
-    <div class="sub">Drag the sliders to assign points across your traits. Caps still apply — surplus returns to essence. The Blessing also fills your Evolution Bar by 10–25% regardless of distribution.</div>
+    <div class="sub">Distribute 40 points across your traits. Caps still apply — surplus returns to essence. Also fills the Evolution Bar 10–25%.</div>
     <div class="alloc-remaining">
       Points left: <b id="allocLeft">40</b>
     </div>
@@ -7615,7 +7615,7 @@
 <div class="modal-backdrop" id="leaderboardModal">
   <div class="modal" style="width: 480px;">
     <h3>🏆 Champion Leaderboard</h3>
-    <div class="sub">Ranked by Power Score: stage × stage-multiplier + total stats + arena ELO</div>
+    <div class="sub">Ranked by Power Score (stage + stats + ELO).</div>
     <div style="display:flex; gap:4px; margin-bottom:14px;">
       <button class="sp-btn lb-filter active" data-sp="all">All Species</button>
       <button class="sp-btn lb-filter" data-sp="orc">🟢 Orc</button>
