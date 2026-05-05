@@ -6817,6 +6817,12 @@
     font-size: 96px; color: #ff8e6b; letter-spacing: 8px;
     text-shadow: 0 0 50px rgba(255,142,107,0.8), 0 0 100px rgba(255,107,46,0.5);
   }
+  /* Combo intro variant — smaller text, accent color, no letter-spacing
+     since it's a longer string ("🔥 2-RUNE COMBO!") */
+  .cmp-countdown-num.cmp-countdown-combo {
+    font-size: 56px; color: var(--accent); letter-spacing: 2px;
+    text-shadow: 0 0 30px rgba(255,205,107,0.7), 0 0 60px rgba(255,142,46,0.4);
+  }
   .cmp-countdown-sub {
     margin-top: 18px; font-size: 14px; letter-spacing: 4px;
     color: var(--muted); text-transform: uppercase; font-weight: 700;
@@ -15589,7 +15595,32 @@ const VxCampaign = (() => {
   // Combo runs slightly tighter window (×0.85) than single since the
   // player is already in rhythm and shouldn't have full reaction time
   // burning between runes.
+  // Brief combo-intro flash — tester ask (Ric O., 5 May): combos work
+  // really well but a small heads-up before they begin (like the 3-2-1
+  // for the fight start) would help. Reuses the countdown overlay so
+  // the visual language matches: title bar of "🔥 N-RUNE COMBO!" for
+  // ~750ms, then "GO!" for ~300ms, then the runes start.
+  async function comboIntro(runeCount) {
+    const overlay = document.getElementById('cmpCountdownOverlay');
+    const num = document.getElementById('cmpCountdownNum');
+    const sub = document.getElementById('cmpCountdownSub');
+    if (!overlay || !num || !sub) return;
+    overlay.classList.add('open');
+    num.textContent = `🔥 ${runeCount}-RUNE COMBO!`;
+    num.className = 'cmp-countdown-num cmp-countdown-combo';
+    sub.textContent = 'Tap each rune in time';
+    void num.offsetWidth;
+    await new Promise(res => setTimeout(res, 750));
+    num.textContent = 'GO!';
+    num.className = 'cmp-countdown-num fight';
+    sub.textContent = '';
+    void num.offsetWidth;
+    await new Promise(res => setTimeout(res, 300));
+    overlay.classList.remove('open');
+  }
+
   async function qteComboGrid({ runeCount = 2, chapId = 1 } = {}) {
+    await comboIntro(runeCount);
     const results = [];
     for (let i = 0; i < runeCount; i++) {
       const r = await qteReactionGrid({
