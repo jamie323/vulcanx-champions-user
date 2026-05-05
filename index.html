@@ -6541,6 +6541,7 @@
           <li><b>Auto</b> — pure stat resolution (default). Battles resolve from a punch of stat math.</li>
           <li><b>Active</b> — Guitar-Hero reaction grid every turn. Attack: tap fast for <b>×1.4</b>, miss = whiff. Defense: tap fast to block down to <b>×0.4 dmg taken</b>; fail = <b>×1.3 dmg taken</b>.</li>
           <li><b>Combos</b> — from Ch3+ some attacks chain 2–3 runes. All-perfect = up to <b>×2.0</b>; break any rune = 0 damage.</li>
+          <li><b>Traps</b> — from Ch3+ some attacks include <b style="color:#ff8888;">RED ⚠ runes</b>. Tap one and your attack misses. Tap the orange/glowing rune as usual. Ch5 sometimes shows two traps at once.</li>
         </ul>
         <div class="cmp-acc-text" style="font-size:11px;">↑ Toggle the mode using the Combat row at the top of the page.</div>
       </details>
@@ -6926,6 +6927,18 @@
     border-color: #9ad8ff;
     box-shadow: 0 0 24px rgba(154,216,255,0.7), inset 0 0 14px rgba(154,216,255,0.4);
     color: #9ad8ff;
+  }
+  /* Trap rune — red glow, must NOT tap. Pulses softer than the lit
+     rune so it reads as a warning, not a target. */
+  .cmp-qte-circle.trap {
+    background: radial-gradient(circle at center, rgba(255,107,107,0.45), rgba(180,30,30,0.2));
+    border-color: #ff8888;
+    box-shadow: 0 0 18px rgba(255,107,107,0.55), inset 0 0 10px rgba(255,107,107,0.3);
+    color: #ff8888;
+    animation: cmpQtePulse 0.7s ease-in-out infinite alternate;
+  }
+  .cmp-qte-circle.trap::before {
+    content: '⚠'; font-size: 32px;
   }
   .cmp-qte-circle.hit-correct {
     background: rgba(125,255,154,0.4); border-color: #7dff9a;
@@ -15140,9 +15153,36 @@ const VxCampaign = (() => {
   //   Ch1: 4 circles · 1100ms     Ch3: 5 circles · 900ms
   //   Ch5: 6 circles · 700ms
   // Returns { mult, grade, label }
-  async function qteReactionGrid({ kind = 'attack', chapId = 1, labelOverride = null } = {}) {
+  // Trap roll — chance the QTE includes a "danger" rune that the player
+  // must NOT tap. Tester ask (Ric, 4 May): "incorrect circles that you
+  // shouldn't tap." Adds skill-expression — you have to scan + decide
+  // which to hit, not just react to whatever lights up. Scales with
+  // chapter so early stages stay forgiving.
+  //   Ch1-2: 0% (clean reaction game)
+  //   Ch3:   20% chance of 1 trap
+  //   Ch4:   30% chance of 1 trap
+  //   Ch5:   40% chance of 1 trap; 15% chance of 2 traps stacked
+  function rollTrapCount(chapId) {
+    if (chapId < 3) return 0;
+    const r = Math.random();
+    if (chapId >= 5) {
+      if (r < 0.15) return 2;
+      if (r < 0.55) return 1;
+      return 0;
+    }
+    if (chapId >= 4) return r < 0.30 ? 1 : 0;
+    return r < 0.20 ? 1 : 0;
+  }
+
+  async function qteReactionGrid({ kind = 'attack', chapId = 1, labelOverride = null, allowTraps = true } = {}) {
     const circleCount = 4 + Math.floor(chapId / 2);   // 4, 4, 5, 5, 6
     const windowMs = Math.max(550, 1100 - (chapId - 1) * 100);  // 1100→700
+    // Pick trap indices (red runes — must NOT tap). Skip for defense
+    // turns (block QTE) since the visual would conflict with the blue
+    // "block" tint, and the threat model on defense is already tight.
+    let trapCount = (allowTraps && kind === 'attack') ? rollTrapCount(chapId) : 0;
+    // Cap trap count so we always have at least 2 non-trap circles to choose from
+    trapCount = Math.min(trapCount, Math.max(0, circleCount - 2));
     const overlay = document.getElementById('cmpQteOverlay');
     const grid = document.getElementById('cmpQteGrid');
     const label = document.getElementById('cmpQteLabel');
@@ -15152,7 +15192,11 @@ const VxCampaign = (() => {
 
     // Set up label per kind (or use override for combo "RUNE 1/2" etc.)
     label.className = 'cmp-qte-label ' + (kind === 'defend' ? 'defend' : 'attack');
-    label.textContent = labelOverride || (kind === 'defend' ? '🛡 BLOCK · tap the glowing rune' : '⚔️ ATTACK · tap the glowing rune');
+    let baseLabel = labelOverride || (kind === 'defend' ? '🛡 BLOCK · tap the glowing rune' : '⚔️ ATTACK · tap the glowing rune');
+    if (trapCount > 0) {
+      baseLabel += trapCount === 1 ? '  ·  ⚠️ avoid the RED rune!' : '  ·  ⚠️ avoid the RED runes!';
+    }
+    label.textContent = baseLabel;
     fb.textContent = '';
     fb.className = 'cmp-qte-feedback';
 
@@ -15160,11 +15204,22 @@ const VxCampaign = (() => {
     const cols = circleCount <= 4 ? 2 : 3;
     grid.style.gridTemplateColumns = `repeat(${cols}, 70px)`;
     grid.innerHTML = '';
-    const litIdx = Math.floor(Math.random() * circleCount);
+    // Pick trap indices first so we can exclude them from the lit pick.
+    const trapIdxs = new Set();
+    while (trapIdxs.size < trapCount) {
+      trapIdxs.add(Math.floor(Math.random() * circleCount));
+    }
+    // Lit (safe) rune — any index NOT a trap.
+    let litIdx;
+    do { litIdx = Math.floor(Math.random() * circleCount); }
+    while (trapIdxs.has(litIdx));
     const circles = [];
     for (let i = 0; i < circleCount; i++) {
       const c = document.createElement('div');
-      c.className = 'cmp-qte-circle' + (i === litIdx ? ` lit${kind === 'defend' ? ' defend' : ''}` : '');
+      let cls = 'cmp-qte-circle';
+      if (i === litIdx) cls += kind === 'defend' ? ' lit defend' : ' lit';
+      else if (trapIdxs.has(i)) cls += ' trap';
+      c.className = cls;
       c.dataset.idx = String(i);
       grid.appendChild(c);
       circles.push(c);
@@ -15206,6 +15261,12 @@ const VxCampaign = (() => {
         ev.preventDefault();
         const idx = parseInt(ev.currentTarget.dataset.idx, 10);
         const elapsed = performance.now() - start;
+        // Tapped a TRAP rune — penalty harsher than a normal miss
+        // since the player ignored the visual warning.
+        if (trapIdxs.has(idx)) {
+          if (kind === 'defend') return cleanup(1.50, 'weak', 'TRAP! ×1.5 dmg taken', idx);
+          return cleanup(0.0, 'weak', '⚠️ TRAP! attack missed', idx);
+        }
         if (idx !== litIdx) {
           // Wrong circle — full miss
           if (kind === 'defend') return cleanup(1.30, 'weak', 'BLOCK FAILED ×1.3 dmg', idx);
