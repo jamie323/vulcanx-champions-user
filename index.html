@@ -6496,70 +6496,49 @@
 
     <!-- How-it-works panel (collapsible) -->
     <div class="campaign-howitworks" id="cmpHowItWorks">
-      <div class="cmp-how-grid">
-        <div class="cmp-how-card">
-          <div class="cmp-how-ico">⚔️</div>
-          <div class="cmp-how-title">3 Mob Fights + 1 Boss</div>
-          <div class="cmp-how-text">Each chapter has 3 quick mob skirmishes leading up to a unique boss fight. Beat them in order to unlock the boss.</div>
-        </div>
-        <div class="cmp-how-card">
-          <div class="cmp-how-ico">🏔</div>
-          <div class="cmp-how-title">5 Chapters, Progressive</div>
-          <div class="cmp-how-text">Chapter 1 is tuned for stage 5+ champions. Each chapter raises the difficulty gate — Chapter 5 is Voidlord Aetheron, the endgame.</div>
-        </div>
-        <div class="cmp-how-card">
-          <div class="cmp-how-ico">📦</div>
-          <div class="cmp-how-title">Chest Rewards</div>
-          <div class="cmp-how-text">Every boss kill awards 1–5 NFT chests scaled to chapter. Plus your champion gains stat XP from each fight (PvE doesn't cost stamina).</div>
-        </div>
-        <div class="cmp-how-card">
-          <div class="cmp-how-ico">💀</div>
-          <div class="cmp-how-title">Defeat = Retry</div>
-          <div class="cmp-how-text">Lose a fight? No penalty — your champion just needs healing back to full HP, then try again. Maybe equip better gear or evolve first.</div>
-        </div>
-        <div class="cmp-how-card">
-          <div class="cmp-how-ico">🔄</div>
-          <div class="cmp-how-title">Replayable</div>
-          <div class="cmp-how-text">Once cleared, replay any chapter for stat XP and bond. Replays don't award the one-off chest reward but still feed the Campaign Push weekly quest.</div>
-        </div>
-        <div class="cmp-how-card">
-          <div class="cmp-how-ico">👥</div>
-          <div class="cmp-how-title">Co-op Coming Soon</div>
-          <div class="cmp-how-text">Phase 2: invite a friend's champion to tag-team boss fights. Shared boss HP, doubled rewards. Stay tuned.</div>
-        </div>
-      </div>
+      <!-- Tester feedback (Ric O. + Jamie, 5 May): the panel was a 999px /
+           2400-char wall of text with 6 cards + dense paragraphs all
+           visible at once. Restructured into 3 collapsed accordions so
+           opening the help shows headers only — keepers expand the bit
+           they care about. Reset Progress moved out of here entirely
+           (gated behind Admin Mode now). -->
 
-      <!-- Combat Mode toggle (Auto / Active) -->
-      <div style="margin-top:18px; padding-top:18px; border-top:1px solid var(--border);">
-        <div style="font-weight:800; font-size:14px; color:var(--accent); margin-bottom:8px;">⚔️ Combat Mode (NEW)</div>
-        <div style="font-size:12px; color:var(--muted); line-height:1.55; margin-bottom:10px;">
-          <b style="color:var(--text);">Auto</b> resolves attacks based purely on stats (current behavior).<br>
-          <b style="color:var(--accent);">Active</b> = a Guitar-Hero-style reaction grid on every turn. <b style="color:#a4ffb8;">⚔ Attack</b>: tap the glowing rune fast for <b>×1.4 damage</b>; wrong rune or timeout = <b style="color:#ff8888;">attack misses</b>. <b style="color:#9ad8ff;">🛡 Defense</b>: tap fast to block (down to <b>×0.4 damage taken</b>); fail = <b>×1.3 damage taken</b>. <b style="color:#ffcd6b;">🔥 Combos</b>: from Ch3 onward some attacks chain 2-3 runes — all-perfect = up to <b>×2.0 damage</b>, miss any = combo breaks for 0 damage. Difficulty scales by chapter (Ch1 = 4 runes / 1.1s, Ch5 = 6 runes / 0.7s).
-        </div>
+      <details class="cmp-acc">
+        <summary>📖 <b>How Campaign Works</b></summary>
+        <ul class="cmp-acc-list">
+          <li><b>3 mobs + 1 boss</b> per chapter. Beat them in order to unlock the boss.</li>
+          <li><b>5 chapters</b> scaling from stage 5+ (Ch1) to stage 18+ Voidlord Aetheron (Ch5).</li>
+          <li>Boss kill = <b>1–5 NFT chests</b> + stat XP. Lose = no penalty, just heal and retry.</li>
+          <li>Replays don't re-award the chest but still count for the <b>Campaign Push</b> weekly quest.</li>
+          <li><b>Co-op</b> tag-team boss fights coming Phase 2.</li>
+        </ul>
+      </details>
+
+      <details class="cmp-acc">
+        <summary>⚔️ <b>Combat Mode</b> <span class="cmp-acc-tag">NEW</span></summary>
+        <ul class="cmp-acc-list">
+          <li><b>Auto</b> — pure stat resolution (default).</li>
+          <li><b>Active</b> — Guitar-Hero reaction grid every turn. Attack: tap fast for <b>×1.4</b>, miss = whiff. Defense: tap fast to block down to <b>×0.4 dmg taken</b>; fail = <b>×1.3 dmg taken</b>.</li>
+          <li><b>Combos</b> — from Ch3+ some attacks chain 2–3 runes. All-perfect = up to <b>×2.0</b>; break any rune = 0 damage.</li>
+        </ul>
         <div class="cmp-mode-toggle" id="cmpModeToggle">
           <button class="cmp-mode-btn" data-mode="auto">Auto · stat-only</button>
           <button class="cmp-mode-btn" data-mode="active">Active · reaction grid</button>
         </div>
-      </div>
+      </details>
 
-      <!-- Reset (testing) -->
-      <div style="margin-top:18px; padding-top:18px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-        <div>
-          <div style="font-weight:800; font-size:13px; color:var(--accent);">Reset Campaign Progress</div>
-          <div style="font-size:11px; color:var(--muted); margin-top:2px;">Wipes all your chapter clears so you can replay from Chapter 1 (testing).</div>
-        </div>
-        <button id="cmpResetBtn" style="background:rgba(255,107,46,0.15); color:var(--ember); border:1px solid rgba(255,107,46,0.4); padding:8px 14px; border-radius:8px; font-weight:800; font-size:12px; letter-spacing:0.5px; cursor:pointer;">↺ Reset Progress</button>
-      </div>
-
-      <!-- Elemental Affinity primer -->
-      <div style="margin-top:18px; padding-top:18px; border-top:1px solid var(--border);">
-        <div style="font-weight:800; font-size:14px; color:var(--accent); margin-bottom:6px;">⚔️ Elemental Affinities (NEW — Phase 4.5)</div>
-        <div style="font-size:12px; color:var(--muted); line-height:1.55; margin-bottom:8px;">
-          Each species has a primary element. When attacking, your element vs the defender's gives a damage tilt:
-          <b style="color:#a4ffb8;">×1.30 super effective</b> if you counter their type,
-          <b style="color:#ffb088;">×0.77 resisted</b> if they counter yours, otherwise neutral. Stack the deck by picking the right champion for the matchup.
+      <details class="cmp-acc">
+        <summary>🌿 <b>Elemental Affinities</b> <span class="cmp-acc-tag">NEW</span></summary>
+        <div class="cmp-acc-text">
+          Each species has a primary element. Strong matchup = <b style="color:#a4ffb8;">×1.30 dmg</b>, weak = <b style="color:#ffb088;">×0.77 dmg</b>, neutral otherwise. Pick the right champion for the matchup.
         </div>
         <div class="aff-chart-grid" id="affChartGrid"></div>
+      </details>
+
+      <!-- Reset Progress (testing aid) — only shown in Admin Mode now -->
+      <div class="cmp-reset-row" id="cmpResetRow">
+        <span class="cmp-reset-label">Testing only:</span>
+        <button id="cmpResetBtn">↺ Reset Campaign Progress</button>
       </div>
     </div>
 
@@ -6596,6 +6575,15 @@
     </div>
     <button class="btn-secondary" onclick="document.getElementById('cmpChapterModal').classList.remove('open')" style="width:100%;">Close</button>
   </div>
+</div>
+
+<!-- Active-mode pre-fight countdown ("3, 2, 1, FIGHT!") —
+     tester ask (Ric O., 5 May): "A small start screen before it begins
+     would be nice. 3, 2, 1, fight". Gives the player a moment to brace
+     before the first QTE prompt arrives. -->
+<div class="cmp-countdown-overlay" id="cmpCountdownOverlay">
+  <div class="cmp-countdown-num" id="cmpCountdownNum">3</div>
+  <div class="cmp-countdown-sub" id="cmpCountdownSub">Get ready…</div>
 </div>
 
 <!-- Campaign QTE overlay — reaction-grid mechanic. One of N circles
@@ -6645,13 +6633,47 @@
   /* Same fix as .quests-wrap — clear topbar+nav (140px combined). */
   .campaign-wrap { max-width: 1100px; margin: 0 auto; padding: 140px 20px 80px; }
 
-  .campaign-howitworks { display: none; margin: 18px 0 24px; padding: 18px; background: rgba(20,12,20,0.85); border: 1px solid var(--border); border-radius: 12px; }
+  .campaign-howitworks { display: none; margin: 18px 0 24px; padding: 14px; background: rgba(20,12,20,0.85); border: 1px solid var(--border); border-radius: 12px; }
   .campaign-howitworks.open { display: block; }
-  .cmp-how-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-  .cmp-how-card { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,205,107,0.15); border-radius: 10px; padding: 14px; }
-  .cmp-how-ico { font-size: 28px; margin-bottom: 6px; }
-  .cmp-how-title { font-weight: 800; font-size: 13px; color: var(--accent); margin-bottom: 4px; letter-spacing: 0.3px; }
-  .cmp-how-text { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  /* Collapsed accordion sections — replaces the previous 6-card grid +
+     paragraph blocks. Each section header is one line; body is hidden
+     until clicked. Native <details> for zero-JS reliability. */
+  .cmp-acc { border-top: 1px solid var(--border); padding: 10px 4px; }
+  .cmp-acc:first-of-type { border-top: none; padding-top: 4px; }
+  .cmp-acc summary {
+    cursor: pointer; list-style: none; padding: 6px 4px;
+    font-size: 13px; color: var(--text); user-select: none;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .cmp-acc summary::-webkit-details-marker { display: none; }
+  .cmp-acc summary::before {
+    content: '▸'; color: var(--accent); display: inline-block;
+    transition: transform 0.15s; font-size: 10px; width: 10px;
+  }
+  .cmp-acc[open] > summary::before { transform: rotate(90deg); }
+  .cmp-acc summary b { font-weight: 800; }
+  .cmp-acc-tag {
+    background: rgba(255,205,107,0.15); color: var(--accent);
+    padding: 1px 6px; border-radius: 3px; font-size: 9px; font-weight: 800;
+    letter-spacing: 1px; margin-left: 4px;
+  }
+  .cmp-acc-list { margin: 8px 0 4px 22px; padding: 0; font-size: 12px;
+    color: var(--muted); line-height: 1.6; }
+  .cmp-acc-list li { margin-bottom: 4px; }
+  .cmp-acc-list li b { color: var(--text); }
+  .cmp-acc-text { font-size: 12px; color: var(--muted); line-height: 1.55; margin: 8px 0; }
+  /* Reset row — admin-only, hidden by default unless body.admin-on */
+  .cmp-reset-row { display: none; margin-top: 14px; padding-top: 12px;
+    border-top: 1px dashed var(--border);
+    align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  body.admin-on .cmp-reset-row { display: flex; }
+  .cmp-reset-label { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; }
+  .cmp-reset-row #cmpResetBtn {
+    background: rgba(255,107,46,0.15); color: var(--ember);
+    border: 1px solid rgba(255,107,46,0.4);
+    padding: 7px 12px; border-radius: 6px;
+    font-weight: 800; font-size: 11px; letter-spacing: 0.5px; cursor: pointer;
+  }
 
   .campaign-champ-picker { display: flex; gap: 12px; align-items: center; margin: 16px 0 18px; flex-wrap: wrap; font-size: 13px; }
   .cmp-cp-label { color: var(--muted); }
@@ -6774,6 +6796,35 @@
   .cmp-mode-btn.active {
     background: linear-gradient(180deg, rgba(255,205,107,0.18), rgba(255,142,46,0.12));
     border-color: var(--accent); color: var(--accent);
+  }
+
+  /* Pre-fight countdown overlay (Active mode only) */
+  .cmp-countdown-overlay {
+    position: fixed; inset: 0; display: none;
+    z-index: 10001; background: rgba(0,0,0,0.78);
+    align-items: center; justify-content: center; flex-direction: column;
+    -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+    pointer-events: none;
+  }
+  .cmp-countdown-overlay.open { display: flex; }
+  .cmp-countdown-num {
+    font-size: 144px; font-weight: 900; line-height: 1;
+    color: var(--accent); letter-spacing: 4px;
+    text-shadow: 0 0 40px rgba(255,205,107,0.6), 0 0 80px rgba(255,142,46,0.4);
+    animation: cmpCdPulse 0.7s ease-out;
+  }
+  .cmp-countdown-num.fight {
+    font-size: 96px; color: #ff8e6b; letter-spacing: 8px;
+    text-shadow: 0 0 50px rgba(255,142,107,0.8), 0 0 100px rgba(255,107,46,0.5);
+  }
+  .cmp-countdown-sub {
+    margin-top: 18px; font-size: 14px; letter-spacing: 4px;
+    color: var(--muted); text-transform: uppercase; font-weight: 700;
+  }
+  @keyframes cmpCdPulse {
+    0%   { transform: scale(0.4); opacity: 0; }
+    30%  { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1.0); opacity: 1; }
   }
 
   /* QTE overlay — shown during Active-mode hero attacks */
@@ -14948,6 +14999,33 @@ const VxCampaign = (() => {
     };
   }
 
+  // ─── Active-mode pre-fight countdown ──────────────────────
+  // Tester ask (Ric O., 5 May): "A small start screen before it begins
+  // would be nice. 3, 2, 1, fight." Beats: 3 → 2 → 1 → FIGHT! → close.
+  // Each number for 600ms, FIGHT for 500ms. Total ~2.3s.
+  async function preFightCountdown() {
+    const overlay = document.getElementById('cmpCountdownOverlay');
+    const num = document.getElementById('cmpCountdownNum');
+    const sub = document.getElementById('cmpCountdownSub');
+    if (!overlay || !num || !sub) return;
+    overlay.classList.add('open');
+    const beats = [
+      { text: '3', sub: 'Get ready…',  cls: '',      ms: 600 },
+      { text: '2', sub: 'Steady…',     cls: '',      ms: 600 },
+      { text: '1', sub: 'Almost…',     cls: '',      ms: 600 },
+      { text: 'FIGHT!', sub: '',       cls: 'fight', ms: 500 },
+    ];
+    for (const b of beats) {
+      num.textContent = b.text;
+      sub.textContent = b.sub;
+      num.className = 'cmp-countdown-num ' + b.cls;
+      // Re-trigger animation by removing/re-adding the element
+      void num.offsetWidth;
+      await new Promise(res => setTimeout(res, b.ms));
+    }
+    overlay.classList.remove('open');
+  }
+
   // ─── Active-mode QTE (reaction grid) ──────────────────────
   // Tester-driven design (Ric O. + PegaraX, 4 May): a grid of N circles
   // where one lights up at random; player has a brief window to tap the
@@ -15434,7 +15512,8 @@ const VxCampaign = (() => {
 
     const mode = getCombatMode();
     if (mode === 'active') {
-      // Active: interleave QTE with each hero attack, render log live.
+      // Active: pre-fight countdown, then interleave QTE with each turn.
+      await preFightCountdown();
       const logEl = document.getElementById('cmpBmLog');
       const heroBar = document.getElementById('cmpBmHeroHp');
       const foeBar = document.getElementById('cmpBmFoeHp');
