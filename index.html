@@ -6534,7 +6534,7 @@
         <div style="font-weight:800; font-size:14px; color:var(--accent); margin-bottom:8px;">⚔️ Combat Mode (NEW)</div>
         <div style="font-size:12px; color:var(--muted); line-height:1.55; margin-bottom:10px;">
           <b style="color:var(--text);">Auto</b> resolves attacks based purely on stats (current behavior).<br>
-          <b style="color:var(--accent);">Active</b> = a Guitar-Hero-style reaction grid on every turn. <b style="color:#a4ffb8;">⚔ Attack</b>: tap the glowing rune fast for <b>×1.4 damage</b>; wrong rune or timeout = <b style="color:#ff8888;">attack misses</b>. <b style="color:#9ad8ff;">🛡 Defense</b>: tap fast to block (down to <b>×0.4 damage taken</b>); fail = <b>×1.3 damage taken</b>. Difficulty scales by chapter (Ch1 = 4 runes / 1.1s, Ch5 = 6 runes / 0.7s).
+          <b style="color:var(--accent);">Active</b> = a Guitar-Hero-style reaction grid on every turn. <b style="color:#a4ffb8;">⚔ Attack</b>: tap the glowing rune fast for <b>×1.4 damage</b>; wrong rune or timeout = <b style="color:#ff8888;">attack misses</b>. <b style="color:#9ad8ff;">🛡 Defense</b>: tap fast to block (down to <b>×0.4 damage taken</b>); fail = <b>×1.3 damage taken</b>. <b style="color:#ffcd6b;">🔥 Combos</b>: from Ch3 onward some attacks chain 2-3 runes — all-perfect = up to <b>×2.0 damage</b>, miss any = combo breaks for 0 damage. Difficulty scales by chapter (Ch1 = 4 runes / 1.1s, Ch5 = 6 runes / 0.7s).
         </div>
         <div class="cmp-mode-toggle" id="cmpModeToggle">
           <button class="cmp-mode-btn" data-mode="auto">Auto · stat-only</button>
@@ -14958,7 +14958,7 @@ const VxCampaign = (() => {
   //   Ch1: 4 circles · 1100ms     Ch3: 5 circles · 900ms
   //   Ch5: 6 circles · 700ms
   // Returns { mult, grade, label }
-  async function qteReactionGrid({ kind = 'attack', chapId = 1 } = {}) {
+  async function qteReactionGrid({ kind = 'attack', chapId = 1, labelOverride = null } = {}) {
     const circleCount = 4 + Math.floor(chapId / 2);   // 4, 4, 5, 5, 6
     const windowMs = Math.max(550, 1100 - (chapId - 1) * 100);  // 1100→700
     const overlay = document.getElementById('cmpQteOverlay');
@@ -14968,9 +14968,9 @@ const VxCampaign = (() => {
     const fb = document.getElementById('cmpQteFeedback');
     if (!overlay || !grid) return { mult: 1.0, grade: 'good', label: 'GOOD' };
 
-    // Set up label per kind
+    // Set up label per kind (or use override for combo "RUNE 1/2" etc.)
     label.className = 'cmp-qte-label ' + (kind === 'defend' ? 'defend' : 'attack');
-    label.textContent = kind === 'defend' ? '🛡 BLOCK · tap the glowing rune' : '⚔️ ATTACK · tap the glowing rune';
+    label.textContent = labelOverride || (kind === 'defend' ? '🛡 BLOCK · tap the glowing rune' : '⚔️ ATTACK · tap the glowing rune');
     fb.textContent = '';
     fb.className = 'cmp-qte-feedback';
 
@@ -15501,6 +15501,62 @@ const VxCampaign = (() => {
   // damage. Foe attacks auto-resolve. UI updates inline (no separate
   // animateBattle pass) so the rhythm of QTE → result feels tight.
   // Returns a result with the same shape as runBattle, plus QTE stats.
+  // Combo QTE — chains N reaction-grid challenges back-to-back.
+  // Tester ask (Ric O., 4 May): "single button or use a combination of
+  // several buttons to make it more challenging." All-or-nothing rewards:
+  // - 2-rune all-perfect → ×1.7  · 2-rune mixed (any non-perfect) → ×1.4
+  // - 3-rune all-perfect → ×2.0  · 3-rune mixed → ×1.5
+  // - any miss anywhere   → ×0.0 (combo broken, attack whiffs entirely)
+  // Combo runs slightly tighter window (×0.85) than single since the
+  // player is already in rhythm and shouldn't have full reaction time
+  // burning between runes.
+  async function qteComboGrid({ runeCount = 2, chapId = 1 } = {}) {
+    const results = [];
+    for (let i = 0; i < runeCount; i++) {
+      const r = await qteReactionGrid({
+        kind: 'attack',
+        chapId,
+        labelOverride: `🔥 ${runeCount}-RUNE COMBO · ${i + 1} / ${runeCount}`,
+      });
+      results.push(r);
+      if (r.mult === 0) {
+        return {
+          mult: 0,
+          grade: 'weak',
+          label: `COMBO BROKEN at ${i + 1}/${runeCount}!`,
+          isCombo: true, runeCount, completed: i,
+        };
+      }
+    }
+    const allPerfect = results.every(r => r.grade === 'perfect');
+    const mult = runeCount === 3
+      ? (allPerfect ? 2.0 : 1.5)
+      : (allPerfect ? 1.7 : 1.4);
+    const grade = allPerfect ? 'perfect' : 'good';
+    const lbl = allPerfect
+      ? `🔥 ${runeCount}-RUNE PERFECT! ×${mult.toFixed(1)}`
+      : `🔥 ${runeCount}-RUNE COMBO ×${mult.toFixed(1)}`;
+    return { mult, grade, label: lbl, isCombo: true, runeCount, completed: runeCount };
+  }
+
+  // Roll for combo runes count on a hero attack. Chapter-scaled.
+  // Ch1-2 → always 1 (single)
+  // Ch3   → 75% single, 25% 2-rune combo
+  // Ch4   → 65% single, 35% 2-rune
+  // Ch5   → 50% single, 30% 2-rune, 20% 3-rune
+  function rollComboRuneCount(chapId) {
+    const r = Math.random();
+    if (chapId >= 5) {
+      if (r < 0.20) return 3;
+      if (r < 0.50) return 2;
+    } else if (chapId >= 4) {
+      if (r < 0.35) return 2;
+    } else if (chapId >= 3) {
+      if (r < 0.25) return 2;
+    }
+    return 1;
+  }
+
   async function runBattleActive(heroStats, foeStats, heroName, foeName, heroSpecies, foeSpecies, chapId, ui) {
     const heroVsFoe = affinityMatchup(heroSpecies, foeSpecies);
     const foeVsHero = affinityMatchup(foeSpecies, heroSpecies);
@@ -15515,16 +15571,24 @@ const VxCampaign = (() => {
       const isHeroTurn = (heroFirst && turn % 2 === 0) || (!heroFirst && turn % 2 === 1);
       let r;
       if (isHeroTurn) {
-        // ATTACK QTE — reaction grid, multiplier 0.0 (miss) → 1.4 (perfect)
-        const qte = await qteReactionGrid({ kind: 'attack', chapId });
+        // ATTACK QTE — roll for combo (Ch3+ chance of 2-rune; Ch5 also 3-rune)
+        const runeCount = rollComboRuneCount(chapId);
+        const qte = runeCount > 1
+          ? await qteComboGrid({ runeCount, chapId })
+          : await qteReactionGrid({ kind: 'attack', chapId });
         qteTotal++;
-        qteAccSum += Math.min(1.4, qte.mult);
+        qteAccSum += Math.min(2.0, qte.mult);
         if (qte.grade === 'perfect') qtePerfect++;
         if (qte.mult === 0) {
-          // Wrong circle / timeout → attack misses entirely
-          r = { type: 'miss', text: `${heroName} fumbles the strike! [${qte.label}]`, qteGrade: 'weak', dmg: 0 };
+          // Wrong circle / timeout / combo break → attack misses entirely
+          const reason = qte.isCombo ? qte.label : `[${qte.label}]`;
+          r = { type: 'miss', text: `${heroName} fumbles the strike! ${reason}`, qteGrade: 'weak', dmg: 0 };
         } else {
           r = simulateTurnWithMult(heroStats, foeStats, heroName, foeName, heroVsFoe.mult * qte.mult, heroVsFoe.kind, qte);
+          // Decorate combo wins with a richer log line
+          if (qte.isCombo && r.dmg) {
+            r.text = `${heroName} ${qte.grade === 'perfect' ? 'UNLEASHES' : 'lands'} a ${qte.runeCount}-rune combo on ${foeName} for ${r.dmg}!`;
+          }
         }
         if (r.dmg) foeHp = Math.max(0, foeHp - r.dmg);
         log.push({ ...r, side: 'hero', heroHp, foeHp });
