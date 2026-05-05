@@ -2791,7 +2791,12 @@
 
   /* allocation potion modal */
   .alloc-row {
-    display: grid; grid-template-columns: 46px 1fr 40px;
+    /* Tester (5 May): "ferocity text is colliding with slider bar" —
+       label column was 46px but the rendered labels are full trait names
+       ("Ferocity", "Intelligence", "Vitality") + emoji + " · MAX" suffix,
+       routinely 90-130px wide. Bumped to 120px so the longest names
+       ("Intelligence") fit cleanly without overflowing into the slider. */
+    display: grid; grid-template-columns: 120px 1fr 40px;
     align-items: center; gap: 10px; margin-bottom: 10px;
     /* Prevent text selection on the whole row — Sean reported dragging
        AGI slider was selecting row text instead of moving the thumb.
@@ -10482,8 +10487,29 @@ bindIf('feedHero', 'click', () => {
   // reaches max form" — at stage 19 (Legendary, L50) progression is
   // complete; feeding/blessing/potions shouldn't be clickable.
   if (state.stageIdx >= 19) {
-    vxAlert('You have reached the peak. Your champion has become the Ultimate Legendary — no further progression possible.',
-      { title: '🏆 Legendary', icon: '🏆' });
+    // Tester (5 May): "Blessing potion gets blocked before all stats
+    // are maxed. The game shows a max progression message even though
+    // the champion may still have remaining stat growth." Root cause:
+    // at Legendary (stage 19) we blocked all feeding flat with the
+    // "no further progression" message — but if stats aren't at the
+    // L50 cap yet, Blessing CAN still distribute points. Now we check
+    // whether any stat still has headroom and route the keeper to the
+    // right tool (Blessing) instead of dead-ending them.
+    const anyHeadroom = TRAITS.some((t, idx) => {
+      const cur = state.stats[t] || STAGE_FLOORS[state.stageIdx][idx];
+      const cap = capAtLevel(state.level)[idx];
+      return cap - cur > 0;
+    });
+    if (anyHeadroom && (state.inv.alloc || 0) > 0) {
+      vxAlert('Your champion is at Legendary — trait potions can\'t feed further, but you still have stat headroom. Use a ✨ Blessing to distribute points.',
+        { title: '🏆 Legendary · use Blessing', icon: '🏆' });
+    } else if (anyHeadroom) {
+      vxAlert('Your champion is at Legendary — trait potions can\'t feed further, but stats still have headroom. Get a ✨ Blessing from the Shop to distribute points.',
+        { title: '🏆 Legendary · stats not maxed', icon: '🏆' });
+    } else {
+      vxAlert('You have reached the peak. Your champion has become the Ultimate Legendary — no further progression possible.',
+        { title: '🏆 Legendary', icon: '🏆' });
+    }
     return;
   }
   // Trello (28 Apr): block feeding while the champion is on a quest —
@@ -12231,14 +12257,28 @@ document.getElementById('traitPotionModal')?.addEventListener('click', (e) => {
 // EVOLUTION ALBUM — past + current = real art, future = locked '?'
 // ============================================================
 function openEvolutionAlbum() {
-  const champ = _ccCurrent;
-  if (!champ) return;
+  // Tester (5 May): "Nothing happens when you click on Evolution Album."
+  // Root cause: _ccCurrent is only set on the public-share view (when
+  // someone clicks a share link), not on the regular champion-detail
+  // view a keeper opens for their own champ. Falling back to state.championId
+  // + myChampions so the button works in both contexts.
+  let champ = _ccCurrent;
+  if (!champ && typeof state !== 'undefined' && state.championId && typeof myChampions !== 'undefined') {
+    champ = myChampions.find(c => c.id === state.championId);
+  }
+  if (!champ) {
+    if (typeof vxAlert === 'function') {
+      vxAlert('Open a champion first to view its Evolution Album.', { title: 'No champion selected', icon: '📸' });
+    }
+    return;
+  }
   const sp = SPECIES[champ.species_id];
   const bl = sp?.bloodlines?.[champ.bloodline_id];
   if (!sp || !bl) return;
 
   const stages = bl.stages || [];
-  const cur = champ.stage_idx;
+  // myChampions schema uses stageIdx (camelCase); _ccCurrent uses stage_idx.
+  const cur = (champ.stage_idx != null ? champ.stage_idx : champ.stageIdx) ?? 0;
   const total = 20; // GDD: 20-stage arc
 
   const grid = document.getElementById('evoAlbumGrid');
