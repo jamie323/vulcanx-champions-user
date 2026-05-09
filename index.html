@@ -896,20 +896,26 @@
   /* nav bar */
   .main-nav {
     position: fixed; top: 52px; left: 0; right: 0;
-    height: 64px; padding: 0 32px;
+    height: 64px; padding: 0 24px;
     background: linear-gradient(180deg, rgba(20,12,20,0.95), rgba(20,12,20,0.75));
     border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 14px;
+    display: flex; align-items: center; gap: 8px;
     z-index: 96; backdrop-filter: blur(8px);
   }
+  /* QA (8 May): with 9 nav buttons (Home/Stable/Adopt/Guide/Explore/
+     Quests/Campaign/Arena/Ranks) + Admin Mode label, the row was
+     overflowing 1366px laptop viewports — Ranks landed off-screen.
+     Tightened padding/gap/letter-spacing so all 9 fit at 1366px and
+     scroll horizontally on narrower widths (existing mobile rule at
+     line 762 already handles tablet/phone sizes). */
   .nav-btn {
-    padding: 13px 28px; background: transparent;
+    padding: 11px 16px; background: transparent;
     border: 1px solid rgba(255,205,107,0.18); border-radius: 10px;
-    font-size: 15px; font-weight: 700; letter-spacing: 2px;
+    font-size: 13px; font-weight: 700; letter-spacing: 1.2px;
     text-transform: uppercase; cursor: pointer;
     color: var(--muted);
     transition: color 0.18s, background 0.18s, border-color 0.18s, transform 0.15s;
-    display: inline-flex; align-items: center; gap: 8px;
+    display: inline-flex; align-items: center; gap: 6px;
   }
   .nav-btn:hover {
     color: var(--text);
@@ -5315,7 +5321,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260427-active-battle',
+  console.log('%c🛡️ VulcanX Champions · v20260509-leaderboard-rank',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -8826,21 +8832,39 @@ const LEADERBOARD = [
 function renderLeaderboard(filter = 'all') {
   const list = document.getElementById('lbList');
   const SPECIES_ICON = { orc:'🟢', elf:'🌙', goblin:'👺' };
-  const currentPower = computePowerScore();
-  const myEntry = {
+  // Defensive guard (8 May refix): the stub render used to assume a
+  // champion was loaded — currentSpecies / currentBloodline / state.stageIdx
+  // were all unconditional reads. That crashed renderLeaderboard with
+  // "Cannot read properties of undefined" when an anonymous visitor
+  // clicked the new top-nav Ranks button without first signing in,
+  // and the crash happened BEFORE showLeaderboard added the `.open`
+  // class so the modal never appeared. Now we skip the "YOU" entry
+  // entirely if no champion is loaded — live data will show on the
+  // refresh pass anyway. With a champion, the entry renders as before.
+  const sp = (typeof currentSpecies !== 'undefined' && currentSpecies)
+           ? SPECIES[currentSpecies] : null;
+  const bl = (sp && typeof currentBloodline !== 'undefined' && currentBloodline)
+           ? sp.bloodlines?.[currentBloodline] : null;
+  const stIdx = (typeof state !== 'undefined' && state?.stageIdx) ?? 0;
+  const myName = bl?.nameByStage?.[stIdx];
+  const currentPower = (typeof computePowerScore === 'function') ? computePowerScore() : 0;
+  const myEntry = (sp && bl && myName) ? {
     rank: '—',
-    name: SPECIES[currentSpecies].bloodlines[currentBloodline].nameByStage[state.stageIdx],
-    species: currentSpecies, stage: state.stageIdx, level: state.level,
+    name: myName,
+    species: currentSpecies, stage: stIdx,
+    level: (typeof state !== 'undefined' && state?.level) || 1,
     elo: 150, power: currentPower, owner: 'YOU', me: true,
-  };
+  } : null;
   const rows = filter === 'all' ? LEADERBOARD : LEADERBOARD.filter(r => r.species === filter);
   list.innerHTML = '';
   // Phase 2: explicit sort by PowerScore desc, then insert the user
   // in the correct slot. The user's power comes from Combat.powerScore;
   // mock rows still use their stored stub power until real PvP lands.
   const withMe = [...rows].sort((a, b) => b.power - a.power);
-  const meRank = withMe.findIndex(r => r.power < currentPower);
-  if (meRank === -1) withMe.push(myEntry); else withMe.splice(meRank, 0, myEntry);
+  if (myEntry) {
+    const meRank = withMe.findIndex(r => r.power < currentPower);
+    if (meRank === -1) withMe.push(myEntry); else withMe.splice(meRank, 0, myEntry);
+  }
   withMe.forEach((r, i) => {
     const rankLabel = r.me ? '—' : (r.rank || i+1);
     const isTop3 = !r.me && rankLabel <= 3;
@@ -9874,8 +9898,16 @@ let _lbState = { period: 'all', species: 'all' };
 
 async function showLeaderboard() {
   _lbState = { period: 'all', species: 'all' };
-  renderLeaderboard('all');                                // instant stub paint
+  // Open the modal FIRST so any stub-render error (or empty state)
+  // never blocks the modal from appearing — QA found this regression
+  // 8 May when an anonymous visitor clicked the new top-nav Ranks
+  // button before signing in: stub crashed, modal stayed closed.
   document.getElementById('leaderboardModal').classList.add('open');
+  try { renderLeaderboard('all'); } catch (e) {
+    console.warn('[leaderboard] stub render skipped:', e.message);
+    document.getElementById('lbList').innerHTML =
+      '<div style="padding:20px;text-align:center;color:var(--muted);">Loading top 20…</div>';
+  }
   await refreshLiveLeaderboard();
   wireLeaderboardButtons();
 }
@@ -11956,8 +11988,12 @@ function renderBloodlinePicker() {
   const sp_id = adoptFlow.species_id;
   if (!sp_id) { navTo('adopt'); return; }
   const sp = SPECIES[sp_id];
+  // QA (8 May): species labels starting with vowels (Orc, Elf) need
+  // "an", others need "a". Tester-spotted nit. Cheaper than a full
+  // i18n article rule — just a vowel check on the first character.
+  const article = /^[aeiouAEIOU]/.test(sp.label) ? 'an' : 'a';
   document.getElementById('bloodlineHeading').textContent =
-    `Choose a ${sp.label} Bloodline`;
+    `Choose ${article} ${sp.label} Bloodline`;
   const grid = document.getElementById('bloodlineGrid');
   const loreMap = {
     ironfang: 'The traditional warrior bloodline — green-grey skin, bronze pendant, the classic orc warlord.',
