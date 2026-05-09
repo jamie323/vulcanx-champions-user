@@ -4,3 +4,15 @@
 # OS / editor cruft
 .DS_Store
 *.swp
+
+# Bloodline art generation outputs — too large for git (1.6 GB+).
+# Ground truth is the per-stage PNG in evolution20/<species>/<bloodline>/.
+# allbloodlines/ is the staging dir from phase22 batch runs.
+allbloodlines/
+allbloodlines_v1/
+
+# Browser-automation cache from local Playwright/Chrome MCP runs.
+.playwright-mcp/
+
+# Old arena prototype screenshots (pre-Campaign era).
+arena-*.png
