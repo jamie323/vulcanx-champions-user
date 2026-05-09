@@ -53,22 +53,27 @@
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; min-height: 100vh;
-    color: var(--text); overflow-x: hidden;
-    /* Trello (28 Apr — refix): "Mouse wheel does not work" + "scrolling
-       only works when manually dragging the scrollbar". Belt-and-braces:
-       force the page to be the wheel-scroll container and never let a
-       descendant rule override Y-overflow into hidden/clip. */
-    overflow-y: auto;
-    /* Prevent iOS rubber-band + scroll-chaining inside inner scroll
-       containers (modal + arena history). Vertical page scroll is the
-       only scroll users should experience on the main views. */
-    overscroll-behavior: contain;
+    color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
                  system-ui, sans-serif;
     background:
       radial-gradient(ellipse at top, #20101a 0%, #0a0608 60%),
       #050305;
   }
+  /* Trello (5 May — re-refix): the previous belt-and-braces pass put
+     `overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain`
+     on BOTH html and body. That silently created two nested scroll
+     contexts (per CSS spec, `overflow-x: hidden` forces `overflow-y`
+     to compute to `auto` even if you set `visible`). Body had no
+     overflowing content (matched the active view's height), so wheel
+     events landed on body, found nothing to scroll, and `contain`
+     blocked them from chaining up to html. Result: scrollbar drag
+     worked, mouse wheel didn't. Fix: keep all page-level scroll +
+     overflow rules on `html` alone; leave `body` defaulted to
+     `visible` so wheel events pass straight through to html. Inner
+     scroll containers (modals, arena history) handle their own
+     overscroll-behavior locally — see `.modal-body` etc. */
+  html { overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; }
   body { min-height: 100vh; }
 
   /* =========== VIEW SYSTEM =========== */
@@ -2794,9 +2799,12 @@
     /* Tester (5 May): "ferocity text is colliding with slider bar" —
        label column was 46px but the rendered labels are full trait names
        ("Ferocity", "Intelligence", "Vitality") + emoji + " · MAX" suffix,
-       routinely 90-130px wide. Bumped to 120px so the longest names
-       ("Intelligence") fit cleanly without overflowing into the slider. */
-    display: grid; grid-template-columns: 120px 1fr 40px;
+       routinely 90-130px wide. Bumped to 120px on 5 May, then again to
+       144px on 8 May after a follow-up Trello card "blessing window has
+       elements that need realigning" — the longest possible label
+       "💎 Intelligence · MAX" still touched the slider at 120px on
+       narrower viewports. */
+    display: grid; grid-template-columns: 144px 1fr 40px;
     align-items: center; gap: 10px; margin-bottom: 10px;
     /* Prevent text selection on the whole row — Sean reported dragging
        AGI slider was selecting row text instead of moving the thumb.
@@ -4808,7 +4816,14 @@
   .cc-portrait img {
     width: 100%; height: 100%;
     object-fit: cover;
+    /* Trello (8 May): "visible element behind Champion image". Defensive —
+       force the IMG above the cc-aura sibling, and hide the broken-image
+       icon while src is still empty (during the brief window before
+       loadChampion sets the src). */
+    position: relative; z-index: 2;
   }
+  .cc-portrait img:not([src]),
+  .cc-portrait img[src=""] { visibility: hidden; }
   .cc-aura {
     position: absolute; inset: 0; pointer-events: none;
     background: radial-gradient(ellipse at 50% 70%, rgba(255,140,60,0.25) 0%, transparent 55%);
@@ -5623,6 +5638,10 @@
   <button class="nav-btn" data-view="quests" title="Quests — send champions on adventures"><span class="nav-ico">🗺️</span><span class="nav-txt">Quests</span></button>
   <button class="nav-btn" data-view="campaign" title="Campaign — solo PvE story mode (5 chapters)"><span class="nav-ico">🏔</span><span class="nav-txt">Campaign</span></button>
   <button class="nav-btn" id="arenaNavBtn" title="Arena — battle other champions"><span class="nav-ico">⚔️</span><span class="nav-txt">Arena</span></button>
+  <!-- Trello (8 May): "leaderboard somewhere in the app — people wanna
+       see where their hero is ranked". Top-nav button is always-on,
+       opens the modal that fetches /functions/v1/leaderboard live. -->
+  <button class="nav-btn" id="leaderboardNavBtn" title="Leaderboard — top 20 champions, all-time + this week"><span class="nav-ico">🏆</span><span class="nav-txt">Ranks</span></button>
   <label class="nav-admin">
     <input type="checkbox" id="adminToggle"/> 🛠 Admin Mode
   </label>
@@ -5733,6 +5752,8 @@
       <button class="howto-tab" data-tab="ht-equipment">⚔️ Equipment</button>
       <button class="howto-tab" data-tab="ht-quests">🗺️ Quests</button>
       <button class="howto-tab" data-tab="ht-arena">🛡️ Arena</button>
+      <button class="howto-tab" data-tab="ht-leaderboard">🏆 Ranks</button>
+      <button class="howto-tab" data-tab="ht-campaign">🗡️ Campaign</button>
       <button class="howto-tab" data-tab="ht-evolve">⚡ Evolve</button>
       <button class="howto-tab" data-tab="ht-daily">🔥 Daily</button>
       <button class="howto-tab" data-tab="ht-bond">💞 Bond</button>
@@ -5773,22 +5794,32 @@
         </div>
         <div class="howto-feature-card">
           <div class="ic">🛡️</div>
-          <h4>5. Battle</h4>
-          <p>Arena vs bots. Pick stance + ability, watch the animated reveal, climb the ELO ladder.</p>
+          <h4>5. Arena</h4>
+          <p>Async stat battles vs bots. Pick stance + ability, watch the animated reveal, climb the ELO ladder.</p>
+        </div>
+        <div class="howto-feature-card">
+          <div class="ic">🗡️</div>
+          <h4>6. Campaign</h4>
+          <p>5 chapters, 4 fights each (3 mobs + boss). Auto or Active (tap-the-rune) combat. Boss kills earn NFT chests.</p>
         </div>
         <div class="howto-feature-card">
           <div class="ic">⚡</div>
-          <h4>6. Evolve</h4>
+          <h4>7. Evolve</h4>
           <p>At each gate level (L3, 5, 7, 10…) burn an Evolution Potion to transform to the next stage.</p>
         </div>
         <div class="howto-feature-card">
           <div class="ic">🔥</div>
-          <h4>7. Daily Streak</h4>
+          <h4>8. Daily Streak</h4>
           <p>Log in every day for a 7-day reward ladder. Miss a day → streak resets. Day 7 is the big one.</p>
         </div>
         <div class="howto-feature-card">
           <div class="ic">🏆</div>
-          <h4>8. Legendary</h4>
+          <h4>9. Ranks</h4>
+          <p>Live all-time + weekly leaderboards (Mon 16:00 UTC reset). Your champion's rank shows on its profile. Embedded on VulcanX.</p>
+        </div>
+        <div class="howto-feature-card">
+          <div class="ic">👑</div>
+          <h4>10. Legendary</h4>
           <p>Stage 20 at L50. Your Legendary becomes an animated on-chain NFT. Trade, showcase, pass it down.</p>
         </div>
       </div>
@@ -6004,6 +6035,140 @@
       <div class="howto-tip">
         <span class="ti">🤖</span>
         <div><b>Bots match your fill ratio.</b> A fresh L1 player faces a fresh L1 bot — no more 1-shot defeats. Bot equipment rarity scales with bracket: Whelpling matches mostly Common, Legendary fights see real Legendary gear.</div>
+      </div>
+      <div class="howto-tip">
+        <span class="ti">🏆</span>
+        <div><b>See your rank live.</b> Your champion's global rank shows on the rank pill on the champion view (click it to open the Leaderboard). Rank pulls from the same all-time + weekly Leaderboard available in the top nav under <b>Ranks</b>.</div>
+      </div>
+    </section>
+
+    <!-- LEADERBOARD / RANKS -->
+    <section id="ht-leaderboard" class="howto-panel">
+      <div class="panel-icon">🏆</div>
+      <h2 style="text-align:center;">The Leaderboard</h2>
+      <p class="lead" style="text-align:center;">
+        Two leaderboards run in parallel: an all-time top-20 by Power Score, and a weekly top-20 by ELO gained in arena matches. Same screen, switchable at the top.
+      </p>
+
+      <h3>Where to find it</h3>
+      <ul>
+        <li><b>Top nav → 🏆 Ranks</b> — always-on, opens the leaderboard modal from any view.</li>
+        <li><b>Champion view → rank pill</b> — your champion's global rank ("Iron III · #234") sits on the pill above the portrait. Click the pill to jump straight to the leaderboard.</li>
+      </ul>
+
+      <h3>The two boards</h3>
+      <div class="howto-feature-grid">
+        <div class="howto-feature-card">
+          <div class="ic">⏳</div>
+          <h4>All-time</h4>
+          <p>Top 20 by <b>Power Score</b> — a single number combining stage, stats, equipment, and ELO. Updates instantly when any champion levels up, evolves, or wins a fight.</p>
+        </div>
+        <div class="howto-feature-card">
+          <div class="ic">📅</div>
+          <h4>This week</h4>
+          <p>Top 20 by <b>ELO gained</b> in arena matches inside the current weekly window. Resets every <b>Monday at 16:00 UTC (4pm GMT)</b>. New window opens immediately, scores start from 0.</p>
+        </div>
+      </div>
+
+      <h3>What's shown per row</h3>
+      <ul>
+        <li><b>Rank</b> + your champion's name (top-3 highlighted in gold).</li>
+        <li><b>Species + level + stage</b>.</li>
+        <li><b>Owner wallet</b> — truncated public address (e.g. <code>0x1a2b…f9e8</code>).</li>
+        <li><b>Score</b> — Power Score (all-time) or ELO gained + match count (weekly).</li>
+        <li><b>Your row</b> — highlighted inline if you're in the top 20, or appended below as <b>YOU · #234</b> if you're further down.</li>
+      </ul>
+
+      <h3>Filter by species</h3>
+      <p>The toggle row above the list filters to a single species (Orc / Elf / Goblin / All). Useful for "who's the top Wolfkin?"-style flexes when more bloodlines come online.</p>
+
+      <div class="howto-tip">
+        <span class="ti">🌐</span>
+        <div><b>Embedded on VulcanX.</b> The same leaderboard is exposed as a public API and embedded on the main VulcanX site, so anyone can see who's at the top — wallet not required.</div>
+      </div>
+    </section>
+
+    <!-- CAMPAIGN -->
+    <section id="ht-campaign" class="howto-panel">
+      <div class="panel-icon">🗡️</div>
+      <h2 style="text-align:center;">The Campaign</h2>
+      <p class="lead" style="text-align:center;">
+        Five chapters of PvE, scaling from stage 5 to the Voidlord at stage 19. Beat each chapter's
+        three mobs to unlock the boss; defeat the boss to earn NFT chests and climb to the next chapter.
+        Pure single-player — no opponents, no ELO. Lose = no penalty, just retry.
+      </p>
+
+      <h3>The five chapters</h3>
+      <div class="howto-feature-grid">
+        <div class="howto-feature-card"><div class="ic">⚒️</div><h4>Ch1 · Pit Trials</h4><p>Stage 5+ · Goblin warlord <b>Skarn the Whelp-Eater</b> · 1 NFT chest</p></div>
+        <div class="howto-feature-card"><div class="ic">💀</div><h4>Ch2 · Bone Coliseum</h4><p>Stage 8+ · Lich queen <b>Vexora the Bone Empress</b> · 2 chests</p></div>
+        <div class="howto-feature-card"><div class="ic">🌿</div><h4>Ch3 · Thornwood Hollow</h4><p>Stage 11+ · Treant warden <b>Thornwarden Mossback</b> · 2 chests</p></div>
+        <div class="howto-feature-card"><div class="ic">🔥</div><h4>Ch4 · Inferno Throne</h4><p>Stage 14+ · Demon king <b>Inferno-King Pyrrhos</b> · 3 chests</p></div>
+        <div class="howto-feature-card"><div class="ic">🌌</div><h4>Ch5 · Voidlord's End</h4><p>Stage 17+ · Void dragon <b>Voidlord Aetheron</b> · 5 chests · Apex run</p></div>
+      </div>
+
+      <h3>Combat Mode — Auto or Active</h3>
+      <p style="text-align:center; max-width:640px; margin:0 auto 16px;">
+        Pick once on the Campaign main page (next to the champion picker) — every battle in the run uses your choice.
+        The toggle persists across sessions.
+      </p>
+      <div class="howto-feature-grid">
+        <div class="howto-feature-card">
+          <div class="ic">🤖</div>
+          <h4>Auto</h4>
+          <p>Pure stat resolution. Both fighters slug it out using STR, VIT, AGI, FER + your weapon and elemental affinity. Fast and deterministic — pick the right champion for the matchup, then watch.</p>
+        </div>
+        <div class="howto-feature-card">
+          <div class="ic">🎮</div>
+          <h4>Active</h4>
+          <p>Guitar-Hero reaction grid every turn. Tap the orange/glowing rune to attack — perfect timing = <b>×1.4 dmg</b>. On defense, tap fast to block down to <b>×0.4 dmg taken</b>; fail = <b>×1.3 taken</b>. Skill can flip a losing matchup.</p>
+        </div>
+      </div>
+
+      <h3>Active Combat — combos &amp; traps</h3>
+      <div class="howto-twocol">
+        <div class="col">
+          <h5>🔗 Combos (Ch3+)</h5>
+          <p>Some attacks chain 2–3 runes back-to-back. All-perfect = up to <b>×2.0 dmg</b>. Break any rune in the chain = <b>0 dmg</b>. Watch the rhythm.</p>
+        </div>
+        <div class="col">
+          <h5 style="color:#ff8888;">⚠ Traps (Ch3+)</h5>
+          <p>Some attacks include <b style="color:#ff8888;">RED runes</b>. <b>Do NOT tap them.</b> One trap tap = your attack misses entirely. Tap the orange/glowing rune as usual. Ch5 sometimes shows two traps at once.</p>
+        </div>
+      </div>
+
+      <h3>Server-side resolution</h3>
+      <p>
+        Every campaign fight is re-run server-side using the same battle resolver as the Arena.
+        For Auto mode the server's outcome is canonical — the client can't fake a win. For Active mode,
+        QTE skill is allowed to flip a winnable matchup, but a stomp loss (foe ends with &gt;70% HP)
+        won't be accepted as a claimed win. Your progress is also reconciled cross-device on every fight.
+      </p>
+
+      <h3>Rewards &amp; gating</h3>
+      <ul>
+        <li><b>3 mobs + 1 boss</b> per chapter, fought in order. Beat all 3 mobs to unlock the boss.</li>
+        <li><b>Boss kill</b> = 1–5 NFT chests (escalates per chapter) + stat XP for your champion.</li>
+        <li><b>Replays</b> don't re-award the chest, but still count for the <b>Campaign Push</b> weekly quest.</li>
+        <li><b>Loss</b> = no penalty. Heal up, swap gear, try again.</li>
+        <li><b>Stage gates:</b> Ch1 needs stage 5+, Ch2 needs 8+, Ch3 11+, Ch4 14+, Ch5 17+.</li>
+      </ul>
+
+      <h3>Elemental affinities</h3>
+      <p>
+        Each species has a primary element. Strong matchup = <b style="color:#a4ffb8;">×1.30 dmg</b>,
+        weak = <b style="color:#ffb088;">×0.77 dmg</b>, neutral otherwise. Bring the right champion for the
+        chapter — Ch1 favours light/aero (vs goblin toxic), Ch5 favours fire/aero (vs drakkin ice). The
+        affinity chart on the Campaign page shows every matchup at a glance.
+      </p>
+
+      <div class="howto-tip">
+        <span class="ti">🤝</span>
+        <div><b>Co-op tag-team boss fights</b> are coming in a later phase. For now, every chapter is solo.</div>
+      </div>
+      <div class="howto-tip warn">
+        <span class="ti">🎮</span>
+        <div><b>Active mode tip:</b> the orange rune appears in a different cell each turn. Don't autopilot — watch the grid. The trap runes in Ch3+ are designed to punish reflex-only tappers.</div>
       </div>
     </section>
 
@@ -6745,10 +6910,17 @@
     aspect-ratio: 1 / 1; position: relative; overflow: hidden;
     background: linear-gradient(135deg, var(--panel), #2a1820);
   }
-  .cmp-cc-art img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
+  .cmp-cc-art img {
+    width: 100%; height: 100%; object-fit: cover;
+    object-position: center top; display: block;
+    /* Trello (8 May): keep the boss IMG above its emoji fallback so a
+       slow-loading image doesn't show the fallback bleeding through. */
+    position: relative; z-index: 2;
+  }
   .cmp-cc-art-fallback {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
     font-size: 60px; opacity: 0.4;
+    z-index: 1;
   }
   .cmp-cc-state-badge {
     position: absolute; top: 8px; right: 8px;
@@ -7691,7 +7863,14 @@
 <div class="modal-backdrop" id="leaderboardModal">
   <div class="modal" style="width: 480px;">
     <h3>🏆 Champion Leaderboard</h3>
-    <div class="sub">Ranked by Power Score (stage + stats + ELO).</div>
+    <div class="sub" id="lbSubtitle">Ranked by Power Score (stage + stats + ELO).</div>
+    <!-- Period toggle (8 May): all-time vs current week. Weekly resets
+         every Monday 16:00 UTC (4pm GMT) and is sorted by ELO gained
+         in arena matches during the window. -->
+    <div style="display:flex; gap:4px; margin-bottom:8px;">
+      <button class="sp-btn lb-period active" data-period="all">⏳ All-time</button>
+      <button class="sp-btn lb-period" data-period="week">📅 This week</button>
+    </div>
     <div style="display:flex; gap:4px; margin-bottom:14px;">
       <button class="sp-btn lb-filter active" data-sp="all">All Species</button>
       <button class="sp-btn lb-filter" data-sp="orc">🟢 Orc</button>
@@ -7700,6 +7879,8 @@
     </div>
     <div id="lbList" style="max-height: 380px; overflow-y: auto;
          font-size: 12px;"></div>
+    <div id="lbResetTimer" style="font-size:10px;color:var(--muted);
+         margin-top:8px;text-align:center;display:none;"></div>
     <button class="btn-primary" id="lbCloseBtn" style="margin-top:14px;">Close</button>
   </div>
 </div>
@@ -9634,12 +9815,184 @@ function computePowerScore() {
   });
 }
 
-function showLeaderboard() {
-  renderLeaderboard('all');
+// Phase 8 (8 May): the LEADERBOARD const above is the dev-stub used
+// when the backend hasn't loaded yet (or is unreachable). On modal
+// open we fetch the live top-20 from /functions/v1/leaderboard,
+// passing the connected wallet so the response highlights the
+// caller's rank. Supports period=all (default) and period=week.
+// Weekly window resets every Monday 16:00 UTC (4pm GMT).
+// Phase 8 (8 May): per-champion rank lookup. Returns the global rank
+// of one champion (default by power_score) so the champion-profile
+// view can show "Iron III · #234" inline on the rank pill.
+async function apiChampionRank(championId, { period = 'all', sort = 'power_score' } = {}) {
+  const params = new URLSearchParams({ id: championId, period, sort });
+  const res = await apiFetch(`${FN_BASE}/champion_rank?${params}`);
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(`${data.error || 'http_'+res.status}: ${data.message || ''}`.trim());
+  }
+  return res.json(); // { champion_id, rank, total_count, sort, period, score, ... }
+}
+
+// Fetch + paint the active champion's global rank suffix. Called from
+// the main champion render path; failures are silent (rank pill keeps
+// showing tier+division alone).
+async function refreshChampionGlobalRank(championId) {
+  if (!championId) return;
+  try {
+    const resp = await apiChampionRank(championId, { period: 'all', sort: 'power_score' });
+    const pill = document.getElementById('rankPill');
+    if (!pill) return;
+    if (resp.rank && resp.total_count) {
+      pill.textContent = `${state.rank.tier} ${state.rank.division} · #${resp.rank}`;
+      pill.title = `Global rank #${resp.rank} of ${resp.total_count.toLocaleString()} — click to open leaderboard`;
+    }
+  } catch (e) {
+    // Backend not reachable / champion not yet visible to ranking — keep
+    // the unsuffixed pill text.
+    console.debug('[champion_rank] skipped:', e.message);
+  }
+}
+
+async function apiLeaderboard({ period = 'all', sort = 'power_score', species, bloodline } = {}) {
+  const params = new URLSearchParams({ period, sort });
+  if (species)   params.set('species', species);
+  if (bloodline) params.set('bloodline', bloodline);
+  const wallet = (typeof getWallet === 'function') ? getWallet() : null;
+  if (wallet) params.set('include_me', wallet);
+  const res = await apiFetch(`${FN_BASE}/leaderboard?${params}`);
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(`${data.error || 'http_'+res.status}: ${data.message || ''}`.trim());
+  }
+  return res.json();
+}
+
+// In-memory cache of the current modal state so the period/species
+// buttons can re-fire the right query.
+let _lbState = { period: 'all', species: 'all' };
+
+async function showLeaderboard() {
+  _lbState = { period: 'all', species: 'all' };
+  renderLeaderboard('all');                                // instant stub paint
   document.getElementById('leaderboardModal').classList.add('open');
+  await refreshLiveLeaderboard();
+  wireLeaderboardButtons();
 }
 function closeLeaderboard() {
   document.getElementById('leaderboardModal').classList.remove('open');
+}
+
+async function refreshLiveLeaderboard() {
+  const { period, species } = _lbState;
+  try {
+    const resp = await apiLeaderboard({
+      period,
+      species: species === 'all' ? undefined : species,
+    });
+    renderLiveLeaderboard(resp);
+    updateLeaderboardSubtitle(resp);
+  } catch (e) {
+    console.warn('[leaderboard] live fetch failed, keeping stub:', e.message);
+  }
+}
+
+function wireLeaderboardButtons() {
+  // Period toggle
+  document.querySelectorAll('.lb-period').forEach(btn => {
+    if (btn._wired) return;
+    btn._wired = true;
+    btn.addEventListener('click', async () => {
+      _lbState.period = btn.dataset.period;
+      document.querySelectorAll('.lb-period').forEach(b => b.classList.toggle('active', b === btn));
+      await refreshLiveLeaderboard();
+    });
+  });
+  // Species filter
+  document.querySelectorAll('.lb-filter').forEach(btn => {
+    if (btn._wired) return;
+    btn._wired = true;
+    btn.addEventListener('click', async () => {
+      _lbState.species = btn.dataset.sp;
+      document.querySelectorAll('.lb-filter').forEach(b => b.classList.toggle('active', b === btn));
+      await refreshLiveLeaderboard();
+    });
+  });
+}
+
+function updateLeaderboardSubtitle(resp) {
+  const sub = document.getElementById('lbSubtitle');
+  const timer = document.getElementById('lbResetTimer');
+  if (!sub) return;
+  if (resp.period === 'week') {
+    sub.textContent = 'Weekly — ranked by ELO gained in the current window.';
+    if (resp.week_end && timer) {
+      const end = new Date(resp.week_end);
+      const fmt = end.toUTCString().replace(':00 GMT', ' GMT');
+      timer.textContent = `Resets at ${fmt}`;
+      timer.style.display = '';
+    }
+  } else {
+    sub.textContent = 'All-time — ranked by Power Score (stage + stats + ELO).';
+    if (timer) timer.style.display = 'none';
+  }
+}
+
+// Render the live API response (top 20 + optional "me" rank).
+function renderLiveLeaderboard(resp) {
+  const list = document.getElementById('lbList');
+  const SPECIES_ICON = { orc:'🟢', elf:'🌙', goblin:'👺', demon:'😈',
+                         drakkin:'🐉', dwarf:'⚒️', beastkin:'🐺', wraith:'👻' };
+  list.innerHTML = '';
+  const isWeek = resp.period === 'week';
+
+  if (!resp.leaderboard || resp.leaderboard.length === 0) {
+    list.innerHTML = `<div style="padding:30px;text-align:center;color:var(--muted);">
+      ${isWeek ? 'No matches yet this week. Be the first.' : 'No champions ranked yet.'}
+    </div>`;
+    return;
+  }
+
+  const rows = resp.leaderboard.map(r => ({ ...r, me: false }));
+  const meInTop = resp.me ? rows.findIndex(r => r.champion_id === resp.me.champion_id) : -1;
+  if (meInTop >= 0) rows[meInTop].me = true;
+  const includeMeBelow = resp.me && meInTop === -1 && (resp.me.rank || -1) > 0;
+
+  rows.forEach((r) => {
+    const isTop3 = !r.me && r.rank <= 3;
+    const icon = SPECIES_ICON[r.species_id] || '◇';
+    const score = isWeek
+      ? `${r.weekly_elo_gained >= 0 ? '+' : ''}${r.weekly_elo_gained}<span class="e"> ELO · ${r.weekly_matches}m</span>`
+      : `${(r.power_score || 0).toLocaleString()}<span class="e"> pwr</span>`;
+    list.insertAdjacentHTML('beforeend',
+      `<div class="lb-row ${r.me?'me':''}">
+        <div class="lb-rank ${isTop3?'top3':''}">${r.me?'YOU':'#'+r.rank}</div>
+        <div class="lb-icon">${icon}</div>
+        <div class="lb-info">
+          <div class="lb-name">${r.name || '(unnamed)'}</div>
+          <div class="lb-detail">${r.species_id} · L${r.level} · stage ${r.stage_idx + 1} · ${r.owner || ''}</div>
+        </div>
+        <div class="lb-score">${score}</div>
+      </div>`);
+  });
+
+  if (includeMeBelow) {
+    const m = resp.me;
+    const score = isWeek
+      ? `${m.weekly_elo_gained >= 0 ? '+' : ''}${m.weekly_elo_gained}<span class="e"> ELO · ${m.weekly_matches}m</span>`
+      : `${(m.power_score || 0).toLocaleString()}<span class="e"> pwr</span>`;
+    list.insertAdjacentHTML('beforeend',
+      `<div class="lb-row lb-row-divider"><div class="lb-rank">…</div></div>
+       <div class="lb-row me">
+         <div class="lb-rank">YOU · #${m.rank}</div>
+         <div class="lb-icon">${SPECIES_ICON[m.species_id] || '◇'}</div>
+         <div class="lb-info">
+           <div class="lb-name">${m.name || '(unnamed)'}</div>
+           <div class="lb-detail">${m.species_id} · L${m.level} · stage ${m.stage_idx + 1}</div>
+         </div>
+         <div class="lb-score">${score}</div>
+       </div>`);
+  }
 }
 
 // ============================================================
@@ -10006,8 +10359,24 @@ function render() {
   document.getElementById('stageFrame').classList.toggle('legend', !!stage.legend);
   document.getElementById('levelBadge').textContent =
     'L ' + String(state.level).padStart(2,'0');
-  document.getElementById('rankPill').textContent =
-    state.rank.tier + ' ' + state.rank.division;
+  // Trello (8 May): show the leaderboard rank inline in the pill so
+  // keepers can see "where their hero is ranked" at a glance. Tier +
+  // division still displays first; the global rank is appended async
+  // by refreshChampionGlobalRank() once the API lands. While waiting,
+  // we render just the tier+division so the pill never goes blank.
+  const _rankPill = document.getElementById('rankPill');
+  _rankPill.textContent = state.rank.tier + ' ' + state.rank.division;
+  _rankPill.style.cursor = 'pointer';
+  _rankPill.title = 'Click to open the leaderboard';
+  if (!_rankPill._wired) {
+    _rankPill._wired = true;
+    _rankPill.addEventListener('click', () => {
+      if (typeof showLeaderboard === 'function') showLeaderboard();
+    });
+  }
+  if (state.championId && typeof refreshChampionGlobalRank === 'function') {
+    refreshChampionGlobalRank(state.championId);  // fire-and-forget
+  }
   document.getElementById('topChampTitle').textContent =
     `${speciesCfg.label} · ${bloodlineCfg.label}`;
   // Phase 2: live PowerScore pill — recomputed every render so it
@@ -10605,7 +10974,8 @@ bindIf('allocPotionRow', 'click', (e) => {
 });
 bindIf('allocApply', 'click', applyAllocation);
 bindIf('allocCancel', 'click', closeAllocModal);
-bindIf('globalRankBar', 'click', showLeaderboard);
+bindIf('globalRankBar', 'click', showLeaderboard);  // (legacy; kept for any old DOM)
+bindIf('leaderboardNavBtn', 'click', showLeaderboard);
 document.querySelectorAll('.lb-filter').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.lb-filter').forEach(b => b.classList.remove('active'));
@@ -10883,22 +11253,38 @@ async function apiListChampions() {
   return (data.champions || []).map(mapChampion);
 }
 
-// Phase 4.5 — Campaign-mode fight logging. Trust-client (server doesn't
-// re-simulate the battle yet); endpoint validates ownership + chapter
-// gating + idempotency, then writes the campaign_chapter_complete event
-// that the quest hub reads to award Conquer-the-X chests.
-async function apiCampaignBattle({ champion_id, chapter_id, fight_key, won, query_only, reset }) {
+// Phase 5 — server-authoritative campaign fight resolution. The server
+// now re-runs the battle via the same runBattle resolver as the Arena
+// and decides the outcome itself. For Auto mode the server result is
+// canonical; for Active mode QTE skill can flip a server-loss into a
+// win when the matchup wasn't a stomp (server detects 'stomp_loss'
+// claims and rejects them as suspicious).
+//
+// Backwards-compat note: response now includes optional `battle` (the
+// resolver's events) so the frontend can animate from server-truth in
+// a future commit. Existing callers that only read { progress, recorded,
+// awards_chest, chest_count } continue to work unchanged.
+async function apiCampaignBattle({
+  champion_id, chapter_id, fight_key, won,
+  stance, ability_id, equipped, fight_mode, qte_score,
+  query_only, reset,
+}) {
   const res = await apiFetch(`${FN_BASE}/campaign_battle`, {
     method: 'POST',
     headers: AUTH_HEADERS,
-    body: JSON.stringify({ wallet: getWallet(), champion_id, chapter_id, fight_key, won, query_only, reset }),
+    body: JSON.stringify({
+      wallet: getWallet(),
+      champion_id, chapter_id, fight_key, won,
+      stance, ability_id, equipped, fight_mode, qte_score,
+      query_only, reset,
+    }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const code = data.error || `http_${res.status}`;
     throw new Error(`${code}: ${data.message || ''}`.trim());
   }
-  return data;  // { ok, progress, event_id?, recorded, awards_chest, chest_count }
+  return data;  // { ok, progress, event_id?, recorded, awards_chest, chest_count, server_resolved?, server_won?, battle? }
 }
 
 async function apiCreateChampion({ species_id, bloodline_id, name }) {
@@ -12273,11 +12659,16 @@ function openEvolutionAlbum() {
   // Tester (5 May): "Nothing happens when you click on Evolution Album."
   // Root cause: _ccCurrent is only set on the public-share view (when
   // someone clicks a share link), not on the regular champion-detail
-  // view a keeper opens for their own champ. Falling back to state.championId
-  // + myChampions so the button works in both contexts.
+  // view a keeper opens for their own champ. Fall back to the active-
+  // champion id (state.championId OR activeChampionId — the codebase
+  // treats them as interchangeable; whichever is set wins) and look it
+  // up in myChampions so the button works in both contexts.
   let champ = _ccCurrent;
-  if (!champ && typeof state !== 'undefined' && state.championId && typeof myChampions !== 'undefined') {
-    champ = myChampions.find(c => c.id === state.championId);
+  if (!champ && typeof myChampions !== 'undefined') {
+    const activeId = (typeof state !== 'undefined' && state.championId)
+                  || (typeof activeChampionId !== 'undefined' && activeChampionId)
+                  || null;
+    if (activeId) champ = myChampions.find(c => c.id === activeId);
   }
   if (!champ) {
     if (typeof vxAlert === 'function') {
@@ -15976,18 +16367,56 @@ const VxCampaign = (() => {
         `;
       }
       setChapterProgress(chapId, prog);
-      // Fire-and-confirm server log
+      // Fire-and-confirm server log. The server re-runs the battle and
+      // decides the outcome itself — Auto = canonical, Active = QTE
+      // skill can flip a winnable matchup. We send the same inputs the
+      // server needs (stance/ability/equipped/fight_mode/qte_score) so
+      // its resolver matches what the client just animated.
       if (champ && typeof apiCampaignBattle === 'function') {
         try {
+          const equippedW = (typeof getEquippedWeaponForArena === 'function')
+            ? getEquippedWeaponForArena(champ.id) : null;
+          const equippedPayload = equippedW ? {
+            weapon_id: equippedW.catalogId || equippedW.id || null,
+            weapon_rarity: equippedW.rarity || 'common',
+          } : null;
+          const fightMode = (typeof getCombatMode === 'function') ? getCombatMode() : 'auto';
+          const qteScore = (result.qte && result.qte.total > 0)
+            ? Math.max(0, Math.min(1, result.qte.perfect / result.qte.total)) : null;
           const resp = await apiCampaignBattle({
             champion_id: champ.id,
             chapter_id: chapId,
             fight_key: isBoss ? 'boss' : fightKey,
             won: true,
+            stance: 'balanced',
+            ability_id: null,
+            equipped: equippedPayload,
+            fight_mode: fightMode,
+            qte_score: qteScore,
           });
           // Reconcile with server progress (in case of cross-device divergence)
           if (resp && resp.progress) {
             try { localStorage.setItem(LS_KEY, JSON.stringify(resp.progress)); } catch(e) {}
+          }
+          // Server-authoritative path: if the server rejected the win
+          // (claimed-win against a stomp loss, or auto-mode mismatch),
+          // roll back the local progress and show DEFEAT instead.
+          if (!resp.recorded && resp.deny_reason) {
+            const localProg = getChapterProgress(chapId);
+            if (isBoss) { localProg.boss_cleared = false; localProg.completed_at = null; }
+            else        { localProg.mobs_cleared[fightKey] = false; }
+            setChapterProgress(chapId, localProg);
+            banner.textContent = 'DEFEAT';
+            banner.classList.add('defeat');
+            const why = resp.deny_reason === 'stomp_loss_claim_rejected'
+              ? 'Outclassed — you need a stronger champion or better gear.'
+              : 'Battle resolved as a loss server-side.';
+            rewards.innerHTML = `
+              <div style="font-size:32px;margin-bottom:6px;">💀</div>
+              <div>Your champion fell.</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:6px;">${why}</div>
+            `;
+            return;
           }
           const status = document.getElementById('cmpBmServerStatus');
           if (status) {
