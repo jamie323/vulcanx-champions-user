@@ -3164,7 +3164,17 @@
      LANDING PAGE
      ============================================================ */
   .view-landing { padding-top: 140px; }
-  .landing-wrap { max-width: 1240px; margin: 0 auto; padding: 0 24px 120px; }
+  /* QA (11 May, sognoDomhan): "Right-side content overflows viewport,
+     requiring horizontal swipe to access" — reproduced at iPad 768px:
+     document.scrollWidth = 944 (176px past viewport). Root cause was
+     the `.landing-hero::before` decorative glow with inset:-80px -200px
+     -40px (bleeds 200px past the hero on each side for atmospheric
+     gradient). On wide desktops that fits inside viewport margins; on
+     tablet/mobile the negative -200px right edge extends past viewport
+     and grows document scrollWidth. overflow-x:clip here contains the
+     pseudo-element's horizontal bleed at the wrapper without affecting
+     the vertical glow or any other layout. */
+  .landing-wrap { max-width: 1240px; margin: 0 auto; padding: 0 24px 120px; overflow-x: clip; }
 
   /* ---- HERO ---- */
   .landing-hero {
@@ -9542,7 +9552,7 @@ const VxQuests = (() => {
         <div class="quest-active-row ${ready?'ready':''}" data-cid="${q.championId}" data-event="${q.eventId}">
           <div class="qar-emoji">${adv.emoji}</div>
           <div class="qar-info">
-            <div class="qar-name">${champName} — ${adv.name}</div>
+            <div class="qar-name">${esc(champName)} — ${adv.name}</div>
             <div class="qar-detail">${dur.label}${ready ? ' · returned, ready to claim!' : ''}</div>
           </div>
           ${ready
@@ -11106,6 +11116,22 @@ const ELYSIUM_CHAIN = {
   blockExplorerUrls: ["https://blockscout.elysiumchain.tech/"],
 };
 
+// QA (11 May, sognoDomhan): defense-in-depth XSS escape for any
+// user-controlled string about to be inserted into innerHTML. Backend
+// sanitizeChampionName() rejects bad input on save, but we also escape
+// on render so any names already in the DB from before the patch (or
+// any future field that goes through innerHTML) can't execute script.
+// Usage:  el.innerHTML = `<div>${esc(champ.name)}</div>`;
+function esc(s) {
+  if (s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function isAuthenticated() {
   return localStorage.getItem('vx_auth') === '1'
       && !!localStorage.getItem('vx_wallet');
@@ -11948,7 +11974,7 @@ function renderStable() {
           <div class="lvl-pill">L${String(c.level).padStart(2,'0')}</div>
           <div class="art"><img src="${stage.img}" /></div>
           <div class="meta">
-            <div class="name">${c.name} ${affinityBadgeHtml(c.species_id, { compact: true })}</div>
+            <div class="name">${esc(c.name)} ${affinityBadgeHtml(c.species_id, { compact: true })}</div>
             <div class="subname">${sp.label} · ${bl.label}</div>
           </div>
         </div>`;
@@ -12879,7 +12905,7 @@ function renderArena() {
     if (myChampions.length > 1) {
       pickerRow.style.display = '';
       pickerSelect.innerHTML = myChampions.map(c =>
-        `<option value="${c.id}" ${c.id === champ?.id ? 'selected' : ''}>${c.name} · L${c.level} · ${SPECIES[c.species_id]?.label || c.species_id} (${SPECIES[c.species_id]?.bloodlines?.[c.bloodline_id]?.label || c.bloodline_id})</option>`
+        `<option value="${c.id}" ${c.id === champ?.id ? 'selected' : ''}>${esc(c.name)} · L${c.level} · ${SPECIES[c.species_id]?.label || c.species_id} (${SPECIES[c.species_id]?.bloodlines?.[c.bloodline_id]?.label || c.bloodline_id})</option>`
       ).join('');
       pickerSelect.onchange = () => {
         const newId = pickerSelect.value;
@@ -12937,7 +12963,7 @@ function renderArena() {
         <span class="arp-elo">${arena.elo} ELO</span>
       </span>
     </div>
-    <b>${champ.name}</b> · ${SPECIES[champ.species_id]?.label || champ.species_id} ·
+    <b>${esc(champ.name)}</b> · ${SPECIES[champ.species_id]?.label || champ.species_id} ·
     L${champ.level} · ${stageName}
     ${equippedLine}
   `;
@@ -13304,7 +13330,7 @@ function renderInboxLists() {
       pending.innerHTML = _inviteListCache.inbox.map(i => {
         const c = i.from_champion;
         const summary = c
-          ? `${c.name || c.species_id} · L${c.level} · ${SPECIES[c.species_id]?.bloodlines?.[c.bloodline_id]?.label || c.bloodline_id}`
+          ? `${esc(c.name || c.species_id)} · L${c.level} · ${SPECIES[c.species_id]?.bloodlines?.[c.bloodline_id]?.label || c.bloodline_id}`
           : '(champion data missing)';
         const stance = i.from_loadout?.stance || '?';
         const ability = i.from_loadout?.ability_id || 'no ability';
@@ -13402,7 +13428,7 @@ function openChallengeModal() {
   const ch = myChampions.find(c => c.id === state.championId);
   const summary = document.getElementById('cmSummary');
   if (ch && summary) {
-    summary.innerHTML = `Sending as <b>${ch.name}</b> · L${ch.level} · ${SPECIES[ch.species_id]?.label || ch.species_id} · ${_arenaStance} stance`;
+    summary.innerHTML = `Sending as <b>${esc(ch.name)}</b> · L${ch.level} · ${SPECIES[ch.species_id]?.label || ch.species_id} · ${_arenaStance} stance`;
   }
   document.getElementById('cmWallet').value = '';
   document.getElementById('cmMessage').value = '';
@@ -13478,7 +13504,7 @@ function openAcceptInviteModal(inviteId) {
   const oppEl = document.getElementById('aiOpponentSummary');
   if (oppEl && opp) {
     oppEl.innerHTML = `
-      <div class="aio-name">${opp.name || 'Challenger'}</div>
+      <div class="aio-name">${esc(opp.name || 'Challenger')}</div>
       <div class="aio-detail">
         ${SPECIES[opp.species_id]?.label || opp.species_id} · ${SPECIES[opp.species_id]?.bloodlines?.[opp.bloodline_id]?.label || opp.bloodline_id}
         · L${opp.level} · stage ${opp.stage_idx + 1}
@@ -13494,7 +13520,7 @@ function openAcceptInviteModal(inviteId) {
   const sel = document.getElementById('aiChampionSelect');
   if (sel) {
     sel.innerHTML = myChampions.map(c =>
-      `<option value="${c.id}">${c.name} · L${c.level} · ${SPECIES[c.species_id]?.label || c.species_id}</option>`
+      `<option value="${c.id}">${esc(c.name)} · L${c.level} · ${SPECIES[c.species_id]?.label || c.species_id}</option>`
     ).join('');
     if (state.championId && myChampions.some(c => c.id === state.championId)) {
       sel.value = state.championId;
@@ -15090,16 +15116,41 @@ const SHOP_ITEMS = [
   { kind: 'healing',    trait: null, label: 'Healing Salve',    emoji: '🩹', tier: 'Special', price: 3  },
 ];
 
+// QA (11 May, sognoDomhan): "Cart contents are lost when the Shop window
+// is closed and reopened." Root cause: openShop() unconditionally reset
+// shopCart on every open. Now we persist the cart in sessionStorage,
+// keyed by wallet so a wallet switch never inherits another wallet's
+// cart. Browser tab close still resets — that's fine (no half-committed
+// orders crossing sessions). On-disk shape: { wallet, items: {key: qty} }.
 let shopCart = {}; // key -> { item, qty }
+const SHOP_CART_KEY = 'vx_shop_cart_v1';
 
 function shopKey(it) { return `${it.kind}:${it.trait || ''}`; }
+
+function _shopCartLoad() {
+  try {
+    const raw = sessionStorage.getItem(SHOP_CART_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || parsed.wallet !== getWallet()) return {};
+    return parsed.items || {};
+  } catch (e) { return {}; }
+}
+function _shopCartSave() {
+  try {
+    sessionStorage.setItem(SHOP_CART_KEY,
+      JSON.stringify({ wallet: getWallet(), items: shopCart }));
+  } catch (e) {}
+}
 
 function openShop() {
   if (!isAuthenticated || !isAuthenticated()) {
     vxAlert('Please connect your wallet before using the shop.', {title: 'Wallet required', icon: '🦊'});
     return;
   }
-  shopCart = {};
+  // Hydrate cart from sessionStorage so a previous close-and-reopen
+  // restores what the user already had in the basket.
+  shopCart = _shopCartLoad();
   renderShop();
   const m = document.getElementById('shopModal');
   m.style.display = 'flex';
@@ -15183,16 +15234,19 @@ function addToCart(key) {
   if (!it) return;
   if (!shopCart[key]) shopCart[key] = { item: it, qty: 0 };
   shopCart[key].qty += 1;
+  _shopCartSave();
   renderShop();
 }
 function removeFromCart(key) {
   if (!shopCart[key]) return;
   shopCart[key].qty -= 1;
   if (shopCart[key].qty <= 0) delete shopCart[key];
+  _shopCartSave();
   renderShop();
 }
 function clearShopCart() {
   shopCart = {};
+  _shopCartSave();
   renderShop();
 }
 
@@ -15210,10 +15264,16 @@ function renderCart() {
   rows.innerHTML = entries.map(([key, { item, qty }]) => {
     const sub = qty * item.price;
     totalQ += qty; totalP += sub;
+    // QA (11 May, sognoDomhan): "duplicated tier labels (Ferocity · Major
+    // · Major)". Root cause: item.label already includes "· Tier", and
+    // the row template appended `· ${item.tier}` a second time. Split
+    // label on the first " · " and render trait + tier separately so
+    // the muted-color tier styling stays, without the duplication.
+    const traitOnly = (item.label || '').split(' · ')[0] || item.label;
     return `
       <div class="shop-cart-row">
         <span class="scr-e">${item.emoji}</span>
-        <span class="scr-name">${item.label} <span style="color:var(--muted);font-size:11px;">· ${item.tier}</span></span>
+        <span class="scr-name">${esc(traitOnly)} <span style="color:var(--muted);font-size:11px;">· ${esc(item.tier)}</span></span>
         <span class="scr-qty">
           <button onclick="removeFromCart('${key}')">−</button>
           <span class="scr-n">${qty}</span>
@@ -15256,6 +15316,10 @@ async function checkoutShop() {
     // Refresh inventory
     await reloadPotions();
     render();
+    // Successful purchase clears the persisted cart so the next open
+    // starts fresh.
+    shopCart = {};
+    _shopCartSave();
     btn.textContent = '✅ Delivered';
     // Friendly confirmation
     setTimeout(() => {
@@ -15900,7 +15964,7 @@ const VxCampaign = (() => {
       const bl = sp?.bloodlines?.[c.bloodline_id];
       const st = bl?.stages?.[c.stageIdx];
       const stageLabel = st?.name || `Stage ${c.stage_idx + 1}`;
-      return `<option value="${c.id}">${c.name || bl?.heroName || 'Nameless'} · ${stageLabel} (L${c.level || 1})</option>`;
+      return `<option value="${c.id}">${esc(c.name || bl?.heroName || 'Nameless')} · ${stageLabel} (L${c.level || 1})</option>`;
     }).join('');
     if (!sel._wired) {
       sel.addEventListener('change', () => { renderChapters(); updateChampStats(); });
