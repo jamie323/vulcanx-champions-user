@@ -779,7 +779,9 @@
       flex-direction: column; gap: 3px;
       text-transform: uppercase;
     }
-    .nav-btn .nav-ico { font-size: 19px; line-height: 1; }
+    .nav-btn .nav-ico { font-size: 19px; line-height: 1; display:inline-flex;
+      align-items:center; justify-content:center; }
+    .nav-btn .nav-ico svg { width: 20px; height: 20px; display: block; }
     .nav-btn .nav-txt {
       display: block !important; font-size: 10px; font-weight: 700;
       overflow: hidden; text-overflow: ellipsis;
@@ -917,6 +919,10 @@
     transition: color 0.18s, background 0.18s, border-color 0.18s, transform 0.15s;
     display: inline-flex; align-items: center; gap: 6px;
   }
+  /* Desktop SVG nav icon sizing (mobile rule above sets its own size). */
+  .nav-btn .nav-ico { display: inline-flex; align-items: center; }
+  .nav-btn .nav-ico svg { width: 18px; height: 18px; display: block;
+    color: currentColor; }
   .nav-btn:hover {
     color: var(--text);
     background: rgba(255,205,107,0.08);
@@ -4837,7 +4843,37 @@
        icon while src is still empty (during the brief window before
        loadChampion sets the src). */
     position: relative; z-index: 2;
+    /* QA (Kueenie, 14 May 2026): "Game feels too static — even tiny motion
+       changes perception enormously." Subtle 5s breathing loop on the
+       champion portrait — barely-perceptible scale + translateY so the
+       creature feels alive without distracting from the painted art.
+       transition lets mood-state filter changes ease in over 1.2s rather
+       than snapping. */
+    animation: cc-breathe 5.4s ease-in-out infinite;
+    transition: filter 1.2s ease-out, transform 1.2s ease-out;
+    transform-origin: 50% 65%;
   }
+  @keyframes cc-breathe {
+    0%, 100% { transform: scale(1) translateY(0); }
+    50%      { transform: scale(1.012) translateY(-1.5px); }
+  }
+  /* Mood-state filters (QA: "Hungry/Starving should feel weakened, not
+     just labelled"). CSS-only, no extra art assets. Classes are toggled
+     on .cc-portrait by VxBond.renderPanel() based on hoursSince last
+     feed: happy → content → hungry → restless → distressed. */
+  .cc-portrait.mood-happy img    { filter: saturate(1.05) brightness(1.02); }
+  .cc-portrait.mood-content img  { filter: none; }
+  .cc-portrait.mood-hungry img   { filter: saturate(0.78) brightness(0.92);
+                                    animation: cc-breathe 6.6s ease-in-out infinite; }
+  .cc-portrait.mood-restless img { filter: saturate(0.55) brightness(0.82) contrast(0.95);
+                                    animation: cc-breathe 7.8s ease-in-out infinite; }
+  .cc-portrait.mood-distressed img { filter: saturate(0.3) brightness(0.7) contrast(0.9) sepia(0.15);
+                                      animation: cc-breathe 9s ease-in-out infinite; }
+  /* Heavier mood states get a subtle slumped baseline + dimmer aura. */
+  .cc-portrait.mood-restless,
+  .cc-portrait.mood-distressed { box-shadow: 0 0 50px rgba(120,80,40,0.1) inset; }
+  .cc-portrait.mood-restless img,
+  .cc-portrait.mood-distressed img { transform: translateY(2px); }
   .cc-portrait img:not([src]),
   .cc-portrait img[src=""] { visibility: hidden; }
   .cc-aura {
@@ -5645,19 +5681,26 @@
 </div>
 
 <!-- main nav bar -->
+<!-- QA feedback (Kueenie, 14 May 2026): "Reduce emoji / mobile energy —
+     replace with fantasy glyphs, sigils, heraldic icons." Swapped to
+     inline SVG line glyphs (currentColor, stroke 1.5, no extra deps). -->
 <nav class="main-nav" id="mainNav">
-  <button class="nav-btn" data-view="landing" title="Home"><span class="nav-ico">🏠</span><span class="nav-txt">Home</span></button>
-  <button class="nav-btn" data-view="stable" title="My Stable — your champions"><span class="nav-ico">🏛</span><span class="nav-txt">Stable</span></button>
-  <button class="nav-btn" data-view="adopt" title="Adopt a new champion"><span class="nav-ico">✨</span><span class="nav-txt">Adopt</span></button>
-  <button class="nav-btn" data-view="howto" title="How it Works — the player guide"><span class="nav-ico">📖</span><span class="nav-txt">Guide</span></button>
-  <button class="nav-btn" data-view="explore" title="Explore — top-ranked champions"><span class="nav-ico">🔎</span><span class="nav-txt">Explore</span></button>
-  <button class="nav-btn" data-view="quests" title="Quests — send champions on adventures"><span class="nav-ico">🗺️</span><span class="nav-txt">Quests</span></button>
-  <button class="nav-btn" data-view="campaign" title="Campaign — solo PvE story mode (5 chapters)"><span class="nav-ico">🏔</span><span class="nav-txt">Campaign</span></button>
-  <button class="nav-btn" id="arenaNavBtn" title="Arena — battle other champions"><span class="nav-ico">⚔️</span><span class="nav-txt">Arena</span></button>
+  <button class="nav-btn" data-view="landing" title="Home"><span class="nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1z"/></svg></span><span class="nav-txt">Home</span></button>
+  <button class="nav-btn" data-view="stable" title="My Stable — your champions"><span class="nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8 12 3l9 5"/><path d="M5 8v11M9 8v11M15 8v11M19 8v11"/><path d="M3 19h18"/><path d="M3 11.5h18"/></svg></span><span class="nav-txt">Stable</span></button>
+  <button class="nav-btn" data-view="adopt" title="Adopt a new champion"><span class="nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/><circle cx="12" cy="12" r="2"/></svg></span><span class="nav-txt">Adopt</span></button>
+  <button class="nav-btn" data-view="howto" title="How it Works — the player guide"><span class="nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H19v15H5.5A1.5 1.5 0 0 0 4 19.5z"/><path d="M4 19.5A1.5 1.5 0 0 0 5.5 21H19"/><path d="M8 7h7M8 11h7"/></svg></span><span class="nav-txt">Guide</span></button>
+  <button class="nav-btn" data-view="explore" title="Explore — top-ranked champions"><span class="nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/><path d="M11 8v6M8 11h6"/></svg></span><span class="nav-txt">Explore</span></button>
+  <button class="nav-btn" data-view="quests" title="Quests — send champions on adventures"><span class="nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v16M15 6v16"/></svg></span><span class="nav-txt">Quests</span></button>
+  <button class="nav-btn" data-view="campaign" title="Campaign — solo PvE story mode (5 chapters)"><span class="nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 19 5-9 4 6 3-4 6 7z"/><path d="M16 4v6"/><path d="M16 4h4l-1 2 1 2h-4"/></svg></span><span class="nav-txt">Campaign</span></button>
+  <button class="nav-btn" id="arenaNavBtn" title="Arena — battle other champions"><span class="nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h5v5L9 19H4v-5z"/><path d="m10 4-5 5 10 11 5-5z"/><path d="m13 7 4 4M7 13l4 4"/></svg></span><span class="nav-txt">Arena</span></button>
   <!-- Trello (8 May): "leaderboard somewhere in the app — people wanna
        see where their hero is ranked". Top-nav button is always-on,
        opens the modal that fetches /functions/v1/leaderboard live. -->
-  <button class="nav-btn" id="leaderboardNavBtn" title="Leaderboard — top 20 champions, all-time + this week"><span class="nav-ico">🏆</span><span class="nav-txt">Ranks</span></button>
+  <button class="nav-btn" id="leaderboardNavBtn" title="Leaderboard — top 20 champions, all-time + this week"><span class="nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v4a5 5 0 0 1-10 0z"/><path d="M5 5H3a2 2 0 0 0 2 4M19 5h2a2 2 0 0 1-2 4"/><path d="M9 13h6l-1 4h-4z"/><path d="M8 20h8"/><path d="M12 17v3"/></svg></span><span class="nav-txt">Ranks</span></button>
+  <!-- Phase 11 (May 14): VulcanX Everything chest-quests. Pulls weekly +
+       lifetime progress from /functions/v1/champion_quests_list. Counters
+       advance server-side from existing champion_events writes. -->
+  <button class="nav-btn" id="chestQuestsNavBtn" title="Chest Quests — earn VulcanX chests for playing"><span class="nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18v10H3z"/><path d="M3 10a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4"/><path d="M10 14h4v3h-4z"/><path d="M10 6v4M14 6v4"/></svg></span><span class="nav-txt">Chests</span></button>
   <label class="nav-admin">
     <input type="checkbox" id="adminToggle"/> 🛠 Admin Mode
   </label>
@@ -6610,6 +6653,11 @@
   .quest-active-row {
     background: rgba(20,12,20,0.85); border: 1px solid rgba(255,205,107,0.3);
     border-radius: 10px; padding: 12px 14px;
+    /* New stacked layout: main row (emoji + info + timer) on top,
+       optional encounter feed below. The grid is moved to .qar-main. */
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .quest-active-row .qar-main {
     display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center;
   }
   .quest-active-row.ready { border-color: var(--accent); box-shadow: 0 0 14px rgba(255,205,107,0.25); }
@@ -6625,6 +6673,30 @@
     text-transform: uppercase;
   }
   .quest-active-row .qar-claim:hover { filter: brightness(1.08); }
+  /* QA (Kueenie): encounter feed — timestamped flavor events. Newest at
+     the bottom (chronological). Reveal-fade so new entries don't pop in
+     jarringly when the next slot's elapsed time is reached. */
+  .quest-active-row .qar-feed {
+    border-top: 1px dashed rgba(255,205,107,0.15);
+    padding-top: 8px; margin-top: 2px;
+    display: flex; flex-direction: column; gap: 4px;
+    font-size: 11px;
+  }
+  .quest-active-row .qar-feed-row {
+    display: grid; grid-template-columns: 50px 1fr; gap: 8px;
+    color: rgba(255,255,255,0.7);
+    animation: qar-feed-in 0.6s ease-out;
+  }
+  .quest-active-row .qar-feed-row:last-child { color: var(--text); }
+  .quest-active-row .qar-feed-time {
+    color: var(--accent-dim); font-family: monospace; font-size: 10px;
+    letter-spacing: 1px;
+  }
+  .quest-active-row .qar-feed-text { line-height: 1.4; font-style: italic; }
+  @keyframes qar-feed-in {
+    from { opacity: 0; transform: translateY(-2px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 
   .quests-section-label { font-size: 11px; color: var(--muted); letter-spacing: 2px;
     text-transform: uppercase; margin: 24px 0 8px; }
@@ -7900,6 +7972,49 @@
     <button class="btn-primary" id="lbCloseBtn" style="margin-top:14px;">Close</button>
   </div>
 </div>
+
+<!-- ======== MODAL: CHEST QUESTS (VulcanX Everything quests) ======== -->
+<!-- Phase 11 scaffolding. Pulls /functions/v1/champion_quests_list and
+     renders one row per active quest with a progress bar. "Ready to
+     claim" rows highlight gold; gateway HMAC POST handles the actual
+     chest grant downstream (pending Rana's spec). -->
+<div class="modal-backdrop" id="chestQuestsModal">
+  <div class="modal" style="width: 520px;">
+    <h3>🎁 VulcanX Chest Quests</h3>
+    <div class="sub">Play Champions, earn chests in the VulcanX Everything dApp. Weekly quests reset Mon 16:00 UTC.</div>
+    <div style="display:flex; gap:4px; margin-bottom:14px;">
+      <button class="sp-btn cq-period active" data-period="daily">☀️ Today</button>
+      <button class="sp-btn cq-period" data-period="weekly">📅 This week</button>
+      <button class="sp-btn cq-period" data-period="lifetime">🏆 Lifetime</button>
+    </div>
+    <div id="cqList" style="max-height: 420px; overflow-y: auto;
+         font-size: 12px;">
+      <div style="padding:20px;text-align:center;color:var(--muted);">
+        Sign in to track your chest quests.
+      </div>
+    </div>
+    <button class="btn-primary" id="cqCloseBtn" style="margin-top:14px;">Close</button>
+  </div>
+</div>
+<style>
+  .cq-row { padding: 10px 4px; border-bottom: 1px dashed var(--border); }
+  .cq-row:last-child { border: none; }
+  .cq-row.completed { background: rgba(255,205,107,0.06); border-radius: 4px; }
+  .cq-head { display: flex; justify-content: space-between;
+    align-items: baseline; margin-bottom: 4px; }
+  .cq-name { font-weight: 700; font-size: 13px; color: var(--accent); }
+  .cq-chests { font-size: 11px; color: var(--legend); }
+  .cq-desc { color: var(--muted); font-size: 11px; margin-bottom: 6px; }
+  .cq-bar-wrap { height: 8px; background: rgba(255,255,255,0.05);
+    border-radius: 4px; overflow: hidden; position: relative; }
+  .cq-bar { height: 100%; background: linear-gradient(90deg,
+    rgba(255,205,107,0.5), rgba(255,205,107,0.9)); transition: width 200ms; }
+  .cq-row.completed .cq-bar {
+    background: linear-gradient(90deg, #d4a32e, #f5e08a); }
+  .cq-bar-label { font-size: 10px; color: var(--muted);
+    text-align: right; margin-top: 2px; }
+  .cq-row.completed .cq-bar-label { color: var(--legend); font-weight: 700; }
+</style>
 <style>
   .lb-row { display: grid; grid-template-columns: 40px 40px 1fr auto;
     gap: 10px; padding: 8px 4px; border-bottom: 1px dashed var(--border);
@@ -9295,6 +9410,23 @@ const VxBond = (() => {
     const afterTier = tierFor(rec.bond).label;
     put(championId, rec);
     console.log('[bond]', reason || 'gain', `+${delta}`, '→', rec.bond);
+
+    // Fire chest-quest events:
+    //   • bond_delta on every positive bump → Daily Bond + Bond Builder
+    //   • bond_score on first 50-crossing → Master Trainer (lifetime)
+    //   • bond_score on first 100-crossing → Soulbound (lifetime)
+    if (typeof postChampionQuestEvent === 'function' && rec.bond > before) {
+      const actualDelta = rec.bond - before;
+      postChampionQuestEvent('bond_delta', championId, { delta: actualDelta, new_bond: rec.bond })
+        .catch((e) => console.debug('[quest] bond_delta emit skipped:', e.message));
+      const crossed50  = before < 50  && rec.bond >= 50;
+      const crossed100 = before < 100 && rec.bond >= 100;
+      if (crossed50 || crossed100) {
+        postChampionQuestEvent('bond_score', championId, { new_bond: rec.bond })
+          .catch((e) => console.debug('[quest] bond_score emit skipped:', e.message));
+      }
+    }
+
     return {
       bond: rec.bond,
       delta,
@@ -9366,6 +9498,14 @@ const VxBond = (() => {
       frame.classList.toggle('bond-companion', rec.bond >= 50 && rec.bond < 75);
       frame.classList.toggle('bond-devoted',   rec.bond >= 75 && rec.bond < 100);
       frame.classList.toggle('bond-soulbound', rec.bond >= 100);
+    }
+    // QA (Kueenie): apply hunger-state CSS class to the portrait so the
+    // image visually weakens with each step of the mood ladder.
+    const portrait = document.querySelector('.cc-portrait');
+    if (portrait) {
+      ['mood-happy','mood-content','mood-hungry','mood-restless','mood-distressed']
+        .forEach(c => portrait.classList.remove(c));
+      portrait.classList.add(`mood-${mood.id}`);
     }
   }
 
@@ -9443,6 +9583,123 @@ const VxQuests = (() => {
     standard: { seconds: 60*60,   label:'Standard · 1 hr',   emoji:'⏳', primary:[5,12],  bar:[8,15] },
     long:     { seconds: 4*60*60, label:'Long · 4 hrs',      emoji:'🌙', primary:[15,30], bar:[20,40] },
   };
+
+  // QA feedback (Kueenie, 14 May 2026): "Adventures Lack Tension — currently
+  // missing some risks, surprises and intervention, all feels too monotonous."
+  // Per-adventure flavor-text encounter banks. A deterministic chooser
+  // picks 6 events spaced across the timer's duration based on the
+  // questId hash, so the same encounters show up consistently if the
+  // page is reloaded mid-quest. Pure flavor — no branching mechanics
+  // yet (that's the full simulation rebuild, out of scope for now).
+  const ENCOUNTERS = {
+    hunting_grounds: [
+      'Departed from camp at first light.',
+      'Tracked fresh prints into the brush.',
+      'A herd of grazers spotted across the ridge.',
+      'Ambush! A pack of hyenas was scattered.',
+      'Slipped past a sleeping bear — too risky.',
+      'A rare beast pelt — folded carefully into the pack.',
+      'Made camp by a quiet stream.',
+      'Followed a blood trail to a worthwhile prize.',
+    ],
+    ancient_ruins: [
+      'Pressed open a sealed door with a glyph-key.',
+      'A faded mural hints at an older language.',
+      'Stepped over a pressure-plate just in time.',
+      'A hollow column rings with old magic.',
+      'Pocketed a small obsidian sigil.',
+      'Distant chanting from the lower halls.',
+      'Mapped a side passage for later.',
+      'Slept lightly — the ruins do not.',
+    ],
+    spirit_caves: [
+      'Crossed the threshold into still air.',
+      'A faint whisper marks the way deeper.',
+      'Sat among the watchful for a long while.',
+      'A spirit-light pulsed and was gone.',
+      'Breathed through a chamber of cold dread.',
+      'Touched the wet stone and remembered.',
+      'A voice gave a name, then forgot it.',
+      'Left an offering of warmth at the threshold.',
+    ],
+    treasure_crypts: [
+      'Tested the floor — the third stone shifts.',
+      'A trapped corridor, neatly disarmed.',
+      'A cache of old coin behind a false wall.',
+      'A glass jar of milky firefly-light.',
+      'Found a key — but not the lock yet.',
+      'A skeleton, posed as if mid-laugh.',
+      'A whisper of dust, then nothing.',
+      'Sealed the vault behind you on the way out.',
+    ],
+    forge_pits: [
+      'Heat washes through the lower gallery.',
+      'A discarded blade — still warm to the grip.',
+      'Hammered out a knot of old iron.',
+      'Drank deep from the cold spring nearby.',
+      'A spark caught a sleeve — quickly stamped out.',
+      'Worked the bellows for an hour, alone.',
+      'A foreman nods, says nothing.',
+      'Walked out tempered, breathing slow.',
+    ],
+    moonlit_glades: [
+      'Walked under a sliver of moon.',
+      'A doe paused, looked, and slipped away.',
+      'Bare feet found a quieter path.',
+      'A nightbird called — three short notes.',
+      'A circle of stones, recently disturbed.',
+      'Caught a glimpse of something with eyes.',
+      'Found a single silver feather.',
+      'Returned by the long path, unhurried.',
+    ],
+    ember_wastes: [
+      'Wind shifted; the heat doubled.',
+      'A scorpion the size of a fist, skirted wide.',
+      'Drank the last warm water.',
+      'A glass tree, half-buried in red sand.',
+      'Wrapped the face against grit-storm.',
+      'A vulture wheeled patiently above.',
+      'Found a cooler hollow — slept poorly.',
+      'Marched on through the ringing dusk.',
+    ],
+    whisper_marshes: [
+      'Boots sucked through warm mud.',
+      'A pale flower — not quite poisonous.',
+      'Heard your own name from a reed-bed.',
+      'A heron stood and did not move.',
+      'Filled a small phial with bog-glow.',
+      'Crossed a corduroy of rotten planks.',
+      'A frog’s eye watched, unblinking.',
+      'Picked herbs by their smell, not their look.',
+    ],
+  };
+
+  /** Return up to 6 encounters for an active quest, only those whose
+   *  scheduled time has elapsed. Deterministic per-quest via eventId hash. */
+  function encountersForQuest(q) {
+    const adv = q.adventureId;
+    const bank = ENCOUNTERS[adv];
+    if (!bank) return [];
+    const duration = DURATIONS[q.durationTier]?.seconds || 900;
+    const startedAt = new Date(q.startedAt).getTime();
+    const elapsedSec = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+    // 6 encounters spaced across the duration. Slots at 8%, 22%, 38%, 55%, 73%, 90%.
+    const slots = [0.08, 0.22, 0.38, 0.55, 0.73, 0.90];
+    // Seed from the eventId so re-rendering picks the same texts.
+    const seed = q.eventId ? q.eventId.split('').reduce((a,c)=>((a<<5)-a + c.charCodeAt(0))|0, 0) : 0;
+    const out = [];
+    for (let i = 0; i < slots.length; i++) {
+      const at = Math.floor(slots[i] * duration);
+      if (elapsedSec < at) break;
+      // Pick a flavor text from the bank — distinct per slot, wraps via seed.
+      const idx = Math.abs(seed + i * 31) % bank.length;
+      const mm = Math.floor(at / 60);
+      const ss = at % 60;
+      const stamp = `${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+      out.push({ at, stamp, text: bank[idx] });
+    }
+    return out;
+  }
 
   let _selectedAdventure = null;
   let _activeChampForBrowse = null;
@@ -9548,16 +9805,26 @@ const VxQuests = (() => {
       const dur = DURATIONS[q.durationTier] || { label: q.durationTier };
       const remaining = (new Date(q.endsAt)).getTime() - Date.now();
       const ready = remaining <= 0;
+      // QA (Kueenie): encounter feed gives adventures a heartbeat between
+      // start and finish. Pure flavor text — no branching, no risk yet.
+      const feed = encountersForQuest(q);
+      const feedHtml = feed.length === 0 ? '' :
+        `<div class="qar-feed">${
+          feed.map(e => `<div class="qar-feed-row"><span class="qar-feed-time">${e.stamp}</span><span class="qar-feed-text">${esc(e.text)}</span></div>`).join('')
+        }</div>`;
       root.insertAdjacentHTML('beforeend', `
         <div class="quest-active-row ${ready?'ready':''}" data-cid="${q.championId}" data-event="${q.eventId}">
-          <div class="qar-emoji">${adv.emoji}</div>
-          <div class="qar-info">
-            <div class="qar-name">${esc(champName)} — ${adv.name}</div>
-            <div class="qar-detail">${dur.label}${ready ? ' · returned, ready to claim!' : ''}</div>
+          <div class="qar-main">
+            <div class="qar-emoji">${adv.emoji}</div>
+            <div class="qar-info">
+              <div class="qar-name">${esc(champName)} — ${adv.name}</div>
+              <div class="qar-detail">${dur.label}${ready ? ' · returned, ready to claim!' : ''}</div>
+            </div>
+            ${ready
+              ? `<button class="qar-claim">⚡ Claim</button>`
+              : `<div class="qar-timer">${fmtTimer(remaining)}</div>`}
           </div>
-          ${ready
-            ? `<button class="qar-claim">⚡ Claim</button>`
-            : `<div class="qar-timer">${fmtTimer(remaining)}</div>`}
+          ${feedHtml}
         </div>
       `);
     }
@@ -9925,6 +10192,162 @@ function closeLeaderboard() {
   document.getElementById('leaderboardModal').classList.remove('open');
 }
 
+// ─── Chest Quests (VulcanX Everything) ─────────────────────────────
+// Cache the last fetch so the period toggle doesn't refetch on every click.
+let _cqState = { period: 'daily', data: null };
+
+async function apiChampionQuestsList(wallet) {
+  const res = await apiFetch(`${FN_BASE}/champion_quests_list?wallet=${encodeURIComponent(wallet)}`);
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(`${data.error || 'http_'+res.status}: ${data.message || ''}`.trim());
+  }
+  return res.json();
+}
+
+// Generic client-side quest-event emitter. Used by the bond and equipment
+// surfaces, which live in localStorage so the server can't observe them
+// directly. Whitelisted server-side to only accept 'bond_score' and
+// 'equip_full_kit' kinds. Fire-and-forget: never blocks the UI, never
+// surfaces errors except in the console.
+async function postChampionQuestEvent(kind, championId, meta) {
+  const wallet = (typeof getWallet === 'function') ? getWallet() : null;
+  if (!wallet) return null;
+  // stable_view is wallet-scoped (no champion_id) — server allows it
+  if (!championId && kind !== 'stable_view') return null;
+  const res = await apiFetch(`${FN_BASE}/champion_quest_event`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ wallet, champion_id: championId || null, kind, meta }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(`${data.error || 'http_'+res.status}: ${data.message || ''}`.trim());
+  }
+  return res.json();
+}
+
+// Check the active champion's kit; if it meets Forge Mastery (≥3 armor)
+// or Fully Forged (=6 armor) threshold, post the event. Server clamps
+// at target so re-firing is harmless.
+function maybeEmitForgeMastery(championId) {
+  if (!championId || !window.Equipment || !Array.isArray(myInventory)) return;
+  const equipped = myInventory.filter(i => i.equippedOn === championId);
+  let weapon = false;
+  let armorCount = 0;
+  for (const inst of equipped) {
+    const slot = Equipment.CATALOG[inst.catalogId]?.slot;
+    if (slot === 'weapon') weapon = true;
+    else if (slot === 'armor') armorCount++;
+  }
+  if (weapon && armorCount >= 3) {
+    // Also compute Stable Curator signal: how many of THIS wallet's
+    // champions currently meet the weapon+3-armor threshold.
+    let walletFullKitCount = 0;
+    if (Array.isArray(window.myChampions)) {
+      for (const c of myChampions) {
+        const cEquip = myInventory.filter(i => i.equippedOn === c.id);
+        let cWeapon = false, cArmor = 0;
+        for (const inst of cEquip) {
+          const s = Equipment.CATALOG[inst.catalogId]?.slot;
+          if (s === 'weapon') cWeapon = true;
+          else if (s === 'armor') cArmor++;
+        }
+        if (cWeapon && cArmor >= 3) walletFullKitCount++;
+      }
+    }
+    postChampionQuestEvent('equip_full_kit', championId, {
+      weapon, armor_count: armorCount,
+      wallet_full_kit_count: walletFullKitCount,
+    }).catch((e) => console.debug('[quest] equip emit skipped:', e.message));
+  }
+}
+
+// Stable Visit — fire when the keeper opens the Stable view AND has
+// viewed every champion they own this session. Called from the Stable
+// view renderer. Server-side requires viewed_count >= total_owned.
+function maybeEmitStableVisit() {
+  if (!window.myChampions || myChampions.length === 0) return;
+  // Track viewed-champions for this UTC day in sessionStorage; on open
+  // we ping with the count of distinct champion IDs viewed.
+  const today = new Date().toISOString().slice(0,10);
+  const key = `vx_stable_viewed_${today}`;
+  let viewedIds = [];
+  try { viewedIds = JSON.parse(sessionStorage.getItem(key) || '[]'); } catch {}
+  const ownedIds = myChampions.map(c => c.id);
+  // Mark every owned id as viewed when the user opens the stable list view
+  const merged = Array.from(new Set([...viewedIds, ...ownedIds]));
+  sessionStorage.setItem(key, JSON.stringify(merged));
+  // Only fire if every owned champ has been viewed
+  if (ownedIds.every(id => merged.includes(id))) {
+    postChampionQuestEvent('stable_view', null, {
+      viewed_count: merged.length,
+      total_owned:  ownedIds.length,
+    }).catch((e) => console.debug('[quest] stable_view emit skipped:', e.message));
+  }
+}
+
+async function showChestQuests() {
+  _cqState = { period: 'daily', data: null };
+  document.querySelectorAll('.cq-period').forEach(b => {
+    b.classList.toggle('active', b.dataset.period === 'daily');
+  });
+  document.getElementById('chestQuestsModal').classList.add('open');
+  const wallet = (typeof getWallet === 'function') ? getWallet() : null;
+  if (!wallet) {
+    document.getElementById('cqList').innerHTML =
+      '<div style="padding:20px;text-align:center;color:var(--muted);">' +
+      'Sign in to track your chest quests.</div>';
+    return;
+  }
+  document.getElementById('cqList').innerHTML =
+    '<div style="padding:20px;text-align:center;color:var(--muted);">Loading…</div>';
+  try {
+    _cqState.data = await apiChampionQuestsList(wallet);
+    renderChestQuestsList();
+  } catch (e) {
+    console.warn('[chest-quests] fetch failed:', e.message);
+    document.getElementById('cqList').innerHTML =
+      `<div style="padding:20px;text-align:center;color:var(--muted);">` +
+      `Couldn't load quests: ${esc(e.message)}</div>`;
+  }
+}
+
+function closeChestQuests() {
+  document.getElementById('chestQuestsModal').classList.remove('open');
+}
+
+function renderChestQuestsList() {
+  if (!_cqState.data) return;
+  const { quests } = _cqState.data;
+  const list = (quests || []).filter(q => q.cadence === _cqState.period);
+  if (list.length === 0) {
+    document.getElementById('cqList').innerHTML =
+      `<div style="padding:20px;text-align:center;color:var(--muted);">` +
+      `No ${esc(_cqState.period)} quests available.</div>`;
+    return;
+  }
+  // Completed quests first (so the "ready to claim" ones aren't buried).
+  list.sort((a, b) => {
+    if (a.completed !== b.completed) return a.completed ? -1 : 1;
+    return (b.counter / b.target) - (a.counter / a.target);
+  });
+  document.getElementById('cqList').innerHTML = list.map(q => {
+    const pct = Math.min(100, Math.round(100 * q.counter / q.target));
+    const stamp = q.completed ? ' ✅' : '';
+    return `
+      <div class="cq-row ${q.completed ? 'completed' : ''}">
+        <div class="cq-head">
+          <span class="cq-name">${esc(q.name)}${stamp}</span>
+          <span class="cq-chests">🎁 ${q.chests} chest${q.chests > 1 ? 's' : ''}</span>
+        </div>
+        <div class="cq-desc">${esc(q.description)}</div>
+        <div class="cq-bar-wrap"><div class="cq-bar" style="width:${pct}%"></div></div>
+        <div class="cq-bar-label">${q.counter} / ${q.target}${q.completed ? ' · ready to claim' : ''}</div>
+      </div>`;
+  }).join('');
+}
+
 async function refreshLiveLeaderboard() {
   const { period, species } = _lbState;
   try {
@@ -10277,6 +10700,13 @@ function equipItem(instId, slot) {
   target.equippedOn = id;
   persistInventory();
   render(); // re-render champion view → updates PowerScore + slot
+  // Daily Forge + Forge Spree — emit equipment_change for any equip
+  postChampionQuestEvent('equipment_change', id, {
+    new_item_id: target.catalogId,
+    slot: Equipment.CATALOG[target.catalogId]?.slot || 'unknown',
+  }).catch((e) => console.debug('[quest] equipment_change emit skipped:', e.message));
+  // Forge Mastery + Fully Forged — fire if the new kit meets thresholds
+  maybeEmitForgeMastery(id);
 }
 
 function unequipSlot(slot) {
@@ -11018,6 +11448,16 @@ bindIf('allocApply', 'click', applyAllocation);
 bindIf('allocCancel', 'click', closeAllocModal);
 bindIf('globalRankBar', 'click', showLeaderboard);  // (legacy; kept for any old DOM)
 bindIf('leaderboardNavBtn', 'click', showLeaderboard);
+bindIf('chestQuestsNavBtn', 'click', showChestQuests);
+bindIf('cqCloseBtn', 'click', closeChestQuests);
+document.querySelectorAll('.cq-period').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.cq-period').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    _cqState.period = btn.dataset.period;
+    renderChestQuestsList();
+  });
+});
 document.querySelectorAll('.lb-filter').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.lb-filter').forEach(b => b.classList.remove('active'));
@@ -11951,6 +12391,9 @@ function toggleFAQ(i) {
 // ============================================================
 function renderStable() {
   const container = document.getElementById('stableContent');
+  // Stable Visit chest-quest — fire when keeper opens the stable view
+  // (rendering implies they're viewing every champion in the grid).
+  try { maybeEmitStableVisit(); } catch (e) { /* never block render */ }
   if (myChampions.length === 0) {
     container.innerHTML = `
       <div class="empty-stable">
