@@ -5363,6 +5363,11 @@
 <script src="wallet.js?v=20260426-d"></script>
 <script src="stories.js?v=20260425-a"></script>
 <script src="equipment.js?v=20260426-a"></script>
+<!-- VulcanX quest tracker — ships metrics to the shared cross-game
+     quest gateway (Runner/Poker/Champions). Pure ES module, no build.
+     Exposes window.VxQuestTracker for inline scripts to call. See
+     vulcanx/index.js. -->
+<script type="module" src="vulcanx/index.js?v=20260515-a"></script>
 <script>
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
@@ -7914,6 +7919,60 @@
 <div class="cine-banner" id="cineBanner">EVOLVED</div>
 <div class="cine-subtext" id="cineSubtext"></div>
 
+<!-- ============================================================
+     VulcanX cross-game quest celebration modal
+     ============================================================
+     Fires when the gateway poll (vulcanxTracker._poll) detects a
+     completed quest. Distinct from the in-app "Chests" modal —
+     this one auto-pops on completion across all 3 services
+     (Runner / Poker / Champions). Same data shape regardless of
+     which gateway quest fired. -->
+<div class="modal-backdrop" id="vxQuestCelebrationModal">
+  <div class="modal" style="width: 440px; text-align: center;">
+    <div style="font-size: 56px; line-height: 1;">🎁</div>
+    <h3 style="margin: 14px 0 6px; color: var(--accent); letter-spacing: 2px;
+               font-family: 'Cinzel', serif; font-weight: 800;
+               text-transform: uppercase;">Quest Complete</h3>
+    <div id="vxqcName" style="font-size: 20px; font-weight: 700; color: var(--text);
+                              margin-bottom: 8px;">—</div>
+    <div id="vxqcDesc" style="color: var(--muted); font-size: 13px; line-height: 1.5;
+                              margin-bottom: 14px; font-style: italic;
+                              text-decoration: line-through;
+                              text-decoration-color: rgba(255,205,107,0.5);">—</div>
+    <div id="vxqcChests" style="font-size: 16px; font-weight: 700; color: var(--legend);
+                                margin-bottom: 18px; letter-spacing: 1px;">—</div>
+    <div style="display: flex; gap: 8px; justify-content: center;">
+      <a id="vxqcRevealBtn" class="btn-primary"
+         href="#" target="_blank" rel="noopener"
+         style="text-decoration: none; padding: 10px 18px;">Reveal on VulcanX ↗</a>
+      <button class="sp-btn" onclick="document.getElementById('vxQuestCelebrationModal').classList.remove('open')">Close</button>
+    </div>
+  </div>
+</div>
+<script>
+// Public surface the vulcanxTracker calls. Renders the modal with the
+// quest data and opens it. Idempotent — closing the modal is the user's
+// move, and the cross-tracker dedup prevents re-fires for the same quest.
+window.VxQuestCelebration = {
+  fire(modal) {
+    if (!modal || typeof modal !== 'object') return;
+    const _esc = (typeof esc === 'function')
+      ? esc
+      : (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    document.getElementById('vxqcName').textContent = modal.name || 'Quest';
+    document.getElementById('vxqcDesc').textContent = modal.description || '';
+    const chests = Number(modal.chest_count) || 1;
+    document.getElementById('vxqcChests').innerHTML =
+      `🎁 ${chests} ${_esc(modal.chest_name || 'Mystery Chest')}${chests > 1 ? 's' : ''}`;
+    const btn = document.getElementById('vxqcRevealBtn');
+    if (btn) btn.href = modal.reveal_url || 'https://vulcan-x.io/quests';
+    document.getElementById('vxQuestCelebrationModal').classList.add('open');
+    // Tiny audio cue if VxAudio loaded
+    try { window.VxAudio?.levelUp?.(); } catch (_) {}
+  },
+};
+</script>
+
 <!-- allocation potion modal -->
 <div class="modal-backdrop" id="allocModal">
   <div class="modal" style="width: 460px;">
@@ -9426,6 +9485,15 @@ const VxBond = (() => {
           .catch((e) => console.debug('[quest] bond_score emit skipped:', e.message));
       }
     }
+    // VulcanX cross-game tracker — bond metrics to the shared gateway.
+    if (window.VxQuestTracker && rec.bond > before) {
+      const ms = window.VxQuestTracker.metrics.fromBondDelta({
+        delta:       rec.bond - before,
+        before_bond: before,
+        new_bond:    rec.bond,
+      });
+      window.VxQuestTracker.recordMany(ms);
+    }
 
     return {
       bond: rec.bond,
@@ -9931,6 +9999,17 @@ const VxQuests = (() => {
         if (typeof render === 'function') render();
       }
       setActiveQuest(championId, null);
+      // VulcanX cross-game tracker — adventure_quests_completed + daily-care
+      if (window.VxQuestTracker) {
+        // resp.rewards.duration_tier maps to easy/medium/hard via the server's tierMap
+        const tier = resp?.rewards?.duration_tier === 'long'    ? 'hard'
+                   : resp?.rewards?.duration_tier === 'standard' ? 'medium'
+                   : 'easy';
+        window.VxQuestTracker.recordMany(
+          window.VxQuestTracker.metrics.fromAdventureComplete({ tier })
+        );
+        window.VxQuestTracker.recordDailyCare();
+      }
       // Phase N: bond gain on quest complete
       if (window.VxBond) {
         const bondResult = VxBond.onQuestComplete(championId);
@@ -10284,6 +10363,15 @@ function maybeEmitStableVisit() {
       viewed_count: merged.length,
       total_owned:  ownedIds.length,
     }).catch((e) => console.debug('[quest] stable_view emit skipped:', e.message));
+    // VulcanX cross-game tracker — stable_full_views metric
+    if (window.VxQuestTracker) {
+      window.VxQuestTracker.recordMany(
+        window.VxQuestTracker.metrics.fromStableVisit({
+          viewed_count: merged.length,
+          total_owned:  ownedIds.length,
+        })
+      );
+    }
   }
 }
 
@@ -10707,6 +10795,19 @@ function equipItem(instId, slot) {
   }).catch((e) => console.debug('[quest] equipment_change emit skipped:', e.message));
   // Forge Mastery + Fully Forged — fire if the new kit meets thresholds
   maybeEmitForgeMastery(id);
+  // VulcanX cross-game tracker — equipment metrics
+  if (window.VxQuestTracker) {
+    // Compute the same full-kit signal we send through the in-app bridge
+    let weapon = false, armorCount = 0;
+    for (const inst of myInventory.filter(i => i.equippedOn === id)) {
+      const slot = Equipment.CATALOG[inst.catalogId]?.slot;
+      if (slot === 'weapon') weapon = true;
+      else if (slot === 'armor') armorCount++;
+    }
+    window.VxQuestTracker.recordMany(
+      window.VxQuestTracker.metrics.fromEquipChange({ weapon, armor_count: armorCount })
+    );
+  }
 }
 
 function unequipSlot(slot) {
@@ -11536,6 +11637,11 @@ const AUTH_HEADERS = {
   'apikey': SUPABASE_ANON,
   'Authorization': `Bearer ${SUPABASE_ANON}`,
 };
+// VulcanX quest tracker reads this via window.SUPABASE_ANON_KEY (see
+// vulcanx/questHttp.js). The tracker hits OUR Supabase project's
+// quest-progress-collect endpoint, which auths with the anon key —
+// gateway JWT + HMAC stay on the server-side flush function.
+window.SUPABASE_ANON_KEY = SUPABASE_ANON;
 
 // =============================================================
 // WALLET AUTH — SIWE on Elysium chain (chainId 1339)
@@ -11782,6 +11888,15 @@ async function apiCampaignBattle({
     const code = data.error || `http_${res.status}`;
     throw new Error(`${code}: ${data.message || ''}`.trim());
   }
+  // VulcanX cross-game tracker — campaign chapter clear + daily-care.
+  // Only fires on actual boss-clears (server_won && awards_chest).
+  if (data?.recorded && data?.awards_chest && data?.server_won
+      && window.VxQuestTracker) {
+    window.VxQuestTracker.recordMany(
+      window.VxQuestTracker.metrics.fromCampaignBoss({ chapter_id })
+    );
+    window.VxQuestTracker.recordDailyCare();
+  }
   return data;  // { ok, progress, event_id?, recorded, awards_chest, chest_count, server_resolved?, server_won?, battle? }
 }
 
@@ -11795,6 +11910,10 @@ async function apiCreateChampion({ species_id, bloodline_id, name }) {
   if (!res.ok) {
     const code = data.error || `http_${res.status}`;
     throw new Error(`${code}: ${data.message || ''}`.trim());
+  }
+  // VulcanX cross-game tracker — champion_adoptions (lifetime "First Hatch")
+  if (window.VxQuestTracker) {
+    window.VxQuestTracker.recordMany(window.VxQuestTracker.metrics.fromChampionCreate());
   }
   return mapChampion(data.champion);
 }
@@ -11902,7 +12021,18 @@ async function apiFeedPotion({ champion_id, potion_id }) {
         body: JSON.stringify({ wallet: getWallet(), champion_id, potion_id }),
       });
       const data = await res.json().catch(() => ({}));
-      if (res.ok) return data;  // { champion, result, potionRemaining }
+      if (res.ok) {
+        // VulcanX cross-game tracker — champions_fed + trait_potions_used + daily-care.
+        // potion_kind on the response comes from the server (minor/major/epic/evolution/healing).
+        if (window.VxQuestTracker) {
+          const kind = data?.result?.potion_kind || data?.result?.kind || null;
+          window.VxQuestTracker.recordMany(
+            window.VxQuestTracker.metrics.fromFeedPotion({ potion_kind: kind })
+          );
+          window.VxQuestTracker.recordDailyCare();
+        }
+        return data;  // { champion, result, potionRemaining }
+      }
       const code = data.error || `http_${res.status}`;
       const err = new Error(`${code}: ${data.message || ''}`.trim());
       // Retry on 5xx server errors only (4xx = bad input, won't change)
@@ -11952,6 +12082,12 @@ async function apiEvolveChampion({ champion_id, evolution_potion_id }) {
   if (!res.ok) {
     const code = data.error || `http_${res.status}`;
     throw new Error(`${code}: ${data.message || ''}`.trim());
+  }
+  // VulcanX cross-game tracker — champion_evolutions + stage milestones
+  if (window.VxQuestTracker) {
+    window.VxQuestTracker.recordMany(
+      window.VxQuestTracker.metrics.fromEvolve({ to_stage: data?.newStageIdx })
+    );
   }
   return data;  // { champion, newStageIdx, newStageName, levelAfter, potionRemaining }
 }
@@ -13599,6 +13735,17 @@ async function apiRequestMatch({ champion_id, stance, current_elo, equipped, abi
     const code = data.error || `http_${res.status}`;
     throw new Error(`${code}: ${data.message || ''}`.trim());
   }
+  // VulcanX cross-game tracker — pvp_battles_completed/won + daily-care.
+  // data.result is "win" | "loss" | "draw". Attacker side, so was_defender=false.
+  if (window.VxQuestTracker) {
+    const won = data?.result === 'win';
+    window.VxQuestTracker.recordMany(
+      window.VxQuestTracker.metrics.fromArenaBattle({
+        won, mode: data?.mode === 'pvp' ? 'pvp' : 'pvp_bot', was_defender: false,
+      })
+    );
+    if (won) window.VxQuestTracker.recordDailyCare();
+  }
   return data;
 }
 
@@ -13702,6 +13849,10 @@ async function apiInviteCreate(payload) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(`${data.error || 'http_'+res.status}: ${data.message || ''}`.trim());
+  // VulcanX cross-game tracker — pvp_invites_sent (Direct Combat weekly).
+  if (window.VxQuestTracker) {
+    window.VxQuestTracker.recordMany(window.VxQuestTracker.metrics.fromInviteCreate());
+  }
   return data;
 }
 async function apiInviteList() {
@@ -13718,6 +13869,17 @@ async function apiInviteAccept(payload) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(`${data.error || 'http_'+res.status}: ${data.message || ''}`.trim());
+  // VulcanX cross-game tracker — invite-mode arena battle (Champion of Champions / Direct Conquest).
+  if (window.VxQuestTracker) {
+    // pvp_invite_accept response shape: { battle:{ winner:'a'|'b'|'draw' }, result:'win'|'loss'|'draw', ... }
+    const won = data?.result === 'win' || data?.battle?.winner === 'a';
+    window.VxQuestTracker.recordMany(
+      window.VxQuestTracker.metrics.fromArenaBattle({
+        won, mode: 'invite', was_defender: false,
+      })
+    );
+    if (won) window.VxQuestTracker.recordDailyCare();
+  }
   return data;
 }
 async function apiInviteDecline(invite_id) {
@@ -15133,9 +15295,30 @@ async function runWalletHeartbeat() {
   } catch (_) { /* transient — retry next tick */ }
 }
 
+// Boot the VulcanX quest tracker once the wallet is bound. Idempotent
+// — re-callable when identity changes. The tracker handles its own
+// flush loop + completion poll. See vulcanx/index.js.
+function bootVulcanxTracker() {
+  const w = getWallet();
+  if (!w) return;
+  if (!window.VxQuestTracker) {
+    // Module hasn't loaded yet (race on cold cache). Retry once on next
+    // tick — module loading is fast but not synchronous.
+    setTimeout(bootVulcanxTracker, 250);
+    return;
+  }
+  window.VxQuestTracker.init({ wallet: w })
+    .then((ok) => console.debug('[vulcanx] init', ok ? 'ok' : 'dormant'))
+    .catch((e) => console.warn('[vulcanx] init failed', e?.message));
+}
+
 function startWalletHeartbeat() {
   if (_walletHeartbeatTimer) clearInterval(_walletHeartbeatTimer);
   _walletHeartbeatTimer = setInterval(runWalletHeartbeat, 30000);
+  // Fire the quest tracker init on heartbeat start — it's the natural
+  // place: only runs after wallet is bound, idempotent, and once per
+  // page session is plenty.
+  try { bootVulcanxTracker(); } catch (e) { console.warn('[vulcanx] boot failed', e); }
   // Also fire one right after tab returns to foreground — catches phones
   // that slept mid-session and woke up with a dead WC socket.
   document.addEventListener('visibilitychange', () => {
