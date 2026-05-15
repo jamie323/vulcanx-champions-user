@@ -54,7 +54,10 @@ export function fromChampionCreate(_meta = {}) {
 // ── Feeding ─────────────────────────────────────────────────────────
 
 export function fromFeedPotion(meta = {}) {
-  const out = [{ metric: 'champions_fed', delta: 1 }];
+  // metric name matches Rana's seeded catalog (singular, action-style).
+  // Don't switch this without coordinating — the gateway silently
+  // drops deltas whose metric isn't in the catalog.
+  const out = [{ metric: 'champion_feed', delta: 1 }];
   // potion_kind = minor|major|epic|evolution|healing
   // Trait Tinker counts only minor/major/epic (the stat-allocation kind).
   const k = meta.potion_kind;
@@ -89,8 +92,14 @@ export function fromEvolve(meta = {}) {
 // ── Arena ──────────────────────────────────────────────────────────
 
 export function fromArenaBattle(meta = {}) {
+  // 'arena_win' is the metric Rana seeded for Daily Skirmish. Keep the
+  // additional finer-grained metrics in case Rana seeds quests for
+  // them later; they'll be silently dropped until then.
   const out = [{ metric: 'pvp_battles_completed', delta: 1 }];
-  if (meta.won) out.push({ metric: 'pvp_battles_won', delta: 1 });
+  if (meta.won) {
+    out.push({ metric: 'arena_win',       delta: 1 });   // ← matches catalog
+    out.push({ metric: 'pvp_battles_won', delta: 1 });   // aliased for future
+  }
   if (meta.won && meta.mode === 'invite') {
     out.push({ metric: 'pvp_invite_wins', delta: 1 });
   }
