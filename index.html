@@ -1051,6 +1051,52 @@
   .step-pill.current { color: var(--accent); border-color: var(--accent);
     background: rgba(255,205,107,0.1); }
 
+  /* Supply / urgency badges on adopt cards + buy page */
+  .bl-supply {
+    margin-top: 8px;
+    padding: 5px 9px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    display: inline-block;
+    font-family: monospace;
+  }
+  .bl-supply.normal {
+    color: var(--accent);
+    background: rgba(255,205,107,0.10);
+    border: 1px solid rgba(255,205,107,0.25);
+  }
+  .bl-supply.low {
+    color: #ff9d3a;
+    background: rgba(255,150,40,0.12);
+    border: 1px solid rgba(255,150,40,0.40);
+  }
+  .bl-supply.critical {
+    color: #ff4d4d;
+    background: rgba(255,80,80,0.14);
+    border: 1px solid rgba(255,80,80,0.55);
+    animation: bl-supply-pulse 2s ease-in-out infinite;
+  }
+  .bl-supply.soldout {
+    color: #888;
+    background: rgba(120,120,120,0.10);
+    border: 1px solid rgba(120,120,120,0.30);
+  }
+  @keyframes bl-supply-pulse {
+    0%, 100% { box-shadow: 0 0 6px rgba(255,80,80,0.2); }
+    50%      { box-shadow: 0 0 14px rgba(255,80,80,0.5); }
+  }
+  .bl-pioneer {
+    display: block;
+    margin-top: 4px;
+    font-size: 10px;
+    color: var(--legend);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
   /* Locked species / bloodline cards (QA phase — only Orc Ironfang adoptable) */
   .species-card.locked, .bloodline-card.locked {
     position: relative; opacity: 0.45; cursor: not-allowed; pointer-events: none;
@@ -12151,6 +12197,8 @@ function makeChampionId() {
 async function addChampion({ species_id, bloodline_id, name }) {
   const champion = await apiCreateChampion({ species_id, bloodline_id, name });
   myChampions.push(champion);
+  // Supply-cache is now stale — next adopt screen visit will re-fetch.
+  if (typeof invalidateSupplyCache === 'function') invalidateSupplyCache();
   return champion;
 }
 
@@ -12589,9 +12637,52 @@ function pickSpecies(species_id) {
   navTo('adopt-bloodline', species_id);
 }
 
+// Per-bloodline supply state — populated on first adopt-screen visit
+// via fetchSupplyOnce(). Keyed by "species/bloodline" (e.g. "orc/ironfang").
+// Fields per entry: { minted, remaining, pioneer_rank_next }
+let _supplyCache = null;
+async function fetchSupplyOnce() {
+  if (_supplyCache) return _supplyCache;
+  try {
+    const res = await apiFetch(`${FN_BASE}/champion_supply`, { headers: AUTH_HEADERS });
+    if (res.ok) _supplyCache = await res.json();
+  } catch (e) {
+    console.debug('[supply] fetch skipped:', e?.message);
+  }
+  return _supplyCache;
+}
+// Drop the cache when a champion is created so the next adopt screen
+// shows updated counts. Hooked from confirmAdopt() below.
+function invalidateSupplyCache() { _supplyCache = null; }
+
+function _supplyBadge(species_id, bloodline_id) {
+  if (!_supplyCache) return '';
+  const k = `${species_id}/${bloodline_id}`;
+  const s = _supplyCache.bloodlines?.[k];
+  if (!s) return '';
+  const remaining = s.remaining;
+  const cap = _supplyCache.max_per_bloodline || 250;
+  // Tier by scarcity: <25 critical (red), <100 low (orange), else accent (gold)
+  const tier = remaining <= 0 ? 'soldout'
+             : remaining < 25 ? 'critical'
+             : remaining < 100 ? 'low'
+             : 'normal';
+  const label = remaining <= 0 ? 'SOLD OUT'
+              : remaining < 25 ? `🔥 ONLY ${remaining} LEFT`
+              : `${remaining} / ${cap} left`;
+  const pioneer = (s.pioneer_rank_next && s.pioneer_rank_next <= 10)
+    ? `<span class="bl-pioneer">⭐ Pioneer slot #${s.pioneer_rank_next} / 10 available</span>`
+    : '';
+  return `<div class="bl-supply ${tier}">${label}</div>${pioneer}`;
+}
+
 function renderBloodlinePicker() {
   const sp_id = adoptFlow.species_id;
   if (!sp_id) { navTo('adopt'); return; }
+  // Kick off supply fetch; first render runs even if it's not back yet,
+  // a second render fires when it lands. Avoids blocking the picker
+  // while the badge data loads.
+  fetchSupplyOnce().then(() => renderBloodlinePicker());
   const sp = SPECIES[sp_id];
   // QA (8 May): species labels starting with vowels (Orc, Elf) need
   // "an", others need "a". Tester-spotted nit. Cheaper than a full
@@ -12632,6 +12723,7 @@ function renderBloodlinePicker() {
     const lockedClass = adoptable ? '' : 'locked';
     const onclick = adoptable ? `onclick="pickBloodline('${id}')"` : '';
     const overlay = adoptable ? '' : '<div class="lock-overlay">🔒 Coming soon</div>';
+    const supplyHtml = adoptable ? _supplyBadge(sp_id, id) : '';
     return `
       <div class="bloodline-card ${lockedClass}" ${onclick}>
         ${overlay}
@@ -12639,6 +12731,7 @@ function renderBloodlinePicker() {
         <div class="bl-meta">
           <div class="bl-name">${bl.label}</div>
           <div class="bl-lore">${loreMap[id] || 'A unique bloodline.'}</div>
+          ${supplyHtml}
         </div>
       </div>`;
   }).join('');
@@ -12652,15 +12745,21 @@ function renderBuy() {
   const sp_id = adoptFlow.species_id;
   const bl_id = adoptFlow.bloodline_id;
   if (!sp_id || !bl_id) { navTo('adopt'); return; }
+  // Lazy-load supply so the buy summary can show "X of 250 left" too.
+  fetchSupplyOnce().then(() => {
+    if (window.location.hash.includes('adopt-buy')) renderBuy();
+  });
   const sp = SPECIES[sp_id];
   const bl = sp.bloodlines[bl_id];
   const stage0 = bl.stages[0];
   const defaultName = `${bl.heroName} the ${stage0.name}`;
+  const supplyHtml = _supplyBadge(sp_id, bl_id);
   document.getElementById('buyWrap').innerHTML = `
     <div class="buy-art"><img src="${stage0.img}" /></div>
     <div class="buy-summary">
       <h3 id="previewName">${defaultName}</h3>
       <div class="species">${sp.label} · ${bl.label} · Stage 1 ${stage0.name}</div>
+      ${supplyHtml}
     </div>
     <div class="buy-form">
       <label>Name your champion</label>
