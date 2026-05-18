@@ -9854,7 +9854,14 @@ const VxQuests = (() => {
     // 6 encounters spaced across the duration. Slots at 8%, 22%, 38%, 55%, 73%, 90%.
     const slots = [0.08, 0.22, 0.38, 0.55, 0.73, 0.90];
     // Seed from the eventId so re-rendering picks the same texts.
-    const seed = q.eventId ? q.eventId.split('').reduce((a,c)=>((a<<5)-a + c.charCodeAt(0))|0, 0) : 0;
+    // Coerce to string defensively — neurodrills reported TypeErrors
+    // here where legacy localStorage entries had numeric/missing
+    // eventIds and the crash bubbled all the way to renderView,
+    // killing the whole Adventures grid render.
+    const seedStr = String(q.eventId || '');
+    const seed = seedStr
+      ? seedStr.split('').reduce((a,c)=>((a<<5)-a + c.charCodeAt(0))|0, 0)
+      : 0;
     const out = [];
     for (let i = 0; i < slots.length; i++) {
       const at = Math.floor(slots[i] * duration);
@@ -9949,8 +9956,14 @@ const VxQuests = (() => {
       if (_activeChampForBrowse) sel.value = _activeChampForBrowse;
       sel.onchange = () => { _activeChampForBrowse = sel.value; renderGrid(); };
     }
-    renderActive();
-    renderGrid();
+    // Defensive: renderActive can throw on legacy / malformed localStorage
+    // quest entries (neurodrills hit a TypeError in encountersForQuest
+    // that took out renderGrid too). Isolate the two renders so one
+    // failure doesn't blank the entire Adventures view.
+    try { renderActive(); }
+    catch (e) { console.warn('[adventures] renderActive failed:', e?.message); }
+    try { renderGrid(); }
+    catch (e) { console.warn('[adventures] renderGrid failed:', e?.message); }
     // Tick the timers every second while the view is open
     if (_tickInterval) clearInterval(_tickInterval);
     _tickInterval = setInterval(() => renderActive(), 1000);
