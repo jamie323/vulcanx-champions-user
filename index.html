@@ -4968,6 +4968,14 @@
     border: 1px solid rgba(255,205,107,0.15);
     border-radius: 8px;
   }
+  /* All stat acronyms (.cc-stat-row, .qc-stat-pill, .ar-stat-row, etc)
+     carry a native title= tooltip. Underdot the label so users know
+     they can hover for an explanation. */
+  .cc-stat-row[title], .qc-stat-pill[title], .ar-stat-row[title] {
+    cursor: help;
+  }
+  .qc-stat-pill { position: relative; }
+
   .cc-stat-row {
     display: flex; justify-content: space-between;
     font-size: 12px;
@@ -8180,6 +8188,23 @@ const TRAITS = ['STR','VIT','AGI','FER','INT','LCK'];
 const TRAIT_NAMES = { STR:'Strength',VIT:'Vitality',AGI:'Agility',
   FER:'Ferocity',INT:'Intelligence',LCK:'Luck' };
 const TRAIT_EMOJI = { STR:'💪', VIT:'❤️', AGI:'🏃', FER:'⚔️', INT:'🧠', LCK:'🍀' };
+// One-sentence descriptions for hover tooltips. Threaded into every
+// place that renders a bare 3-letter acronym (stat pills, stat rows,
+// allocation modal, adventure-card pills) via traitTitle() — see
+// usages below.
+const TRAIT_DESC = {
+  STR: 'Physical damage output. Drives hit damage with melee/ranged weapons.',
+  VIT: 'Hit points + damage reduction. Higher VIT = more HP and tougher to kill.',
+  AGI: 'Initiative + dodge chance. Higher AGI swings first and avoids more hits.',
+  FER: 'Crit chance + crit multiplier. The "burst damage" stat.',
+  INT: 'Magic damage + spell resistance. Drives damage with magic-type weapons.',
+  LCK: 'Trigger chance on weapon signature effects + drop luck.',
+};
+function traitTitle(t) {
+  const name = TRAIT_NAMES[t] || t;
+  const desc = TRAIT_DESC[t] || '';
+  return `${t} · ${name} — ${desc}`;
+}
 
 // ─── ELEMENTAL AFFINITY (Phase 4.5 — Pokemon-style type matchups) ───────
 // Mirrors backend champions_battle.ts. Damage multiplier on top of stats:
@@ -8845,7 +8870,7 @@ function openAllocModal(sourceEl) {
     const emoji = TRAIT_EMOJI[t] || '';
     rows.insertAdjacentHTML('beforeend',
       `<div class="alloc-row" style="${isMaxed?'opacity:0.55;':''}">
-        <div class="alloc-label" title="${t}" style="color:var(--${t.toLowerCase()}-color,var(--accent));">
+        <div class="alloc-label" title="${traitTitle(t)}" style="color:var(--${t.toLowerCase()}-color,var(--accent));cursor:help;">
           <span style="font-size:14px;margin-right:4px;">${emoji}</span>${fullName}${isMaxed?' · MAX':''}
         </div>
         <input type="range" min="0" max="${Math.max(0,maxAllowed)}" value="0" data-t="${t}" ${isMaxed?'disabled':''}/>
@@ -9984,8 +10009,8 @@ const VxQuests = (() => {
     const champBusy = champId && getActiveQuest(champId) != null;
     root.innerHTML = '';
     for (const [advId, adv] of Object.entries(ADVENTURES)) {
-      const primaryPills = adv.primaries.map(t => `<span class="qc-stat-pill">${t}</span>`).join('');
-      const secondaryPills = adv.secondaries.map(t => `<span class="qc-stat-pill secondary">${t}</span>`).join('');
+      const primaryPills = adv.primaries.map(t => `<span class="qc-stat-pill" title="${traitTitle(t)}">${t}</span>`).join('');
+      const secondaryPills = adv.secondaries.map(t => `<span class="qc-stat-pill secondary" title="${traitTitle(t)}">${t}</span>`).join('');
       const disabled = champBusy ? 'disabled' : '';
       root.insertAdjacentHTML('beforeend', `
         <div class="quest-card ${disabled}" data-adv="${advId}">
@@ -10015,8 +10040,8 @@ const VxQuests = (() => {
     document.getElementById('qsmBlurb').textContent = adv.blurb;
     const tags = document.getElementById('qsmStatTags');
     tags.innerHTML =
-      adv.primaries.map(t => `<span class="qc-stat-pill">PRIMARY · ${t}</span>`).join('') +
-      adv.secondaries.map(t => `<span class="qc-stat-pill secondary">${t}</span>`).join('');
+      adv.primaries.map(t => `<span class="qc-stat-pill" title="${traitTitle(t)}">PRIMARY · ${t}</span>`).join('') +
+      adv.secondaries.map(t => `<span class="qc-stat-pill secondary" title="${traitTitle(t)}">${t}</span>`).join('');
     // Reward range strings using current adventure
     const fmtRange = (durK) => {
       const d = DURATIONS[durK];
@@ -12387,7 +12412,7 @@ async function renderChampionCard(payload) {
       const cap = capAtLevel(champ.level)[i];
       const val = champ.stats?.[t] || 0;
       statsBox.insertAdjacentHTML('beforeend',
-        `<div class="cc-stat-row"><span class="lbl">${TRAIT_EMOJI[t]} ${t}</span><span class="val">${Math.round(val)}<span style="color:var(--muted);"> / ${cap}</span></span></div>`);
+        `<div class="cc-stat-row" title="${traitTitle(t)}"><span class="lbl">${TRAIT_EMOJI[t]} ${t}</span><span class="val">${Math.round(val)}<span style="color:var(--muted);"> / ${cap}</span></span></div>`);
     });
   }
 
@@ -14889,7 +14914,7 @@ function _renderStatCompare(resp) {
     const b = Math.round(botStats[t] || 0);
     const max = Math.max(1, a, b);
     return `
-      <div class="ar-stat-row">
+      <div class="ar-stat-row" title="${traitTitle(t)}">
         <div class="ar-stat-bar-l"><div style="width:${(a/max*100).toFixed(0)}%;"></div></div>
         <div class="ar-stat-name">${TRAIT_LABELS[t]}</div>
         <div class="ar-stat-bar-r"><div style="width:${(b/max*100).toFixed(0)}%;"></div></div>
