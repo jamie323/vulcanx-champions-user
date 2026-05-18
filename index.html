@@ -5741,7 +5741,11 @@
   <button class="nav-btn" data-view="adopt" title="Adopt a new champion"><span class="nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/><circle cx="12" cy="12" r="2"/></svg></span><span class="nav-txt">Adopt</span></button>
   <button class="nav-btn" data-view="howto" title="How it Works — the player guide"><span class="nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H19v15H5.5A1.5 1.5 0 0 0 4 19.5z"/><path d="M4 19.5A1.5 1.5 0 0 0 5.5 21H19"/><path d="M8 7h7M8 11h7"/></svg></span><span class="nav-txt">Guide</span></button>
   <button class="nav-btn" data-view="explore" title="Explore — top-ranked champions"><span class="nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/><path d="M11 8v6M8 11h6"/></svg></span><span class="nav-txt">Explore</span></button>
-  <button class="nav-btn" data-view="quests" title="Quests — send champions on adventures"><span class="nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v16M15 6v16"/></svg></span><span class="nav-txt">Quests</span></button>
+  <!-- Renamed Quests → Adventures (2026-05-17) to disambiguate from the
+       cross-game "Chest Quests" gateway. data-view attribute and CSS
+       classes (.view-quests) keep the old internal id to avoid a wider
+       refactor — only user-facing strings change. -->
+  <button class="nav-btn" data-view="quests" title="Adventures — send champions on adventures"><span class="nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v16M15 6v16"/></svg></span><span class="nav-txt">Adventures</span></button>
   <button class="nav-btn" data-view="campaign" title="Campaign — solo PvE story mode (5 chapters)"><span class="nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 19 5-9 4 6 3-4 6 7z"/><path d="M16 4v6"/><path d="M16 4h4l-1 2 1 2h-4"/></svg></span><span class="nav-txt">Campaign</span></button>
   <button class="nav-btn" id="arenaNavBtn" title="Arena — battle other champions"><span class="nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h5v5L9 19H4v-5z"/><path d="m10 4-5 5 10 11 5-5z"/><path d="m13 7 4 4M7 13l4 4"/></svg></span><span class="nav-txt">Arena</span></button>
   <!-- Trello (8 May): "leaderboard somewhere in the app — people wanna
@@ -5860,7 +5864,7 @@
       <button class="howto-tab" data-tab="ht-adopt">🥚 Adopt</button>
       <button class="howto-tab" data-tab="ht-feed">🧪 Feed</button>
       <button class="howto-tab" data-tab="ht-equipment">⚔️ Equipment</button>
-      <button class="howto-tab" data-tab="ht-quests">🗺️ Quests</button>
+      <button class="howto-tab" data-tab="ht-quests">🗺️ Adventures</button>
       <button class="howto-tab" data-tab="ht-arena">🛡️ Arena</button>
       <button class="howto-tab" data-tab="ht-leaderboard">🏆 Ranks</button>
       <button class="howto-tab" data-tab="ht-campaign">🗡️ Campaign</button>
@@ -6066,7 +6070,7 @@
     <!-- QUESTS -->
     <section id="ht-quests" class="howto-panel">
       <div class="panel-icon">🗺️</div>
-      <h2 style="text-align:center;">Quests &amp; Adventures</h2>
+      <h2 style="text-align:center;">Adventures</h2>
       <p class="lead" style="text-align:center;">
         Send your champion on async expeditions. They're gone for 15 min – 4 hours;
         when they return, stat XP + Evolution Bar progress is applied directly. Multiple champions
@@ -6405,7 +6409,7 @@
           <p>Capped at +20/day per champion so grinding 100 potions doesn't insta-max.</p>
         </div>
         <div class="col">
-          <h5>Quest Complete · +5</h5>
+          <h5>Adventure Complete · +5</h5>
           <p>Coming home from an adventure is real bond fuel.</p>
         </div>
         <div class="col">
@@ -6449,7 +6453,7 @@
         <div class="howto-feature-card"><div class="ic">🐲</div><h4>Champions</h4><p>DB-backed for QA. ERC-721 after launch.</p></div>
         <div class="howto-feature-card"><div class="ic">🎨</div><h4>Art</h4><p>Full 20 stages for <b>Orc Ironfang</b>. Other bloodlines use placeholder art.</p></div>
         <div class="howto-feature-card"><div class="ic">⚔️</div><h4>Arena</h4><p>Live vs bots. Real PvP arrives in Phase 8.</p></div>
-        <div class="howto-feature-card"><div class="ic">🗺️</div><h4>Quests</h4><p>Live, server-timed. Async — close the tab and come back.</p></div>
+        <div class="howto-feature-card"><div class="ic">🗺️</div><h4>Adventures</h4><p>Live, server-timed. Async — close the tab and come back.</p></div>
         <div class="howto-feature-card"><div class="ic">🔥</div><h4>Daily streak</h4><p>Live. Resets if you skip a calendar day.</p></div>
       </div>
 
@@ -6507,7 +6511,7 @@
         </div>
       </div>
 
-      <h3>Quests &amp; Daily</h3>
+      <h3>Adventures &amp; Daily</h3>
       <div class="howto-twocol">
         <div class="col">
           <h5>Can I close the tab during a quest?</h5>
@@ -10026,7 +10030,7 @@ const VxQuests = (() => {
       renderActive();
       renderGrid();
     } catch (e) {
-      vxAlert(e.message || 'Failed to start quest', { title: 'Quest start failed', icon: '🗺️', variant: 'error' });
+      vxAlert(e.message || 'Failed to start adventure', { title: 'Adventure start failed', icon: '🗺️', variant: 'error' });
     }
   }
 
@@ -11516,7 +11520,7 @@ bindIf('feedHero', 'click', () => {
   // Trello (28 Apr): block feeding while the champion is on a quest —
   // the keeper can't reach a champion who's away on adventure.
   if (window.VxQuests && state.championId && VxQuests.getActiveQuest(state.championId)) {
-    vxAlert('Your champion is away on an adventure. They\'ll be back soon — quest progress fills the Evolution Bar without potions.',
+    vxAlert('Your champion is away on an adventure. They\'ll be back soon — adventure progress fills the Evolution Bar without potions.',
       { title: '🗺️ On Adventure', icon: '🗺️' });
     return;
   }
@@ -11540,7 +11544,7 @@ bindIf('feedHero', 'click', () => {
     const tips = [];
     if (allocCount > 0) tips.push('• ✨ Use a Blessing (10–25% bar)');
     if (evoCount > 0)   tips.push('• ⚡ Use an Evolution Potion at the gate');
-    tips.push('• 🗺️ Send your champion on a Quest (free bar progress)');
+    tips.push('• 🗺️ Send your champion on an Adventure (free bar progress)');
     vxAlert(
       `All six stats are at cap for this stage — feeding more trait potions would just burn them.\n\nFill the Evolution Bar instead:\n\n${tips.join('\n')}`,
       { title: 'Stats maxed for this stage', icon: '🧪' }
@@ -11585,7 +11589,7 @@ bindIf('allocPotionRow', 'click', (e) => {
   // and removes any chance of false positives in the cap check.
   // The on-adventure gate stays — that's an unrelated correctness check.
   if (window.VxQuests && state.championId && VxQuests.getActiveQuest(state.championId)) {
-    vxAlert('Your champion is away on an adventure. They\'ll be back soon — quest progress fills the Evolution Bar without potions.',
+    vxAlert('Your champion is away on an adventure. They\'ll be back soon — adventure progress fills the Evolution Bar without potions.',
       { title: '🗺️ On Adventure', icon: '🗺️' });
     return;
   }
@@ -13249,7 +13253,7 @@ function openBatchFeedModal() {
   // who's away on adventure). The single-feed handler had this check; the
   // batch path was missed in the original fix.
   if (window.VxQuests && state.championId && VxQuests.getActiveQuest(state.championId)) {
-    vxAlert('Your champion is away on an adventure. They\'ll be back soon — quest progress fills the Evolution Bar without potions.',
+    vxAlert('Your champion is away on an adventure. They\'ll be back soon — adventure progress fills the Evolution Bar without potions.',
       { title: '🗺️ On Adventure', icon: '🗺️' });
     return;
   }
@@ -13318,7 +13322,7 @@ async function runBatchFeed(count) {
       ready_to_evolve: `Stopped — ready to evolve! (Bar full at the gate. Click ⚡ Evolve.)`,
       no_trait_available: `Stopped — no eligible trait left to feed.`,
       out_of_potions: `Stopped — out of trait potions in inventory.`,
-      all_traits_capped: `Stopped — all stats are maxed for this level. Try a Blessing, Evolution Potion, or send your champion on a Quest.`,
+      all_traits_capped: `Stopped — all stats are maxed for this level. Try a Blessing, Evolution Potion, or send your champion on an Adventure.`,
     }[s.stopped_reason] || `Stopped: ${s.stopped_reason}`;
     resultEl.innerHTML = `
       <div style="font-size:14px;font-weight:700;color:var(--accent);margin-bottom:6px;">
@@ -13350,7 +13354,7 @@ async function runBatchFeed(count) {
       // Pull out the underlying reason if present (e.g. "all_traits_capped")
       const reason = (msg.match(/:\s*([a-z_]+)\s*$/) || [])[1] || '';
       const friendlyReason = ({
-        all_traits_capped: 'All stats are maxed for this level. Try a Blessing, Evolution Potion, or send your champion on a Quest.',
+        all_traits_capped: 'All stats are maxed for this level. Try a Blessing, Evolution Potion, or send your champion on an Adventure.',
         no_trait_available: 'No eligible trait left to feed.',
         out_of_potions:    'Out of trait potions in inventory.',
       })[reason] || 'Nothing was fed this batch.';
