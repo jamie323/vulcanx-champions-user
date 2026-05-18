@@ -1633,6 +1633,19 @@
     border-left: 3px solid var(--accent);
     font-size: 12px;
   }
+  .inbox-row .ir-wager {
+    background: rgba(255,140,40,0.10);
+    color: var(--legend);
+    padding: 6px 10px; border-radius: 6px;
+    border: 1px solid rgba(255,140,40,0.35);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
   .inbox-row .ir-actions {
     display: flex; gap: 8px; margin-top: 4px;
   }
@@ -7406,6 +7419,18 @@
     <input type="text" id="cmWallet" class="cm-input" placeholder="0x1234…abcd" autocomplete="off" />
     <label class="cm-label" style="margin-top:12px;">Message (optional, ≤120 chars)</label>
     <input type="text" id="cmMessage" class="cm-input" placeholder="See you in the arena!" maxlength="120" />
+    <!-- Optional wager — DECLARATIVE for now; no PYR moves until the
+         on-chain escrow contract lands. UI surfaces the stake so the
+         recipient knows what's on the line. Winner takes 95% of pot;
+         5% goes to treasury. -->
+    <label class="cm-label" style="margin-top:12px;">
+      Wager PYR (optional, 0–10,000)
+      <span style="color:var(--muted); font-size:11px; font-weight:400;">
+        Winner takes 95% of pot · 5% treasury rake
+      </span>
+    </label>
+    <input type="number" id="cmWager" class="cm-input"
+           placeholder="0 (no stake)" min="0" max="10000" step="1" />
     <div class="cm-summary" id="cmSummary"></div>
     <div class="cm-actions">
       <button class="btn-secondary" onclick="closeChallengeModal()">Cancel</button>
@@ -14053,6 +14078,7 @@ function renderInboxLists() {
             </div>
             <div class="ir-summary">${summary} · ${stance} · ${ability}</div>
             ${i.message ? `<div class="ir-msg">"${i.message}"</div>` : ''}
+            ${i.wager_pyr > 0 ? `<div class="ir-wager">💰 ${i.wager_pyr} PYR wagered · winner takes ${Math.floor(i.wager_pyr * 2 * 0.95)} PYR</div>` : ''}
             <div class="ir-actions">
               <button class="ir-accept" data-action="accept" data-id="${i.id}">⚔️ Accept</button>
               <button class="ir-decline" data-action="decline" data-id="${i.id}">✕ Decline</button>
@@ -14160,10 +14186,13 @@ bindIf('cmSendBtn', 'click', async () => {
   const btn = document.getElementById('cmSendBtn');
   btn.disabled = true; btn.textContent = 'Sending…';
   try {
+    const wagerRaw = document.getElementById('cmWager')?.value || '';
+    const wager_pyr = Math.max(0, Math.min(10000, Math.floor(Number(wagerRaw) || 0)));
     await apiInviteCreate({
       champion_id: ch.id, to_wallet: toWallet,
       stance: _arenaStance, ability_id, equipped,
       message: msg || undefined,
+      wager_pyr: wager_pyr || undefined,
     });
     closeChallengeModal();
     vxAlert(`Challenge sent to ${toWallet.slice(0,6)}…${toWallet.slice(-4)}. Expires in 24h.`,
@@ -14222,6 +14251,7 @@ function openAcceptInviteModal(inviteId) {
         ${inv.from_loadout?.weapon_id ? ` · Weapon: ${inv.from_loadout.weapon_id.replace(/_/g,' ')}` : ''}
       </div>
       ${inv.message ? `<div class="aio-msg">"${inv.message}"</div>` : ''}
+      ${inv.wager_pyr > 0 ? `<div class="ir-wager" style="margin-top:8px;">💰 ${inv.wager_pyr} PYR wagered · winner takes ${Math.floor(inv.wager_pyr * 2 * 0.95)} PYR (after 5% rake)</div>` : ''}
     `;
   }
   // Populate champion select with the player's owned champions
