@@ -206,7 +206,8 @@
           "passive": {
             "name": "Iron Will",
             "description": "+5% damage reduction while below 30% HP"
-          }
+          },
+          "story": "Grokk of the Ironfang clan was forged in the smoking pits beneath the Black Mountains, where weakness is beaten out and resolve hammered in. Their warriors bend before they break, and only the foolish mistake patience for mercy."
         },
         "ashclan": {
           "label": "Ashclan",
@@ -217,165 +218,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/orc/ashclan/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/orc/ashclan/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/orc/ashclan/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/orc/ashclan/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/orc/ashclan/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/orc/ashclan/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/orc/ashclan/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/orc/ashclan/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/orc/ashclan/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/orc/ashclan/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/orc/ashclan/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/orc/ashclan/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/orc/ashclan/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/orc/ashclan/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/orc/ashclan/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/orc/ashclan/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/orc/ashclan/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/orc/ashclan/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/orc/ashclan/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/orc/ashclan/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 1.3,
             "VIT": 0.9,
@@ -387,7 +388,8 @@
           "passive": {
             "name": "Smoldering Fury",
             "description": "+8% STR each round survived (caps at +24%)"
-          }
+          },
+          "story": "Ashkar Bonecaller speaks to the embers that linger after every battle, drawing strength from the smoke of the fallen. The Ashclan walk last from every burning field \u2014 and arrive first at the next."
         },
         "bloodfang": {
           "label": "Bloodfang",
@@ -398,165 +400,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/orc/bloodfang/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/orc/bloodfang/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/orc/bloodfang/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/orc/bloodfang/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/orc/bloodfang/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/orc/bloodfang/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/orc/bloodfang/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/orc/bloodfang/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/orc/bloodfang/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/orc/bloodfang/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/orc/bloodfang/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/orc/bloodfang/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/orc/bloodfang/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/orc/bloodfang/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/orc/bloodfang/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/orc/bloodfang/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/orc/bloodfang/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/orc/bloodfang/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/orc/bloodfang/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/orc/bloodfang/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 1.1,
             "VIT": 1.3,
@@ -568,7 +570,8 @@
           "passive": {
             "name": "Bloodthirst",
             "description": "Heal 5% max HP on every crit"
-          }
+          },
+          "story": "The Bloodfang hunt because the hunt sharpens the spirit, not because they are hungry. Each wound dealt feeds the next blow, until the warrior is a moving storm of red iron."
         },
         "tuskborn": {
           "label": "Tuskborn",
@@ -579,165 +582,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/orc/tuskborn/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/orc/tuskborn/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/orc/tuskborn/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/orc/tuskborn/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/orc/tuskborn/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/orc/tuskborn/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/orc/tuskborn/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/orc/tuskborn/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/orc/tuskborn/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/orc/tuskborn/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/orc/tuskborn/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/orc/tuskborn/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/orc/tuskborn/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/orc/tuskborn/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/orc/tuskborn/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/orc/tuskborn/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/orc/tuskborn/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/orc/tuskborn/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/orc/tuskborn/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/orc/tuskborn/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 1.1,
             "VIT": 1.3,
@@ -749,7 +752,8 @@
           "passive": {
             "name": "Tribe's Bond",
             "description": "+10% damage while below 50% HP"
-          }
+          },
+          "story": "Grom of the Tuskborn is never alone \u2014 his clan stands behind every swing, and his rage rises sharpest when his kin lie wounded. A Tuskborn cornered fights for ten."
         },
         "dreadclaw": {
           "label": "Dreadclaw",
@@ -760,165 +764,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/orc/dreadclaw/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/orc/dreadclaw/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/orc/dreadclaw/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/orc/dreadclaw/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/orc/dreadclaw/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/orc/dreadclaw/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/orc/dreadclaw/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/orc/dreadclaw/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/orc/dreadclaw/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/orc/dreadclaw/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/orc/dreadclaw/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/orc/dreadclaw/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/orc/dreadclaw/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/orc/dreadclaw/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/orc/dreadclaw/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/orc/dreadclaw/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/orc/dreadclaw/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/orc/dreadclaw/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/orc/dreadclaw/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/orc/dreadclaw/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 1.2,
             "VIT": 1.0,
@@ -930,7 +934,8 @@
           "passive": {
             "name": "Skull Reaper",
             "description": "+5% damage per crit landed this fight (stacks 4\u00d7)"
-          }
+          },
+          "story": "Skarn the Skull Reaper carries a tally carved into his pauldron, one notch per heart stopped. The Dreadclaw believe a critical blow is a sacrament, and they tend it with cold devotion."
         }
       }
     },
@@ -970,165 +975,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/elf/moonsong/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/elf/moonsong/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/elf/moonsong/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/elf/moonsong/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/elf/moonsong/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/elf/moonsong/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/elf/moonsong/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/elf/moonsong/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/elf/moonsong/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/elf/moonsong/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/elf/moonsong/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/elf/moonsong/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/elf/moonsong/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/elf/moonsong/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/elf/moonsong/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/elf/moonsong/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/elf/moonsong/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/elf/moonsong/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/elf/moonsong/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/elf/moonsong/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 0.9,
             "VIT": 0.9,
@@ -1140,7 +1145,8 @@
           "passive": {
             "name": "Moonlit Grace",
             "description": "+10% dodge chance in Round 1"
-          }
+          },
+          "story": "The Moonsong walk between the silver wash of moonlight and the dark beneath it, slipping past blades meant to find them. Their grace is not vanity \u2014 it is the only armor their lithe frames will ever need."
         },
         "sunweaver": {
           "label": "Sunweaver",
@@ -1151,165 +1157,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/elf/sunweaver/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/elf/sunweaver/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/elf/sunweaver/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/elf/sunweaver/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/elf/sunweaver/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/elf/sunweaver/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/elf/sunweaver/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/elf/sunweaver/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/elf/sunweaver/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/elf/sunweaver/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/elf/sunweaver/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/elf/sunweaver/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/elf/sunweaver/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/elf/sunweaver/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/elf/sunweaver/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/elf/sunweaver/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/elf/sunweaver/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/elf/sunweaver/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/elf/sunweaver/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/elf/sunweaver/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 0.8,
             "VIT": 0.9,
@@ -1321,7 +1327,8 @@
           "passive": {
             "name": "Solar Charge",
             "description": "First INT spell of the match deals +30% damage"
-          }
+          },
+          "story": "Sunweavers draw a current of solar charge into their open palms each dawn, releasing it across the battlefield as searing light. To meet one at noon is to fight a furnace that smiles."
         },
         "nightshade": {
           "label": "Nightshade",
@@ -1332,165 +1339,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/elf/nightshade/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/elf/nightshade/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/elf/nightshade/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/elf/nightshade/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/elf/nightshade/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/elf/nightshade/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/elf/nightshade/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/elf/nightshade/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/elf/nightshade/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/elf/nightshade/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/elf/nightshade/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/elf/nightshade/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/elf/nightshade/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/elf/nightshade/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/elf/nightshade/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/elf/nightshade/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/elf/nightshade/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/elf/nightshade/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/elf/nightshade/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/elf/nightshade/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 1.0,
             "VIT": 0.8,
@@ -1502,7 +1509,8 @@
           "passive": {
             "name": "Shadow Strike",
             "description": "If you win initiative, your first hit is a guaranteed crit"
-          }
+          },
+          "story": "Nightshade adepts learn to stand inside a shadow before they learn to draw a blade. Their first strike is always the one their enemy never sees coming."
         }
       }
     },
@@ -1542,165 +1550,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/goblin/irontooth/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/goblin/irontooth/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/goblin/irontooth/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/goblin/irontooth/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/goblin/irontooth/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/goblin/irontooth/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/goblin/irontooth/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/goblin/irontooth/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/goblin/irontooth/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/goblin/irontooth/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/goblin/irontooth/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/goblin/irontooth/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/goblin/irontooth/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/goblin/irontooth/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/goblin/irontooth/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/goblin/irontooth/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/goblin/irontooth/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/goblin/irontooth/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/goblin/irontooth/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/goblin/irontooth/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 1.0,
             "VIT": 1.1,
@@ -1712,7 +1720,8 @@
           "passive": {
             "name": "Bite Back",
             "description": "Reflect 15% of damage taken back to attacker"
-          }
+          },
+          "story": "Irontooth goblins file their fangs against the bones of those who underestimate them, and an Irontooth bite carries the grudge of every previous mark. The smallest jaw in the warband, the longest memory."
         },
         "swampskin": {
           "label": "Swampskin",
@@ -1723,165 +1732,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/goblin/swampskin/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/goblin/swampskin/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/goblin/swampskin/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/goblin/swampskin/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/goblin/swampskin/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/goblin/swampskin/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/goblin/swampskin/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/goblin/swampskin/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/goblin/swampskin/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/goblin/swampskin/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/goblin/swampskin/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/goblin/swampskin/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/goblin/swampskin/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/goblin/swampskin/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/goblin/swampskin/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/goblin/swampskin/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/goblin/swampskin/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/goblin/swampskin/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/goblin/swampskin/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/goblin/swampskin/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 0.9,
             "VIT": 1.0,
@@ -1893,7 +1902,8 @@
           "passive": {
             "name": "Slippery",
             "description": "10% chance to fully dodge any incoming attack"
-          }
+          },
+          "story": "Swampskin warriors are coated in the slick weed-oils of the marshes \u2014 blows slide off them, grips slip free, and they laugh while you flail. Try to pin one and you'll find yourself face-down in the reeds."
         },
         "emberskin": {
           "label": "Emberskin",
@@ -1904,165 +1914,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/goblin/emberskin/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/goblin/emberskin/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/goblin/emberskin/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/goblin/emberskin/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/goblin/emberskin/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/goblin/emberskin/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/goblin/emberskin/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/goblin/emberskin/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/goblin/emberskin/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/goblin/emberskin/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/goblin/emberskin/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/goblin/emberskin/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/goblin/emberskin/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/goblin/emberskin/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/goblin/emberskin/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/goblin/emberskin/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/goblin/emberskin/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/goblin/emberskin/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/goblin/emberskin/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/goblin/emberskin/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 0.9,
             "VIT": 0.7,
@@ -2074,7 +2084,8 @@
           "passive": {
             "name": "Ember Burst",
             "description": "Crits deal an extra 20% damage"
-          }
+          },
+          "story": "Emberskin goblins crackle when they move, sparks shaking loose from their dust-dry hide. Strike one and you'll find the heat answers back \u2014 louder than they are."
         }
       }
     },
@@ -2114,165 +2125,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/demon/infernal/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/demon/infernal/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/demon/infernal/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/demon/infernal/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/demon/infernal/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/demon/infernal/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/demon/infernal/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/demon/infernal/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/demon/infernal/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/demon/infernal/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/demon/infernal/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/demon/infernal/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/demon/infernal/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/demon/infernal/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/demon/infernal/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/demon/infernal/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/demon/infernal/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/demon/infernal/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/demon/infernal/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/demon/infernal/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 0.9,
             "VIT": 0.9,
@@ -2284,7 +2295,8 @@
           "passive": {
             "name": "Hellfire",
             "description": "INT damage ignores 20% of opponent's spell resist"
-          }
+          },
+          "story": "Infernal demons carry the furnace in their chest, breathing hellfire as casually as a mortal exhales. To stand against one is to feel the wrath of every soul their flame has ever tasted."
         },
         "voidborn": {
           "label": "Voidborn",
@@ -2295,165 +2307,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/demon/voidborn/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/demon/voidborn/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/demon/voidborn/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/demon/voidborn/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/demon/voidborn/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/demon/voidborn/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/demon/voidborn/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/demon/voidborn/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/demon/voidborn/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/demon/voidborn/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/demon/voidborn/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/demon/voidborn/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/demon/voidborn/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/demon/voidborn/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/demon/voidborn/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/demon/voidborn/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/demon/voidborn/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/demon/voidborn/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/demon/voidborn/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/demon/voidborn/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 0.8,
             "VIT": 0.8,
@@ -2465,7 +2477,8 @@
           "passive": {
             "name": "Void Drain",
             "description": "Heal 8% of all magic damage you deal"
-          }
+          },
+          "story": "Voidborn drink the strength out of their foes, draining vitality the way a mortal draws breath. Each strike returns something to them \u2014 and takes something more from you."
         },
         "ichorskin": {
           "label": "Ichorskin",
@@ -2476,165 +2489,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/demon/ichorskin/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/demon/ichorskin/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/demon/ichorskin/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/demon/ichorskin/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/demon/ichorskin/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/demon/ichorskin/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/demon/ichorskin/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/demon/ichorskin/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/demon/ichorskin/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/demon/ichorskin/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/demon/ichorskin/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/demon/ichorskin/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/demon/ichorskin/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/demon/ichorskin/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/demon/ichorskin/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/demon/ichorskin/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/demon/ichorskin/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/demon/ichorskin/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/demon/ichorskin/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/demon/ichorskin/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 0.9,
             "VIT": 1.2,
@@ -2646,7 +2659,8 @@
           "passive": {
             "name": "Cursed Skin",
             "description": "The first crit you take each match is reduced to a normal hit"
-          }
+          },
+          "story": "The Ichorskin bleed black, and the black bleeds back. Their cursed skin makes them harder to wound the longer the fight goes \u2014 your sword tires before they do."
         }
       }
     },
@@ -2686,165 +2700,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/drakkin/emberscale/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/drakkin/emberscale/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/drakkin/emberscale/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/drakkin/emberscale/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/drakkin/emberscale/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/drakkin/emberscale/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/drakkin/emberscale/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/drakkin/emberscale/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/drakkin/emberscale/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/drakkin/emberscale/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/drakkin/emberscale/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/drakkin/emberscale/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/drakkin/emberscale/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/drakkin/emberscale/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/drakkin/emberscale/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/drakkin/emberscale/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/drakkin/emberscale/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/drakkin/emberscale/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/drakkin/emberscale/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/drakkin/emberscale/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 1.2,
             "VIT": 1.0,
@@ -2856,7 +2870,8 @@
           "passive": {
             "name": "Dragonbreath",
             "description": "Round 2 attack deals hybrid STR + INT damage"
-          }
+          },
+          "story": "Emberscale drakkin hatched in the calderas of the old volcanoes, their breath carrying the deep heat of the dragons that came before. A single roar can crack a shield wall \u2014 and melt the courage behind it."
         },
         "frostscale": {
           "label": "Frostscale",
@@ -2867,165 +2882,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/drakkin/frostscale/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/drakkin/frostscale/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/drakkin/frostscale/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/drakkin/frostscale/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/drakkin/frostscale/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/drakkin/frostscale/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/drakkin/frostscale/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/drakkin/frostscale/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/drakkin/frostscale/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/drakkin/frostscale/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/drakkin/frostscale/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/drakkin/frostscale/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/drakkin/frostscale/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/drakkin/frostscale/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/drakkin/frostscale/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/drakkin/frostscale/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/drakkin/frostscale/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/drakkin/frostscale/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/drakkin/frostscale/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/drakkin/frostscale/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 1.0,
             "VIT": 1.3,
@@ -3037,7 +3052,8 @@
           "passive": {
             "name": "Frozen Hide",
             "description": "+20% VIT while in Defensive stance"
-          }
+          },
+          "story": "Frostscale drakkin walk wrapped in the rime of the high glaciers, every blow that lands on them met by a wall of crystallised ice. Wear them down? They wear you down first."
         },
         "stormscale": {
           "label": "Stormscale",
@@ -3048,165 +3064,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/drakkin/stormscale/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/drakkin/stormscale/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/drakkin/stormscale/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/drakkin/stormscale/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/drakkin/stormscale/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/drakkin/stormscale/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/drakkin/stormscale/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/drakkin/stormscale/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/drakkin/stormscale/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/drakkin/stormscale/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/drakkin/stormscale/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/drakkin/stormscale/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/drakkin/stormscale/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/drakkin/stormscale/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/drakkin/stormscale/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/drakkin/stormscale/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/drakkin/stormscale/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/drakkin/stormscale/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/drakkin/stormscale/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/drakkin/stormscale/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 1.1,
             "VIT": 1.1,
@@ -3218,7 +3234,8 @@
           "passive": {
             "name": "Lightning Reflex",
             "description": "+15% AGI while at full HP"
-          }
+          },
+          "story": "Stormscale drakkin carry the wind in their wings and the lightning in their eyes. They strike between the heartbeats of slower fighters and are gone before the thunder catches up."
         }
       }
     },
@@ -3258,165 +3275,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/dwarf/ironbeard/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/dwarf/ironbeard/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/dwarf/ironbeard/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/dwarf/ironbeard/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/dwarf/ironbeard/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/dwarf/ironbeard/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/dwarf/ironbeard/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/dwarf/ironbeard/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/dwarf/ironbeard/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/dwarf/ironbeard/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/dwarf/ironbeard/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/dwarf/ironbeard/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/dwarf/ironbeard/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/dwarf/ironbeard/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/dwarf/ironbeard/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/dwarf/ironbeard/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/dwarf/ironbeard/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/dwarf/ironbeard/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/dwarf/ironbeard/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/dwarf/ironbeard/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 1.1,
             "VIT": 1.2,
@@ -3428,7 +3445,8 @@
           "passive": {
             "name": "Forged Resolve",
             "description": "Flat 10% damage reduction (always on)"
-          }
+          },
+          "story": "Ironbeards are forged in the deep halls, beards braided with iron rings won from every campaign survived. Their resolve, like their hammer-hafts, only grows denser with every blow it takes."
         },
         "stonehammer": {
           "label": "Stonehammer",
@@ -3439,165 +3457,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/dwarf/stonehammer/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/dwarf/stonehammer/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/dwarf/stonehammer/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/dwarf/stonehammer/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/dwarf/stonehammer/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/dwarf/stonehammer/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/dwarf/stonehammer/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/dwarf/stonehammer/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/dwarf/stonehammer/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/dwarf/stonehammer/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/dwarf/stonehammer/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/dwarf/stonehammer/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/dwarf/stonehammer/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/dwarf/stonehammer/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/dwarf/stonehammer/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/dwarf/stonehammer/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/dwarf/stonehammer/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/dwarf/stonehammer/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/dwarf/stonehammer/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/dwarf/stonehammer/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 1.1,
             "VIT": 1.3,
@@ -3609,7 +3627,8 @@
           "passive": {
             "name": "Anvil Strike",
             "description": "Every 2nd attack deals +25% damage"
-          }
+          },
+          "story": "A Stonehammer's first strike is a question \u2014 the second is the answer. They learn the anvil rhythm before they learn to walk, and each blow lands with the weight of the mountain that raised them."
         },
         "goldseeker": {
           "label": "Goldseeker",
@@ -3620,165 +3639,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/dwarf/goldseeker/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/dwarf/goldseeker/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/dwarf/goldseeker/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/dwarf/goldseeker/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/dwarf/goldseeker/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/dwarf/goldseeker/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/dwarf/goldseeker/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/dwarf/goldseeker/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/dwarf/goldseeker/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/dwarf/goldseeker/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/dwarf/goldseeker/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/dwarf/goldseeker/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/dwarf/goldseeker/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/dwarf/goldseeker/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/dwarf/goldseeker/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/dwarf/goldseeker/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/dwarf/goldseeker/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/dwarf/goldseeker/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/dwarf/goldseeker/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/dwarf/goldseeker/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 1.0,
             "VIT": 1.1,
@@ -3790,7 +3809,8 @@
           "passive": {
             "name": "Lucky Find",
             "description": "+15% LCK in matches with a PYR wager"
-          }
+          },
+          "story": "Goldseekers chase fortune the way other warriors chase glory, and the gods of luck seem to follow them home. Whatever a Goldseeker reaches for, the dice tend to favour."
         }
       }
     },
@@ -3830,165 +3850,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/beastkin/wolfkin/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/beastkin/wolfkin/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/beastkin/wolfkin/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/beastkin/wolfkin/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/beastkin/wolfkin/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/beastkin/wolfkin/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/beastkin/wolfkin/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/beastkin/wolfkin/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/beastkin/wolfkin/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/beastkin/wolfkin/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/beastkin/wolfkin/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/beastkin/wolfkin/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/beastkin/wolfkin/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/beastkin/wolfkin/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/beastkin/wolfkin/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/beastkin/wolfkin/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/beastkin/wolfkin/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/beastkin/wolfkin/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/beastkin/wolfkin/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/beastkin/wolfkin/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 1.1,
             "VIT": 1.0,
@@ -4000,7 +4020,8 @@
           "passive": {
             "name": "Pack Tactics",
             "description": "+10% STR when your PowerScore is lower than opponent's"
-          }
+          },
+          "story": "Wolfkin run in lockstep, every move triangulated against the pack-mind behind their eyes. A lone Wolfkin is a problem; a Wolfkin with its kin nearby is a slaughter."
         },
         "pantherkin": {
           "label": "Pantherkin",
@@ -4011,165 +4032,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/beastkin/pantherkin/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/beastkin/pantherkin/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/beastkin/pantherkin/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/beastkin/pantherkin/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/beastkin/pantherkin/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/beastkin/pantherkin/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/beastkin/pantherkin/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/beastkin/pantherkin/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/beastkin/pantherkin/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/beastkin/pantherkin/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/beastkin/pantherkin/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/beastkin/pantherkin/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/beastkin/pantherkin/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/beastkin/pantherkin/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/beastkin/pantherkin/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/beastkin/pantherkin/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/beastkin/pantherkin/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/beastkin/pantherkin/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/beastkin/pantherkin/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/beastkin/pantherkin/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 1.0,
             "VIT": 0.8,
@@ -4181,7 +4202,8 @@
           "passive": {
             "name": "Pounce",
             "description": "Always wins initiative (first strike guaranteed)"
-          }
+          },
+          "story": "Pantherkin warriors coil before they pounce, every muscle wound tight, every breath held. By the time you see one move, you are already inside the arc of its first claw."
         },
         "bearkin": {
           "label": "Bearkin",
@@ -4192,165 +4214,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/beastkin/bearkin/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/beastkin/bearkin/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/beastkin/bearkin/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/beastkin/bearkin/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/beastkin/bearkin/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/beastkin/bearkin/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/beastkin/bearkin/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/beastkin/bearkin/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/beastkin/bearkin/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/beastkin/bearkin/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/beastkin/bearkin/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/beastkin/bearkin/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/beastkin/bearkin/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/beastkin/bearkin/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/beastkin/bearkin/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/beastkin/bearkin/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/beastkin/bearkin/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/beastkin/bearkin/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/beastkin/bearkin/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/beastkin/bearkin/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 1.2,
             "VIT": 1.2,
@@ -4362,7 +4384,8 @@
           "passive": {
             "name": "Maul",
             "description": "Crits stun the opponent for 1 round (they skip their attack)"
-          }
+          },
+          "story": "Bearkin do not feint, do not retreat, do not consider the smaller blow. When a Bearkin commits to a strike, it is to maul \u2014 and the field afterward bears the mark of the meeting."
         }
       }
     },
@@ -4402,165 +4425,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/wraith/mourner/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/wraith/mourner/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/wraith/mourner/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/wraith/mourner/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/wraith/mourner/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/wraith/mourner/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/wraith/mourner/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/wraith/mourner/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/wraith/mourner/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/wraith/mourner/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/wraith/mourner/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/wraith/mourner/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/wraith/mourner/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/wraith/mourner/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/wraith/mourner/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/wraith/mourner/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/wraith/mourner/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/wraith/mourner/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/wraith/mourner/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/wraith/mourner/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 0.9,
             "VIT": 1.1,
@@ -4572,7 +4595,8 @@
           "passive": {
             "name": "Soul Link",
             "description": "First time you would die, survive at 1 HP (once per match)"
-          }
+          },
+          "story": "Lyra of the Skyweavers walks the bright threads stitched between the stars, drawing a soul-link from the constellations that watched her ancestors fall. Strike one and the bound spirit answers \u2014 colder than starlight, twice as keen."
         },
         "voidstalker": {
           "label": "Voidstalker",
@@ -4583,165 +4607,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/wraith/voidstalker/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/wraith/voidstalker/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/wraith/voidstalker/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/wraith/voidstalker/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/wraith/voidstalker/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/wraith/voidstalker/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/wraith/voidstalker/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/wraith/voidstalker/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/wraith/voidstalker/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/wraith/voidstalker/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/wraith/voidstalker/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/wraith/voidstalker/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/wraith/voidstalker/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/wraith/voidstalker/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/wraith/voidstalker/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/wraith/voidstalker/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/wraith/voidstalker/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/wraith/voidstalker/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/wraith/voidstalker/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/wraith/voidstalker/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 0.9,
             "VIT": 0.8,
@@ -4753,7 +4777,8 @@
           "passive": {
             "name": "Phase",
             "description": "15% chance to fully dodge any magic attack"
-          }
+          },
+          "story": "Voidstalkers slip between realities at will, blade entering before their body finishes the step. By the time you sense the chill behind you, the wound is already done."
         },
         "sunspire": {
           "label": "Sunspire",
@@ -4764,165 +4789,165 @@
               "name": "Whelp",
               "minLevel": 1,
               "zone": "nursery cave",
-              "img": null,
+              "img": "evolution20/wraith/sunspire/s01.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hatchling",
               "minLevel": 3,
               "zone": "nursery hearth",
-              "img": null,
+              "img": "evolution20/wraith/sunspire/s02.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Pup",
               "minLevel": 5,
               "zone": "home hearth",
-              "img": null,
+              "img": "evolution20/wraith/sunspire/s03.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Cub",
               "minLevel": 7,
               "zone": "village courtyard",
-              "img": null,
+              "img": "evolution20/wraith/sunspire/s04.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Youngling",
               "minLevel": 10,
               "zone": "village path",
-              "img": null,
+              "img": "evolution20/wraith/sunspire/s05.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Apprentice",
               "minLevel": 13,
               "zone": "training yard",
-              "img": null,
+              "img": "evolution20/wraith/sunspire/s06.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Initiate",
               "minLevel": 15,
               "zone": "ceremonial hall",
-              "img": null,
+              "img": "evolution20/wraith/sunspire/s07.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Novice",
               "minLevel": 18,
               "zone": "barracks",
-              "img": null,
+              "img": "evolution20/wraith/sunspire/s08.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warrior",
               "minLevel": 22,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/wraith/sunspire/s09.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Veteran",
               "minLevel": 26,
               "zone": "battlefield",
-              "img": null,
+              "img": "evolution20/wraith/sunspire/s10.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Champion",
               "minLevel": 30,
               "zone": "guild hall",
-              "img": null,
+              "img": "evolution20/wraith/sunspire/s11.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Elite",
               "minLevel": 34,
               "zone": "arena",
-              "img": null,
+              "img": "evolution20/wraith/sunspire/s12.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Hero",
               "minLevel": 38,
               "zone": "hero plaza",
-              "img": null,
+              "img": "evolution20/wraith/sunspire/s13.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Commander",
               "minLevel": 41,
               "zone": "throne hall",
-              "img": null,
+              "img": "evolution20/wraith/sunspire/s14.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Warlord",
               "minLevel": 44,
               "zone": "dark citadel",
-              "img": null,
+              "img": "evolution20/wraith/sunspire/s15.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Exemplar",
               "minLevel": 46,
               "zone": "grand temple",
-              "img": null,
+              "img": "evolution20/wraith/sunspire/s16.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Paragon",
               "minLevel": 48,
               "zone": "mountain peak",
-              "img": null,
+              "img": "evolution20/wraith/sunspire/s17.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Ascendant",
               "minLevel": 49,
               "zone": "celestial sky",
-              "img": null,
+              "img": "evolution20/wraith/sunspire/s18.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Mythic",
               "minLevel": 49,
               "zone": "dimensional rift",
-              "img": null,
+              "img": "evolution20/wraith/sunspire/s19.png",
               "legend": false,
-              "coming_soon": true
+              "coming_soon": false
             },
             {
               "name": "Legendary",
               "minLevel": 50,
               "zone": "divine realm",
-              "img": null,
+              "img": "evolution20/wraith/sunspire/s20.png",
               "legend": true,
-              "coming_soon": true
+              "coming_soon": false
             }
           ],
-          "complete": false,
-          "adoptable": false,
+          "complete": true,
+          "adoptable": true,
           "stat_weights": {
             "STR": 0.9,
             "VIT": 1.0,
@@ -4934,7 +4959,8 @@
           "passive": {
             "name": "Radiant Blessing",
             "description": "Heal 10% max HP at the start of Round 2"
-          }
+          },
+          "story": "Sunspire wraiths carry the radiance of the funeral pyres they were burned upon \u2014 a blessing wrapped around a curse. Their light heals their kin and sears anything that does not deserve to stand in it."
         }
       }
     }
