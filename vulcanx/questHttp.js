@@ -108,16 +108,25 @@ export async function postBatchViaCollect(args) {
 }
 
 // ── Read path: GET /api/vulcanx/Quest/active (catalog + per-wallet) ──
+//
+// Routed through OUR Supabase proxy (champion_quest_gateway_proxy)
+// rather than hitting the gateway directly. Two reasons:
+//   1. /active requires a Bearer service JWT when wallet is supplied —
+//      the JWT must stay server-side.
+//   2. The gateway doesn't send CORS headers for GitHub Pages / our
+//      domain — direct browser fetch fails with "Access-Control-Allow-
+//      Origin missing" + 401. The proxy is on our Supabase project so
+//      its CORS is open by default.
+// neurodrills hit this in DevTools console on 2026-05-18.
 
 export async function getActiveQuests(args = {}) {
-  const baseUrl = args.baseUrl || DEFAULT_BASE_URL;
   const params = new URLSearchParams();
   params.set('game', args.game || DEFAULT_SERVICE_ID);
   if (args.wallet) params.set('wallet', String(args.wallet).toLowerCase());
-  const url = `${baseUrl}/api/vulcanx/Quest/active?${params.toString()}`;
+  const url = `${SUPABASE_URL}/functions/v1/champion_quest_gateway_proxy?${params.toString()}`;
   return _fetchJson(url, {
     method: 'GET',
-    headers: { Accept: 'application/json' },
+    headers: _supabaseHeaders(),
   });
 }
 
