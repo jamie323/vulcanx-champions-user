@@ -741,8 +741,22 @@
        once we added more chips (streak, mute, wallet-with-balance). On
        phones we now hide the wallet ADDRESS and keep only the PYR
        balance + dot, so the chip stays inside the viewport. The
-       address is still copyable by tapping (vxAlert shows it). */
-    .topbar .wallet-chip { padding: 4px 8px; font-size: 10px; gap: 4px; }
+       address is still copyable by tapping (vxAlert shows it).
+       Trello (12 May refix): "MetaMask button is out of the screen [..]
+       on the my stable page." Compacting the address wasn't enough —
+       7 chips were still overflowing. Two additional measures:
+       1. Hide the demo gold/gem/essence coins on mobile (they're
+          admin-mode placeholders with no real backend update; saves
+          ~120px of horizontal real estate).
+       2. Make the wallet chip flex-shrink:0 + ensure the .currency row
+          can wrap. The chip is now guaranteed to render fully even if
+          earlier items had to flex-shrink. */
+    .topbar .currency { flex-wrap: wrap; row-gap: 4px; justify-content: flex-end; }
+    .topbar .currency .coin { display: none; }   /* demo currency hidden on mobile */
+    .topbar .wallet-chip {
+      padding: 4px 8px; font-size: 10px; gap: 4px;
+      flex-shrink: 0;
+    }
     .topbar .wallet-chip #walletChipAddr { display: none; }
     .topbar .wallet-chip-bal { margin-left: 0; padding-left: 0; border-left: none; }
     .topbar .wallet-chip-bal .wcb-num { font-size: 11px; }
@@ -2874,8 +2888,16 @@
        144px on 8 May after a follow-up Trello card "blessing window has
        elements that need realigning" — the longest possible label
        "💎 Intelligence · MAX" still touched the slider at 120px on
-       narrower viewports. */
-    display: grid; grid-template-columns: 144px 1fr 40px;
+       narrower viewports.
+       Trello (12 May, same card refix): on the narrowest mobile modal
+       (336px viewport - padding) the 144px column left only ~100px for
+       the slider AND the label could still bleed through when text-emoji
+       rendered with a tracking quirk. Switched to minmax so the column
+       can shrink to 116px, added ellipsis safety, and dropped the
+       "· MAX" text suffix (row dim + disabled slider already convey
+       maxed state). */
+    display: grid;
+    grid-template-columns: minmax(116px, 144px) 1fr 40px;
     align-items: center; gap: 10px; margin-bottom: 10px;
     /* Prevent text selection on the whole row — Sean reported dragging
        AGI slider was selecting row text instead of moving the thumb.
@@ -2889,6 +2911,10 @@
     font-size: 11px; color: var(--muted);
     text-transform: uppercase; font-weight: 700;
     pointer-events: none;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .alloc-row .alloc-val {
     pointer-events: none;
@@ -5998,6 +6024,12 @@
       <p class="lead" style="text-align:center;">
         Pouring potions raises stats and fills the Evolution Bar. Feed one at a time for precision, or batch-feed in bulk to skip the grind.
       </p>
+      <!-- Trello (12 May): "Potions guide link is buried at the bottom
+           of the page." Surfaced the link at the top of the section
+           (also kept at the bottom for scrolled-through readers). -->
+      <p style="text-align:center; margin: -4px 0 18px;">
+        <button class="welcome-secondary" onclick="openPotionGuide()">📖 Open the Potion Guide</button>
+      </p>
 
       <h3>The six trait potions</h3>
       <div class="howto-feature-grid">
@@ -8879,9 +8911,9 @@ function openAllocModal(sourceEl) {
     const fullName = TRAIT_NAMES[t] || t;
     const emoji = TRAIT_EMOJI[t] || '';
     rows.insertAdjacentHTML('beforeend',
-      `<div class="alloc-row" style="${isMaxed?'opacity:0.55;':''}">
-        <div class="alloc-label" title="${traitTitle(t)}" style="color:var(--${t.toLowerCase()}-color,var(--accent));cursor:help;">
-          <span style="font-size:14px;margin-right:4px;">${emoji}</span>${fullName}${isMaxed?' · MAX':''}
+      `<div class="alloc-row" style="${isMaxed?'opacity:0.55;':''}" title="${isMaxed ? fullName + ' is at cap' : traitTitle(t)}">
+        <div class="alloc-label" style="color:var(--${t.toLowerCase()}-color,var(--accent));cursor:help;">
+          <span style="font-size:14px;margin-right:4px;">${emoji}</span>${fullName}
         </div>
         <input type="range" min="0" max="${Math.max(0,maxAllowed)}" value="0" data-t="${t}" ${isMaxed?'disabled':''}/>
         <div class="alloc-val" id="av-${t}">${isMaxed?'–':'0'}</div>
@@ -12064,7 +12096,13 @@ function vxToastQuestCompletions(applied) {
                  'Quest';
     const chests = chestById.get(id) || 1;
     const chestEmoji = chests > 1 ? `+${chests} 🎁` : '+🎁';
-    // Stagger so multiple completions don't pile on the same toast
+    // Trello (12 May): "Congratulations? pop up between level 3 to 4.
+    // multiple pop ups at the same time, does not allow time to read or
+    // see individually." Evolve fires a 2.3s cinematic banner + level-up
+    // banner + an "Evolved to X" toast — quest-complete toasts piling on
+    // top of that gave the impression of an indecipherable stack. Delay
+    // the first quest-complete toast by 1.8s (post-cinematic) and stagger
+    // subsequent ones 700ms apart so each reads cleanly on its own.
     setTimeout(() => {
       try {
         showToast(`🏆 Quest complete: ${name} · ${chestEmoji}`, 'success', 4200);
@@ -12072,7 +12110,7 @@ function vxToastQuestCompletions(applied) {
           VxAudio.levelUp();
         }
       } catch (_) { /* showToast may not be defined yet on early boot */ }
-    }, shown * 600);
+    }, 1800 + shown * 700);
     shown++;
   }
 }
