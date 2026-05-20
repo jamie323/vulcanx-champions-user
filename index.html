@@ -11951,9 +11951,64 @@ function mapChampion(row) {
 async function apiFetch(url, opts = {}, timeoutMs = 12000) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  let resp;
   try {
-    return await fetch(url, { ...opts, signal: ctrl.signal });
+    resp = await fetch(url, { ...opts, signal: ctrl.signal });
   } finally { clearTimeout(t); }
+  // Universal tap: any 2xx JSON response whose body carries a
+  // `quest_progress` array (entries with newly_completed:true) triggers
+  // an in-game celebratory toast. Centralised here so individual edge
+  // functions can fire emit-style quest deltas (evolve, feed, arena win
+  // etc.) without each call-site having to remember to surface them.
+  // Failures are swallowed — never block the caller's downstream parse.
+  if (resp && resp.ok) {
+    try {
+      const ct = resp.headers.get('content-type') || '';
+      if (ct.indexOf('application/json') !== -1) {
+        const peek = await resp.clone().json();
+        const list = (peek && Array.isArray(peek.quest_progress)) ? peek.quest_progress : null;
+        if (list && list.length) vxToastQuestCompletions(list);
+      }
+    } catch (_) { /* non-JSON body or already consumed — fine */ }
+  }
+  return resp;
+}
+
+// ─── Meta-quest completion toast ──────────────────────────────────
+// Called from the apiFetch tap when a backend response includes a
+// non-empty quest_progress[] array. Each entry is
+// { quest_id, period_key, new_counter, newly_completed }.
+//
+// Quest display name comes from the cached chest-quests list
+// (_cqState.data.quests, populated when the Chest Quests modal is
+// opened). If the cache is cold we fall back to a titleized quest_id —
+// the toast still fires, just with a less polished name.
+function vxToastQuestCompletions(applied) {
+  if (!Array.isArray(applied) || applied.length === 0) return;
+  const cached = (typeof _cqState !== 'undefined' && _cqState && _cqState.data && Array.isArray(_cqState.data.quests))
+    ? _cqState.data.quests : [];
+  const nameById = new Map(cached.map(q => [q.quest_id, q.name]));
+  const chestById = new Map(cached.map(q => [q.quest_id, q.chests || 1]));
+  let shown = 0;
+  for (const c of applied) {
+    if (!c || c.newly_completed !== true) continue;
+    const id = c.quest_id || '';
+    const name = nameById.get(id) ||
+                 id.replace(/_/g, ' ').replace(/\b\w/g, m => m.toUpperCase()) ||
+                 'Quest';
+    const chests = chestById.get(id) || 1;
+    const chestEmoji = chests > 1 ? `+${chests} 🎁` : '+🎁';
+    // Stagger so multiple completions don't pile on the same toast
+    setTimeout(() => {
+      try {
+        showToast(`🏆 Quest complete: ${name} · ${chestEmoji}`, 'success', 4200);
+        if (typeof VxAudio !== 'undefined' && VxAudio && typeof VxAudio.levelUp === 'function') {
+          VxAudio.levelUp();
+        }
+      } catch (_) { /* showToast may not be defined yet on early boot */ }
+    }, shown * 600);
+    shown++;
+  }
 }
 
 async function apiListChampions() {
@@ -12245,6 +12300,21 @@ async function loadMyChampions() {
     console.error('loadMyChampions failed', e);
     myChampions = [];
   }
+  // Warm the chest-quest catalog cache so the quest-completion toast
+  // (vxToastQuestCompletions) can show proper names instead of titleized
+  // quest_ids. Fire-and-forget; the toast fall-back covers the cold case.
+  (async () => {
+    try {
+      const wallet = (typeof getWallet === 'function') ? getWallet() : null;
+      if (!wallet) return;
+      const data = await apiChampionQuestsList(wallet);
+      if (data && Array.isArray(data.quests)) {
+        _cqState.data = data;
+      }
+    } catch (e) {
+      console.debug('[chest-quests] catalog prefetch skipped:', e.message);
+    }
+  })();
 }
 // Kept for backward-compat — no-op now (backend is source of truth).
 function saveMyChampions() { /* noop */ }
