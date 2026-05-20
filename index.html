@@ -4631,6 +4631,79 @@
   }
   .shop-item.tier-epic .si-name { color: #ff9a5a; }
 
+  /* ── Shop tabs (potions / equipment / champions / limited) ── */
+  .shop-tabs {
+    display: flex; gap: 4px; margin-top: 14px;
+    padding: 4px; background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+  }
+  .shop-tab {
+    flex: 1; padding: 8px 6px;
+    background: transparent; border: 0;
+    color: var(--muted); cursor: pointer;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.5px;
+    border-radius: 8px;
+    transition: background 0.15s, color 0.15s;
+  }
+  .shop-tab:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+  .shop-tab.active {
+    background: rgba(255, 205, 107, 0.15);
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+  @media (max-width: 640px) {
+    .shop-tab { font-size: 10px; padding: 8px 3px; letter-spacing: 0; }
+  }
+
+  /* ── NFT shop item augmentations ── */
+  /* The base .shop-item layout works for everything; these styles add
+     the image thumb + NFT chip + supply pill + rarity colouring for the
+     NFT-category SKUs. Tabs swap between renderers. */
+  .shop-item .si-img {
+    width: 100%; aspect-ratio: 1/1;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.35);
+    margin-bottom: 6px;
+    object-fit: cover;
+    display: block;
+  }
+  .shop-item .si-nft-chip {
+    position: absolute; top: 6px; left: 6px;
+    background: linear-gradient(135deg, #6b85ff, #b169ff);
+    color: #fff; font-weight: 800; font-size: 8px;
+    letter-spacing: 1.2px;
+    padding: 3px 6px; border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  }
+  .shop-item .si-supply {
+    font-size: 9px; letter-spacing: 1px;
+    color: var(--muted);
+    margin-top: 4px;
+    text-transform: uppercase;
+  }
+  .shop-item .si-supply b { color: var(--text); }
+  .shop-item .si-supply.low b { color: #ff9a5a; }
+  .shop-item .si-supply.critical b { color: #ff6e6e; }
+  .shop-item.sold-out {
+    opacity: 0.45; cursor: not-allowed;
+    filter: grayscale(0.7);
+  }
+  .shop-item.sold-out:hover { transform: none; box-shadow: none; }
+  .shop-item.sold-out .si-supply { color: #ff6e6e; }
+
+  /* Rarity tier borders for equipment (matches in-game equip-card style) */
+  .shop-item.rarity-common    { border-color: rgba(180, 180, 180, 0.35); }
+  .shop-item.rarity-rare      { border-color: rgba(93, 142, 255, 0.5); }
+  .shop-item.rarity-rare .si-name { color: #9dc3ff; }
+  .shop-item.rarity-epic      { border-color: rgba(177, 105, 255, 0.55);
+    background: linear-gradient(180deg, rgba(150, 80, 220, 0.10), rgba(0,0,0,0.3)); }
+  .shop-item.rarity-epic .si-name { color: #d4a5ff; }
+  .shop-item.rarity-legendary { border-color: rgba(255, 205, 107, 0.65);
+    background: linear-gradient(180deg, rgba(255, 180, 60, 0.14), rgba(0,0,0,0.3));
+    box-shadow: inset 0 0 12px rgba(255, 180, 60, 0.10); }
+  .shop-item.rarity-legendary .si-name { color: #ffcd6b; }
+
   .shop-cart {
     background: rgba(0, 0, 0, 0.4);
     border: 1px solid rgba(255, 200, 90, 0.2);
@@ -5619,12 +5692,22 @@
     <button class="vx-modal-close" onclick="closeShop()">×</button>
     <div class="shop-header">
       <div class="welcome-eyebrow">✦ The Apothecary ✦</div>
-      <h2 class="guide-title">Potion Shop</h2>
+      <h2 class="guide-title">Shop</h2>
       <p class="welcome-sub">
-        Buy potions with <b>PYR</b>. Every bottle is <b>5 PYR</b>. Species-locked
-        to <b>Orc Ironfang</b> during QA.
-        <br/><span style="color:var(--muted);font-size:12px;">QA note: TX is signed on Elysium but zero value — no PYR is deducted.</span>
+        Buy potions and NFT items with <b>PYR</b>.
+        <br/><span style="color:var(--muted);font-size:12px;">
+          NFTs (equipment, limited potions, champion eggs) are batch-delivered to your wallet within a few days of purchase.
+          Standard potions are credited to your inventory instantly.
+        </span>
+        <br/><span style="color:var(--muted);font-size:11px;">QA note: PYR transfer is signed but zero-value during testing — no PYR is actually deducted yet.</span>
       </p>
+      <!-- Shop tabs (added 2026-05-19): Potions / Equipment / Champions / Limited Drops -->
+      <div class="shop-tabs" id="shopTabs">
+        <button class="shop-tab active" data-tab="potions">🧪 Potions</button>
+        <button class="shop-tab" data-tab="equipment">⚔️ Equipment</button>
+        <button class="shop-tab" data-tab="champion">🥚 Champions</button>
+        <button class="shop-tab" data-tab="limited_potion">✨ Limited Drops</button>
+      </div>
     </div>
 
     <div class="shop-grid" id="shopGrid">
@@ -16116,7 +16199,45 @@ const SHOP_ITEMS = [
 let shopCart = {}; // key -> { item, qty }
 const SHOP_CART_KEY = 'vx_shop_cart_v1';
 
-function shopKey(it) { return `${it.kind}:${it.trait || ''}`; }
+// Active shop tab — 'potions' (legacy SHOP_ITEMS) | 'equipment' |
+// 'champion' | 'limited_potion' (latter three from nft_supply_get).
+let shopActiveTab = 'potions';
+
+// In-memory cache of the NFT supply state, refreshed on shop open.
+// Shape mirrors the edge fn's response: { items: [{ sku_id, category,
+// title, image_path, pyr_price, shop_remaining, ... }, ...] }
+let nftSupplyCache = null;
+let nftSupplyLastFetch = 0;
+const NFT_SUPPLY_TTL_MS = 15000;  // matches the edge fn's Cache-Control
+
+async function loadNftSupply(force = false) {
+  const now = Date.now();
+  if (!force && nftSupplyCache && (now - nftSupplyLastFetch) < NFT_SUPPLY_TTL_MS) {
+    return nftSupplyCache;
+  }
+  try {
+    const res = await apiFetch(`${FN_BASE}/nft_supply_get`, { headers: AUTH_HEADERS });
+    if (!res.ok) {
+      console.warn('[nft-supply] fetch failed:', res.status);
+      return nftSupplyCache || { items: [] };
+    }
+    nftSupplyCache = await res.json();
+    nftSupplyLastFetch = now;
+    return nftSupplyCache;
+  } catch (e) {
+    console.warn('[nft-supply] fetch threw:', e.message);
+    return nftSupplyCache || { items: [] };
+  }
+}
+
+function shopKey(it) {
+  // Potion items (legacy): key is "<kind>:<trait>" so we can grant via
+  // the existing potion_grant flow. NFT items: key is the sku_id from
+  // nft_supply_state, prefixed with "nft:" so the checkout splitter
+  // routes them to nft_purchase instead.
+  if (it._nft) return `nft:${it.sku_id}`;
+  return `${it.kind}:${it.trait || ''}`;
+}
 
 function _shopCartLoad() {
   try {
@@ -16142,7 +16263,21 @@ function openShop() {
   // Hydrate cart from sessionStorage so a previous close-and-reopen
   // restores what the user already had in the basket.
   shopCart = _shopCartLoad();
+  // Wire tab buttons once (idempotent — checks for prior wiring).
+  const tabs = document.getElementById('shopTabs');
+  if (tabs && !tabs._wired) {
+    tabs.querySelectorAll('.shop-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        shopActiveTab = btn.dataset.tab;
+        tabs.querySelectorAll('.shop-tab').forEach(b => b.classList.toggle('active', b === btn));
+        renderShop();
+      });
+    });
+    tabs._wired = true;
+  }
   renderShop();
+  // Kick off NFT supply fetch in parallel — re-renders when data lands.
+  loadNftSupply().then(() => { if (shopActiveTab !== 'potions') renderShop(); });
   const m = document.getElementById('shopModal');
   m.style.display = 'flex';
   document.body.style.overflow = 'hidden';
@@ -16200,29 +16335,123 @@ function shopTooltipFor(it) {
 
 function renderShop() {
   const grid = document.getElementById('shopGrid');
-  grid.innerHTML = SHOP_ITEMS.map(it => {
-    const key = shopKey(it);
-    const qty = shopCart[key]?.qty || 0;
-    const tierCls = it.tier === 'Major' ? 'tier-major' :
-                    it.tier === 'Epic'  ? 'tier-epic'  : '';
-    const tip = shopTooltipFor(it).replace(/"/g, '&quot;').replace(/\n/g, '&#10;');
-    return `
-      <div class="shop-item ${tierCls} ${qty > 0 ? 'in-cart' : ''}"
-           data-key="${key}" onclick="addToCart('${key}')"
-           title="${tip}">
-        ${qty > 0 ? `<div class="si-badge">${qty}</div>` : ''}
-        <div class="si-emoji">${it.emoji}</div>
-        <div class="si-name">${it.label}</div>
-        <div class="si-tier">${it.tier}</div>
-        <div class="si-price">${it.price} PYR</div>
-      </div>`;
-  }).join('');
+  if (shopActiveTab === 'potions') {
+    grid.innerHTML = SHOP_ITEMS.map(_renderPotionTile).join('');
+    renderCart();
+    return;
+  }
+  // NFT tab — needs the supply data loaded
+  const supply = nftSupplyCache?.items || [];
+  const items  = supply.filter(s => s.category === shopActiveTab);
+  if (!supply.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;padding:30px;text-align:center;color:var(--muted);">Loading NFT inventory…</div>`;
+    renderCart();
+    return;
+  }
+  if (!items.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;padding:30px;text-align:center;color:var(--muted);">Nothing in this tab yet — check back at launch.</div>`;
+    renderCart();
+    return;
+  }
+  grid.innerHTML = items.map(_renderNftTile).join('');
   renderCart();
 }
 
-function addToCart(key) {
-  const it = SHOP_ITEMS.find(x => shopKey(x) === key);
+function _renderPotionTile(it) {
+  const key = shopKey(it);
+  const qty = shopCart[key]?.qty || 0;
+  const tierCls = it.tier === 'Major' ? 'tier-major' :
+                  it.tier === 'Epic'  ? 'tier-epic'  : '';
+  const tip = shopTooltipFor(it).replace(/"/g, '&quot;').replace(/\n/g, '&#10;');
+  return `
+    <div class="shop-item ${tierCls} ${qty > 0 ? 'in-cart' : ''}"
+         data-key="${key}" onclick="addToCart('${key}')"
+         title="${tip}">
+      ${qty > 0 ? `<div class="si-badge">${qty}</div>` : ''}
+      <div class="si-emoji">${it.emoji}</div>
+      <div class="si-name">${esc(it.label)}</div>
+      <div class="si-tier">${esc(it.tier)}</div>
+      <div class="si-price">${it.price} PYR</div>
+    </div>`;
+}
+
+function _renderNftTile(row) {
+  // row is one item from nft_supply_get: { sku_id, category, title,
+  // image_path, pyr_price, shop_remaining, shop_total, rarity,
+  // mechanic, sold_out, ... }
+  const adapted = {
+    _nft:    true,
+    sku_id:  row.sku_id,
+    label:   row.title,
+    price:   Number(row.pyr_price),
+    tier:    row.rarity || row.metadata?.tier || '',
+    emoji:   '',  // we use the image instead
+  };
+  const key = shopKey(adapted);
+  const qty = shopCart[key]?.qty || 0;
+  const remaining = Number(row.shop_remaining);
+  const total = Number(row.shop_total);
+  const pct = total > 0 ? (remaining / total) : 1;
+  const supplyClass = remaining === 0 ? 'critical'
+                    : pct < 0.10        ? 'critical'
+                    : pct < 0.30        ? 'low'
+                    : '';
+  const soldOut = row.sold_out || remaining <= 0;
+  const rarityCls = row.rarity ? `rarity-${row.rarity.toLowerCase()}` : '';
+
+  // Tooltip aggregates the gameplay description + supply state
+  const tip = [
+    row.title,
+    row.mechanic || '',
+    `Supply: ${remaining.toLocaleString()} of ${total.toLocaleString()} remaining`,
+    `Price: ${row.pyr_price} PYR`,
+    soldOut ? 'SOLD OUT — secondary market only.' :
+              'NFT — batch-delivered to your wallet within a few days.',
+  ].filter(Boolean).join('\n').replace(/"/g, '&quot;').replace(/\n/g, '&#10;');
+
+  const onclick = soldOut ? '' : `onclick="addToCart('${key}', ${JSON.stringify(adapted).replace(/"/g, '&quot;')})"`;
+
+  // Image path is relative to the deployed app root
+  const img = row.image_path
+    ? `<img class="si-img" src="${encodeURI(row.image_path)}" alt="${esc(row.title)}" loading="lazy" />`
+    : `<div class="si-img" style="display:flex;align-items:center;justify-content:center;font-size:32px;">🎁</div>`;
+
+  return `
+    <div class="shop-item ${rarityCls} ${qty > 0 ? 'in-cart' : ''} ${soldOut ? 'sold-out' : ''}"
+         data-key="${key}" ${onclick}
+         title="${tip}">
+      <div class="si-nft-chip">NFT</div>
+      ${qty > 0 ? `<div class="si-badge">${qty}</div>` : ''}
+      ${img}
+      <div class="si-name">${esc(row.title)}</div>
+      <div class="si-tier">${esc(row.rarity || row.metadata?.tier || row.category.replace('_',' '))}</div>
+      <div class="si-price">${row.pyr_price} PYR</div>
+      <div class="si-supply ${supplyClass}">
+        ${soldOut ? 'Sold out' : `<b>${remaining.toLocaleString()}</b> / ${total.toLocaleString()} left`}
+      </div>
+    </div>`;
+}
+
+function addToCart(key, nftItem) {
+  // Look up the item: SHOP_ITEMS (potions) or the inline NFT adapter
+  // passed from _renderNftTile (NFT category items aren't in SHOP_ITEMS).
+  let it = SHOP_ITEMS.find(x => shopKey(x) === key);
+  if (!it && nftItem && typeof nftItem === 'object') it = nftItem;
   if (!it) return;
+
+  // Enforce supply cap for NFT items so the cart never asks for more
+  // than is available in the shop bucket.
+  if (it._nft) {
+    const supplyRow = (nftSupplyCache?.items || []).find(r => r.sku_id === it.sku_id);
+    const remaining = supplyRow ? Number(supplyRow.shop_remaining) : 0;
+    const inCart = shopCart[key]?.qty || 0;
+    if (inCart + 1 > remaining) {
+      vxAlert(`Only ${remaining.toLocaleString()} of ${it.label} remain in the shop bucket — can't add more.`,
+        { title: 'Out of stock', icon: '⏳' });
+      return;
+    }
+  }
+
   if (!shopCart[key]) shopCart[key] = { item: it, qty: 0 };
   shopCart[key].qty += 1;
   _shopCartSave();
@@ -16281,8 +16510,21 @@ function renderCart() {
 async function checkoutShop() {
   const entries = Object.entries(shopCart);
   if (entries.length === 0) return;
+
+  // Split cart by category. Potions go through the existing grant flow
+  // (off-chain Supabase, instant delivery). NFT items go through the
+  // off-chain queue (nft_purchase) — Farhan's batch sender drains it
+  // every few days and does the actual on-chain transfer from treasury.
+  const potionLines = [];
+  const nftLines    = [];
+  for (const [, { item, qty }] of entries) {
+    if (item._nft) nftLines.push({ sku_id: item.sku_id, qty, label: item.label, price: item.price });
+    else            potionLines.push({ item, qty });
+  }
+
   const totalQ = entries.reduce((s, [_, v]) => s + v.qty, 0);
   const totalP = entries.reduce((s, [_, v]) => s + v.qty * v.item.price, 0);
+
   const btn = document.getElementById('shopBuyBtn');
   btn.disabled = true;
   const origText = btn.textContent;
@@ -16293,29 +16535,65 @@ async function checkoutShop() {
     const label = `shop:${totalQ}x@${totalP}PYR`;
     await signDummyTx(label);
 
-    btn.textContent = '🧪 Brewing…';
-    // Grant each potion in the cart via the existing grant endpoint.
-    const species_id = 'orc';
-    for (const [, { item, qty }] of entries) {
-      await apiGrantPotion({
-        species_id,
-        kind: item.kind,
-        trait: item.trait,
-        quantity: qty,
-      });
+    // ── 1) Standard potions: instant grant ─────────────────────
+    if (potionLines.length) {
+      btn.textContent = '🧪 Brewing…';
+      const species_id = 'orc';
+      for (const { item, qty } of potionLines) {
+        await apiGrantPotion({
+          species_id, kind: item.kind, trait: item.trait, quantity: qty,
+        });
+      }
     }
-    // Refresh inventory
-    await reloadPotions();
+
+    // ── 2) NFT items: queue for batch delivery ─────────────────
+    let queueResult = null;
+    if (nftLines.length) {
+      btn.textContent = '🪙 Queueing NFTs…';
+      const res = await apiFetch(`${FN_BASE}/nft_purchase`, {
+        method: 'POST',
+        headers: { ...AUTH_HEADERS, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wallet: getWallet(),
+          items: nftLines.map(l => ({ sku_id: l.sku_id, qty: l.qty })),
+        }),
+      });
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.message || `nft_purchase failed (${res.status})`);
+      }
+      queueResult = await res.json();
+      // Invalidate supply cache so the badges update next render
+      nftSupplyCache = null;
+    }
+
+    // Refresh local state
+    if (potionLines.length) await reloadPotions();
     render();
-    // Successful purchase clears the persisted cart so the next open
-    // starts fresh.
     shopCart = {};
     _shopCartSave();
-    btn.textContent = '✅ Delivered';
-    // Friendly confirmation
+
+    btn.textContent = '✅ Done';
+
+    // Confirmation — different copy for potion-only vs NFT-included orders
     setTimeout(() => {
       closeShop();
-      showToast(`🧪 ${totalQ} potion${totalQ>1?'s':''} delivered · ${totalP} PYR (dummy)`, 'success', 3200);
+      if (nftLines.length) {
+        const nftQty = nftLines.reduce((s, l) => s + l.qty, 0);
+        const potQty = potionLines.reduce((s, l) => s + l.qty, 0);
+        let msg = `🎁 ${nftQty} NFT${nftQty>1?'s':''} queued for batch delivery (a few days).`;
+        if (potQty)  msg += ` 🧪 ${potQty} potion${potQty>1?'s':''} delivered now.`;
+        vxAlert(
+          `Your order is in:\n\n` +
+          (potQty ? `• ${potQty} potion${potQty>1?'s':''} credited to your inventory now.\n` : '') +
+          (nftQty ? `• ${nftQty} NFT item${nftQty>1?'s':''} queued for batch delivery to your wallet within a few days.\n` : '') +
+          `\nTotal: ${queueResult?.total_pyr_charged ?? totalP} PYR (zero-value dummy TX during QA).`,
+          { title: '🎁 Order placed', icon: '🦊' }
+        );
+        showToast(msg, 'success', 5000);
+      } else {
+        showToast(`🧪 ${totalQ} potion${totalQ>1?'s':''} delivered · ${totalP} PYR (dummy)`, 'success', 3200);
+      }
       btn.textContent = origText;
       btn.disabled = false;
     }, 700);
