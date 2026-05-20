@@ -8214,11 +8214,21 @@ const SPECIES_AFFINITY = {
   orc: 'fire',     elf: 'nature',   goblin: 'toxic',  demon: 'shadow',
   drakkin: 'ice',  dwarf: 'earth',  beastkin: 'storm', wraith: 'light',
 };
+// Trello (12 May): "In the element affinities, sometimes the same element
+// is listed under both 'Strong' and 'Weak.' That doesn't make sense." Root
+// cause: the old table had reciprocal pairs (shadow↔light and light↔toxic
+// were both mutually strong), so for those elements the chart's "strong vs"
+// AND "weak vs" lists overlapped. Replaced with a balanced rotational
+// chart — each element strong vs the next 2 clockwise, weak vs the
+// previous 2 — guaranteeing zero overlap between strong + weak lists.
+// Backend mirror in champions_battle.ts updated to match.
+//
+// Order: fire → nature → ice → storm → earth → shadow → light → toxic → (loop)
 const AFFINITY_STRONG = {
-  fire:   ['nature', 'ice'],     nature: ['earth', 'toxic'],
-  ice:    ['nature', 'storm'],   storm:  ['fire', 'shadow'],
-  earth:  ['fire', 'storm'],     shadow: ['ice', 'light'],
-  light:  ['shadow', 'toxic'],   toxic:  ['light', 'earth'],
+  fire:   ['nature', 'ice'],     nature: ['ice', 'storm'],
+  ice:    ['storm', 'earth'],    storm:  ['earth', 'shadow'],
+  earth:  ['shadow', 'light'],   shadow: ['light', 'toxic'],
+  light:  ['toxic', 'fire'],     toxic:  ['fire', 'nature'],
 };
 const AFFINITY_INFO = {
   fire:   { emoji: '🔥', name: 'Fire',   color: '#ff8e2e' },
@@ -8909,26 +8919,48 @@ function updateAllocRemaining() {
     const cap = capAtLevel(state.level)[idx];
     return cap - cur <= 0;
   });
+  // Compute the max number of points the player CAN legitimately spend
+  // (sum of remaining headroom across all traits, clamped to 40). If
+  // they've already distributed `spendable` points, partial Apply is
+  // OK — there's literally nowhere else to put them. Otherwise force
+  // the full 40 to prevent wasted Blessings.
+  // Trello (12 May): "Player should only be able to click Apply after
+  // all 40 points are assigned — disable until Points Left = 0."
+  const spendable = TRAITS.reduce((total, t) => {
+    const idx = TRAITS.indexOf(t);
+    const cur = state.stats[t] || STAGE_FLOORS[state.stageIdx][idx];
+    const cap = capAtLevel(state.level)[idx];
+    return total + Math.max(0, cap - cur);
+  }, 0);
+  const requiredSpend = Math.min(40, spendable);
   if (statusText && applyBtn) {
     if (allocState.remaining < 0) {
       statusText.textContent = `⚠️ Over by ${-allocState.remaining} pts — pull a slider back.`;
       applyBtn.disabled = true;
       applyBtn.textContent = 'Apply';
-    } else if (sum === 0 && !allCapped) {
-      statusText.innerHTML = `<b style="color:#ffcd6b;">No stats distributed.</b> Apply will only fill your Evolution Bar by 10–25%. Pull sliders to actually grow your stats.`;
-      applyBtn.disabled = false;
-      applyBtn.textContent = 'Apply (bar fill only · 10–25%)';
-    } else if (sum === 0 && allCapped) {
+    } else if (allCapped) {
+      // Legitimate bar-only path: no traits can take points anywhere,
+      // so let the Blessing fire for the 10–25% Evolution Bar fill.
       statusText.innerHTML = `Every stat is at this stage's cap — Blessing fills your Evolution Bar by 10–25% so you can still progress to the next gate.`;
       applyBtn.disabled = false;
       applyBtn.textContent = 'Apply (bar fill · 10–25%)';
+    } else if (sum < requiredSpend) {
+      // There's room to spend more — block Apply until the keeper has
+      // distributed everything they can. Prevents accidental "burned my
+      // Blessing for nothing" reports.
+      const left = requiredSpend - sum;
+      statusText.innerHTML = `<b style="color:#ffcd6b;">Distribute all ${requiredSpend} points before applying.</b> ${left} point${left===1?'':'s'} left.`;
+      applyBtn.disabled = true;
+      applyBtn.textContent = `Apply (${left} pt${left===1?'':'s'} left)`;
     } else {
-      statusText.textContent = `Distributing ${sum}/40 points + 10–25% Evolution Bar fill.`;
+      statusText.textContent = `Distributing ${sum}/${requiredSpend} points + 10–25% Evolution Bar fill.`;
       applyBtn.disabled = false;
-      applyBtn.textContent = sum < 40 ? `Apply (${sum} pts + bar)` : 'Apply (40 pts + bar)';
+      applyBtn.textContent = requiredSpend < 40
+        ? `Apply (${sum} pts + bar · stats partly capped)`
+        : 'Apply (40 pts + bar)';
     }
   } else if (applyBtn) {
-    applyBtn.disabled = allocState.remaining < 0;
+    applyBtn.disabled = allocState.remaining < 0 || (!allCapped && sum < requiredSpend);
   }
 }
 // Apply the Blessing: sends the distribution to the champion_allocate
@@ -9440,12 +9472,31 @@ const VxDaily = (() => {
   }
   function closeModal() {
     document.getElementById('dailyClaimModal').classList.remove('open');
+    // Trello (12 May): "After claiming or closing the prompt, it should
+    // remain dismissed until the next eligible login/day." Stamp today
+    // in localStorage so maybeAutoOpen() respects the dismissal across
+    // page refreshes and new tabs.
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      localStorage.setItem('vx_daily_dismissed_' + today, '1');
+    } catch (_) { /* private mode etc. — fall back to session-only */ }
   }
-  // Auto-open the modal on first authenticated boot of the day.
+  // Auto-open the modal on first authenticated boot of the day, ONCE
+  // per browser session. Without the session/dismissal gates the modal
+  // re-opened on every page refresh (Trello 12 May: "Daily Login Reward
+  // prompt appears during normal website use instead of only appearing
+  // after the player logs in or reconnects their wallet"). The auth
+  // hook this is wired to runs on every page load, not just fresh
+  // sign-ins, so we self-gate here.
   function maybeAutoOpen() {
-    if (canClaimToday()) {
-      setTimeout(() => { if (canClaimToday()) openModal(); }, 1200);
-    }
+    if (!canClaimToday()) return;
+    try {
+      if (sessionStorage.getItem('vx_daily_seen_session') === '1') return;
+      const today = new Date().toISOString().slice(0, 10);
+      if (localStorage.getItem('vx_daily_dismissed_' + today) === '1') return;
+      sessionStorage.setItem('vx_daily_seen_session', '1');
+    } catch (_) { /* storage blocked — best-effort: still open */ }
+    setTimeout(() => { if (canClaimToday()) openModal(); }, 1200);
   }
 
   return { canClaimToday, getStreak, nextStreak, claim, openModal, closeModal, refreshPill, refresh, maybeAutoOpen };
@@ -10977,15 +11028,30 @@ function showFullInventory() {
       `);
     }
     list.querySelectorAll('.equip-picker-item').forEach(el => {
-      if (el.classList.contains('equipped')) return;
       const slot = el.dataset.slot;
-      const cat = Equipment.CATALOG[myInventory.find(i => i.id === el.dataset.instId)?.catalogId];
+      const inst = myInventory.find(i => i.id === el.dataset.instId);
+      const cat = inst ? Equipment.CATALOG[inst.catalogId] : null;
       if (!cat) return;
       const slotDef = Equipment.SLOTS[cat.slot];
       if (slotDef.speciesLocked && cat.species !== currentSpecies) return;
+      // Trello (3 May): "when i click on an item in the inventory, it
+      // automatically equips it and exits from that screen. Expected:
+      // you should be able to clearly see [...] and stay in the
+      // inventory view." Surgical fix: keep the picker OPEN after a
+      // click, re-render so the new equip status reflects, and let
+      // clicking an already-equipped row unequip in place. The user
+      // exits via the Close button when they're done curating.
       el.addEventListener('click', () => {
-        equipItem(el.dataset.instId, slot);
-        closeEquipPicker();
+        const wasEquipped = el.classList.contains('equipped');
+        if (wasEquipped) {
+          // Unequip in place (mirrors the per-slot picker's unequip btn)
+          if (inst) inst.equippedOn = null;
+          persistInventory();
+        } else {
+          equipItem(el.dataset.instId, slot);
+        }
+        // Stay in the modal; re-render to surface the change.
+        showFullInventory();
       });
     });
   }
@@ -13376,9 +13442,29 @@ async function apiFeedBatch({ champion_id, count, mode = 'auto' }) {
 function openBatchFeedModal() {
   if (!state.championId) return;
   // Trello (29 Apr): block at max form
+  // Trello (12 May refix): the Legendary block was firing on champions
+  // that STILL have stat headroom, dead-ending them and prompting
+  // testers to report it as "Blessing potion blocked too early". Mirror
+  // the headroom-aware logic from feedHero: if any stat can still grow,
+  // route the keeper to a Blessing (which CAN distribute points at
+  // L50). Only show "Ultimate Legendary" when both level + stats are
+  // fully capped.
   if (state.stageIdx >= 19) {
-    vxAlert('You have reached the peak. Your champion has become the Ultimate Legendary — no further progression possible.',
-      { title: '🏆 Legendary', icon: '🏆' });
+    const anyHeadroom = TRAITS.some((t, idx) => {
+      const cur = state.stats[t] || STAGE_FLOORS[state.stageIdx][idx];
+      const cap = capAtLevel(state.level)[idx];
+      return cap - cur > 0;
+    });
+    if (anyHeadroom && (state.inv.alloc || 0) > 0) {
+      vxAlert('Your champion is at Legendary — trait potions can\'t feed further, but you still have stat headroom. Use a ✨ Blessing to distribute points.',
+        { title: '🏆 Legendary · use Blessing', icon: '🏆' });
+    } else if (anyHeadroom) {
+      vxAlert('Your champion is at Legendary — trait potions can\'t feed further, but stats still have headroom. Get a ✨ Blessing from the Shop to distribute points.',
+        { title: '🏆 Legendary · stats not maxed', icon: '🏆' });
+    } else {
+      vxAlert('You have reached the peak. Your champion has become the Ultimate Legendary — no further progression possible.',
+        { title: '🏆 Legendary', icon: '🏆' });
+    }
     return;
   }
   // Trello (29 Apr, refix): block batch feeding while the champion is on a
@@ -16805,7 +16891,13 @@ const VxCampaign = (() => {
       const weakElems = Object.entries(AFFINITY_STRONG)
         .filter(([_, list]) => list.includes(aff))
         .map(([el]) => el);
-      const fmt = (els) => els.map(e => `${AFFINITY_INFO[e].emoji} ${AFFINITY_INFO[e].name}`).join(', ');
+      // Trello (12 May, mobile): "On mobile [...] the icon is in the first
+      // line and the corresponding word is in the second line." Each element
+      // chip wrapped in a white-space:nowrap span so the emoji + name stay
+      // glued together across narrow viewports.
+      const fmt = (els) => els.map(e =>
+        `<span style="white-space:nowrap;">${AFFINITY_INFO[e].emoji} ${AFFINITY_INFO[e].name}</span>`
+      ).join(', ');
       return `<div class="aff-chart-cell" style="border-color:${info.color}55;">
         <div class="aff-cc-head" style="color:${info.color};">${info.emoji} ${info.name} <span style="color:var(--muted);font-weight:600;font-size:10px;">· ${SPECIES_LABEL[speciesId]}</span></div>
         <div class="aff-cc-row"><span class="lbl" style="color:#7dff9a;">STRONG</span> ${fmt(strongElems)}</div>
