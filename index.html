@@ -7610,6 +7610,20 @@
         </div>
       </div>
 
+      <!-- Trello (Ric O., 2026-05-21): "In campaigns we have the active
+           combat mode. Is it possible to get this mode also for the
+           arena? Would be a lot more fun." Same UX pattern as the
+           campaign combat-mode toggle. Auto = server resolves the
+           fight, animate the result. Active = pre-fight QTE combo,
+           timing-graded multiplier (±15%) sent to the server. -->
+      <div class="arena-mode-row" id="arenaCombatModeRow">
+        <div class="arena-stance-label">Combat Mode</div>
+        <div class="arena-mode-btns">
+          <button class="arena-mode-btn active" data-combat-mode="auto"   title="Auto-resolve the fight, watch the result animate. No reaction skill needed.">🎲 Auto</button>
+          <button class="arena-mode-btn"        data-combat-mode="active" title="Pre-fight QTE combo (3 runes). Perfect timing boosts your damage by up to +15%.">⚡ Active</button>
+        </div>
+      </div>
+
       <!-- Phase 8.6: invite a specific wallet to a duel -->
       <div class="arena-invite-row">
         <button class="arena-invite-btn" id="arenaInviteBtn" title="Challenge a specific player by wallet">🎯 Challenge Player by Wallet</button>
@@ -14101,6 +14115,22 @@ let _arenaMode = (() => {
   catch (_) { return 'bots'; }
 })();
 
+// Combat mode (Trello, Ric O. 2026-05-21): 'auto' = legacy server-resolve
+// + animate, 'active' = pre-fight QTE combo that boosts player damage by
+// up to ±15%. Keyed independently from the campaign combat mode so the
+// keeper's arena preference doesn't drag the campaign with it.
+let _arenaCombatMode = (() => {
+  try { return localStorage.getItem('vx_arena_combat_mode') === 'active' ? 'active' : 'auto'; }
+  catch (_) { return 'auto'; }
+})();
+function _setArenaCombatMode(mode) {
+  _arenaCombatMode = mode === 'active' ? 'active' : 'auto';
+  try { localStorage.setItem('vx_arena_combat_mode', _arenaCombatMode); } catch (_) {}
+  document.querySelectorAll('.arena-mode-btn[data-combat-mode]').forEach(b => {
+    b.classList.toggle('active', b.dataset.combatMode === _arenaCombatMode);
+  });
+}
+
 function loadArenaState() {
   try { return JSON.parse(localStorage.getItem(ARENA_STORAGE_KEY) || '{}'); }
   catch (_) { return {}; }
@@ -14359,9 +14389,22 @@ document.querySelectorAll('.stance-btn').forEach(btn => {
   });
 });
 
+// Trello (Ric O., 2026-05-21): Active combat mode toggle for Arena.
+// Wire click handlers for the new data-combat-mode buttons. Keyed off
+// data-combat-mode so they don't clash with the existing data-mode
+// bots/pvp toggle which lives in the same row layout.
+document.querySelectorAll('.arena-mode-btn[data-combat-mode]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    _setArenaCombatMode(btn.dataset.combatMode);
+  });
+});
+// Reflect persisted choice on first render
+_setArenaCombatMode(_arenaCombatMode);
+
 // Phase 8: PvP / Bots mode toggle
 function syncArenaModeBtns() {
-  document.querySelectorAll('.arena-mode-btn').forEach(b => {
+  // Skip the combat-mode buttons (they're synced independently above)
+  document.querySelectorAll('.arena-mode-btn[data-mode]').forEach(b => {
     b.classList.toggle('active', b.dataset.mode === _arenaMode);
   });
   const findBtn = document.getElementById('arenaFindBtn');
@@ -14371,7 +14414,10 @@ function syncArenaModeBtns() {
       : '⚔️ Find Opponent + Fight';
   }
 }
-document.querySelectorAll('.arena-mode-btn').forEach(btn => {
+// Filter to [data-mode] so we don't also grab the [data-combat-mode]
+// Active/Auto toggles (those are wired separately above and would
+// otherwise clobber _arenaMode with `undefined`).
+document.querySelectorAll('.arena-mode-btn[data-mode]').forEach(btn => {
   btn.addEventListener('click', () => {
     _arenaMode = btn.dataset.mode;
     try { localStorage.setItem('vx_arena_mode', _arenaMode); } catch (_) {}
@@ -14383,11 +14429,19 @@ syncArenaModeBtns();
 // Initial render so the panel isn't empty on first arena visit
 renderStanceDetail();
 
-async function apiRequestMatch({ champion_id, stance, current_elo, equipped, ability_id, mode }) {
+async function apiRequestMatch({ champion_id, stance, current_elo, equipped, ability_id, mode, fight_mode, qte_score }) {
   const res = await apiFetch(`${FN_BASE}/match_request`, {
     method: 'POST',
     headers: AUTH_HEADERS,
-    body: JSON.stringify({ wallet: getWallet(), champion_id, stance, current_elo, equipped, ability_id, mode }),
+    body: JSON.stringify({
+      wallet: getWallet(), champion_id, stance, current_elo, equipped, ability_id, mode,
+      // 2026-05-21 — Active combat mode (Trello Ric O.). The server caps
+      // qte_score's effect at ±15%, so even a perfect combo can't turn
+      // a stomp loss into a win — keeps PvP fair without disabling the
+      // mechanic.
+      fight_mode: fight_mode || 'auto',
+      qte_score: typeof qte_score === 'number' ? qte_score : null,
+    }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -15079,6 +15133,33 @@ bindIf('arenaFindBtn', 'click', async () => {
     _arenaInFlight = false;
   };
 
+  // Active combat mode: pre-fight QTE combo. Reuses the campaign's
+  // qteComboGrid (3 runes, all-perfect → 2.0 mult, miss → 0). We
+  // convert the combo's internal multiplier to a 0..1 score the
+  // server can apply as a damage swing (±15%, capped tight so PvP
+  // stays fair even though the defender wasn't online to QTE).
+  let qte_score = null;
+  const combatMode = _arenaCombatMode;   // 'auto' | 'active'
+  if (combatMode === 'active' && window.VxCampaign?.qteComboGrid) {
+    try {
+      findBtn.textContent = '⚡ Get ready…';
+      await window.VxCampaign.preFightCountdown();
+      // 3 runes, chapId=3 for moderate window (~900ms each). Returns
+      // { mult, perfectCount, runeCount, grade }. The internal mult
+      // ranges from 0 (miss) → 2.0 (3-perfect combo); we map to 0..1.
+      const r = await window.VxCampaign.qteComboGrid({ runeCount: 3, chapId: 3 });
+      // mult 0   → score 0.00  (no boost / penalty)
+      // mult 1.0 → score 0.50  (auto-baseline)
+      // mult 1.7 → score 0.85  (single-perfect approx)
+      // mult 2.0 → score 1.00  (combo perfect)
+      qte_score = Math.max(0, Math.min(1, (r?.mult ?? 1.0) / 2.0));
+      console.log('[arena] active QTE result', r, 'score=', qte_score);
+    } catch (e) {
+      console.warn('[arena] active QTE failed:', e);
+      qte_score = 0.5;   // fall back to neutral
+    }
+  }
+
   let resp;
   try {
     resp = await apiRequestMatch({
@@ -15088,6 +15169,8 @@ bindIf('arenaFindBtn', 'click', async () => {
       equipped,
       ability_id,
       mode: _arenaMode,
+      fight_mode: combatMode,
+      qte_score,
     });
     console.log('[arena] response', resp);
   } catch (e) {
@@ -15131,11 +15214,14 @@ bindIf('arenaFindBtn', 'click', async () => {
         _arenaQueueAbort = true;
         await apiQueueLeave(champ.id).catch(() => {});
         hideQueueOverlay();
-        // Re-fire the click as a bot match
+        // Re-fire the click as a bot match — propagate combat mode +
+        // the qte_score we already collected pre-queue so the player
+        // doesn't have to QTE twice.
         try {
           const botResp = await apiRequestMatch({
             champion_id: champ.id, stance: _arenaStance, current_elo: arena.elo,
             equipped, ability_id, mode: 'pvp_force_bot',
+            fight_mode: combatMode, qte_score,
           });
           handleResolvedMatch(botResp, champ, arena);
         } catch (e) {
@@ -15153,12 +15239,14 @@ bindIf('arenaFindBtn', 'click', async () => {
       return;
     }
     if (result.status === 'timeout') {
-      // Auto-fall-back to bot
+      // Auto-fall-back to bot — propagate combat mode + qte_score so
+      // the keeper's pre-queue Active timing carries into the bot fight.
       await apiQueueLeave(champ.id).catch(() => {});
       try {
         const botResp = await apiRequestMatch({
           champion_id: champ.id, stance: _arenaStance, current_elo: arena.elo,
           equipped, ability_id, mode: 'pvp_force_bot',
+          fight_mode: combatMode, qte_score,
         });
         handleResolvedMatch(botResp, champ, arena);
       } catch (e) {
@@ -15341,6 +15429,22 @@ function showArenaResult(resp, champ) {
     `<span class="emoji">${playerSpEmoji}</span> <span class="level">L${champ.level}</span> · <span class="stage">${playerStageName}</span> ${affinityBadgeHtml(champ.species_id, { compact: true })}`;
   document.getElementById('arBotContext').innerHTML =
     `<span class="emoji">${botSpEmoji}</span> <span class="level">L${champ.level}</span> · <span class="stage">${botStageName}</span> ${affinityBadgeHtml(resp.opponent.species_id, { compact: true })}`;
+
+  // 2026-05-21 — surface the Active-mode QTE contribution so the player
+  // sees their reaction skill mattered. The server returns qte_multiplier
+  // (0.85..1.15) on active-mode fights; we paint it as a green +N% or
+  // red -N% chip under the player's name. Auto fights skip this block.
+  if (resp.fight_mode === 'active' && typeof resp.qte_multiplier === 'number') {
+    const pct = Math.round((resp.qte_multiplier - 1.0) * 100);
+    const sign = pct > 0 ? '+' : '';
+    const color = pct > 5 ? '#7dff9a' : pct < -5 ? '#ff7d7d' : 'var(--muted)';
+    const label = pct >= 14 ? '⚡ Perfect combo!' :
+                  pct >  5 ? '⚡ Good timing'   :
+                  pct < -5 ? '⚡ Missed combo'  :
+                              '⚡ Neutral';
+    document.getElementById('arPlayerContext').innerHTML +=
+      `<div style="font-size:10px;color:${color};margin-top:3px;font-weight:700;">${label} (${sign}${pct}% dmg)</div>`;
+  }
 
   // Reset ticker + stats panel
   document.getElementById('arTicker').innerHTML = '';
@@ -18147,7 +18251,17 @@ const VxCampaign = (() => {
     };
   }
 
-  return { renderView, CHAPTERS };
+  return {
+    renderView, CHAPTERS,
+    // 2026-05-21 — surface the QTE primitives so the Arena can reuse
+    // them (Trello, Ric O.: port Active combat mode to Arena). The
+    // overlay DOM (.cmp-qte-overlay / .cmp-countdown-overlay) is
+    // position:fixed inset:0 so it works from any view, not just the
+    // campaign battle modal.
+    qteComboGrid,
+    qteReactionGrid,
+    preFightCountdown,
+  };
 })();
 window.VxCampaign = VxCampaign;
 </script>
