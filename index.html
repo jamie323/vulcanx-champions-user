@@ -235,6 +235,64 @@
   .cc-evo-pct { font-size: 11px; color: var(--muted); margin-top: 4px; }
   .cc-evo-pct b { color: var(--accent); font-size: 14px; }
 
+  /* ── Energy + HP vitals (2026-05-21 feature pass) ── */
+  .cc-vitals { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .cc-vital-row {
+    display: grid;
+    grid-template-columns: 18px 50px 1fr 36px;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    cursor: help;
+  }
+  .cc-vital-icon { font-size: 14px; line-height: 1; }
+  .cc-vital-label { color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+  .cc-vital-bar {
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+    height: 7px;
+  }
+  .cc-vital-fill {
+    height: 100%;
+    transition: width 0.35s ease, background 0.3s;
+  }
+  .cc-vital-energy { background: linear-gradient(90deg, #ffcd6b, #ffaa3a); }
+  .cc-vital-energy.low { background: linear-gradient(90deg, #ffaa3a, #ff7a3a); }
+  .cc-vital-energy.critical { background: linear-gradient(90deg, #ff7a3a, #ff4a4a); }
+  .cc-vital-hp { background: linear-gradient(90deg, #ff6a8c, #ff3a5a); }
+  .cc-vital-hp.low { background: linear-gradient(90deg, #ff5a5a, #ff3535); }
+  .cc-vital-hp.critical { background: linear-gradient(90deg, #ff3535, #aa0000); animation: hpPulse 1.2s infinite; }
+  @keyframes hpPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+  .cc-vital-val { color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+  .cc-vital-val.low      { color: #ffcd6b; }
+  .cc-vital-val.critical { color: #ff6a6a; }
+
+  /* ── Level-up timer (L20+) ── */
+  .cc-level-timer {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: linear-gradient(135deg, rgba(120, 90, 200, 0.14), rgba(60, 40, 120, 0.08));
+    border: 1px solid rgba(160, 120, 255, 0.3);
+    border-radius: 8px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .cc-level-timer .clt-icon { font-size: 20px; }
+  .cc-level-timer .clt-info { flex: 1; min-width: 0; }
+  .cc-level-timer .clt-line { font-size: 12px; color: var(--text); }
+  .cc-level-timer .clt-line b { color: #c9a8ff; }
+  .cc-level-timer .clt-sub  { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .cc-level-timer .clt-skip {
+    background: linear-gradient(135deg, #ffcd6b, #ff9a3a);
+    color: #1a0f05; border: 0;
+    padding: 6px 10px; border-radius: 6px;
+    font-size: 11px; font-weight: 800; letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .cc-level-timer .clt-skip:hover { transform: translateY(-1px); }
+  .cc-level-timer .clt-skip:disabled { opacity: 0.5; cursor: wait; }
+
   /* Center column */
   .cc-col-center { gap: 10px; }
   .cc-stage-frame {
@@ -885,6 +943,50 @@
     /* Shop / inventory grids */
     .shop-row, .equip-picker-item { padding: 10px 10px; }
 
+    /* ─── SHOP NFT TAB COMPACTING (2026-05-21) ─────────────────
+       The default 4-column shop grid is fine for 21 emoji-sized
+       potion tiles but cramped for the new NFT tabs whose tiles
+       carry a 1024² image thumb + multiple text rows. Drop to
+       2 columns on tablets/phones — gives the thumbs room to
+       breathe and the supply pill stays readable. */
+    .shop-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .shop-item { padding: 10px 8px 8px; }
+    .shop-item .si-img { margin-bottom: 4px; }
+    .shop-item .si-name { font-size: 12px; }
+    .shop-item .si-tier { font-size: 9px; }
+    .shop-item .si-price { font-size: 13px; }
+    .shop-item .si-supply { font-size: 9px; }
+    .shop-item .si-nft-chip { font-size: 7px; padding: 2px 5px; top: 4px; left: 4px; }
+
+    /* Shop tabs: ensure all 4 fit on a 360px phone */
+    .shop-tabs { padding: 3px; gap: 2px; }
+    .shop-tab  { padding: 7px 2px; font-size: 10px; letter-spacing: 0; }
+    .shop-tab .tab-emoji { display: none; }   /* save horizontal room */
+
+    /* Shop modal: claim more vertical real estate on mobile so the
+       cart + Pay button stays within reach instead of below 100+
+       NFT tiles. */
+    #shopModal .vx-modal-card.shop-card {
+      max-height: 96vh;
+      display: flex; flex-direction: column;
+      padding: 14px 12px;
+    }
+    #shopModal .shop-grid {
+      flex: 1; overflow-y: auto;
+      max-height: 50vh;
+      padding-right: 4px;
+      margin-right: -4px;
+    }
+    #shopModal .shop-cart {
+      flex-shrink: 0;
+      position: sticky; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(8px);
+      margin: 0 -12px -14px;
+      border-radius: 0 0 12px 12px;
+      padding: 12px 14px;
+    }
+
     /* Reduce fixed header height on mobile so views start below cleanly.
        Discord (PegaraX, 28 Apr): "this menu bar is blocking my stats"
        — bumping the clearance gives the nav more breathing room before
@@ -907,6 +1009,20 @@
     /* same fix on small phones — aspect-ratio drives the height now */
     /* .cc-stage-frame { max-height: 280px; } — removed */
     .ar-portrait { width: 80px; height: 80px; }
+
+    /* On the smallest phones (≤480px), the 2-col NFT tile grid is
+       still legible. Single-col would shrink the catalogue scroll
+       to one-card-per-screen which is annoying. Stay at 2 cols but
+       further tighten the per-tile chrome. */
+    .shop-tab { font-size: 9px; }
+    .shop-item .si-name { font-size: 11px; letter-spacing: 0.3px; }
+    .shop-item .si-tier { font-size: 8px; }
+    .shop-item .si-price { font-size: 11px; padding: 2px 5px; }
+    .shop-item .si-supply { font-size: 8px; }
+
+    /* Tooltip-via-title doesn't fire on touch — keep tile titles
+       short on small phones so the gist reads at a glance from
+       what's painted on the card itself. */
   }
 
   /* nav bar */
@@ -7760,6 +7876,39 @@
         <div class="evo-bar"><div class="evo-fill" id="evoFill" style="width:0%"></div></div>
         <div class="cc-evo-pct"><b id="evoPct">0</b>% <span id="evoPctLabel">to Level <span id="nextLevelNum">02</span></span></div>
       </div>
+      <!-- Energy + HP bars (Trello: 2026-04-28 "After a fight, you need
+           a healing potion", 2026-05-01 "energy consumption per champion
+           for quest and arena"). Energy regenerates +5/hr passively;
+           HP regenerates +5%/hr or instantly via Healing Salve. -->
+      <div class="cc-vitals" id="ccVitals">
+        <div class="cc-vital-row" title="Energy regenerates +5 per hour. Used by adventures, arena, and campaign fights.">
+          <span class="cc-vital-icon">⚡</span>
+          <span class="cc-vital-label">Energy</span>
+          <div class="cc-vital-bar"><div class="cc-vital-fill cc-vital-energy" id="energyFill" style="width:100%"></div></div>
+          <span class="cc-vital-val" id="energyVal">100</span>
+        </div>
+        <div class="cc-vital-row" title="HP persists between fights. Regenerates +5% per hour, or use a Healing Salve to top up instantly.">
+          <span class="cc-vital-icon">❤️</span>
+          <span class="cc-vital-label">Health</span>
+          <div class="cc-vital-bar"><div class="cc-vital-fill cc-vital-hp" id="hpFill" style="width:100%"></div></div>
+          <span class="cc-vital-val" id="hpVal">100%</span>
+        </div>
+      </div>
+      <!-- Level timer (L20+ champions). Hidden by default; shown when
+           levelStatus === 'waiting'. PYR skip button calls
+           champion_skip_level — costs 1 PYR per minute remaining. -->
+      <div class="cc-level-timer" id="levelTimer" style="display:none;">
+        <span class="clt-icon">⏳</span>
+        <div class="clt-info">
+          <div class="clt-line">
+            <b id="levelTimerMinutes">—</b> until <b>L<span id="levelTimerLevel">—</span></b>
+          </div>
+          <div class="clt-sub" id="levelTimerSub">Adventures tick the timer down while away.</div>
+        </div>
+        <button class="clt-skip" id="levelTimerSkip" onclick="skipLevelTimer()">
+          Skip · <b id="levelTimerCost">—</b> PYR
+        </button>
+      </div>
       <!-- Trello (Ric O., 28 Apr — "should only be ready to evolve when
            all stat bars are full"): clarify that stats do NOT need to be
            maxed — evolution only requires (gate level + bar full +
@@ -10259,7 +10408,15 @@ const VxQuests = (() => {
       renderActive();
       renderGrid();
     } catch (e) {
-      vxAlert(e.message || 'Failed to start adventure', { title: 'Adventure start failed', icon: '🗺️', variant: 'error' });
+      // 2026-05-21 — surface energy/HP gate errors with the dedicated
+      // helper (offers Healing Salve / Shop CTA). Falls through to the
+      // generic alert for anything else.
+      const handled = await (typeof handleEnergyHpError === 'function'
+        ? handleEnergyHpError(e, championId) : false);
+      if (!handled) {
+        vxAlert(e.message || 'Failed to start adventure',
+          { title: 'Adventure start failed', icon: '🗺️', variant: 'error' });
+      }
     }
   }
 
@@ -11355,12 +11512,63 @@ function render() {
   fill.classList.toggle('gate-ready', canEvolve());
   updateBarNearFull(state.evoPct);
 
+  // 2026-05-21: Energy + HP vitals on the level card. Pulls from the
+  // active champion row populated by apiListChampions (which joins
+  // champion_runtime_state server-side). Defaults to 100/100 for
+  // pre-migration champions so the bars never look broken.
+  const _activeCh = myChampions.find(c => c.id === state.championId) || {};
+  const enVal = Math.max(0, Math.min(100, Math.round(_activeCh.energy ?? 100)));
+  const hpVal = Math.max(0, Math.min(100, Math.round(_activeCh.currentHp ?? 100)));
+  const enFill = document.getElementById('energyFill');
+  const enValEl = document.getElementById('energyVal');
+  const hpFillEl = document.getElementById('hpFill');
+  const hpValEl = document.getElementById('hpVal');
+  if (enFill && enValEl) {
+    enFill.style.width = enVal + '%';
+    enFill.classList.toggle('critical', enVal < 10);
+    enFill.classList.toggle('low',      enVal >= 10 && enVal < 30);
+    enValEl.textContent = String(enVal);
+    enValEl.classList.toggle('critical', enVal < 10);
+    enValEl.classList.toggle('low',      enVal >= 10 && enVal < 30);
+  }
+  if (hpFillEl && hpValEl) {
+    hpFillEl.style.width = hpVal + '%';
+    hpFillEl.classList.toggle('critical', hpVal < 25);
+    hpFillEl.classList.toggle('low',      hpVal >= 25 && hpVal < 50);
+    hpValEl.textContent = hpVal + '%';
+    hpValEl.classList.toggle('critical', hpVal < 25);
+    hpValEl.classList.toggle('low',      hpVal >= 25 && hpVal < 50);
+  }
+  // Level timer (L20+). Shown only when the backend reports
+  // levelStatus='waiting'. Skip cost = remaining minutes × 1 PYR.
+  const timerEl = document.getElementById('levelTimer');
+  if (timerEl) {
+    const waiting = _activeCh.levelStatus === 'waiting'
+      && (_activeCh.levelMinutesRemaining ?? 0) > 0;
+    timerEl.style.display = waiting ? 'flex' : 'none';
+    if (waiting) {
+      const mins = _activeCh.levelMinutesRemaining;
+      const hrs  = Math.floor(mins / 60);
+      const rem  = mins % 60;
+      const human = hrs > 0 ? `${hrs}h ${rem}m` : `${rem}m`;
+      document.getElementById('levelTimerMinutes').textContent = human;
+      document.getElementById('levelTimerLevel').textContent =
+        String(Math.min(50, state.level + 1)).padStart(2, '0');
+      document.getElementById('levelTimerCost').textContent = String(mins);
+    }
+  }
+
   const evoBtn = document.getElementById('evolveBtn');
   const ok = canEvolve();
-  evoBtn.disabled = !ok;
-  evoBtn.classList.toggle('ready', ok);
-  evoBtn.textContent = ok && next ? '⚡ Evolve to ' + next.name
-    : next ? '⚡ Evolve (locked)' : 'Max form reached';
+  // Block evolve if the level timer is still ticking down (L20+).
+  const levelLocked = _activeCh.levelStatus === 'waiting'
+    && (_activeCh.levelMinutesRemaining ?? 0) > 0;
+  evoBtn.disabled = !ok || levelLocked;
+  evoBtn.classList.toggle('ready', ok && !levelLocked);
+  evoBtn.textContent = levelLocked
+    ? '⏳ Resting…'
+    : (ok && next ? '⚡ Evolve to ' + next.name
+      : next ? '⚡ Evolve (locked)' : 'Max form reached');
 
   // ── TRAITS (in right panel stats card)
   const tBox = document.getElementById('traits');
@@ -12125,6 +12333,14 @@ function mapChampion(row) {
     },
     animated: !!row.animated_url,
     createdAt: row.created_at,
+    // 2026-05-21 — runtime state (regen-on-read) from champion_list's
+    // join against champion_runtime_state. Defaults match a fresh
+    // champion at full energy + HP if the backend hasn't been migrated.
+    energy:                row.energy_now ?? row.energy ?? 100,
+    currentHp:             row.hp_now ?? row.current_hp_pct ?? 100,
+    levelStatus:           row.level_status || 'ready',
+    levelReadyAt:          row.level_ready_at || null,
+    levelMinutesRemaining: row.level_minutes_remaining || 0,
     _backend: true,  // flag for debug / migration
   };
 }
@@ -14240,6 +14456,88 @@ async function apiHeal(championId) {
   return data;
 }
 
+// ─── Level-timer skip (L20+ feature, 2026-05-21) ───────────────
+// Costs 1 PYR per remaining minute. Frontend signs a dummy TX, calls
+// champion_skip_level which clears the level_ready_at gate and returns
+// the actual minutes skipped (in case timer ticked down between the
+// render and the click). Refreshes the champion + re-renders.
+async function skipLevelTimer() {
+  if (!state?.championId) return;
+  const ch = myChampions.find(c => c.id === state.championId);
+  const mins = ch?.levelMinutesRemaining ?? 0;
+  if (mins <= 0) return;
+  const btn = document.getElementById('levelTimerSkip');
+  const orig = btn?.textContent;
+  const confirmed = await new Promise((resolve) => {
+    vxAlert(
+      `Skip the ${mins}-minute level-up wait for ${mins} PYR?\n\n` +
+      `(Dummy TX during QA — no PYR actually deducted yet.)`,
+      { title: '⏳ Skip wait', icon: '✨', okLabel: 'Yes, skip', cancelLabel: 'Wait it out' },
+    ).then(ok => resolve(ok));
+  }).catch(() => false);
+  if (!confirmed) return;
+  if (btn) { btn.disabled = true; btn.textContent = '🦊 Signing…'; }
+  try {
+    await signDummyTx(`skip_level:${state.championId}:${mins}PYR`);
+    if (btn) btn.textContent = '⏳ Skipping…';
+    const res = await apiFetch(`${FN_BASE}/champion_skip_level`, {
+      method: 'POST', headers: AUTH_HEADERS,
+      body: JSON.stringify({ wallet: getWallet(), champion_id: state.championId }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || `http_${res.status}`);
+    // Refresh champion state and re-render
+    await loadMyChampions();
+    render();
+    showToast(`⚡ Skipped ${data.minutes_skipped || mins} min for ${data.pyr_cost || mins} PYR`,
+      'success', 3000);
+  } catch (e) {
+    console.error('[skipLevelTimer]', e);
+    vxAlert(e.message || String(e), { title: 'Skip failed', icon: '🔥', variant: 'error' });
+    if (btn) { btn.disabled = false; btn.textContent = orig; }
+  }
+}
+
+// ─── Friendly handling of energy/HP gate errors (2026-05-21) ───
+// Edge fns (champion_quest_start, match_request, campaign_battle)
+// return error.code = 'too_tired' or 'too_hurt' with a helpful message
+// when the champion can't proceed. Surface them as vxAlerts with a
+// "Use Healing Salve" CTA when applicable.
+async function handleEnergyHpError(err, championId) {
+  const msg = err?.message || String(err);
+  const isTired = msg.includes('too_tired') || (err?.data?.error === 'too_tired');
+  const isHurt  = msg.includes('too_hurt')  || (err?.data?.error === 'too_hurt');
+  if (!isTired && !isHurt) return false;
+  const title = isTired ? '⚡ Too tired' : '🩹 Too hurt';
+  const detail = isTired
+    ? 'Energy regenerates +5 per hour. A Healing Salve also tops them up.'
+    : 'Feed your champion a Healing Salve to restore +50% HP instantly.';
+  const haveSalve = (state?.inv?.healing || 0) > 0;
+  const useSalve = await vxAlert(
+    `Your champion needs to rest.\n\n${detail}`,
+    {
+      title, icon: isTired ? '⚡' : '🩹',
+      okLabel:    haveSalve ? '🩹 Use Healing Salve' : '🛒 Get a Healing Salve',
+      cancelLabel: 'OK',
+    },
+  ).then(ok => ok).catch(() => false);
+  if (useSalve) {
+    if (haveSalve) {
+      try {
+        const result = await apiHeal(championId);
+        await loadMyChampions();
+        render();
+        showToast(`🩹 Healing Salve used · HP ${result.hp_now}%`, 'success', 2800);
+      } catch (e) {
+        vxAlert(e.message || String(e), { title: 'Heal failed', variant: 'error' });
+      }
+    } else {
+      openShop();
+    }
+  }
+  return true;
+}
+
 // Phase 8.5: cooldown chip on the arena card. Polls the pool row's
 // next_battle_at via pvp_queue_check (which returns {status: 'idle'}
 // when there's no row, no queue, and no cooldown blocking). We track
@@ -14795,6 +15093,11 @@ bindIf('arenaFindBtn', 'click', async () => {
   } catch (e) {
     console.error('[arena] match request failed', e);
     resetButton();
+    // 2026-05-21 — energy/HP gate errors take priority (offer salve/shop).
+    if (typeof handleEnergyHpError === 'function'
+        && await handleEnergyHpError(e, champ.id)) {
+      return;
+    }
     // Surface healing cooldown specifically — show the chip + a toast
     // so the keeper sees how long until they can fight + can heal now.
     const msg = String(e?.message || '');
@@ -17800,6 +18103,19 @@ const VxCampaign = (() => {
           }
         } catch (e) {
           console.warn('[campaign] backend log failed', e);
+          // 2026-05-21 — surface energy/HP gate errors as a friendly
+          // resolution path (Healing Salve / rest) instead of a vague
+          // backend-log warning. Falls through if not the gate error.
+          if (typeof handleEnergyHpError === 'function'
+              && await handleEnergyHpError(e, champ.id)) {
+            // Already shown the modal — also need to roll back local
+            // progress because the server didn't record the fight.
+            const localProg = getChapterProgress(chapId);
+            if (isBoss) { localProg.boss_cleared = false; localProg.completed_at = null; }
+            else        { localProg.mobs_cleared[Number(fightKey)] = false; }
+            try { localStorage.setItem(LS_KEY, JSON.stringify(getProgress())); } catch(_) {}
+            return;
+          }
           const status = document.getElementById('cmpBmServerStatus');
           if (status) {
             status.textContent = '⚠ Backend log failed — progress kept locally; quest credit will sync next session.';
