@@ -5817,11 +5817,14 @@
         </span>
         <br/><span style="color:var(--muted);font-size:11px;">QA note: PYR transfer is signed but zero-value during testing — no PYR is actually deducted yet.</span>
       </p>
-      <!-- Shop tabs (added 2026-05-19): Potions / Equipment / Champions / Limited Drops -->
+      <!-- Shop tabs. Updated 2026-05-21 — Champion eggs moved out of the
+           shop; they live in the dedicated Adopt nav-button flow instead
+           (cleaner separation: shop is for consumables + gear, Adopt is
+           the journey of picking a bloodline and seeing the supply state
+           in context). Three tabs is much easier to scan than four. -->
       <div class="shop-tabs" id="shopTabs">
         <button class="shop-tab active" data-tab="potions">🧪 Potions</button>
         <button class="shop-tab" data-tab="equipment">⚔️ Equipment</button>
-        <button class="shop-tab" data-tab="champion">🥚 Champions</button>
         <button class="shop-tab" data-tab="limited_potion">✨ Limited Drops</button>
       </div>
     </div>
