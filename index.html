@@ -9868,8 +9868,26 @@ const VxBond = (() => {
     return TIERS.find(t => bond >= t.min) || TIERS[TIERS.length - 1];
   }
 
-  // Compute mood from lastFedAt timestamp.
+  // Compute mood from lastFedAt timestamp + bond floor.
   // Returns { id, emoji, label, blurb }.
+  //
+  // Trello 2026-05-21: "100/100 bond & mood progress bar showing
+  // opposite end of the spectrum emoji visual and says 'neglected'."
+  // Root cause: mood was purely time-since-fed and ignored bond. A
+  // 100-bond Soulbound champion who hadn't been fed in 72hrs would
+  // still read as "Neglected" 😤 next to the maxed bond meter — the
+  // two halves of the panel told contradictory stories.
+  //
+  // New rule: bond floors how bad the mood can get. Soulbound (75+)
+  // can't drop below "Content"; Companion (50+) can't drop below
+  // "Hungry". Below 50 bond, time-since-fed runs the whole show.
+  const MOODS = [
+    { id: 'happy',      emoji: '😊', label: 'Happy',         blurb: 'Well-fed and ready for adventure.' },
+    { id: 'content',    emoji: '🙂', label: 'Content',       blurb: 'Doing fine. A snack would be nice.' },
+    { id: 'hungry',     emoji: '🥺', label: 'Hungry',        blurb: "It's been a while. Feed me?" },
+    { id: 'restless',   emoji: '😴', label: 'Restless',      blurb: 'Bored and a bit grumpy. Let\'s fight or eat.' },
+    { id: 'distressed', emoji: '😤', label: 'Neglected',     blurb: 'Where have you been? I miss you.' },
+  ];
   function moodFor(championId) {
     const rec = get(championId);
     const fed = rec.lastFedAt ? new Date(rec.lastFedAt).getTime() : null;
@@ -9878,16 +9896,16 @@ const VxBond = (() => {
                blurb: 'Feed me to get started!' };
     }
     const hoursSince = (Date.now() - fed) / 3_600_000;
-    if (hoursSince < 12)   return { id: 'happy', emoji: '😊', label: 'Happy',
-      blurb: 'Well-fed and ready for adventure.' };
-    if (hoursSince < 24)   return { id: 'content', emoji: '🙂', label: 'Content',
-      blurb: 'Doing fine. A snack would be nice.' };
-    if (hoursSince < 48)   return { id: 'hungry', emoji: '🥺', label: 'Hungry',
-      blurb: "It's been a while. Feed me?" };
-    if (hoursSince < 72)   return { id: 'restless', emoji: '😴', label: 'Restless',
-      blurb: 'Bored and a bit grumpy. Let\'s fight or eat.' };
-    return { id: 'distressed', emoji: '😤', label: 'Neglected',
-      blurb: 'Where have you been? I miss you.' };
+    const timeMood = hoursSince < 12 ? 0
+                   : hoursSince < 24 ? 1
+                   : hoursSince < 48 ? 2
+                   : hoursSince < 72 ? 3
+                   :                    4;
+    // Bond floor — high bond means the champion is patient with you.
+    const bondFloor = rec.bond >= 75 ? 1
+                    : rec.bond >= 50 ? 2
+                    :                   4;
+    return MOODS[Math.min(timeMood, bondFloor)];
   }
 
   // Add bond points and persist. Returns the new total + whether a
@@ -10301,11 +10319,31 @@ const VxQuests = (() => {
     _tickInterval = setInterval(() => renderActive(), 1000);
   }
 
+  // Track the last rendered signature so the 1Hz tick doesn't re-paint
+  // the entire list when nothing actually changed (Trello 2026-05-21:
+  // "adventure text blinks and is hard to read" — ready-to-claim rows
+  // were getting innerHTML-wiped + rebuilt every second, which
+  // destroyed and recreated the Claim button + status text 60 times
+  // a minute, perceived as blinking. Now: build the signature from
+  // (eventId, ready-or-seconds-remaining); if it matches the last
+  // tick exactly, we skip the DOM write entirely.
+  let _lastActiveSig = '__never__';
   function renderActive() {
     const root = document.getElementById('questsActiveList');
     if (!root) return;
     const all = load();
     const entries = Object.entries(all).map(([cid, q]) => ({ ...q, championId: cid }));
+    // Build a signature of what this render WOULD show. Ready quests
+    // give a constant token; in-flight quests give a per-second token.
+    const sig = entries.length === 0
+      ? 'empty'
+      : entries.map(q => {
+          const remaining = (new Date(q.endsAt)).getTime() - Date.now();
+          if (remaining <= 0) return `${q.eventId}:R`;
+          return `${q.eventId}:${Math.floor(remaining / 1000)}`;
+        }).join('|');
+    if (sig === _lastActiveSig) return;     // nothing to redraw
+    _lastActiveSig = sig;
     if (entries.length === 0) {
       root.innerHTML = '<div style="color:var(--muted);font-style:italic;padding:8px 4px;font-size:13px;">No active adventures. Pick one below to send a champion out.</div>';
       return;
@@ -13239,7 +13277,12 @@ function renderBloodlinePicker() {
   // Kick off supply fetch; first render runs even if it's not back yet,
   // a second render fires when it lands. Avoids blocking the picker
   // while the badge data loads.
-  fetchSupplyOnce().then(() => renderBloodlinePicker());
+  // Same recursive-loop guard as renderBuy() — only re-render after
+  // the FIRST cache populate; otherwise the warm-cache resolve fires
+  // synchronously and we tail-call ourselves forever.
+  if (!_supplyCache) {
+    fetchSupplyOnce().then(() => renderBloodlinePicker());
+  }
   const sp = SPECIES[sp_id];
   // QA (8 May): species labels starting with vowels (Orc, Elf) need
   // "an", others need "a". Tester-spotted nit. Cheaper than a full
@@ -13303,9 +13346,18 @@ function renderBuy() {
   const bl_id = adoptFlow.bloodline_id;
   if (!sp_id || !bl_id) { navTo('adopt'); return; }
   // Lazy-load supply so the buy summary can show "X of 250 left" too.
-  fetchSupplyOnce().then(() => {
-    if (window.location.hash.includes('adopt-buy')) renderBuy();
-  });
+  // Trello P0 (2026-05-21, Adopt Hero Page Freezes): without the
+  // `_supplyCache` gate this triggered an unbounded re-render loop —
+  // fetchSupplyOnce() resolves SYNCHRONOUSLY on a warm cache, the .then
+  // re-called renderBuy(), which re-called fetchSupplyOnce(), which
+  // re-fired the .then, etc. The cursor froze inside the microtask
+  // queue and the tab crashed after 2-3 min from DOM-overwrite memory
+  // pressure. Only re-render after the FIRST cache populate.
+  if (!_supplyCache) {
+    fetchSupplyOnce().then(() => {
+      if (window.location.hash.includes('adopt-buy')) renderBuy();
+    });
+  }
   const sp = SPECIES[sp_id];
   const bl = sp.bloodlines[bl_id];
   const stage0 = bl.stages[0];
