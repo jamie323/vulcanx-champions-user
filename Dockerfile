@@ -14,6 +14,7 @@ RUN rm -rf /usr/share/nginx/html/*
 # allbloodlines*, .git/, .claude/, etc. (see .dockerignore).
 COPY index.html        /usr/share/nginx/html/
 COPY wallet.js         /usr/share/nginx/html/
+COPY auth.js           /usr/share/nginx/html/
 COPY stories.js        /usr/share/nginx/html/
 COPY equipment.js      /usr/share/nginx/html/
 COPY bloodlines.json   /usr/share/nginx/html/
@@ -24,6 +25,17 @@ COPY howto/            /usr/share/nginx/html/howto/
 COPY icons/            /usr/share/nginx/html/icons/
 COPY img/              /usr/share/nginx/html/img/
 COPY nft_images/       /usr/share/nginx/html/nft_images/
+
+# ─── Bake the Vulcan-X gateway URL into index.html at image-build time ────
+# index.html ships `'https://dev-new-api.vulcan-x.io'` as the default
+# fallback for window.__VX_GATEWAY_URL__ (used when the request host is
+# NOT localhost / 127.x — the inline script in index.html handles the
+# local-dev override automatically). For non-default deploys (staging,
+# prod cutover) swap the URL via the build arg:
+#   docker build --build-arg VX_GATEWAY_URL=https://api.vulcan-x.io …
+# Leaving the build arg unset keeps the dev-new default below.
+ARG VX_GATEWAY_URL=https://dev-new-api.vulcan-x.io
+RUN sed -i "s|'https://dev-new-api.vulcan-x.io'|'${VX_GATEWAY_URL}'|g" /usr/share/nginx/html/index.html
 
 # Drop in our custom nginx config.
 COPY nginx.conf /etc/nginx/conf.d/default.conf
