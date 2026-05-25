@@ -7570,12 +7570,7 @@
              matchmaking" — testers see ELO but don't know what bracket
              they're in or who they can match with. -->
         <button class="arena-elo-help" type="button"
-                onclick="vxAlert(
-                  'Your ELO controls who you fight.\\n\\n' +
-                  '• Brackets: 🥚 Whelpling Cup (ELO 0-200) · 🐺 Adolescent (200-400) · 🛡️ Champion (400-700) · 👑 Legendary (700+).\\n\\n' +
-                  'Match-making picks opponents inside your bracket whose ELO is closest to yours. If no one\\'s online inside the 3-min queue, a bot is generated to match you.\\n\\n' +
-                  'Win → ELO goes up. Lose → ELO goes down. Cross a bracket threshold and your bracket changes too.',
-                  { title: '🏆 ELO &amp; Matchmaking', icon: '🏆' })"
+                onclick="showEloHelp()"
                 title="How does ELO matchmaking work?">?</button>
       </div>
     </div>
@@ -9780,7 +9775,39 @@ const VxDaily = (() => {
     setTimeout(() => { if (canClaimToday()) openModal(); }, 1200);
   }
 
-  return { canClaimToday, getStreak, nextStreak, claim, openModal, closeModal, refreshPill, refresh, maybeAutoOpen };
+  // 2026-05-25 (Trello "Log in count Not progressing past 2 days"):
+  // tester left their tab open across multiple days, no fresh sign-in
+  // fired, so VxDaily never re-checked the server and the streak
+  // silently reset to 1 on day 3 (missed-claim penalty). Fix: poll
+  // every 15 min for UTC-date change; on change, refresh the streak
+  // state and auto-claim if eligible. Players who keep the app open
+  // now get their streak credited automatically each day.
+  function _utcDay() { return new Date().toISOString().slice(0, 10); }
+  let _lastSeenUtcDay = _utcDay();
+  function watchUtcDayRollover() {
+    setInterval(async () => {
+      try {
+        const today = _utcDay();
+        if (today === _lastSeenUtcDay) return;
+        console.log('[daily] UTC day rolled over:', _lastSeenUtcDay, '→', today);
+        _lastSeenUtcDay = today;
+        // Clear the session-seen + dismissed flags from yesterday so
+        // today's auto-open / auto-claim works fresh.
+        try {
+          sessionStorage.removeItem('vx_daily_seen_session');
+        } catch (_) {}
+        await refresh();
+        if (canClaimToday()) {
+          console.log('[daily] auto-claiming for keep-tab-open users');
+          await claim();
+        }
+      } catch (e) {
+        console.warn('[daily] day-rollover watcher failed:', e?.message);
+      }
+    }, 15 * 60 * 1000);  // 15 min — well under a day, cheap heartbeat
+  }
+
+  return { canClaimToday, getStreak, nextStreak, claim, openModal, closeModal, refreshPill, refresh, maybeAutoOpen, watchUtcDayRollover };
 })();
 window.VxDaily = VxDaily;
 // Wire claim button + backdrop dismiss
@@ -15944,6 +15971,9 @@ async function boot() {
       await VxDaily.refresh();
       VxDaily.refreshPill();
       VxDaily.maybeAutoOpen();
+      // Start the UTC-day-rollover watcher so tab-open users don't lose
+      // their streak when midnight passes (Trello 2026-05-25).
+      VxDaily.watchUtcDayRollover();
     }
 
     // ── Deep-link: handle ?champion=<id> share URLs ──
@@ -16307,6 +16337,21 @@ function showToast(message, variant = 'info', durationMs = 2600) {
 // says" system prompt. Returns a Promise so call-sites can `await`.
 // ============================================================
 let _vxDialogPending = null; // { resolve, isPrompt }
+
+// 2026-05-25 (Trello "(?) Icon no action"): the ? button next to YOUR ELO
+// had an inline onclick with `\\'` mid-string, which JS parses as
+// `\' + s'` — a syntax error — so the handler was never installed and
+// the click did nothing (only the title tooltip showed on hover).
+// Lifted the message into a named function so escaping isn't an issue.
+function showEloHelp() {
+  return vxAlert(
+    'Your ELO controls who you fight.\n\n' +
+    '• Brackets: 🥚 Whelpling Cup (ELO 0-200) · 🐺 Adolescent (200-400) · 🛡️ Champion (400-700) · 👑 Legendary (700+).\n\n' +
+    "Match-making picks opponents inside your bracket whose ELO is closest to yours. If no one's online inside the 3-min queue, a bot is generated to match you.\n\n" +
+    'Win → ELO goes up. Lose → ELO goes down. Cross a bracket threshold and your bracket changes too.',
+    { title: '🏆 ELO & Matchmaking', icon: '🏆' }
+  );
+}
 
 function vxAlert(message, opts = {}) {
   return _vxShowDialog({
