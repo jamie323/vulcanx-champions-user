@@ -5701,7 +5701,10 @@
           <span class="wg-btn-sub">or other browser extension</span>
         </span>
       </button>
-      <button class="wg-btn wg-btn-wc" id="connectBtnWC" onclick="connectWallet('walletconnect')">
+      <!-- WalletConnect hidden — Champions now offers MetaMask only.
+           The element is kept in DOM (display:none) so existing JS that
+           queries connectBtnWC / wcSubLabel doesn't null-deref. -->
+      <button class="wg-btn wg-btn-wc" id="connectBtnWC" style="display:none;" onclick="connectWallet('walletconnect')">
         <span class="wg-btn-ico">📱</span>
         <span class="wg-btn-body">
           <span class="wg-btn-title">WalletConnect</span>
