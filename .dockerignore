@@ -20,7 +20,7 @@ evolution20/
 # ── Docker build files themselves ──────────────────────────────────────────
 Dockerfile
 .dockerignore
-nginx.conf
+# nginx.conf is intentionally NOT excluded — it is COPY'd into the container
 
 # ── Arena prototype screenshots ────────────────────────────────────────────
 arena-*.png
