@@ -1,0 +1,29 @@
+# ── Git / IDE ──────────────────────────────────────────────────────────────
+.git/
+.gitignore
+.claude/
+.playwright-mcp/
+
+# ── Dev-only Python image-generation scripts ───────────────────────────────
+scripts/
+
+# ── Bulk art directories (GBs of source PNGs, not served by the app) ───────
+allbloodlines/
+allbloodlines_v1/
+evolution20/
+
+# ── OS noise ───────────────────────────────────────────────────────────────
+.DS_Store
+*.swp
+*.swo
+
+# ── Docker build files themselves ──────────────────────────────────────────
+Dockerfile
+.dockerignore
+# nginx.conf is intentionally NOT excluded — it is COPY'd into the container
+
+# ── Arena prototype screenshots ────────────────────────────────────────────
+arena-*.png
+
+# ── Docs / READMEs (not required at runtime) ──────────────────────────────
+README.md
