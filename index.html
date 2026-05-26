@@ -1958,6 +1958,32 @@
     color: var(--accent);
   }
   .arena-find-btn { width: 100%; max-width: 360px; margin-top: 6px; }
+  /* Heal button on the HP vital row (Trello 2026-05-26 wpuzqUvv) */
+  .cc-vital-heal {
+    background: linear-gradient(180deg, #ff6a8c, #ff3a5a);
+    color: #fff; border: none; cursor: pointer;
+    padding: 4px 9px; border-radius: 10px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.4px;
+    margin-left: 8px;
+    flex-shrink: 0;
+  }
+  .cc-vital-heal:hover { filter: brightness(1.08); }
+  .cc-vital-heal:disabled { opacity: 0.55; cursor: wait; }
+
+  /* Arena energy chip (Trello 2026-05-26 OfUu5ovP) */
+  .arena-energy-chip {
+    display: flex; justify-content: center; align-items: center; gap: 8px;
+    margin: 8px auto 0; padding: 6px 12px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    font-size: 11px; color: var(--muted);
+    max-width: 360px;
+  }
+  .arena-energy-chip b { color: var(--text); }
+  .arena-energy-chip .ae-sep { opacity: 0.5; }
+  .arena-energy-chip.too-tired b { color: #ff7d7d; }
 
   /* Stance description card — swaps content as player picks a stance */
   .stance-detail {
@@ -3419,6 +3445,17 @@
     max-width: 720px; margin: 20px auto 32px; line-height: 1.6;
   }
   .hero-cta-row { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+  /* Trello 2026-05-26 (9z5JDcss): split into primary (Adopt, big) and
+     secondary (Stable/Shop/How-It-Works, small) rows so the Adopt CTA
+     dominates the hero. */
+  .hero-cta-row.hero-cta-primary { margin-bottom: 14px; }
+  .hero-cta-row.hero-cta-secondary {
+    margin-top: 8px;
+    gap: 10px;
+    font-size: 12px;
+    opacity: 0.92;
+  }
+  .hero-cta-row.hero-cta-secondary .cta-ghost { padding: 8px 18px; font-size: 12px; }
   .cta-big {
     padding: 16px 34px; font-size: 14px; font-weight: 800;
     letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
@@ -5989,7 +6026,11 @@
   <button class="nav-btn" data-view="stable" title="My Stable — your champions"><span class="nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8 12 3l9 5"/><path d="M5 8v11M9 8v11M15 8v11M19 8v11"/><path d="M3 19h18"/><path d="M3 11.5h18"/></svg></span><span class="nav-txt">Stable</span></button>
   <button class="nav-btn" data-view="adopt" title="Adopt a new champion"><span class="nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/><circle cx="12" cy="12" r="2"/></svg></span><span class="nav-txt">Adopt</span></button>
   <button class="nav-btn" data-view="howto" title="How it Works — the player guide"><span class="nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H19v15H5.5A1.5 1.5 0 0 0 4 19.5z"/><path d="M4 19.5A1.5 1.5 0 0 0 5.5 21H19"/><path d="M8 7h7M8 11h7"/></svg></span><span class="nav-txt">Guide</span></button>
-  <button class="nav-btn" data-view="explore" title="Explore — top-ranked champions"><span class="nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/><path d="M11 8v6M8 11h6"/></svg></span><span class="nav-txt">Explore</span></button>
+  <!-- Trello 2026-05-26 (hIAP6u6y): Explore button removed — the Ranks
+       button + leaderboard already covers the same "see top champions"
+       intent, so Explore was redundant. Keeping the view route + the
+       /explore deep-link functional for backwards-compat but no longer
+       in the main nav. -->
   <!-- Renamed Quests → Adventures (2026-05-17) to disambiguate from the
        cross-game "Chest Quests" gateway. data-view attribute and CSS
        classes (.view-quests) keep the old internal id to avoid a wider
@@ -6028,9 +6069,15 @@
           animated masterpiece. Eight species. Twenty-four ancient bloodlines. Every
           champion born with a unique face, story, and destiny only you will uncover.
         </p>
-        <div class="hero-cta-row" id="heroCtaRow">
+        <!-- Trello 2026-05-26 (9z5JDcss): Adopt CTA was one of 4 equal-
+             weight buttons in a row — primary action hierarchy unclear.
+             Restructured: Adopt is its own row, centered + dominant.
+             Secondary actions live below as a smaller "ghost" row. -->
+        <div class="hero-cta-row hero-cta-primary" id="heroCtaRow">
           <button class="cta-big" onclick="navTo('adopt')">🥚 Adopt a Baby Champion</button>
-          <button class="cta-ghost" id="heroStableBtn" style="display:none;" onclick="navTo('stable')">🏛 Go to My Stable</button>
+        </div>
+        <div class="hero-cta-row hero-cta-secondary">
+          <button class="cta-ghost" id="heroStableBtn" style="display:none;" onclick="navTo('stable')">🏛 My Stable</button>
           <button class="cta-ghost" onclick="openShop()">🛒 Shop</button>
           <button class="cta-ghost" onclick="document.getElementById('howSection').scrollIntoView({behavior:'smooth'})">How It Works</button>
         </div>
@@ -6389,7 +6436,7 @@
         <div class="howto-feature-card"><div class="ic">🩸</div><h4>Drain Touch</h4><p>Heal 12% of damage dealt for the first 3 rounds.</p></div>
         <div class="howto-feature-card"><div class="ic">💨</div><h4>Quickstep</h4><p>+20% dodge for the first 2 rounds.</p></div>
         <div class="howto-feature-card"><div class="ic">🎯</div><h4>Hunter's Mark</h4><p>Your first crit deals +50% damage.</p></div>
-        <div class="howto-feature-card"><div class="ic">🪨</div><h4>Stone Wall</h4><p>First 2 hits taken deal 50% damage (then expires).</p></div>
+        <div class="howto-feature-card"><div class="ic">🧱</div><h4>Stone Wall</h4><p>First 2 hits taken deal 50% damage (then expires).</p></div>
         <div class="howto-feature-card"><div class="ic">🩹</div><h4>Pact of Blood</h4><p>Pay 15% HP at start; gain +25% damage all match.</p></div>
       </div>
 
@@ -7649,6 +7696,16 @@
         <div class="arena-ability-grid" id="arenaAbilityGrid"></div>
       </div>
       <button class="btn-big arena-find-btn" id="arenaFindBtn">⚔️ Find Opponent + Fight</button>
+      <!-- Trello 2026-05-26 (OfUu5ovP): "Energy not clear in arena. It
+           should show how much energy is left for the champion."
+           Tiny chip directly under the find button — cost on the left,
+           remaining on the right. Updates whenever the active champion's
+           energy changes (rendered alongside the existing vital bars). -->
+      <div class="arena-energy-chip" id="arenaEnergyChip">
+        <span>Costs <b>15 ⚡</b></span>
+        <span class="ae-sep">·</span>
+        <span>You have <b id="arenaEnergyNow">100</b> ⚡</span>
+      </div>
       <div class="arena-bracket-hint" id="arenaBracketHint"></div>
     </div>
 
@@ -7904,6 +7961,14 @@
           <span class="cc-vital-label">Health</span>
           <div class="cc-vital-bar"><div class="cc-vital-fill cc-vital-hp" id="hpFill" style="width:100%"></div></div>
           <span class="cc-vital-val" id="hpVal">100%</span>
+          <!-- Trello 2026-05-26 (wpuzqUvv): tester bought a Healing
+               Salve but couldn't find where to use it. The arena's
+               Heal Now button only shows during a cooldown — outside
+               of that there was no surface. New button next to the HP
+               bar is always visible when HP < 100% AND the keeper
+               owns a salve. Click → instant heal. -->
+          <button class="cc-vital-heal" id="vitalHealBtn" style="display:none;"
+                  title="Use 1 Healing Salve to restore HP">🩹 Heal</button>
         </div>
       </div>
       <!-- Level timer (L20+ champions). Hidden by default; shown when
@@ -9016,6 +9081,23 @@ function evolveRequirementText() {
 // exactly what's missing. Replaces the dead-click that had Acadian
 // and PegaraX guessing.
 async function tryEvolveFromPotion() {
+  // Trello 2026-05-26 (qdfKklBj — Evolution Potion Button triggers
+  // Failed Fetch Error): the bar was clickable in states it shouldn't
+  // have been (no wallet / no champion selected / mid-flight). Now
+  // we early-bail with a friendlier message before touching the
+  // network so testers stop seeing raw "Failed to fetch" errors.
+  if (!state.championId) {
+    return vxAlert('Pick a champion first — your stable is on the left.',
+      { title: 'No champion selected', icon: '⚡' });
+  }
+  if (typeof getWallet === 'function' && !getWallet()) {
+    return vxAlert('Reconnect your wallet to evolve. The session timed out.',
+      { title: 'Wallet disconnected', icon: '🦊' });
+  }
+  if (_evolveInFlight) {
+    return vxAlert('An evolution is already in flight — wait a few seconds and try again.',
+      { title: 'Hold on…', icon: '⏳' });
+  }
   if (canEvolve()) {
     await evolve();
     return;
@@ -9057,7 +9139,19 @@ async function evolve() {
       });
     } catch (e) {
       console.error('[evolve] api call failed', e);
-      vxAlert(e.message || 'Unknown error', {title: 'Evolve failed', icon: '⚡', variant: 'error'});
+      // Network-level fetch failures surface as TypeError with messages
+      // like "Failed to fetch" (Chrome) or "Load failed" (Safari). Show
+      // a friendlier "try again" instead of the raw browser jargon —
+      // Trello 2026-05-26 tester saw "Failed to fetch" and reported as
+      // a bug.
+      const msg = e?.message || 'Unknown error';
+      const isNetErr = /Failed to fetch|Load failed|NetworkError|aborted/i.test(msg);
+      vxAlert(
+        isNetErr
+          ? 'Lost connection to the server. Check your internet and try again in a moment.'
+          : msg,
+        { title: isNetErr ? 'Connection lost' : 'Evolve failed', icon: isNetErr ? '📡' : '⚡', variant: 'error' }
+      );
       return;
     }
 
@@ -10346,31 +10440,64 @@ const VxQuests = (() => {
     _tickInterval = setInterval(() => renderActive(), 1000);
   }
 
-  // Track the last rendered signature so the 1Hz tick doesn't re-paint
-  // the entire list when nothing actually changed (Trello 2026-05-21:
-  // "adventure text blinks and is hard to read" — ready-to-claim rows
-  // were getting innerHTML-wiped + rebuilt every second, which
-  // destroyed and recreated the Claim button + status text 60 times
-  // a minute, perceived as blinking. Now: build the signature from
-  // (eventId, ready-or-seconds-remaining); if it matches the last
-  // tick exactly, we skip the DOM write entirely.
-  let _lastActiveSig = '__never__';
+  // Trello 2026-05-21 + 2026-05-26 refix (AngelHorn — "the text still
+  // blinks. I think the blink should be removed and just update text
+  // so users can freely read what is happening").
+  //
+  // V1 fix used a signature dedup at second granularity — that stopped
+  // re-paints when state was IDENTICAL but the timer still ticked
+  // every second, so each second the WHOLE row got innerHTML-wiped
+  // and rebuilt = still visible blink.
+  //
+  // V2 fix (now): split renders into STRUCTURE vs CONTENT. Structure
+  // (set of quest eventIds + ready/in-flight state) full-rebuilds the
+  // list. Content (timer countdown text + encounter-feed entries) is
+  // updated surgically in place on the existing DOM nodes — no
+  // innerHTML wipes per tick, so no blink. Full rebuild fires only
+  // on quest add/remove/ready-transition, which is rare.
+  let _lastStructureSig = '__never__';
   function renderActive() {
     const root = document.getElementById('questsActiveList');
     if (!root) return;
     const all = load();
     const entries = Object.entries(all).map(([cid, q]) => ({ ...q, championId: cid }));
-    // Build a signature of what this render WOULD show. Ready quests
-    // give a constant token; in-flight quests give a per-second token.
-    const sig = entries.length === 0
+
+    // Structure signature: just the set of (eventId, ready-state). If
+    // this matches, no rebuild — just patch in-place text.
+    const structureSig = entries.length === 0
       ? 'empty'
       : entries.map(q => {
-          const remaining = (new Date(q.endsAt)).getTime() - Date.now();
-          if (remaining <= 0) return `${q.eventId}:R`;
-          return `${q.eventId}:${Math.floor(remaining / 1000)}`;
+          const ready = (new Date(q.endsAt)).getTime() <= Date.now();
+          return `${q.eventId}:${ready ? 'R' : 'T'}`;
         }).join('|');
-    if (sig === _lastActiveSig) return;     // nothing to redraw
-    _lastActiveSig = sig;
+
+    if (structureSig === _lastStructureSig) {
+      // Structure unchanged — just refresh timer text + feed in place.
+      for (const q of entries) {
+        const remaining = (new Date(q.endsAt)).getTime() - Date.now();
+        if (remaining > 0) {
+          const row = root.querySelector(`.quest-active-row[data-event="${q.eventId}"]`);
+          if (!row) continue;
+          const timerEl = row.querySelector('.qar-timer');
+          if (timerEl) timerEl.textContent = fmtTimer(remaining);
+          // Surgically refresh the encounter feed without nuking the row
+          const newFeed = encountersForQuest(q);
+          const feedHost = row.querySelector('.qar-feed');
+          const existingRows = feedHost ? feedHost.querySelectorAll('.qar-feed-row').length : 0;
+          if (newFeed.length > existingRows && feedHost) {
+            // Append only the new entries (fade-in feel without rebuild)
+            for (let i = existingRows; i < newFeed.length; i++) {
+              const e = newFeed[i];
+              feedHost.insertAdjacentHTML('beforeend',
+                `<div class="qar-feed-row"><span class="qar-feed-time">${e.stamp}</span><span class="qar-feed-text">${esc(e.text)}</span></div>`);
+            }
+          }
+        }
+      }
+      return;
+    }
+
+    _lastStructureSig = structureSig;
     if (entries.length === 0) {
       root.innerHTML = '<div style="color:var(--muted);font-style:italic;padding:8px 4px;font-size:13px;">No active adventures. Pick one below to send a champion out.</div>';
       return;
@@ -10752,7 +10879,12 @@ async function refreshChampionGlobalRank(championId) {
   }
 }
 
-async function apiLeaderboard({ period = 'all', sort = 'power_score', species, bloodline } = {}) {
+// Trello 2026-05-26 (f3Mx0nwb — "Leaderboards should not be determined
+// by pwr"): tester wants the all-time board to sort by ELO since that
+// reflects actual skill at arena, not raw stat power. Default sort
+// flipped from 'power_score' to 'elo'. Weekly board already sorted by
+// elo_gained, unchanged.
+async function apiLeaderboard({ period = 'all', sort = 'elo', species, bloodline } = {}) {
   const params = new URLSearchParams({ period, sort });
   if (species)   params.set('species', species);
   if (bloodline) params.set('bloodline', bloodline);
@@ -11612,6 +11744,24 @@ function render() {
     enValEl.textContent = String(enVal);
     enValEl.classList.toggle('critical', enVal < 10);
     enValEl.classList.toggle('low',      enVal >= 10 && enVal < 30);
+  }
+  // Trello 2026-05-26 (OfUu5ovP) — keep the arena's energy chip in
+  // sync with the vital bar. Only renders if the arena view is active
+  // (skipped otherwise) and flags the chip red when too low to fight.
+  const arenaEnergyNow = document.getElementById('arenaEnergyNow');
+  const arenaEnergyChip = document.getElementById('arenaEnergyChip');
+  if (arenaEnergyNow) {
+    arenaEnergyNow.textContent = String(enVal);
+    if (arenaEnergyChip) arenaEnergyChip.classList.toggle('too-tired', enVal < 15);
+  }
+  // Trello 2026-05-26 (wpuzqUvv): show the Heal button next to HP
+  // whenever HP < 100% AND the keeper owns at least 1 Healing Salve.
+  const healBtn = document.getElementById('vitalHealBtn');
+  if (healBtn) {
+    const healingSalves = (typeof state !== 'undefined' && state.inv && state.inv.healing) || 0;
+    const show = hpVal < 100 && healingSalves > 0;
+    healBtn.style.display = show ? '' : 'none';
+    if (show) healBtn.title = `Use 1 Healing Salve (you have ${healingSalves}) to restore HP`;
   }
   if (hpFillEl && hpValEl) {
     hpFillEl.style.width = hpVal + '%';
@@ -14152,7 +14302,7 @@ const VxAbilities = {
     blurb:'+20% dodge for the first 2 rounds.' },
   hunters_mark: { name:"Hunter's Mark", emoji:'🎯', vibe:'offense',
     blurb:'Your first crit lands +50% damage.' },
-  stone_wall:   { name:'Stone Wall',   emoji:'🪨', vibe:'defense',
+  stone_wall:   { name:'Stone Wall',   emoji:'🧱', vibe:'defense',
     blurb:'First two hits taken deal 50% damage.' },
   pact_of_blood:{ name:'Pact of Blood', emoji:'🩹', vibe:'scaling',
     blurb:'Pay 15% HP at start; gain +25% damage all match.' },
@@ -15109,6 +15259,37 @@ bindIf('arenaHealBtn', 'click', async () => {
     }
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Heal Now (1 🩹)'; }
+  }
+});
+
+// Trello 2026-05-26 (wpuzqUvv): same handler but for the new HP-bar
+// heal button (proactive use, outside the arena cooldown context).
+bindIf('vitalHealBtn', 'click', async () => {
+  const champ = myChampions.find(c => c.id === state.championId);
+  if (!champ) return;
+  const btn = document.getElementById('vitalHealBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  try {
+    const resp = await apiHeal(champ.id);
+    // Update local HP cache so the bar repaints to 100 immediately.
+    const cached = myChampions.find(m => m.id === champ.id);
+    if (cached) cached.currentHp = resp.hp_now ?? 100;
+    if (typeof _activeCh !== 'undefined' && _activeCh) _activeCh.currentHp = resp.hp_now ?? 100;
+    // Decrement the salve count in local inv so the button hides
+    // immediately on the next tick rather than waiting for a reload.
+    if (state && state.inv && state.inv.healing) state.inv.healing = Math.max(0, state.inv.healing - 1);
+    if (typeof render === 'function') render();
+    showToast(`🩹 Healed to ${resp.hp_now}% HP · ${resp.salves_remaining} salves left`, 'success', 3000);
+  } catch (e) {
+    const msg = String(e?.message || '');
+    if (msg.includes('no_salve')) {
+      vxAlert('No Healing Salve in stock. Buy one in the 🛒 Shop (3 PYR).',
+        { title: 'Out of salves', icon: '🩹' });
+    } else {
+      vxAlert(msg, { title: 'Heal failed', icon: '🩹', variant: 'error' });
+    }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🩹 Heal'; }
   }
 });
 
@@ -16546,6 +16727,31 @@ function setStageImage(newSrc) {
   const prev = document.getElementById('stageImgPrev');
   const frame = document.getElementById('stageFrame');
   if (!cur) return;
+  // Trello 2026-05-26 (eyc94EPh — Champion Image Does Not Display on
+  // Champion Page): bloodlines that haven't been studio-approved have
+  // null/empty img on their stages. setStageImage(undefined) used to
+  // set `cur.src = "undefined"` which the browser tried to load as a
+  // relative URL, failed, and showed broken-image-icon / blank frame.
+  // Defensive fallback: if no src given, derive from the current
+  // species+bloodline+stage_idx and trust the on-disk art under
+  // evolution20/. All 520 PNGs exist on disk regardless of approval
+  // state — only the bloodlines.json `img` field gets populated when
+  // a bloodline is approved.
+  if (!newSrc || newSrc === 'null' || newSrc === 'undefined') {
+    try {
+      const sp = (typeof currentSpecies === 'string') ? currentSpecies : null;
+      const bl = (typeof currentBloodline === 'string') ? currentBloodline : null;
+      const idx = (typeof state !== 'undefined' && Number.isFinite(state?.stageIdx))
+        ? state.stageIdx + 1 : 1;
+      if (sp && bl) {
+        newSrc = `evolution20/${sp}/${bl}/s${String(idx).padStart(2,'0')}.png`;
+      } else {
+        newSrc = 'evolution/L01_whelp_final.jpg';   // last-resort fallback
+      }
+    } catch (_) {
+      newSrc = 'evolution/L01_whelp_final.jpg';
+    }
+  }
   // absolute url for equality
   const curAbs = cur.src;
   if (!_lastStageSrc) {
