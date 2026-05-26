@@ -17342,10 +17342,22 @@ async function checkoutShop() {
       }
     }
 
-    // ── 2) NFT items: queue for batch delivery ─────────────────
+    // ── 2) NFT items: queue for batch delivery AND grant immediately ─
+    //
+    // 2026-05-26 (Jamie spotted this): queueing alone meant the tester
+    // bought an item, got "queued for batch delivery" message, then
+    // couldn't actually USE the item until Farhan's batch sender ran
+    // (which doesn't exist yet). For game UX we now ALSO grant the
+    // equivalent off-chain game asset right away so the player can
+    // equip / use it immediately. The on-chain NFT delivery is the
+    // separate ownership token that arrives via batch later (will
+    // sync into local inventory once GetChampionNfts is wired post-
+    // mint). For now local inventory is canonical and the queue is
+    // the IOU for the chain mirror.
     let queueResult = null;
+    let grantedInstantly = { equipment: 0, lpotion: 0, champion: 0 };
     if (nftLines.length) {
-      btn.textContent = '🪙 Queueing NFTs…';
+      btn.textContent = '🪙 Queueing NFTs + granting items…';
       const res = await apiFetch(`${FN_BASE}/nft_purchase`, {
         method: 'POST',
         headers: { ...AUTH_HEADERS, 'Content-Type': 'application/json' },
@@ -17359,8 +17371,58 @@ async function checkoutShop() {
         throw new Error(errBody.message || `nft_purchase failed (${res.status})`);
       }
       queueResult = await res.json();
-      // Invalidate supply cache so the badges update next render
       nftSupplyCache = null;
+
+      // Instant in-game grant — keyed off the SKU's category from the
+      // cached nft_supply_state. Equipment + limited potions are
+      // game-usable; champion eggs are still queue-only (need a
+      // backend champion_create call which we don't want to fire on
+      // every shop purchase).
+      const supply = nftSupplyCache?.items || (await loadNftSupply(true))?.items || [];
+      const supplyBySku = new Map(supply.map(s => [s.sku_id, s]));
+      for (const line of nftLines) {
+        const meta = supplyBySku.get(line.sku_id);
+        if (!meta) continue;
+        if (meta.category === 'equipment') {
+          // Parse "<base_item>_<rarity>" → e.g. "heavy_axe_common" →
+          // catalogId='heavy_axe' rarity='common'
+          const baseItem = meta.base_item || line.sku_id.replace(/_(common|rare|epic|legendary)$/i, '');
+          const rarity   = (meta.rarity || line.sku_id.split('_').pop() || 'common').toLowerCase();
+          for (let i = 0; i < line.qty; i++) {
+            const inst = {
+              id: 'nft_' + Math.random().toString(36).slice(2, 10),
+              catalogId: baseItem,
+              rarity,
+              equippedOn: null,
+              _fromNftQueue: true,   // marker so the future batch-sync can dedup
+              _queueId: queueResult?.breakdown?.find(b => b.sku_id === line.sku_id)?.queue_id || null,
+            };
+            // Roll a random stat for power_ring (trinket mechanic)
+            if (baseItem === 'power_ring') {
+              const stats = ['STR','VIT','AGI','FER','INT','LCK'];
+              inst.rolledStat = stats[Math.floor(Math.random() * stats.length)];
+            }
+            myInventory.push(inst);
+            grantedInstantly.equipment++;
+          }
+        } else if (meta.category === 'limited_potion') {
+          // Limited potions get added to a parallel state.inv slot
+          // keyed by the SKU's slug so the game can fire their effect
+          // when the keeper "uses" them. e.g. state.inv.bond_bloom = 2
+          const slug = (meta.metadata?.slug) || line.sku_id.replace(/^lpotion_/, '');
+          if (state && state.inv) {
+            state.inv[slug] = (state.inv[slug] || 0) + line.qty;
+            grantedInstantly.lpotion += line.qty;
+          }
+        } else if (meta.category === 'champion') {
+          // Champion eggs stay queue-only — minting a baby champion
+          // needs a champion_create call against the backend. For
+          // now the keeper sees "queued for batch delivery"; once
+          // we wire it up post-mint the egg will hatch automatically.
+          grantedInstantly.champion += line.qty;
+        }
+      }
+      if (grantedInstantly.equipment) persistInventory();
     }
 
     // Refresh local state
@@ -17371,22 +17433,40 @@ async function checkoutShop() {
 
     btn.textContent = '✅ Done';
 
-    // Confirmation — different copy for potion-only vs NFT-included orders
+    // Confirmation — be explicit about dual-grant. The off-chain
+    // game asset is usable NOW; the on-chain NFT lands later.
     setTimeout(() => {
       closeShop();
       if (nftLines.length) {
-        const nftQty = nftLines.reduce((s, l) => s + l.qty, 0);
         const potQty = potionLines.reduce((s, l) => s + l.qty, 0);
-        let msg = `🎁 ${nftQty} NFT${nftQty>1?'s':''} queued for batch delivery (a few days).`;
-        if (potQty)  msg += ` 🧪 ${potQty} potion${potQty>1?'s':''} delivered now.`;
+        const eqQty  = grantedInstantly.equipment;
+        const lpQty  = grantedInstantly.lpotion;
+        const chQty  = grantedInstantly.champion;
+
+        // Build a granular message that calls out exactly what's
+        // usable now vs what's coming later.
+        const lines = [];
+        if (potQty) lines.push(`• 🧪 ${potQty} potion${potQty>1?'s':''} added to your inventory (usable now)`);
+        if (eqQty)  lines.push(`• ⚔️ ${eqQty} equipment piece${eqQty>1?'s':''} added to your inventory (equip from My Stable now)`);
+        if (lpQty)  lines.push(`• ✨ ${lpQty} limited potion${lpQty>1?'s':''} added (usable now)`);
+        if (chQty)  lines.push(`• 🥚 ${chQty} champion egg${chQty>1?'s':''} queued — your baby champion hatches once the on-chain NFT lands`);
+
+        lines.push('');
+        lines.push(`The matching NFTs will be batch-delivered to your wallet within a few days. Your gameplay use of these items doesn't wait on the chain — keep playing.`);
+        lines.push('');
+        lines.push(`Total: ${queueResult?.total_pyr_charged ?? totalP} PYR (zero-value dummy TX during QA).`);
+
         vxAlert(
-          `Your order is in:\n\n` +
-          (potQty ? `• ${potQty} potion${potQty>1?'s':''} credited to your inventory now.\n` : '') +
-          (nftQty ? `• ${nftQty} NFT item${nftQty>1?'s':''} queued for batch delivery to your wallet within a few days.\n` : '') +
-          `\nTotal: ${queueResult?.total_pyr_charged ?? totalP} PYR (zero-value dummy TX during QA).`,
+          `Your order is in:\n\n${lines.join('\n')}`,
           { title: '🎁 Order placed', icon: '🦊' }
         );
-        showToast(msg, 'success', 5000);
+
+        const toastBits = [];
+        if (eqQty)  toastBits.push(`⚔️ ${eqQty} equipment`);
+        if (lpQty)  toastBits.push(`✨ ${lpQty} limited potion${lpQty>1?'s':''}`);
+        if (chQty)  toastBits.push(`🥚 ${chQty} champion egg${chQty>1?'s':''}`);
+        if (potQty) toastBits.push(`🧪 ${potQty} potion${potQty>1?'s':''}`);
+        showToast(`🎁 Added: ${toastBits.join(' · ')}`, 'success', 5000);
       } else {
         showToast(`🧪 ${totalQ} potion${totalQ>1?'s':''} delivered · ${totalP} PYR (dummy)`, 'success', 3200);
       }
