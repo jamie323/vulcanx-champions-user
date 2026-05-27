@@ -11092,6 +11092,18 @@ function renderChestQuestsList() {
   document.getElementById('cqList').innerHTML = list.map(q => {
     const pct = Math.min(100, Math.round(100 * q.counter / q.target));
     const stamp = q.completed ? ' ✅' : '';
+    // Trello 2026-05-27 (CLTJNNQi): chests are minted/claimed in the
+    // VulcanX super-app, not in-game. Add a Claim button on every
+    // completed quest row that deep-links into vulcan-x.io chests so
+    // testers stop wondering where the reward actually lands.
+    const claimBtn = q.completed
+      ? `<button class="cq-claim-btn" onclick="openVxChests(); return false;"
+               style="margin-top:8px;width:100%;padding:8px 12px;border-radius:8px;
+                      background:var(--legend);color:#000;font-weight:700;
+                      border:none;cursor:pointer;font-size:13px;">
+           Claim on VulcanX →
+         </button>`
+      : '';
     return `
       <div class="cq-row ${q.completed ? 'completed' : ''}">
         <div class="cq-head">
@@ -11101,8 +11113,24 @@ function renderChestQuestsList() {
         <div class="cq-desc">${esc(q.description)}</div>
         <div class="cq-bar-wrap"><div class="cq-bar" style="width:${pct}%"></div></div>
         <div class="cq-bar-label">${q.counter} / ${q.target}${q.completed ? ' · ready to claim' : ''}</div>
+        ${claimBtn}
       </div>`;
   }).join('');
+}
+
+// Trello 2026-05-27 (CLTJNNQi): deep-link to the VulcanX chest claim page.
+// Opens in same window inside the SPA wrapper (so SSO survives) and in a
+// new tab when standalone.
+function openVxChests() {
+  const url = 'https://vulcan-x.io/everything?tab=chests';
+  if (window.parent && window.parent !== window) {
+    // Embedded inside the unified-app iframe → ask the parent to navigate.
+    try {
+      window.parent.postMessage({ type: 'vx-navigate', url }, '*');
+      return;
+    } catch (_) { /* fall through */ }
+  }
+  window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 async function refreshLiveLeaderboard() {
@@ -11155,7 +11183,9 @@ function updateLeaderboardSubtitle(resp) {
       timer.style.display = '';
     }
   } else {
-    sub.textContent = 'All-time — ranked by Power Score (stage + stats + ELO).';
+    // 2026-05-27 (f3Mx0nwb refix-2): subtitle stale — default sort flipped
+    // to ELO in bb29f44 but the copy still said "Power Score".
+    sub.textContent = 'All-time — ranked by ELO (arena skill).';
     if (timer) timer.style.display = 'none';
   }
 }

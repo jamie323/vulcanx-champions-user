@@ -24,11 +24,16 @@
   };
 
   // ─── RARITY ─────────────────────────────────────────────────────
+  // Trello 2026-05-27 (LyBp8Dnx): tester reported higher rarities barely
+  // felt different from commons. Widened the spread from 1.05–1.50
+  // (43% range) to 1.00–1.85 (85% range) so Legendary feels meaningfully
+  // stronger than Common. The match_request RARITY_MULT table is bumped
+  // to match — combat damage scales with this curve.
   const RARITY = {
-    common:    { mult: 1.05, color: '#a1a1ad', label: 'Common',    weight: 70 },
-    rare:      { mult: 1.12, color: '#5d8eff', label: 'Rare',      weight: 22 },
-    epic:      { mult: 1.25, color: '#b169ff', label: 'Epic',      weight:  7 },
-    legendary: { mult: 1.50, color: '#ffcd6b', label: 'Legendary', weight:  1 },
+    common:    { mult: 1.00, color: '#a1a1ad', label: 'Common',    weight: 70 },
+    rare:      { mult: 1.20, color: '#5d8eff', label: 'Rare',      weight: 22 },
+    epic:      { mult: 1.45, color: '#b169ff', label: 'Epic',      weight:  7 },
+    legendary: { mult: 1.85, color: '#ffcd6b', label: 'Legendary', weight:  1 },
   };
   const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary'];
 
