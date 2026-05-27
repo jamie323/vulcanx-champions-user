@@ -11167,6 +11167,12 @@ function renderLiveLeaderboard(resp) {
                          drakkin:'🐉', dwarf:'⚒️', beastkin:'🐺', wraith:'👻' };
   list.innerHTML = '';
   const isWeek = resp.period === 'week';
+  // Trello 2026-05-27 (f3Mx0nwb refix): default all-time sort flipped to
+  // ELO in bb29f44 but the rendered score column was still showing
+  // power_score with a 'pwr' suffix → tester saw no change. Now show
+  // ELO when the server confirms it sorted by elo, fall back to pwr only
+  // if an explicit ?sort=power_score query was used.
+  const sortedByElo = (resp.sort || 'elo') === 'elo';
 
   if (!resp.leaderboard || resp.leaderboard.length === 0) {
     list.innerHTML = `<div style="padding:30px;text-align:center;color:var(--muted);">
@@ -11185,7 +11191,9 @@ function renderLiveLeaderboard(resp) {
     const icon = SPECIES_ICON[r.species_id] || '◇';
     const score = isWeek
       ? `${r.weekly_elo_gained >= 0 ? '+' : ''}${r.weekly_elo_gained}<span class="e"> ELO · ${r.weekly_matches}m</span>`
-      : `${(r.power_score || 0).toLocaleString()}<span class="e"> pwr</span>`;
+      : sortedByElo
+        ? `${(r.elo ?? 100).toLocaleString()}<span class="e"> ELO</span>`
+        : `${(r.power_score || 0).toLocaleString()}<span class="e"> pwr</span>`;
     list.insertAdjacentHTML('beforeend',
       `<div class="lb-row ${r.me?'me':''}">
         <div class="lb-rank ${isTop3?'top3':''}">${r.me?'YOU':'#'+r.rank}</div>
@@ -11202,7 +11210,9 @@ function renderLiveLeaderboard(resp) {
     const m = resp.me;
     const score = isWeek
       ? `${m.weekly_elo_gained >= 0 ? '+' : ''}${m.weekly_elo_gained}<span class="e"> ELO · ${m.weekly_matches}m</span>`
-      : `${(m.power_score || 0).toLocaleString()}<span class="e"> pwr</span>`;
+      : sortedByElo
+        ? `${(m.elo ?? 100).toLocaleString()}<span class="e"> ELO</span>`
+        : `${(m.power_score || 0).toLocaleString()}<span class="e"> pwr</span>`;
     list.insertAdjacentHTML('beforeend',
       `<div class="lb-row lb-row-divider"><div class="lb-rank">…</div></div>
        <div class="lb-row me">
@@ -15593,12 +15603,26 @@ function handleResolvedMatch(resp, champ, arena) {
     });
     arena.history = arena.history.slice(0, 50);
     saveArenaForChamp(champ.id, arena);
+    // Trello 2026-05-27 (MkVtzDmO): the local myChampions cache was
+    // never refreshed post-fight, so the arena energy chip + vital bar
+    // kept showing the pre-fight energy until the player navigated away
+    // and back. Server already deducted 15 energy + applied HP loss;
+    // mirror that locally so the next render() shows the truth.
+    const meLocal = myChampions.find(c => c.id === champ.id);
+    if (meLocal) {
+      const hpLoss = resp.result === 'win' ? 15 : resp.result === 'draw' ? 25 : 40;
+      meLocal.energy   = Math.max(0, (meLocal.energy   ?? 100) - 15);
+      meLocal.currentHp = Math.max(0, (meLocal.currentHp ?? 100) - hpLoss);
+    }
     if (window.VxBond && resp.result === 'win') {
       const bondResult = VxBond.onArenaWin(champ.id);
       if (bondResult?.tieredUp) VxBond.celebrateTierUp(bondResult.newTier);
     }
     showArenaResult(resp, champ);
     renderArena();
+    // Re-render the champion view too so the vital bars + arena energy
+    // chip refresh immediately (render() reads from myChampions).
+    if (typeof render === 'function') render();
   } catch (e) {
     console.error('[arena] render failed after successful match', e);
     const stack = (e && e.stack ? String(e.stack).split('\n').slice(0, 4).join('\n') : '(no stack)');
