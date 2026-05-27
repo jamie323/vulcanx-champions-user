@@ -7,10 +7,13 @@
 # ── Dev-only Python image-generation scripts ───────────────────────────────
 scripts/
 
-# ── Bulk art directories (GBs of source PNGs, not served by the app) ───────
+# ── Bulk art directories ───────────────────────────────────────────────────
+# allbloodlines*/ are source-of-truth high-res renders (GBs, never served).
+# evolution20/ IS served — bloodlines.json points every stage's `img` field
+# at evolution20/<species>/<bloodline>/sNN.png. Excluding it broke the live
+# champion images (Trello eyc94EPh chain, 2026-05-27).
 allbloodlines/
 allbloodlines_v1/
-evolution20/
 
 # ── OS noise ───────────────────────────────────────────────────────────────
 .DS_Store
