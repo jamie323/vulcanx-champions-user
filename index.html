@@ -8951,15 +8951,29 @@ async function usePotion(trait, sourceEl, tier) {
   const cached = myChampions.find(m => m.id === c.id);
   if (cached) Object.assign(cached, c);
 
-  // Potion qty decremented server-side — refresh inventory.
-  await reloadPotions();
-  // Defensive immediate render so the potion grid + counts reflect the
-  // post-feed state right now (Trello "Fix potion inventory UI
-  // disappearing after leveling up" — race between the level-up banner
-  // animation and the potion-grid render was leaving the inventory
-  // looking empty until refresh). The 300ms-delayed render below still
-  // runs, but this catch-up happens immediately after server confirms.
+  // Potion qty decremented server-side. Trello R2L21koo ("Potion Feeding
+  // Has Significant Delay"): we used to BLOCK on a second network
+  // round-trip (reloadPotions) before rendering, so every feed felt
+  // laggy — click → wait for feed → wait for a FULL potion re-fetch →
+  // only then update the UI. Apply the known decrement locally from
+  // resp.potionRemaining and render right away; reconcile with the server
+  // in the background so the cache stays honest without blocking.
+  const fedRow = (state.potions || []).find(p => p.id === potion.id);
+  if (fedRow) {
+    fedRow.quantity = (typeof resp.potionRemaining === 'number')
+      ? resp.potionRemaining
+      : Math.max(0, (fedRow.quantity || 1) - 1);
+  }
+  // Drop fully-consumed rows so findPotion/deriveInv don't surface them.
+  state.potions = (state.potions || []).filter(p => (p.quantity || 0) > 0);
+  deriveInv();
+  // Immediate render so the potion grid + counts reflect the post-feed
+  // state right now (also fixes the old race in Trello "Fix potion
+  // inventory UI disappearing after leveling up").
   render();
+  // Background reconcile — non-blocking. A failure here is non-fatal;
+  // the next view refresh re-pulls the authoritative inventory.
+  reloadPotions().catch(e => console.warn('[feed] bg potion reload failed:', e?.message));
 
   const actualGain = state.stats[trait] - oldVal;
   const didLevelUp = state.level > oldLevel;
