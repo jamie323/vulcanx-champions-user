@@ -6960,6 +6960,12 @@
       <div>
         <h2>🗺️ Adventures</h2>
         <div class="sub">Send champions on adventures. Rewards apply directly to stats + Evolution Bar.</div>
+        <!-- Energy chip (2026-05-29, Jamie): adventures cost energy
+             (quick 10 / standard 20 / long 30 ⚡) but the page never showed
+             it. Mirrors the arena chip; reflects the picked champion. -->
+        <div class="adv-energy-chip" id="advEnergyChip" style="display:none;">
+          <span id="advEnergyText">⚡ —</span>
+        </div>
       </div>
     </div>
 
@@ -6989,20 +6995,24 @@
         <span class="qd-name">Quick</span>
         <span class="qd-time">15 min</span>
         <span class="qd-reward" id="qsmRewardQuick">+1-3 / +2-5%</span>
+        <span class="qd-energy" id="qsmEnergyQuick">10 ⚡</span>
       </button>
       <button class="qsm-dur-btn" data-tier="standard">
         <span class="qd-emoji">⏳</span>
         <span class="qd-name">Standard</span>
         <span class="qd-time">1 hour</span>
         <span class="qd-reward" id="qsmRewardStandard">+5-12 / +8-15%</span>
+        <span class="qd-energy" id="qsmEnergyStandard">20 ⚡</span>
       </button>
       <button class="qsm-dur-btn" data-tier="long">
         <span class="qd-emoji">🌙</span>
         <span class="qd-name">Long</span>
         <span class="qd-time">4 hours</span>
         <span class="qd-reward" id="qsmRewardLong">+15-30 / +20-40%</span>
+        <span class="qd-energy" id="qsmEnergyLong">30 ⚡</span>
       </button>
     </div>
+    <div class="qsm-energy-have" id="qsmEnergyHave"></div>
     <button class="btn-primary" onclick="document.getElementById('questStartModal').classList.remove('open')" style="margin-top:14px;width:100%;background:#2a1a22;color:var(--muted);border:1px solid var(--border);">Cancel</button>
   </div>
 </div>
@@ -7124,6 +7134,22 @@
   .qsm-dur-btn .qd-name { font-weight: 700; font-size: 13px; letter-spacing: 0.5px; }
   .qsm-dur-btn .qd-time { font-size: 11px; color: var(--muted); }
   .qsm-dur-btn .qd-reward { font-size: 10px; color: var(--accent); font-weight: 700; margin-top: 4px; }
+  .qsm-dur-btn .qd-energy { font-size: 11px; font-weight: 700; color: #ffd86b; margin-top: 2px; }
+  /* Tier the champion can't afford — dimmed + not clickable. */
+  .qsm-dur-btn.too-tired { opacity: 0.4; cursor: not-allowed; }
+  .qsm-dur-btn.too-tired:hover { border-color: var(--border); background: rgba(20,12,20,0.85); }
+  .qsm-dur-btn.too-tired .qd-energy { color: #ff6b6b; }
+  .qsm-energy-have { text-align: center; font-size: 12px; color: var(--muted); margin-top: 10px; }
+  .qsm-energy-have b { color: #ffd86b; }
+  /* Energy chip on the Adventures page header (mirrors the arena chip). */
+  .adv-energy-chip {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 6px;
+    padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;
+    background: rgba(255,216,107,0.10); border: 1px solid rgba(255,216,107,0.30);
+    color: #ffd86b;
+  }
+  .adv-energy-chip.too-tired { background: rgba(255,107,107,0.12);
+    border-color: rgba(255,107,107,0.35); color: #ff6b6b; }
 
   .qcm-rewards { display: flex; flex-direction: column; gap: 6px;
     background: rgba(255,205,107,0.06); border-radius: 8px; padding: 12px;
@@ -10250,10 +10276,13 @@ const VxQuests = (() => {
       blurb:'Tend strange herbs in mist-cloaked bogs. Restorative, lucky finds.',
       primaries:['VIT','LCK'], secondaries:['INT','AGI'] },
   };
+  // `energy` mirrors the backend ENERGY_COST gate in champion_quest_start
+  // (quick=10, standard=20, long=30). Keep in sync — it's shown on the
+  // duration buttons + used to disable tiers the champion can't afford.
   const DURATIONS = {
-    quick:    { seconds: 15*60,   label:'Quick · 15 min',    emoji:'⚡', primary:[1,3],   bar:[2,5] },
-    standard: { seconds: 60*60,   label:'Standard · 1 hr',   emoji:'⏳', primary:[5,12],  bar:[8,15] },
-    long:     { seconds: 4*60*60, label:'Long · 4 hrs',      emoji:'🌙', primary:[15,30], bar:[20,40] },
+    quick:    { seconds: 15*60,   label:'Quick · 15 min',    emoji:'⚡', primary:[1,3],   bar:[2,5],   energy:10 },
+    standard: { seconds: 60*60,   label:'Standard · 1 hr',   emoji:'⏳', primary:[5,12],  bar:[8,15],  energy:20 },
+    long:     { seconds: 4*60*60, label:'Long · 4 hrs',      emoji:'🌙', primary:[15,30], bar:[20,40], energy:30 },
   };
 
   // QA feedback (Kueenie, 14 May 2026): "Adventures Lack Tension — currently
@@ -10458,8 +10487,9 @@ const VxQuests = (() => {
         _activeChampForBrowse = myChampions[0]?.id;
       }
       if (_activeChampForBrowse) sel.value = _activeChampForBrowse;
-      sel.onchange = () => { _activeChampForBrowse = sel.value; renderGrid(); };
+      sel.onchange = () => { _activeChampForBrowse = sel.value; renderGrid(); updateEnergyChip(); };
     }
+    updateEnergyChip();
     // Defensive: renderActive can throw on legacy / malformed localStorage
     // quest entries (neurodrills hit a TypeError in encountersForQuest
     // that took out renderGrid too). Isolate the two renders so one
@@ -10602,6 +10632,28 @@ const VxQuests = (() => {
     }
   }
 
+  // Current energy of whichever champion the Adventures picker has active.
+  // Champion rows carry `.energy` (regen-aware, from apiListChampions).
+  function activeChampEnergy() {
+    const c = myChampions.find(m => m.id === _activeChampForBrowse) || myChampions[0];
+    if (!c) return null;
+    return Math.max(0, Math.min(100, Math.round(c.energy ?? 100)));
+  }
+
+  // Update the header chip so the keeper always sees their energy on the
+  // Adventures page (the cheapest adventure costs 10 ⚡; below that they
+  // can't set off — mirrors the backend min_energy=10 gate).
+  function updateEnergyChip() {
+    const chip = document.getElementById('advEnergyChip');
+    const txt  = document.getElementById('advEnergyText');
+    if (!chip || !txt) return;
+    const en = activeChampEnergy();
+    if (en === null) { chip.style.display = 'none'; return; }
+    chip.style.display = '';
+    txt.textContent = `⚡ ${en} energy · adventures cost 10–30`;
+    chip.classList.toggle('too-tired', en < 10);
+  }
+
   function openStartModal(adventureId) {
     _selectedAdventure = adventureId;
     const adv = ADVENTURES[adventureId];
@@ -10620,6 +10672,24 @@ const VxQuests = (() => {
     document.getElementById('qsmRewardQuick').textContent    = fmtRange('quick');
     document.getElementById('qsmRewardStandard').textContent = fmtRange('standard');
     document.getElementById('qsmRewardLong').textContent     = fmtRange('long');
+    // Energy cost per tier + affordability (2026-05-29). Dim & disable any
+    // tier the champion can't afford so they don't hit the backend
+    // too_tired gate blind.
+    const en = activeChampEnergy();
+    const tierEls = { quick: 'qsmEnergyQuick', standard: 'qsmEnergyStandard', long: 'qsmEnergyLong' };
+    for (const [tier, elId] of Object.entries(tierEls)) {
+      const cost = DURATIONS[tier].energy;
+      const el = document.getElementById(elId);
+      if (el) el.textContent = `${cost} ⚡`;
+      const btn = document.querySelector(`.qsm-dur-btn[data-tier="${tier}"]`);
+      if (btn) btn.classList.toggle('too-tired', en !== null && en < cost);
+    }
+    const have = document.getElementById('qsmEnergyHave');
+    if (have) {
+      have.innerHTML = (en === null)
+        ? ''
+        : `This champion has <b>${en} ⚡</b> · regenerates +5/hr`;
+    }
     document.getElementById('questStartModal').classList.add('open');
   }
 
@@ -10629,6 +10699,15 @@ const VxQuests = (() => {
     if (!champId) return;
     if (getActiveQuest(champId)) {
       vxAlert('This champion is already adventuring.', { title: 'Already on quest', icon: '🗺️' });
+      return;
+    }
+    // Don't fire on a tier the champion can't afford — the button is
+    // dimmed but a stray click would still hit the backend too_tired gate.
+    const cost = DURATIONS[durationTier]?.energy ?? 10;
+    const en = activeChampEnergy();
+    if (en !== null && en < cost) {
+      vxAlert(`This adventure costs ${cost} ⚡ but your champion only has ${en}. Energy regenerates +5/hr, or feed a Healing Salve.`,
+        { title: '⚡ Too tired', icon: '⚡' });
       return;
     }
     try {
@@ -10646,9 +10725,15 @@ const VxQuests = (() => {
         endsAt: q.ends_at,
       });
       VxAudio.click();
+      // Reflect the energy just spent locally so the chip updates without
+      // waiting for a full champion re-fetch.
+      const spent = DURATIONS[durationTier]?.energy ?? 10;
+      const cc = myChampions.find(m => m.id === champId);
+      if (cc) cc.energy = Math.max(0, (cc.energy ?? 100) - spent);
       document.getElementById('questStartModal').classList.remove('open');
       renderActive();
       renderGrid();
+      updateEnergyChip();
     } catch (e) {
       // 2026-05-21 — surface energy/HP gate errors with the dedicated
       // helper (offers Healing Salve / Shop CTA). Falls through to the
