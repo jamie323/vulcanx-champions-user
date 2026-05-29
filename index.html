@@ -11006,7 +11006,10 @@ function maybeEmitForgeMastery(championId) {
     // Also compute Stable Curator signal: how many of THIS wallet's
     // champions currently meet the weapon+3-armor threshold.
     let walletFullKitCount = 0;
-    if (Array.isArray(window.myChampions)) {
+    // Same window.myChampions → lexical-binding fix as maybeEmitStableVisit
+    // (2026-05-29): window.myChampions is always undefined, which silently
+    // skipped the Stable Curator full-kit count.
+    if (Array.isArray(myChampions)) {
       for (const c of myChampions) {
         const cEquip = myInventory.filter(i => i.equippedOn === c.id);
         let cWeapon = false, cArmor = 0;
@@ -11029,7 +11032,13 @@ function maybeEmitForgeMastery(championId) {
 // viewed every champion they own this session. Called from the Stable
 // view renderer. Server-side requires viewed_count >= total_owned.
 function maybeEmitStableVisit() {
-  if (!window.myChampions || myChampions.length === 0) return;
+  // BUG (2026-05-29, Ric O. "Stable Visit quest doesn't work"): this used
+  // to guard on `window.myChampions`, but myChampions is declared with a
+  // top-level `let` — a lexical binding that never becomes a window
+  // property. So window.myChampions was ALWAYS undefined, the guard always
+  // bailed, and the stable_view event was never emitted → the quest could
+  // never complete for anyone. Use the lexical binding (in scope here).
+  if (!Array.isArray(myChampions) || myChampions.length === 0) return;
   // Track viewed-champions for this UTC day in sessionStorage; on open
   // we ping with the count of distinct champion IDs viewed.
   const today = new Date().toISOString().slice(0,10);
