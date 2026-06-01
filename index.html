@@ -2575,6 +2575,26 @@
     border-color: var(--accent);
     transform: translateY(-2px);
   }
+  /* Trello 2026-06-01 (XYL9WtKp — "Potion displays traits: outline isn't
+     very bright"). Bottles with stock that aren't capped get a clear
+     accent border + soft pulse so testers spot the available potions
+     without hunting. Empty / capped / disabled bottles stay subdued. */
+  .feed-bottle:not(.empty):not(.at-cap):not(:disabled) {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(255,205,107,0.30),
+                0 0 14px rgba(255,205,107,0.20);
+    animation: feedBottleReadyPulse 2.4s ease-in-out infinite;
+  }
+  @keyframes feedBottleReadyPulse {
+    0%, 100% { box-shadow: 0 0 0 1px rgba(255,205,107,0.25),
+                           0 0 10px rgba(255,205,107,0.16); }
+    50%      { box-shadow: 0 0 0 1px rgba(255,205,107,0.55),
+                           0 0 18px rgba(255,205,107,0.35); }
+  }
+  /* Respect reduced-motion preference. */
+  @media (prefers-reduced-motion: reduce) {
+    .feed-bottle:not(.empty):not(.at-cap):not(:disabled) { animation: none; }
+  }
   /* At-cap: still clickable (backend fills bar even on capped feeds) but
      visually dimmed so the keeper sees "I've maxed this for the stage". */
   .feed-bottle.at-cap:not(:disabled) {
@@ -3205,14 +3225,19 @@
   @media (max-width: 420px) { .ea-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; } }
 
   .ea-tile {
-    position: relative; aspect-ratio: 1;
+    /* Trello 2026-06-01 (KCYhguBj — "Evolution album pictures are cropped"):
+       source stage PNGs are 2:3 portrait (1024×1536). A 1:1 tile + cover
+       was cropping head/feet off every champion. Match the tile to the
+       art aspect so cover doesn't crop, only ~5% safety zoom-out. */
+    position: relative; aspect-ratio: 2 / 3;
     background: rgba(0,0,0,0.4); border: 1px solid var(--border);
     border-radius: 10px; overflow: hidden;
     display: flex; flex-direction: column; justify-content: flex-end;
   }
   .ea-tile img {
     position: absolute; inset: 0;
-    width: 100%; height: 100%; object-fit: cover;
+    width: 100%; height: 100%; object-fit: contain;
+    background: #0a0608;
   }
   .ea-tile.locked img {
     filter: brightness(0.15) blur(2px);
@@ -9307,10 +9332,16 @@ function openAllocModal(sourceEl) {
     // pouring points into.
     const fullName = TRAIT_NAMES[t] || t;
     const emoji = TRAIT_EMOJI[t] || '';
+    // Trello 2026-06-01 (vfSXEUHN — "Viewing current stat bars"):
+    // show the CURRENT stat + cap next to each trait so the keeper can
+    // see what they're working with while allocating. Previously the
+    // modal only showed sliders, leaving testers guessing how many
+    // points they actually needed.
+    const curCapTag = `<span class="alloc-curcap" style="color:var(--muted);font-size:11px;font-weight:600;margin-left:6px;">${cur}/${cap}</span>`;
     rows.insertAdjacentHTML('beforeend',
       `<div class="alloc-row" style="${isMaxed?'opacity:0.55;':''}" title="${isMaxed ? fullName + ' is at cap' : traitTitle(t)}">
         <div class="alloc-label" style="color:var(--${t.toLowerCase()}-color,var(--accent));cursor:help;">
-          <span style="font-size:14px;margin-right:4px;">${emoji}</span>${fullName}
+          <span style="font-size:14px;margin-right:4px;">${emoji}</span>${fullName}${curCapTag}
         </div>
         <input type="range" min="0" max="${Math.max(0,maxAllowed)}" value="0" data-t="${t}" ${isMaxed?'disabled':''}/>
         <div class="alloc-val" id="av-${t}">${isMaxed?'–':'0'}</div>
@@ -10072,8 +10103,19 @@ const VxBond = (() => {
     const rec = get(championId);
     const fed = rec.lastFedAt ? new Date(rec.lastFedAt).getTime() : null;
     if (!fed) {
-      return { id: 'new', emoji: '🥚', label: 'Newly hatched',
-               blurb: 'Feed me to get started!' };
+      // Trello 2026-06-01 (EoCZKJEL — "Level 8 Mood just hatched"):
+      // lastFedAt only gets set by onFeed, so a champion that levelled
+      // via Blessings/Adventures with no trait-potion feeds would read
+      // "Newly hatched" at high stages. Only use that copy at stage 1;
+      // beyond that fall back to a neutral "Content" so the mood line
+      // doesn't lie about a Champion-stage warrior.
+      const lvl = (Array.isArray(myChampions) && myChampions.find(m => m.id === championId)?.level) || 1;
+      if (lvl <= 2) {
+        return { id: 'new', emoji: '🥚', label: 'Newly hatched',
+                 blurb: 'Feed me to get started!' };
+      }
+      return { id: 'content', emoji: '🙂', label: 'Content',
+               blurb: 'Doing fine. A snack would be nice.' };
     }
     const hoursSince = (Date.now() - fed) / 3_600_000;
     const timeMood = hoursSince < 12 ? 0
@@ -13542,11 +13584,21 @@ function renderStable() {
       const stage = bl.stages[c.stageIdx];
       const stageName = stage.name;
       const legend = c.stageIdx >= 8;
+      // Trello 2026-06-01 (B431s7JH — "Some champs pic does not show"):
+      // bloodlines.json `img` is null for every bloodline that hasn't
+      // been studio-locked-in yet, so the <img src="null"> rendered
+      // broken. The setStageImage fix from eyc94EPh covered the champion
+      // detail view but not these stable thumbnails. Same fallback path
+      // applied here — evolution20/<species>/<bloodline>/sNN.png — the
+      // PNGs all exist on disk regardless of approval state.
+      const stageNum = String((c.stageIdx ?? 0) + 1).padStart(2, '0');
+      const imgSrc = stage.img
+        || `evolution20/${c.species_id}/${c.bloodline_id}/s${stageNum}.png`;
       return `
         <div class="champ-card ${legend ? 'legend' : ''}" onclick="openChampion('${c.id}')">
           <div class="stage-pill">${stageName}</div>
           <div class="lvl-pill">L${String(c.level).padStart(2,'0')}</div>
-          <div class="art"><img src="${stage.img}" /></div>
+          <div class="art"><img src="${imgSrc}" alt="${esc(c.name || '')}" loading="lazy" onerror="this.style.opacity='0.3';"/></div>
           <div class="meta">
             <div class="name">${esc(c.name)} ${affinityBadgeHtml(c.species_id, { compact: true })}</div>
             <div class="subname">${sp.label} · ${bl.label}</div>
@@ -14430,9 +14482,14 @@ function openEvolutionAlbum() {
     const label = unlocked
       ? (stage?.name || `Stage ${i + 1}`)
       : '???';
-    const img = stage?.img
-      ? `<img src="${stage.img}" alt="${stage.name || ''}" loading="lazy" onerror="this.style.display='none'"/>`
-      : '';
+    // Same fallback as the stable grid + setStageImage (B431s7JH /
+    // eyc94EPh chain): derive evolution20/<species>/<bloodline>/sNN.png
+    // when bloodlines.json `img` is null (most bloodlines aren't locked-
+    // in yet, but the PNGs exist on disk regardless).
+    const stageNum = String(i + 1).padStart(2, '0');
+    const imgSrc = stage?.img
+      || `evolution20/${champ.species_id}/${champ.bloodline_id}/s${stageNum}.png`;
+    const img = `<img src="${imgSrc}" alt="${stage?.name || ''}" loading="lazy" onerror="this.style.opacity='0.2';"/>`;
     const numBadge = isCurrent ? 'NOW' : `${i + 1}`;
 
     grid.insertAdjacentHTML('beforeend', `
