@@ -13584,16 +13584,9 @@ function renderStable() {
       const stage = bl.stages[c.stageIdx];
       const stageName = stage.name;
       const legend = c.stageIdx >= 8;
-      // Trello 2026-06-01 (B431s7JH — "Some champs pic does not show"):
-      // bloodlines.json `img` is null for every bloodline that hasn't
-      // been studio-locked-in yet, so the <img src="null"> rendered
-      // broken. The setStageImage fix from eyc94EPh covered the champion
-      // detail view but not these stable thumbnails. Same fallback path
-      // applied here — evolution20/<species>/<bloodline>/sNN.png — the
-      // PNGs all exist on disk regardless of approval state.
-      const stageNum = String((c.stageIdx ?? 0) + 1).padStart(2, '0');
-      const imgSrc = stage.img
-        || `evolution20/${c.species_id}/${c.bloodline_id}/s${stageNum}.png`;
+      // Trello B431s7JH retest fix: route through _portraitFor so the
+      // fallback path is identical to the arena + album + buy view.
+      const imgSrc = _portraitFor(c.species_id, c.bloodline_id, c.stageIdx ?? 0);
       return `
         <div class="champ-card ${legend ? 'legend' : ''}" onclick="openChampion('${c.id}')">
           <div class="stage-pill">${stageName}</div>
@@ -13731,7 +13724,7 @@ function renderBloodlinePicker() {
     return `
       <div class="bloodline-card ${lockedClass}" ${onclick}>
         ${overlay}
-        ${stage0.img ? `<div class="bl-art"><img src="${stage0.img}" /></div>` : '<div class="bl-art bl-placeholder">🥚</div>'}
+        <div class="bl-art"><img src="${_portraitFor(sp_id, id, 0)}" alt="${bl.label}" onerror="this.parentElement.innerHTML='🥚';this.parentElement.classList.add('bl-placeholder');"/></div>
         <div class="bl-meta">
           <div class="bl-name">${bl.label}</div>
           <div class="bl-lore">${loreMap[id] || 'A unique bloodline.'}</div>
@@ -13768,7 +13761,7 @@ function renderBuy() {
   const defaultName = `${bl.heroName} the ${stage0.name}`;
   const supplyHtml = _supplyBadge(sp_id, bl_id);
   document.getElementById('buyWrap').innerHTML = `
-    <div class="buy-art"><img src="${stage0.img}" /></div>
+    <div class="buy-art"><img src="${_portraitFor(sp_id, bl_id, 0)}" alt="${bl.label} stage 1"/></div>
     <div class="buy-summary">
       <h3 id="previewName">${defaultName}</h3>
       <div class="species">${sp.label} · ${bl.label} · Stage 1 ${stage0.name}</div>
@@ -14482,13 +14475,8 @@ function openEvolutionAlbum() {
     const label = unlocked
       ? (stage?.name || `Stage ${i + 1}`)
       : '???';
-    // Same fallback as the stable grid + setStageImage (B431s7JH /
-    // eyc94EPh chain): derive evolution20/<species>/<bloodline>/sNN.png
-    // when bloodlines.json `img` is null (most bloodlines aren't locked-
-    // in yet, but the PNGs exist on disk regardless).
-    const stageNum = String(i + 1).padStart(2, '0');
-    const imgSrc = stage?.img
-      || `evolution20/${champ.species_id}/${champ.bloodline_id}/s${stageNum}.png`;
+    // Same fallback via _portraitFor (B431s7JH / eyc94EPh chain).
+    const imgSrc = _portraitFor(champ.species_id, champ.bloodline_id, i);
     const img = `<img src="${imgSrc}" alt="${stage?.name || ''}" loading="lazy" onerror="this.style.opacity='0.2';"/>`;
     const numBadge = isCurrent ? 'NOW' : `${i + 1}`;
 
@@ -15871,11 +15859,23 @@ function _pushTicker(msg, kindClass) {
   while (ticker.children.length > 3) ticker.removeChild(ticker.lastChild);
 }
 
-// Stage portrait URL for a (species, bloodline, stage) — falls back to a
-// placeholder for non-orc-ironfang species which don't have art yet.
+// Stage portrait URL for a (species, bloodline, stage). Trello retest
+// 2026-06-01 (B431s7JH refix): bloodlines.json `img` is null for every
+// bloodline that hasn't been studio-locked-in yet, so falling back to
+// the legacy whelp jpg meant every non-Ironfang champion looked the
+// same (or blank, when the call site didn't go through this helper).
+// The 520 PNGs at evolution20/<species>/<bloodline>/sNN.png exist on
+// disk regardless of approval state, so derive that path FIRST and
+// only use the legacy jpg if even the species/bloodline ids are
+// missing. Used by arena portraits + stable grid + album + buy view.
 function _portraitFor(speciesId, bloodlineId, stageIdx) {
   const stage = SPECIES?.[speciesId]?.bloodlines?.[bloodlineId]?.stages?.[stageIdx];
-  return stage?.img || 'evolution/L01_whelp_final.jpg';  // legacy fallback
+  if (stage?.img) return stage.img;
+  if (speciesId && bloodlineId && Number.isFinite(stageIdx)) {
+    const n = String((stageIdx ?? 0) + 1).padStart(2, '0');
+    return `evolution20/${speciesId}/${bloodlineId}/s${n}.png`;
+  }
+  return 'evolution/L01_whelp_final.jpg';  // last-resort legacy
 }
 
 const _SPECIES_EMOJI = { orc:'🟢', elf:'🌙', goblin:'👺', demon:'🔥', drakkin:'🐉', dwarf:'⚒️', beastkin:'🐺', wraith:'👻' };
