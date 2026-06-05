@@ -3059,7 +3059,7 @@
        "· MAX" text suffix (row dim + disabled slider already convey
        maxed state). */
     display: grid;
-    grid-template-columns: minmax(116px, 144px) 1fr 40px;
+    grid-template-columns: minmax(116px, 144px) 1fr auto;
     align-items: center; gap: 10px; margin-bottom: 10px;
     /* Prevent text selection on the whole row — Sean reported dragging
        AGI slider was selecting row text instead of moving the thumb.
@@ -3092,7 +3092,29 @@
   }
   .alloc-row .alloc-val {
     color: var(--accent); font-weight: 700; font-size: 14px;
-    text-align: right;
+    text-align: center;
+  }
+  /* +/- buttons for fine-grained blessing point allocation
+     (Ric O. feedback: "increments feel too large", "hard to allocate precisely").
+     Each click adjusts by 1 point. Prevents negative values + respects caps. */
+  .alloc-btn-minus, .alloc-btn-plus {
+    background: linear-gradient(135deg, rgba(255,205,107,0.08), rgba(255,140,60,0.08));
+    border: 1px solid rgba(255,205,107,0.3);
+    color: var(--accent-dim);
+    border-radius: 6px; cursor: pointer;
+    font-weight: 700; font-size: 16px;
+    transition: all 0.15s;
+  }
+  .alloc-btn-minus:hover:not(:disabled), .alloc-btn-plus:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(255,205,107,0.15), rgba(255,140,60,0.15));
+    border-color: rgba(255,205,107,0.5);
+    color: var(--accent);
+  }
+  .alloc-btn-minus:active:not(:disabled), .alloc-btn-plus:active:not(:disabled) {
+    transform: scale(0.92);
+  }
+  .alloc-btn-minus:disabled, .alloc-btn-plus:disabled {
+    opacity: 0.35; cursor: not-allowed;
   }
   .alloc-remaining {
     text-align: center; padding: 10px;
@@ -9344,13 +9366,48 @@ function openAllocModal(sourceEl) {
           <span style="font-size:14px;margin-right:4px;">${emoji}</span>${fullName}${curCapTag}
         </div>
         <input type="range" min="0" max="${Math.max(0,maxAllowed)}" value="0" data-t="${t}" ${isMaxed?'disabled':''}/>
-        <div class="alloc-val" id="av-${t}">${isMaxed?'–':'0'}</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="alloc-btn-minus" data-t="${t}" style="width:32px;height:32px;padding:0;font-size:16px;flex-shrink:0;" ${isMaxed?'disabled':''}>−</button>
+          <div class="alloc-val" id="av-${t}" style="width:32px;text-align:center;font-weight:600;">${isMaxed?'–':'0'}</div>
+          <button class="alloc-btn-plus" data-t="${t}" style="width:32px;height:32px;padding:0;font-size:16px;flex-shrink:0;" ${isMaxed?'disabled':''}>+</button>
+        </div>
       </div>`);
   });
   rows.querySelectorAll('input').forEach(inp => {
     inp.addEventListener('input', () => {
       const trait = inp.dataset.t;
-      allocState.values[trait] = +inp.value;
+      allocState.values[trait] = Math.max(0, +inp.value);
+      updateAllocRemaining();
+    });
+  });
+  // Wire +/- buttons for fine-grained control (addresses Ric O. feedback:
+  // "sliders can go negative" + "increments too large"). Each click
+  // adjusts by 1 point, respecting caps and remaining budget.
+  rows.querySelectorAll('.alloc-btn-minus').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const trait = btn.dataset.t;
+      const idx = TRAITS.indexOf(trait);
+      const cur = state.stats[trait] || STAGE_FLOORS[state.stageIdx][idx];
+      const cap = capAtLevel(state.level)[idx];
+      // Clamp: can't go below 0 or below the current value
+      allocState.values[trait] = Math.max(0, Math.min(allocState.values[trait] - 1, cap - cur));
+      const inp = rows.querySelector(`input[data-t="${trait}"]`);
+      if (inp) inp.value = allocState.values[trait];
+      updateAllocRemaining();
+    });
+  });
+  rows.querySelectorAll('.alloc-btn-plus').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const trait = btn.dataset.t;
+      const idx = TRAITS.indexOf(trait);
+      const cur = state.stats[trait] || STAGE_FLOORS[state.stageIdx][idx];
+      const cap = capAtLevel(state.level)[idx];
+      // Clamp: can't exceed cap or total remaining budget (40 points)
+      const maxAllowedForThisTrait = cap - cur;
+      const maxFromBudget = allocState.remaining + allocState.values[trait]; // remaining + what's already here
+      allocState.values[trait] = Math.max(0, Math.min(allocState.values[trait] + 1, Math.min(maxAllowedForThisTrait, maxFromBudget)));
+      const inp = rows.querySelector(`input[data-t="${trait}"]`);
+      if (inp) inp.value = allocState.values[trait];
       updateAllocRemaining();
     });
   });
