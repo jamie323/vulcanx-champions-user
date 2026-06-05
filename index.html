@@ -7910,6 +7910,12 @@
       <b id="arEloNew" class="ar-elo-new">110</b>
       <span class="ar-elo-delta" id="arEloDelta">+10</span>
     </div>
+    <!-- PYR wager reward (shown when wagered match is won) -->
+    <div id="arWagerReward" style="display:none; margin-top:14px; padding:12px; background:rgba(255,205,107,0.1); border:1px solid rgba(255,205,107,0.3); border-radius:8px; text-align:center;">
+      <div style="font-size:14px; color:var(--accent); font-weight:700; margin-bottom:8px;">💰 PYR WINNINGS</div>
+      <div style="font-size:20px; color:#ffcd6b; font-weight:800; margin-bottom:10px;" id="arWagerAmount">0 PYR</div>
+      <button class="btn-primary" id="arClaimWagerBtn" style="width:100%; background:linear-gradient(135deg,rgba(255,205,107,0.2),rgba(255,140,60,0.2)); border-color:var(--accent);">Claim PYR</button>
+    </div>
     <div class="ar-log-toggle"><a href="#" id="arLogToggle">Show battle log ▼</a></div>
     <div class="ar-log" id="arLog" style="display:none;"></div>
     <div style="display:flex; gap:8px; margin-top:14px;">
@@ -15227,6 +15233,21 @@ async function apiInviteDecline(invite_id) {
   return res.json().catch(() => ({}));
 }
 
+// Claim PYR winnings from a wagered match. Ric O. bug: "winning player
+// doesn't have a claim button to attain the pyr". Now they do.
+async function apiClaimWagerReward(match_id) {
+  const res = await apiFetch(`${FN_BASE}/claim_wager_reward`, {
+    method: 'POST', headers: AUTH_HEADERS,
+    body: JSON.stringify({ wallet: getWallet(), match_id }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const code = data.error || `http_${res.status}`;
+    throw new Error(`${code}: ${data.message || ''}`.trim());
+  }
+  return data;  // { pyr_claimed, new_balance }
+}
+
 let _inviteListCache = { inbox: [], sent: [] };
 let _inviteAcceptStance = 'balanced';
 let _activeAcceptInvite = null;
@@ -16169,6 +16190,18 @@ function _revealFinalResult(resp) {
 
   document.getElementById('arSummary').textContent = battle.summary;
 
+  // Show PYR wager reward if the match was wagered and the player won
+  const wagerEl = document.getElementById('arWagerReward');
+  if (resp.result === 'win' && resp.wager_pyr && resp.wager_pyr > 0) {
+    const pyr_won = Math.floor(resp.wager_pyr * 2 * 0.95); // winner takes 95% of doubled wager
+    document.getElementById('arWagerAmount').textContent = `${pyr_won} PYR`;
+    wagerEl.style.display = '';
+    window._pendingWagerClaim = { match_id: resp.match_id, pyr_amount: pyr_won };
+  } else {
+    wagerEl.style.display = 'none';
+    window._pendingWagerClaim = null;
+  }
+
   // ELO tween — count up/down over 600ms
   const oldElo = resp.newElo - resp.eloChange;
   const eloEl = document.getElementById('arEloNew');
@@ -16251,6 +16284,43 @@ bindIf('arRematchBtn', 'click', () => {
 bindIf('arCloseBtn', 'click', () => {
   _clearPlayback();  // stop in-flight animation
   document.getElementById('arenaResultModal').classList.remove('open');
+});
+// Claim PYR winnings from wagered match
+bindIf('arClaimWagerBtn', 'click', async () => {
+  if (!window._pendingWagerClaim) {
+    vxAlert('No wager winnings to claim.', {title: 'Error', icon: '⚠️'});
+    return;
+  }
+  const btn = document.getElementById('arClaimWagerBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Claiming…';
+  try {
+    const resp = await apiClaimWagerReward(window._pendingWagerClaim.match_id);
+    vxAlert(`Claimed ${window._pendingWagerClaim.pyr_amount} PYR!`,
+      {title: 'Winnings Claimed', icon: '💰', variant: 'success'});
+    window._pendingWagerClaim = null;
+    document.getElementById('arWagerReward').style.display = 'none';
+    // Refresh wallet balance to show new PYR — forceRefresh bypasses the 30s cache
+    if (typeof refreshWalletBalance === 'function' && typeof getWallet === 'function') {
+      const wallet = getWallet();
+      if (wallet) {
+        refreshWalletBalance(wallet, true);  // true = forceRefresh
+      }
+    }
+  } catch (e) {
+    console.error('[claim-wager] failed', e);
+    const msg = e?.message || 'Failed to claim winnings';
+    const isNetErr = /Failed to fetch|TypeError|timeout|aborted|NetworkError/i.test(String(msg));
+    vxAlert(
+      isNetErr
+        ? 'Lost connection to server. Check your internet and try again.'
+        : msg,
+      {title: 'Claim failed', icon: '⚠️', variant: 'error'}
+    );
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Claim PYR';
+  }
 });
 // Backdrop click also dismisses + cancels animation
 document.getElementById('arenaResultModal')?.addEventListener('click', (e) => {
@@ -16743,12 +16813,20 @@ function updateWalletUI() {
 
 // PYR balance — Elysium native token, 18 decimals, chainId 1339.
 // Cached for 30s to avoid hammering the RPC on every render.
+// Ric O. bug: "When you connect your wallet, the pyr display is not the same
+// in the wallet" — cache was showing stale balance. Now: cache is cleared when
+// wallet changes, forcing an immediate fresh fetch on reconnect.
 let _balanceCache = { wallet: null, pyr: null, fetchedAt: 0 };
-async function refreshWalletBalance(wallet) {
+async function refreshWalletBalance(wallet, forceRefresh = false) {
   const balEl = document.getElementById('walletChipBal');
   const numEl = balEl?.querySelector('.wcb-num');
   if (!balEl || !numEl) return;
-  const fresh = _balanceCache.wallet === wallet
+  // If wallet changed, clear cache to force refresh on next call
+  if (_balanceCache.wallet && _balanceCache.wallet !== wallet) {
+    _balanceCache = { wallet: null, pyr: null, fetchedAt: 0 };
+  }
+  const fresh = !forceRefresh
+    && _balanceCache.wallet === wallet
     && Date.now() - _balanceCache.fetchedAt < 30000
     && _balanceCache.pyr != null;
   if (fresh) {
