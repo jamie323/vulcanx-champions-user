@@ -13093,23 +13093,51 @@ async function apiRenameChampion({ champion_id, new_name }) {
 }
 
 async function apiEvolveChampion({ champion_id, evolution_potion_id }) {
-  const res = await apiFetch(`${FN_BASE}/champion_evolve`, {
-    method: 'POST',
-    headers: AUTH_HEADERS,
-    body: JSON.stringify({ wallet: getWallet(), champion_id, evolution_potion_id }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const code = data.error || `http_${res.status}`;
-    throw new Error(`${code}: ${data.message || ''}`.trim());
+  // Retry with exponential backoff for transient failures (cold starts, network blips).
+  // Supabase cold-start 503s resolve themselves on retry; network timeouts are often
+  // momentary. Immediate 4xx/auth failures still throw immediately since they won't fix.
+  const DELAYS = [200, 800, 2000]; // ms — three tries total
+  let lastErr;
+  for (let attempt = 0; attempt <= DELAYS.length; attempt++) {
+    try {
+      const res = await apiFetch(`${FN_BASE}/champion_evolve`, {
+        method: 'POST',
+        headers: AUTH_HEADERS,
+        body: JSON.stringify({ wallet: getWallet(), champion_id, evolution_potion_id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const code = data.error || `http_${res.status}`;
+        const err = new Error(`${code}: ${data.message || ''}`.trim());
+        // Retry 5xx (service unavailable) + network errors; fail fast on 4xx (auth/validation)
+        if (res.status >= 500 && res.status < 600 && attempt < DELAYS.length) {
+          console.warn(`[evolve] ${code} attempt ${attempt+1}, retrying in ${DELAYS[attempt]}ms`);
+          await new Promise(r => setTimeout(r, DELAYS[attempt]));
+          lastErr = err;
+          continue;
+        }
+        throw err;
+      }
+      // VulcanX cross-game tracker — champion_evolutions + stage milestones
+      if (window.VxQuestTracker) {
+        window.VxQuestTracker.recordMany(
+          window.VxQuestTracker.metrics.fromEvolve({ to_stage: data?.newStageIdx })
+        );
+      }
+      return data;  // { champion, newStageIdx, newStageName, levelAfter, potionRemaining }
+    } catch (e) {
+      // Retry network errors (fetch failures, timeouts, etc.)
+      const isNetErr = /Failed to fetch|TypeError|timeout|aborted|NetworkError/i.test(String(e?.message || e));
+      if (isNetErr && attempt < DELAYS.length) {
+        console.warn(`[evolve] network blip attempt ${attempt+1}, retrying in ${DELAYS[attempt]}ms`);
+        await new Promise(r => setTimeout(r, DELAYS[attempt]));
+        lastErr = e;
+        continue;
+      }
+      throw e;
+    }
   }
-  // VulcanX cross-game tracker — champion_evolutions + stage milestones
-  if (window.VxQuestTracker) {
-    window.VxQuestTracker.recordMany(
-      window.VxQuestTracker.metrics.fromEvolve({ to_stage: data?.newStageIdx })
-    );
-  }
-  return data;  // { champion, newStageIdx, newStageName, levelAfter, potionRemaining }
+  throw lastErr || new Error('evolve_failed: exhausted retries');
 }
 
 // Public read-only champion fetch — works without wallet auth, returns
