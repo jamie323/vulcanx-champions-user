@@ -12539,12 +12539,17 @@ function render() {
 
   const evoBtn = document.getElementById('evolveBtn');
   const ok = canEvolve();
+  // At L23+, Evolution Potions are no longer needed — evolution happens
+  // automatically when feeding normal potions. Disable the button entirely.
+  const noLongerNeeded = state.level >= 23;
   // Block evolve if the level timer is still ticking down (L20+).
   const levelLocked = _activeCh.levelStatus === 'waiting'
     && (_activeCh.levelMinutesRemaining ?? 0) > 0;
-  evoBtn.disabled = !ok || levelLocked;
-  evoBtn.classList.toggle('ready', ok && !levelLocked);
-  evoBtn.textContent = levelLocked
+  evoBtn.disabled = !ok || levelLocked || noLongerNeeded;
+  evoBtn.classList.toggle('ready', ok && !levelLocked && !noLongerNeeded);
+  evoBtn.textContent = noLongerNeeded
+    ? '⚡ Auto-evolve (feed potions)'
+    : levelLocked
     ? '⏳ Resting…'
     : (ok && next ? '⚡ Evolve to ' + next.name
       : next ? '⚡ Evolve (locked)' : 'Max form reached');
