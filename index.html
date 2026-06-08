@@ -8104,6 +8104,26 @@
       </div>
     </div>
 
+    <!-- Persistent unclaimed PYR winnings (Ric O. bug: "no clear claim
+         button"). Stays claimable after the result modal is dismissed,
+         on any device. Populated by loadArenaWinnings(). -->
+    <div id="arenaWinningsBanner" style="display:none; margin:0 0 14px; padding:14px 16px;
+         background:linear-gradient(135deg,rgba(255,205,107,0.14),rgba(255,140,60,0.12));
+         border:1px solid rgba(255,205,107,0.4); border-radius:12px; display:none;
+         align-items:center; justify-content:space-between; gap:12px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:22px;">💰</span>
+        <div>
+          <div style="font-weight:800; color:#ffcd6b; font-size:16px;" id="arenaWinningsAmount">0 PYR</div>
+          <div style="font-size:12px; color:var(--muted);" id="arenaWinningsSub">in unclaimed wager winnings</div>
+        </div>
+      </div>
+      <button class="btn-primary" id="arenaClaimAllBtn" type="button"
+              style="background:linear-gradient(135deg,rgba(255,205,107,0.25),rgba(255,140,60,0.25)); border-color:var(--accent); white-space:nowrap;">
+        Claim all
+      </button>
+    </div>
+
     <div class="arena-card">
       <!-- Trello (29 Apr): "Add champion selection dropdown before
            entering Arena" — testers were confused which champion was
@@ -15225,6 +15245,9 @@ function bracketLabel(stageIdx) {
 }
 
 function renderArena() {
+  // Refresh the persistent unclaimed-winnings banner each time the
+  // Arena opens (fire-and-forget).
+  loadArenaWinnings();
   const champ = myChampions.find(c => c.id === state.championId)
              || myChampions[0]
              || null;
@@ -15768,6 +15791,46 @@ async function apiClaimWagerReward(match_id) {
   return data;  // { pyr_claimed, new_balance }
 }
 
+// List unclaimed wager winnings for the persistent claim banner.
+async function apiListWagerWinnings(wallet) {
+  const res = await apiFetch(`${FN_BASE}/wager_winnings_list?wallet=${encodeURIComponent(wallet)}`, {
+    headers: AUTH_HEADERS,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return { total_unclaimed: 0, items: [] };
+  return data;  // { total_unclaimed, items: [{ match_id, payout_pyr, created_at }] }
+}
+
+// QA PYR balance (claimed wager winnings, pre on-chain escrow).
+async function apiGetQaPyrBalance(wallet) {
+  try {
+    const res = await apiFetch(`${FN_BASE}/qa_pyr_balance?wallet=${encodeURIComponent(wallet)}`, {
+      headers: AUTH_HEADERS,
+    });
+    const data = await res.json().catch(() => ({}));
+    return res.ok ? Number(data.balance || 0) : 0;
+  } catch (_) { return 0; }
+}
+
+// Populate + show/hide the persistent "Claim all" winnings banner in the
+// Arena view. Safe no-op if the wallet isn't connected or there's nothing.
+async function loadArenaWinnings() {
+  const banner = document.getElementById('arenaWinningsBanner');
+  if (!banner) return;
+  const wallet = typeof getWallet === 'function' ? getWallet() : null;
+  if (!wallet) { banner.style.display = 'none'; return; }
+  let data;
+  try { data = await apiListWagerWinnings(wallet); }
+  catch (_) { banner.style.display = 'none'; return; }
+  const total = Number(data?.total_unclaimed || 0);
+  if (!total || !(data.items || []).length) { banner.style.display = 'none'; return; }
+  document.getElementById('arenaWinningsAmount').textContent = `${total.toLocaleString()} PYR`;
+  document.getElementById('arenaWinningsSub').textContent =
+    `in unclaimed winnings from ${data.items.length} ${data.items.length === 1 ? 'match' : 'matches'}`;
+  banner._items = data.items;
+  banner.style.display = 'flex';
+}
+
 let _inviteListCache = { inbox: [], sent: [] };
 let _inviteAcceptStance = 'balanced';
 let _activeAcceptInvite = null;
@@ -16214,6 +16277,10 @@ function matchEventToResp(payload) {
     eloChange: payload.elo_change,
     newElo: payload.new_elo,
     seed: payload.seed,
+    // Carry wager fields so async/queued wins also surface the claim button
+    // (winnings are also always reachable via the persistent Arena banner).
+    match_id: payload.invite_id,
+    wager_pyr: payload.wager?.wager_pyr,
   };
 }
 
@@ -16713,7 +16780,9 @@ function _revealFinalResult(resp) {
   // Show PYR wager reward if the match was wagered and the player won
   const wagerEl = document.getElementById('arWagerReward');
   if (resp.result === 'win' && resp.wager_pyr && resp.wager_pyr > 0) {
-    const pyr_won = Math.floor(resp.wager_pyr * 2 * 0.95); // winner takes 95% of doubled wager
+    // Match the backend payout exactly: pot minus floor(5% rake). Using
+    // floor(pot*0.95) can differ by 1 PYR from what's actually credited.
+    const pyr_won = (resp.wager_pyr * 2) - Math.floor(resp.wager_pyr * 2 * 0.05);
     document.getElementById('arWagerAmount').textContent = `${pyr_won} PYR`;
     wagerEl.style.display = '';
     window._pendingWagerClaim = { match_id: resp.match_id, pyr_amount: pyr_won };
@@ -16816,10 +16885,13 @@ bindIf('arClaimWagerBtn', 'click', async () => {
   btn.textContent = '⏳ Claiming…';
   try {
     const resp = await apiClaimWagerReward(window._pendingWagerClaim.match_id);
-    vxAlert(`Claimed ${window._pendingWagerClaim.pyr_amount} PYR!`,
+    const claimed = Number(resp?.pyr_claimed ?? window._pendingWagerClaim.pyr_amount);
+    vxAlert(`Claimed ${claimed.toLocaleString()} PYR!`,
       {title: 'Winnings Claimed', icon: '💰', variant: 'success'});
     window._pendingWagerClaim = null;
     document.getElementById('arWagerReward').style.display = 'none';
+    // Keep the persistent banner in sync if it's on screen.
+    if (typeof loadArenaWinnings === 'function') loadArenaWinnings();
     // Refresh wallet balance to show new PYR — forceRefresh bypasses the 30s cache
     if (typeof refreshWalletBalance === 'function' && typeof getWallet === 'function') {
       const wallet = getWallet();
@@ -16841,6 +16913,41 @@ bindIf('arClaimWagerBtn', 'click', async () => {
     btn.disabled = false;
     btn.textContent = 'Claim PYR';
   }
+});
+// Persistent "Claim all" winnings banner — claims every unclaimed payout
+// in sequence, then refreshes the wallet balance + hides the banner.
+bindIf('arenaClaimAllBtn', 'click', async () => {
+  const banner = document.getElementById('arenaWinningsBanner');
+  const items = (banner && banner._items) || [];
+  if (!items.length) return;
+  const btn = document.getElementById('arenaClaimAllBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Claiming…';
+  let totalClaimed = 0, failed = 0;
+  for (const it of items) {
+    try {
+      const r = await apiClaimWagerReward(it.match_id);
+      totalClaimed += Number(r.pyr_claimed || it.payout_pyr || 0);
+    } catch (e) {
+      // already_claimed elsewhere → just skip; anything else counts as failed.
+      if (!String(e?.message || '').includes('already_claimed')) failed++;
+    }
+  }
+  if (totalClaimed > 0) {
+    vxAlert(`Claimed ${totalClaimed.toLocaleString()} PYR in winnings!`,
+      { title: 'Winnings Claimed', icon: '💰', variant: 'success' });
+  } else if (failed) {
+    vxAlert('Could not claim winnings right now. Try again in a moment.',
+      { title: 'Claim failed', icon: '⚠️', variant: 'error' });
+  }
+  // Refresh wallet balance (forceRefresh) + reload the banner.
+  if (typeof refreshWalletBalance === 'function' && typeof getWallet === 'function') {
+    const w = getWallet();
+    if (w) refreshWalletBalance(w, true);
+  }
+  btn.disabled = false;
+  btn.textContent = 'Claim all';
+  loadArenaWinnings();
 });
 // Backdrop click also dismisses + cancels animation
 document.getElementById('arenaResultModal')?.addEventListener('click', (e) => {
@@ -17380,7 +17487,11 @@ async function refreshWalletBalance(wallet, forceRefresh = false) {
     if (!hex) { balEl.style.display = 'none'; return; }
     // wei → PYR (1e18). Show 0 / int / 2-decimal-trimmed depending on
     // size so the chip stays compact.
-    const wei = BigInt(hex);
+    let wei = BigInt(hex);
+    // Fold in QA wager winnings (Supabase-side, pre on-chain escrow) so
+    // claimed winnings are reflected in the balance chip.
+    const qaPyr = await apiGetQaPyrBalance(wallet);
+    if (qaPyr > 0) wei += BigInt(qaPyr) * 10n ** 18n;
     const whole = wei / 10n ** 18n;
     const frac = (wei % 10n ** 18n) / 10n ** 16n; // 2-decimal precision
     let display;
