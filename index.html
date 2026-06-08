@@ -9716,41 +9716,16 @@ async function evolve() {
   const evoPotion = findPotion({ kind: 'evolution' });
   if (!evoPotion) return;
 
-  _evolveInFlight = true;
-  let resp;
-  try {
-    try {
-      resp = await apiEvolveChampion({
-        champion_id: state.championId,
-        evolution_potion_id: evoPotion.id,
-      });
-    } catch (e) {
-      console.error('[evolve] api call failed', e);
-      // Network-level fetch failures surface as TypeError with messages
-      // like "Failed to fetch" (Chrome) or "Load failed" (Safari). Show
-      // a friendlier "try again" instead of the raw browser jargon —
-      // Trello 2026-05-26 tester saw "Failed to fetch" and reported as
-      // a bug.
-      const msg = e?.message || 'Unknown error';
-      const isNetErr = /Failed to fetch|Load failed|NetworkError|aborted/i.test(msg);
-      vxAlert(
-        isNetErr
-          ? 'Lost connection to the server. Check your internet and try again in a moment.'
-          : msg,
-        { title: isNetErr ? 'Connection lost' : 'Evolve failed', icon: isNetErr ? '📡' : '⚡', variant: 'error' }
-      );
-      return;
-    }
+  // Snapshot the pre-evolve stage so we can reconcile if the RESPONSE is
+  // lost mid-flight. champion_evolve commits server-side before replying,
+  // and apiEvolveChampion retries on network errors — so a dropped
+  // response can throw even though the evolution actually went through.
+  const prevStageIdx = state.stageIdx;
 
-    console.log('[evolve] ok', {
-      oldStage: state.stageIdx,
-      newStage: resp?.champion?.stage_idx,
-      oldLevel: state.level,
-      newLevel: resp?.champion?.level,
-      potionRemaining: resp?.potionRemaining,
-    });
-
-    const c = mapChampion(resp.champion);
+  // Applies a confirmed evolution to local state + plays the cinematic.
+  // Takes an already-mapped champion (mapChampion output). Shared by the
+  // normal success path and the reconcile-after-network-error path.
+  const applyEvolved = async (c) => {
     state.stats = { ...c.stats };
     state.evoPct = c.evoPct;
     state.level = c.level;
@@ -9779,6 +9754,55 @@ async function evolve() {
     // setStageImage in render() will fire crossfade + burst ring
 
     setTimeout(() => render(), 400);
+  };
+
+  _evolveInFlight = true;
+  let resp;
+  try {
+    try {
+      resp = await apiEvolveChampion({
+        champion_id: state.championId,
+        evolution_potion_id: evoPotion.id,
+      });
+    } catch (e) {
+      console.error('[evolve] api call failed', e);
+      // The mutation commits server-side BEFORE the response is sent, so a
+      // dropped/timed-out response (or an exhausted network retry) can land
+      // here even though the evolution succeeded. This is the tester report
+      // "Connection-lost popup, no animation, but a refresh shows the next
+      // level." Before showing any error, re-fetch and reconcile: if the
+      // champion already advanced a stage, treat it as success.
+      try {
+        const fresh = (await apiListChampions()).find(m => m.id === state.championId);
+        if (fresh && fresh.stageIdx > prevStageIdx) {
+          console.log('[evolve] reconciled: server advanced despite lost response');
+          await applyEvolved(fresh);
+          return;
+        }
+      } catch (reErr) {
+        console.warn('[evolve] reconcile fetch failed', reErr);
+      }
+      // Genuinely did not advance — surface a friendly error.
+      const msg = e?.message || 'Unknown error';
+      const isNetErr = /Failed to fetch|Load failed|NetworkError|aborted/i.test(msg);
+      vxAlert(
+        isNetErr
+          ? 'Lost connection to the server. Check your internet and try again in a moment.'
+          : msg,
+        { title: isNetErr ? 'Connection lost' : 'Evolve failed', icon: isNetErr ? '📡' : '⚡', variant: 'error' }
+      );
+      return;
+    }
+
+    console.log('[evolve] ok', {
+      oldStage: prevStageIdx,
+      newStage: resp?.champion?.stage_idx,
+      oldLevel: state.level,
+      newLevel: resp?.champion?.level,
+      potionRemaining: resp?.potionRemaining,
+    });
+
+    await applyEvolved(mapChampion(resp.champion));
   } finally {
     // Longer release than feed/blessing because the evolve cinematic
     // runs ~2.3s — don't want the user firing another evolve while the
