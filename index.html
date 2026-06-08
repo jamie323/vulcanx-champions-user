@@ -9770,19 +9770,26 @@ async function evolve() {
       // dropped/timed-out response (or an exhausted network retry) can land
       // here even though the evolution succeeded. This is the tester report
       // "Connection-lost popup, no animation, but a refresh shows the next
-      // level." Before showing any error, re-fetch and reconcile: if the
-      // champion already advanced a stage, treat it as success.
-      try {
-        const fresh = (await apiListChampions()).find(m => m.id === state.championId);
-        if (fresh && fresh.stageIdx > prevStageIdx) {
-          console.log('[evolve] reconciled: server advanced despite lost response');
-          await applyEvolved(fresh);
-          return;
+      // level." Before showing any error, POLL and reconcile: a slow
+      // (cold-start) commit can land AFTER an immediate re-fetch, so one
+      // read races the write. We poll with backoff (~9s total) and treat a
+      // confirmed stage advance as success.
+      showToast('⏳ Confirming evolution…', 'info', 9000);
+      const RECONCILE_DELAYS = [600, 1500, 2500, 4000]; // ms
+      for (let i = 0; i < RECONCILE_DELAYS.length; i++) {
+        await new Promise(r => setTimeout(r, RECONCILE_DELAYS[i]));
+        try {
+          const fresh = (await apiListChampions()).find(m => m.id === state.championId);
+          if (fresh && fresh.stageIdx > prevStageIdx) {
+            console.log(`[evolve] reconciled after poll #${i + 1}: server advanced despite lost response`);
+            await applyEvolved(fresh);
+            return;
+          }
+        } catch (reErr) {
+          console.warn(`[evolve] reconcile poll #${i + 1} failed`, reErr);
         }
-      } catch (reErr) {
-        console.warn('[evolve] reconcile fetch failed', reErr);
       }
-      // Genuinely did not advance — surface a friendly error.
+      // Genuinely did not advance after polling — surface a friendly error.
       const msg = e?.message || 'Unknown error';
       const isNetErr = /Failed to fetch|Load failed|NetworkError|aborted/i.test(msg);
       vxAlert(
@@ -13672,11 +13679,15 @@ async function apiEvolveChampion({ champion_id, evolution_potion_id }) {
   let lastErr;
   for (let attempt = 0; attempt <= DELAYS.length; attempt++) {
     try {
+      // Longer timeout (25s) than the default 12s: champion_evolve can be
+      // slow on a cold start, and aborting early turns a successful commit
+      // into a lost RESPONSE → false "Connection lost". Give the server
+      // time to actually reply.
       const res = await apiFetch(`${FN_BASE}/champion_evolve`, {
         method: 'POST',
         headers: AUTH_HEADERS,
         body: JSON.stringify({ wallet: getWallet(), champion_id, evolution_potion_id }),
-      });
+      }, 25000);
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         const code = data.error || `http_${res.status}`;
