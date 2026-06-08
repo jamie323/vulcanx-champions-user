@@ -9701,12 +9701,6 @@ let _evolveInFlight = false;
 
 async function evolve() {
   if (!canEvolve() || !state.championId) return;
-  // At L23+, Evolution Potions are no longer needed.
-  if (state.level >= 23) {
-    vxAlert('Your champion evolves automatically by feeding regular potions.',
-      { title: '⚡ Auto-evolving', icon: '⚡' });
-    return;
-  }
   if (_evolveInFlight) {
     console.warn('[evolve] bailed: already in flight');
     return;
@@ -12545,17 +12539,12 @@ function render() {
 
   const evoBtn = document.getElementById('evolveBtn');
   const ok = canEvolve();
-  // At L23+, Evolution Potions are no longer needed — evolution happens
-  // automatically when feeding normal potions. Disable the button entirely.
-  const noLongerNeeded = state.level >= 23;
   // Block evolve if the level timer is still ticking down (L20+).
   const levelLocked = _activeCh.levelStatus === 'waiting'
     && (_activeCh.levelMinutesRemaining ?? 0) > 0;
-  evoBtn.disabled = !ok || levelLocked || noLongerNeeded;
-  evoBtn.classList.toggle('ready', ok && !levelLocked && !noLongerNeeded);
-  evoBtn.textContent = noLongerNeeded
-    ? '⚡ Auto-evolve (feed potions)'
-    : levelLocked
+  evoBtn.disabled = !ok || levelLocked;
+  evoBtn.classList.toggle('ready', ok && !levelLocked);
+  evoBtn.textContent = levelLocked
     ? '⏳ Resting…'
     : (ok && next ? '⚡ Evolve to ' + next.name
       : next ? '⚡ Evolve (locked)' : 'Max form reached');
@@ -12835,11 +12824,7 @@ function render() {
   const evoRow = document.getElementById('specEvoRow');
   if (evoHint) evoHint.textContent = evolveRequirementText();
   if (evoRow) {
-    // At L23+, Evolution Potions are no longer needed — hide the card entirely.
-    // Players can feed normal potions to reach max level automatically.
-    const noLongerNeeded = state.level >= 23;
-    evoRow.style.display = noLongerNeeded ? 'none' : '';
-    evoRow.classList.toggle('evo-ready', canEvolve() && !noLongerNeeded);
+    evoRow.classList.toggle('evo-ready', canEvolve());
     evoRow.classList.toggle('empty', !state.inv.evo);
   }
   const allocRow = document.getElementById('allocPotionRow');
