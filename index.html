@@ -9701,6 +9701,12 @@ let _evolveInFlight = false;
 
 async function evolve() {
   if (!canEvolve() || !state.championId) return;
+  // At L23+, Evolution Potions are no longer needed.
+  if (state.level >= 23) {
+    vxAlert('Your champion evolves automatically by feeding regular potions.',
+      { title: '⚡ Auto-evolving', icon: '⚡' });
+    return;
+  }
   if (_evolveInFlight) {
     console.warn('[evolve] bailed: already in flight');
     return;
