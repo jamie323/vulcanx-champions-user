@@ -970,21 +970,25 @@
       max-height: 96vh;
       display: flex; flex-direction: column;
       padding: 14px 12px;
+      overflow: hidden;
     }
     #shopModal .shop-grid {
       flex: 1; overflow-y: auto;
-      max-height: 50vh;
+      min-height: 0;
       padding-right: 4px;
       margin-right: -4px;
+      margin-bottom: 12px;
     }
     #shopModal .shop-cart {
       flex-shrink: 0;
-      position: sticky; bottom: 0;
+      position: relative;
+      bottom: auto;
       background: rgba(0,0,0,0.85);
       backdrop-filter: blur(8px);
       margin: 0 -12px -14px;
       border-radius: 0 0 12px 12px;
       padding: 12px 14px;
+      border-top: 1px solid rgba(255,205,107,0.2);
     }
 
     /* Reduce fixed header height on mobile so views start below cleanly.
@@ -1079,12 +1083,43 @@
     padding: 140px 24px 60px;
   }
   .page-hd {
-    margin-bottom: 24px; display: flex; justify-content: space-between;
-    align-items: baseline; gap: 16px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid rgba(255, 205, 107, 0.15);
+    position: relative;
   }
-  .page-hd h2 { margin: 0; font-size: 28px; font-weight: 700;
-    letter-spacing: 0.3px; }
-  .page-hd .sub { color: var(--muted); font-size: 13px; }
+  .page-hd::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
+  .page-hd h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: var(--text);
+    position: relative;
+  }
+  .page-hd h2::before {
+    content: '✦';
+    margin-right: 8px;
+    color: var(--accent);
+    opacity: 0.6;
+  }
+  .page-hd .sub {
+    color: var(--muted);
+    font-size: 13px;
+    font-style: italic;
+  }
 
   .stable-grid {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -1092,13 +1127,26 @@
   }
   .champ-card {
     background: linear-gradient(135deg, rgba(40,20,10,0.5), rgba(20,12,20,0.85));
-    border: 1px solid var(--border); border-radius: 12px;
+    border: 1.5px solid rgba(255,205,107,0.25); border-radius: 12px;
     overflow: hidden; cursor: pointer;
-    transition: transform 0.2s, border-color 0.2s;
+    transition: all 0.3s ease;
     position: relative;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   }
-  .champ-card:hover { transform: translateY(-4px);
-    border-color: var(--accent); }
+  .champ-card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 50px; height: 50px;
+    background: radial-gradient(circle, rgba(255,205,107,0.15), transparent);
+    border-radius: 0 12px 0 100%;
+    z-index: 1;
+  }
+  .champ-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--accent);
+    box-shadow: 0 12px 28px rgba(255,205,107,0.2);
+  }
   .champ-card .art { aspect-ratio: 2/3; overflow: hidden;
     background: #0a0608; }
   .champ-card .art img { width: 100%; height: 100%; object-fit: cover;
@@ -5567,11 +5615,23 @@
   .howto-panel {
     display: none;
     background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 200, 90, 0.15);
-    border-radius: 14px;
+    border: 2px solid rgba(255, 205, 107, 0.25);
+    border-radius: 12px;
     padding: 44px 48px;
     animation: howtoPanelIn 0.25s ease-out;
+    position: relative;
+    box-shadow: 0 0 30px rgba(255, 205, 107, 0.1), inset 0 0 30px rgba(255, 205, 107, 0.03);
   }
+  .howto-panel::before,
+  .howto-panel::after {
+    content: '✦';
+    position: absolute;
+    color: var(--accent);
+    font-size: 18px;
+    opacity: 0.6;
+  }
+  .howto-panel::before { top: 12px; left: 24px; }
+  .howto-panel::after { bottom: 12px; right: 24px; }
   @media (max-width: 768px) {
     .howto-panel { padding: 28px 22px; }
   }
@@ -5586,8 +5646,23 @@
     gap: 18px; margin: 22px 0 8px;
   }
   .howto-feature-card {
-    background: rgba(255,205,107,0.05); border: 1px solid rgba(255,205,107,0.18);
-    border-radius: 12px; padding: 20px 18px;
+    background: rgba(20,12,20,0.85); border: 1.5px solid rgba(255,205,107,0.25);
+    border-radius: 10px; padding: 20px 18px;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  .howto-feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 30px; height: 30px;
+    background: radial-gradient(circle, rgba(255,205,107,0.15), transparent);
+    border-radius: 0 10px 0 100%;
+  }
+  .howto-feature-card:hover {
+    border-color: rgba(255,205,107,0.4);
+    box-shadow: 0 0 15px rgba(255,205,107,0.15);
+    transform: translateY(-2px);
   }
   .howto-feature-card .ic { font-size: 32px; line-height: 1; margin-bottom: 10px; }
   .howto-feature-card h4 {
@@ -5718,6 +5793,301 @@
     .howto-panel { padding: 22px 20px; }
     .howto-panel h2 { font-size: 22px; }
     .howto-steps-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ────────────────────── ORNATE MEDIEVAL PREMIUM STYLING ───────────────────── */
+  /* Decorative frame styles for gamified medieval aesthetic across all screens */
+
+  .ornate-frame {
+    position: relative;
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(255,205,107,0.08), rgba(255,205,107,0.03));
+    box-shadow:
+      0 0 20px rgba(255,205,107,0.15),
+      inset 0 0 30px rgba(255,205,107,0.05);
+  }
+
+  .ornate-frame::before {
+    content: '✦';
+    position: absolute;
+    top: -8px; left: 20px;
+    font-size: 16px;
+    color: var(--accent);
+  }
+
+  .ornate-frame::after {
+    content: '✦';
+    position: absolute;
+    top: -8px; right: 20px;
+    font-size: 16px;
+    color: var(--accent);
+  }
+
+  .ornate-divider {
+    height: 2px;
+    background: linear-gradient(90deg,
+      transparent,
+      var(--accent),
+      transparent);
+    margin: 16px 0;
+    position: relative;
+  }
+
+  .ornate-divider::before {
+    content: '✦';
+    position: absolute;
+    left: 50%;
+    top: -10px;
+    transform: translateX(-50%);
+    color: var(--accent);
+    font-size: 12px;
+    background: var(--bg-deep);
+    padding: 0 8px;
+  }
+
+  .ornate-header {
+    text-align: center;
+    position: relative;
+    padding: 24px 0;
+  }
+
+  .ornate-header h1, .ornate-header h2, .ornate-header h3 {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--accent);
+    margin: 0;
+    text-shadow: 0 0 10px rgba(255,205,107,0.3);
+    letter-spacing: 1px;
+  }
+
+  .ornate-header .eyebrow {
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .ornate-card {
+    background: rgba(20,12,20,0.85);
+    border: 1px solid rgba(255,205,107,0.25);
+    border-radius: 10px;
+    padding: 16px;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+
+  .ornate-card:hover {
+    border-color: rgba(255,205,107,0.4);
+    box-shadow: 0 0 15px rgba(255,205,107,0.15);
+  }
+
+  .ornate-card .card-number {
+    position: absolute;
+    top: 8px; right: 10px;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--accent);
+    opacity: 0.6;
+  }
+
+  /* Day counter tiles for daily reward */
+  .day-counter {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    padding: 16px;
+  }
+
+  .day-tile {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: rgba(20,12,20,0.85);
+    border: 1.5px solid rgba(255,205,107,0.2);
+    border-radius: 10px;
+    cursor: default;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .day-tile.completed {
+    background: rgba(125,255,154,0.08);
+    border-color: rgba(125,255,154,0.4);
+  }
+
+  .day-tile.completed::before {
+    content: '✓';
+    position: absolute;
+    top: 4px; right: 6px;
+    color: var(--ok);
+    font-weight: 800;
+    font-size: 12px;
+  }
+
+  .day-tile.today {
+    background: rgba(255,205,107,0.12);
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(255,205,107,0.25);
+    transform: scale(1.08);
+  }
+
+  .day-tile .day-label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+  }
+
+  .day-tile .day-num {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  .day-tile.today .day-num {
+    color: var(--accent);
+  }
+
+  .day-tile .day-emoji {
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  /* Trophy/rank badge styling */
+  .rank-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-weight: 800;
+    font-size: 14px;
+    position: relative;
+    background: rgba(255,205,107,0.1);
+    border: 2px solid rgba(255,205,107,0.3);
+  }
+
+  .rank-badge.top1 {
+    background: linear-gradient(135deg, rgba(255,205,107,0.2), rgba(255,140,40,0.1));
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 15px rgba(255,205,107,0.3);
+  }
+
+  .rank-badge.top2 {
+    background: rgba(200,200,200,0.08);
+    border-color: rgba(200,200,200,0.3);
+    color: rgba(200,200,200,0.8);
+  }
+
+  .rank-badge.top3 {
+    background: rgba(210,170,100,0.08);
+    border-color: rgba(210,170,100,0.3);
+    color: rgba(210,170,100,0.8);
+  }
+
+  .rank-badge::before {
+    content: '🏆';
+    position: absolute;
+    top: -8px;
+    font-size: 14px;
+    opacity: 0.5;
+  }
+
+  /* Leaderboard row enhancements */
+  .lb-row-enhanced {
+    display: grid;
+    grid-template-columns: 50px 1fr auto;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(20,12,20,0.85);
+    border-bottom: 1px dashed rgba(255,205,107,0.15);
+    align-items: center;
+    transition: all 0.2s ease;
+  }
+
+  .lb-row-enhanced:hover {
+    background: rgba(20,12,20,0.95);
+    border-color: rgba(255,205,107,0.3);
+  }
+
+  .lb-row-enhanced.top-rank {
+    background: rgba(255,205,107,0.08);
+    border-left: 3px solid var(--accent);
+  }
+
+  /* Adventure card premium styling */
+  .adventure-card-premium {
+    background: rgba(20,12,20,0.85);
+    border: 1.5px solid rgba(255,205,107,0.2);
+    border-radius: 10px;
+    padding: 14px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .adventure-card-premium::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 50px; height: 50px;
+    background: radial-gradient(circle, rgba(255,205,107,0.2), transparent);
+    border-radius: 0 10px 0 50%;
+  }
+
+  .adventure-card-premium:hover {
+    border-color: rgba(255,205,107,0.4);
+    box-shadow: 0 0 20px rgba(255,205,107,0.15);
+    transform: translateY(-2px);
+  }
+
+  .adventure-card-premium .difficulty-badge {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: rgba(255,107,46,0.15);
+    border: 1px solid rgba(255,107,46,0.3);
+    color: var(--legend);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  /* Premium section header */
+  .premium-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px;
+    border-bottom: 2px solid rgba(255,205,107,0.2);
+    margin-bottom: 16px;
+  }
+
+  .premium-section-header .header-icon {
+    font-size: 24px;
+  }
+
+  .premium-section-header h2 {
+    color: var(--accent);
+    font-size: 18px;
+    font-weight: 800;
+    margin: 0;
+  }
+
+  .premium-section-header .header-subtitle {
+    color: var(--muted);
+    font-size: 11px;
+    margin-left: auto;
   }
 </style>
 </head>
@@ -6215,10 +6585,10 @@
 <!-- ======== VIEW: HOW IT WORKS (full page) ======== -->
 <div class="view view-howto">
   <div class="howto-view-wrap">
-    <div class="howto-hero">
+    <div class="howto-hero ornate-frame" style="padding: 32px 24px;">
       <div class="welcome-eyebrow">✦ QA · ELYSIUM TESTNET ✦</div>
-      <h1>How it Works</h1>
-      <p>Adopt a baby creature · Feed it potions · Raise it through 20 life stages to Legendary.</p>
+      <h1 style="color: var(--accent); font-size: 36px; text-shadow: 0 0 10px rgba(255,205,107,0.3);">How It Works</h1>
+      <p style="color: var(--muted); margin-top: 12px;">Adopt a baby creature · Feed it potions · Raise it through 20 life stages to Legendary.</p>
     </div>
 
     <div class="howto-tabs" role="tablist">
@@ -7003,16 +7373,23 @@
 <!-- ======== VIEW: QUESTS / ADVENTURES (Phase L) ======== -->
 <div class="view view-quests">
   <div class="quests-wrap">
-    <div class="page-hd">
+    <div class="ornate-frame" style="padding: 24px; margin-bottom: 24px;">
+      <div class="ornate-header" style="margin: -24px -24px 16px; padding-bottom: 0;">
+        <span class="eyebrow">🗺️ ADVENTURE AWAITS 🗺️</span>
+        <h2 style="margin-bottom: 8px;">Send Champions on Adventures</h2>
+      </div>
+      <div class="sub" style="text-align: center;">Rewards apply directly to stats + Evolution Bar.</div>
+      <!-- Energy chip (2026-05-29, Jamie): adventures cost energy
+           (quick 10 / standard 20 / long 30 ⚡) but the page never showed
+           it. Mirrors the arena chip; reflects the picked champion. -->
+      <div class="adv-energy-chip" id="advEnergyChip" style="display:none;margin-top:12px;">
+        <span id="advEnergyText">⚡ —</span>
+      </div>
+    </div>
+    <div class="page-hd" style="display:none;">
       <div>
         <h2>🗺️ Adventures</h2>
         <div class="sub">Send champions on adventures. Rewards apply directly to stats + Evolution Bar.</div>
-        <!-- Energy chip (2026-05-29, Jamie): adventures cost energy
-             (quick 10 / standard 20 / long 30 ⚡) but the page never showed
-             it. Mirrors the arena chip; reflects the picked champion. -->
-        <div class="adv-energy-chip" id="advEnergyChip" style="display:none;">
-          <span id="advEnergyText">⚡ —</span>
-        </div>
       </div>
     </div>
 
@@ -7143,17 +7520,28 @@
 
   .quests-grid {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 12px;
+    gap: 14px;
+    margin-top: 16px;
   }
   .quest-card {
-    background: rgba(20,12,20,0.85); border: 1px solid rgba(255,205,107,0.18);
-    border-radius: 12px; padding: 14px; cursor: pointer; transition: all 0.15s;
+    background: rgba(20,12,20,0.85); border: 1.5px solid rgba(255,205,107,0.25);
+    border-radius: 10px; padding: 14px; cursor: pointer; transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .quest-card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 40px; height: 40px;
+    background: radial-gradient(circle, rgba(255,205,107,0.2), transparent);
+    border-radius: 0 10px 0 100%;
   }
   .quest-card:hover {
-    border-color: rgba(255,205,107,0.5); transform: translateY(-2px);
-    box-shadow: 0 4px 18px rgba(0,0,0,0.4);
+    border-color: rgba(255,205,107,0.45); transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(255,205,107,0.15);
   }
-  .quest-card.disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .quest-card.disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
   .quest-card.disabled:hover { border-color: rgba(255,205,107,0.18); transform: none; box-shadow: none; }
   .quest-card .qc-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
   .quest-card .qc-emoji { font-size: 22px; }
@@ -8219,18 +8607,23 @@
 <!-- Phase K: Daily login reward modal — opens automatically on first
      login of the day, shows 7-day ladder + current-day reward + claim CTA. -->
 <div class="modal-backdrop" id="dailyClaimModal">
-  <div class="modal" style="width: 480px;">
-    <h3 style="text-align:center;">🔥 Daily Login Reward</h3>
-    <div class="sub" id="dailyStreakLine" style="text-align:center;">
-      Day <b style="color:var(--accent);">1</b> of your login streak.
+  <div class="modal ornate-frame" style="width: 520px; padding: 24px;">
+    <div class="ornate-header" style="margin: -24px -24px 20px;">
+      <span class="eyebrow">🔥 DAILY REWARDS 🔥</span>
+      <h2>Login Streak</h2>
     </div>
-    <div id="dailyLadder" class="daily-ladder"></div>
-    <div id="dailyReward" class="daily-reward-box">
-      <div class="daily-reward-title">Today's reward</div>
+    <div class="sub" id="dailyStreakLine" style="text-align:center; margin-bottom: 16px;">
+      Day <b style="color:var(--accent);">1</b> of your login streak
+    </div>
+    <div class="ornate-divider"></div>
+    <div id="dailyLadder" class="day-counter"></div>
+    <div class="ornate-divider"></div>
+    <div id="dailyReward" class="daily-reward-box" style="margin: 16px 0;">
+      <div class="daily-reward-title">✨ TODAY'S REWARD ✨</div>
       <div id="dailyRewardItems" class="daily-reward-items"></div>
     </div>
-    <button class="btn-primary" id="dailyClaimBtn" style="width:100%;margin-top:10px;">⚡ Claim</button>
-    <div id="dailyClaimNote" style="text-align:center;margin-top:8px;font-size:11px;color:var(--muted);">
+    <button class="btn-primary" id="dailyClaimBtn" style="width:100%;margin-top:16px;background:linear-gradient(180deg,#ffcd6b,#ff8e2e);color:#1a0e08;border:none;font-weight:800;text-transform:uppercase;letter-spacing:1px;">⚡ Claim Reward</button>
+    <div id="dailyClaimNote" style="text-align:center;margin-top:12px;font-size:11px;color:var(--muted);font-style:italic;">
       Come back tomorrow to keep your streak going. Miss a day → streak resets to 1.
     </div>
   </div>
@@ -8296,32 +8689,50 @@
     }
     .streak-pill .streak-claim-label { font-size: 10px; padding: 2px 6px; }
   }
-  .daily-ladder {
-    display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
-    margin: 14px 0;
+  .daily-ladder,
+  .day-counter {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;
+    margin: 0;
+    padding: 0;
   }
-  .daily-ladder .dl-day {
-    background: rgba(20,12,20,0.85); border: 1px solid var(--border);
-    border-radius: 8px; padding: 8px 4px; text-align: center;
-    font-size: 10px; color: var(--muted); position: relative;
-    min-height: 64px; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 3px;
+  .daily-ladder .dl-day,
+  .day-counter .dl-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: rgba(20,12,20,0.85);
+    border: 1.5px solid rgba(255,205,107,0.2);
+    border-radius: 10px;
+    text-align: center;
+    font-size: 10px;
+    color: var(--muted);
+    position: relative;
+    transition: all 0.3s ease;
+    cursor: default;
   }
-  .daily-ladder .dl-day.past {
-    background: rgba(125,255,154,0.06); border-color: rgba(125,255,154,0.4);
+  .daily-ladder .dl-day.past,
+  .day-counter .dl-day.past {
+    background: rgba(125,255,154,0.08); border-color: rgba(125,255,154,0.4);
     color: #7dff9a;
   }
-  .daily-ladder .dl-day.past::after {
-    content: '✓'; position: absolute; top: 2px; right: 4px;
-    color: #7dff9a; font-weight: 800; font-size: 10px;
+  .daily-ladder .dl-day.past::before,
+  .day-counter .dl-day.past::before {
+    content: '✓'; position: absolute; top: 4px; right: 6px;
+    color: #7dff9a; font-weight: 800; font-size: 12px;
   }
-  .daily-ladder .dl-day.today {
+  .daily-ladder .dl-day.today,
+  .day-counter .dl-day.today {
     background: rgba(255,205,107,0.12); border-color: var(--accent);
-    color: var(--accent); transform: scale(1.05);
-    box-shadow: 0 0 14px rgba(255,205,107,0.3);
+    color: var(--accent); transform: scale(1.08);
+    box-shadow: 0 0 16px rgba(255,205,107,0.25);
   }
-  .daily-ladder .dl-num { font-weight: 800; font-size: 13px; letter-spacing: 0.5px; }
-  .daily-ladder .dl-icon { font-size: 18px; line-height: 1; }
+  .daily-ladder .dl-num,
+  .day-counter .dl-num { font-weight: 800; font-size: 16px; letter-spacing: 0.5px; }
+  .daily-ladder .dl-icon,
+  .day-counter .dl-icon { font-size: 18px; line-height: 1; }
   .daily-reward-box {
     background: rgba(255,205,107,0.08); border: 1px solid rgba(255,205,107,0.3);
     border-radius: 8px; padding: 12px; margin-top: 6px;
@@ -8530,27 +8941,32 @@ window.VxQuestCelebration = {
 </div>
 
 <div class="modal-backdrop" id="leaderboardModal">
-  <div class="modal" style="width: 480px;">
-    <h3>🏆 Champion Leaderboard</h3>
-    <div class="sub" id="lbSubtitle">Ranked by Power Score (stage + stats + ELO).</div>
+  <div class="modal ornate-frame" style="width: 520px; padding: 24px;">
+    <div class="ornate-header" style="margin: -24px -24px 20px;">
+      <span class="eyebrow">🏆 CHAMPION RANKS 🏆</span>
+      <h2>Leaderboard</h2>
+      <div class="sub" id="lbSubtitle" style="font-size:11px;margin-top:8px;">Ranked by Power Score (stage + stats + ELO)</div>
+    </div>
+    <div class="ornate-divider"></div>
     <!-- Period toggle (8 May): all-time vs current week. Weekly resets
          every Monday 16:00 UTC (4pm GMT) and is sorted by ELO gained
          in arena matches during the window. -->
-    <div style="display:flex; gap:4px; margin-bottom:8px;">
-      <button class="sp-btn lb-period active" data-period="all">⏳ All-time</button>
-      <button class="sp-btn lb-period" data-period="week">📅 This week</button>
+    <div style="display:flex; gap:4px; margin-bottom:12px; flex-wrap: wrap;">
+      <button class="sp-btn lb-period active" data-period="all" style="flex:1;min-width:120px;">⏳ All-time</button>
+      <button class="sp-btn lb-period" data-period="week" style="flex:1;min-width:120px;">📅 This week</button>
     </div>
-    <div style="display:flex; gap:4px; margin-bottom:14px;">
-      <button class="sp-btn lb-filter active" data-sp="all">All Species</button>
-      <button class="sp-btn lb-filter" data-sp="orc">🟢 Orc</button>
-      <button class="sp-btn lb-filter" data-sp="elf">🌙 Elf</button>
-      <button class="sp-btn lb-filter" data-sp="goblin">👺 Goblin</button>
+    <div style="display:flex; gap:4px; margin-bottom:16px; flex-wrap: wrap;">
+      <button class="sp-btn lb-filter active" data-sp="all" style="flex:1;min-width:100px;">All Species</button>
+      <button class="sp-btn lb-filter" data-sp="orc" style="flex:1;min-width:100px;">🟢 Orc</button>
+      <button class="sp-btn lb-filter" data-sp="elf" style="flex:1;min-width:100px;">🌙 Elf</button>
+      <button class="sp-btn lb-filter" data-sp="goblin" style="flex:1;min-width:100px;">👺 Goblin</button>
     </div>
+    <div class="ornate-divider"></div>
     <div id="lbList" style="max-height: 380px; overflow-y: auto;
-         font-size: 12px;"></div>
+         font-size: 12px; padding: 8px 0;"></div>
     <div id="lbResetTimer" style="font-size:10px;color:var(--muted);
          margin-top:8px;text-align:center;display:none;"></div>
-    <button class="btn-primary" id="lbCloseBtn" style="margin-top:14px;">Close</button>
+    <button class="btn-primary" id="lbCloseBtn" style="margin-top:16px;width:100%;">Close</button>
   </div>
 </div>
 
@@ -8597,21 +9013,70 @@ window.VxQuestCelebration = {
   .cq-row.completed .cq-bar-label { color: var(--legend); font-weight: 700; }
 </style>
 <style>
-  .lb-row { display: grid; grid-template-columns: 40px 40px 1fr auto;
-    gap: 10px; padding: 8px 4px; border-bottom: 1px dashed var(--border);
-    align-items: center; }
-  .lb-row:last-child { border: none; }
-  .lb-rank { color: var(--accent); font-weight: 700; text-align: center; }
-  .lb-rank.top3 { color: var(--legend); }
+  .lb-row {
+    display: grid;
+    grid-template-columns: 50px 1fr auto;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(20,12,20,0.85);
+    border-bottom: 1px dashed rgba(255,205,107,0.15);
+    align-items: center;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    transition: all 0.2s ease;
+  }
+  .lb-row:hover {
+    background: rgba(20,12,20,0.95);
+    border-color: rgba(255,205,107,0.3);
+  }
+  .lb-row:last-child { border: none; margin-bottom: 0; }
+
+  .lb-rank {
+    font-weight: 800;
+    text-align: center;
+    color: var(--accent);
+    font-size: 16px;
+    background: rgba(255,205,107,0.1);
+    border: 1.5px solid rgba(255,205,107,0.2);
+    border-radius: 6px;
+    padding: 6px 4px;
+    min-width: 50px;
+  }
+
+  .lb-rank.top1 {
+    background: rgba(255,205,107,0.2);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 12px rgba(255,205,107,0.2);
+  }
+
+  .lb-rank.top2 {
+    background: rgba(200,200,200,0.08);
+    border-color: rgba(200,200,200,0.25);
+    color: rgba(200,200,200,0.8);
+  }
+
+  .lb-rank.top3 {
+    background: rgba(210,170,100,0.08);
+    border-color: rgba(210,170,100,0.25);
+    color: rgba(210,170,100,0.8);
+  }
+
   .lb-icon { font-size: 22px; text-align: center; }
   .lb-info { min-width: 0; }
-  .lb-name { font-weight: 700; font-size: 13px; }
+  .lb-name { font-weight: 700; font-size: 13px; color: var(--text); }
   .lb-detail { color: var(--muted); font-size: 10px;
-    text-transform: uppercase; letter-spacing: 0.5px; }
-  .lb-score { color: var(--accent); font-weight: 700; font-size: 13px; }
+    text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+  .lb-score { color: var(--accent); font-weight: 800; font-size: 14px; text-align: right; }
   .lb-score .e { color: var(--muted); font-size: 10px; font-weight: 400; }
-  .lb-row.me { background: rgba(255,205,107,0.08); border-radius: 4px; }
-  .lb-row.me .lb-name { color: var(--accent); }
+
+  .lb-row.me {
+    background: rgba(255,205,107,0.1);
+    border: 1.5px solid rgba(255,205,107,0.3);
+    box-shadow: 0 0 12px rgba(255,205,107,0.15);
+  }
+  .lb-row.me .lb-name { color: var(--accent); font-weight: 800; }
+  .lb-row.me .lb-rank { background: rgba(255,205,107,0.15); border-color: var(--accent); }
 </style>
 
 <script>
@@ -9198,6 +9663,14 @@ async function tryEvolveFromPotion() {
   // have been (no wallet / no champion selected / mid-flight). Now
   // we early-bail with a friendlier message before touching the
   // network so testers stop seeing raw "Failed to fetch" errors.
+
+  // If already Legendary, silently return — don't show an error dialog
+  // for a state that's not an error (Trello: L23+ - "no longer need
+  // Evolve potion after level 23, error message keeps popping up").
+  if (state.stageIdx >= STAGES.length - 1) {
+    return;
+  }
+
   if (!state.championId) {
     return vxAlert('Pick a champion first — your stable is on the left.',
       { title: 'No champion selected', icon: '⚡' });
@@ -9706,11 +10179,11 @@ function renderLeaderboard(filter = 'all') {
   }
   withMe.forEach((r, i) => {
     const rankLabel = r.me ? '—' : (r.rank || i+1);
-    const isTop3 = !r.me && rankLabel <= 3;
+    const rankClass = !r.me && rankLabel === 1 ? 'top1' : !r.me && rankLabel === 2 ? 'top2' : !r.me && rankLabel === 3 ? 'top3' : '';
     const icon = SPECIES_ICON[r.species];
     list.insertAdjacentHTML('beforeend',
-      `<div class="lb-row ${r.me?'me':''}">
-        <div class="lb-rank ${isTop3?'top3':''}">${r.me?'YOU':'#'+rankLabel}</div>
+      `<div class="lb-row ${r.me?'me':''}${!r.me && rankLabel <= 3 ? ' top-rank' : ''}">
+        <div class="lb-rank ${rankClass}">${r.me?'YOU':'#'+rankLabel}</div>
         <div class="lb-icon">${icon}</div>
         <div class="lb-info">
           <div class="lb-name">${r.name}</div>
@@ -12852,7 +13325,17 @@ function mapChampion(row) {
     currentHp:             row.hp_now ?? row.current_hp_pct ?? 100,
     levelStatus:           row.level_status || 'ready',
     levelReadyAt:          row.level_ready_at || null,
-    levelMinutesRemaining: row.level_minutes_remaining || 0,
+    // Calculate remaining minutes: if level_ready_at exists, use it; else use DB value.
+    // If ready time has passed, remaining is 0 (not negative).
+    levelMinutesRemaining: (() => {
+      if (row.level_ready_at) {
+        const now = Date.now();
+        const readyTime = new Date(row.level_ready_at).getTime();
+        const minsRemaining = Math.max(0, Math.ceil((readyTime - now) / 60000));
+        return minsRemaining;
+      }
+      return Math.max(0, row.level_minutes_remaining || 0);
+    })(),
     _backend: true,  // flag for debug / migration
   };
 }
@@ -16837,6 +17320,22 @@ async function refreshWalletBalance(wallet, forceRefresh = false) {
   try {
     const provider = window.ethereum;
     if (!provider) { balEl.style.display = 'none'; return; }
+
+    // Ensure we're on Elysium (chain 1339) before fetching balance
+    try {
+      const currentChain = await provider.request({ method: 'eth_chainId' });
+      if (currentChain !== '0x53b') {  // 0x53b = 1339 in hex
+        // Try to switch to Elysium; if it fails, continue anyway
+        await provider.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0x53b' }],
+        }).catch(() => {});
+      }
+    } catch (e) {
+      // Ignore chain switch errors — proceed with balance fetch on current chain
+      console.warn('[wallet] chain switch failed', e);
+    }
+
     const hex = await provider.request({
       method: 'eth_getBalance',
       params: [wallet, 'latest'],
