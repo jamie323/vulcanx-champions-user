@@ -6096,6 +6096,16 @@
 </head>
 <body>
 
+<!-- ── Gateway URL — MUST run before auth.js loads (auth.js captures
+     GATEWAY_URL as a closure variable at IIFE execution time).         -->
+<script>
+  if (!window.__VX_GATEWAY_URL__
+      && (location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    window.__VX_GATEWAY_URL__ = 'http://localhost:8080';
+  }
+  window.__VX_GATEWAY_URL__ = window.__VX_GATEWAY_URL__ || 'https://dev-new-api.vulcan-x.io';
+</script>
+
 <!-- ── Asset version — bump this ONE value on every deploy ──────────────
      The Dockerfile also auto-stamps this at docker build time via sed,
      so manual bumps are only needed for non-Docker local deploys.       -->
@@ -6107,15 +6117,6 @@
   ['wallet.js','auth.js','stories.js','equipment.js'].forEach(function(s) {
     document.write('<scr'+'ipt src="'+s+'?v='+window._V+'"><\/scr'+'ipt>');
   });
-</script>
-
-<!-- Vulcan-X gateway SSO config + helper module. -->
-<script>
-  if (!window.__VX_GATEWAY_URL__
-      && (location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
-    window.__VX_GATEWAY_URL__ = 'http://localhost:8080';
-  }
-  window.__VX_GATEWAY_URL__ = window.__VX_GATEWAY_URL__ || 'https://dev-new-api.vulcan-x.io';
 </script>
 
 <!-- VulcanX quest tracker — ships metrics to the shared cross-game
