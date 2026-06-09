@@ -17000,7 +17000,7 @@ async function boot() {
     // visibilitychange→/me pattern.
     let _vxSsoRecheckInFlight = false;
     let _lastSeenLogoutTs = window.vxAuth.getLogoutBroadcast();
-    document.addEventListener('visibilitychange', async () => {
+    const _onSsoSync = async () => {
       if (document.visibilityState !== 'visible') return;
 
       // Check vx_logout_ts first — if another app logged out, clear immediately
@@ -17036,7 +17036,9 @@ async function boot() {
         }
       } catch (_) { /* ignore */ }
       finally { _vxSsoRecheckInFlight = false; }
-    });
+    };
+    document.addEventListener('visibilitychange', _onSsoSync);
+    window.addEventListener('focus', _onSsoSync);
   }
 
   // ── Share-link deep-link, public path ──
