@@ -14470,7 +14470,19 @@ function offerReconnect() {
           // surfaced "session expired".
           try { await window.vxAuth?.clearAuth(); } catch (_) {}
           localStorage.removeItem('vx_auth');
-          location.reload();
+          // Bug (Discord): "Reconnect doesn't pop MetaMask, just redirects
+          // to home." It used to bounce to the wallet gate via reload. When
+          // an injected provider is present, drive the connect directly so
+          // MetaMask actually prompts (connectWallet pops the wallet + sign
+          // dialog, then reloads into the app on success). Fall back to the
+          // gate only when there's no injected provider (mobile/WC) or the
+          // user dismisses the prompt.
+          if (window.ethereum && typeof connectWallet === 'function') {
+            try { await connectWallet('injected'); } catch (_) {}
+            location.reload();  // reached only if connect didn't navigate away
+          } else {
+            location.reload();
+          }
         }
         resolve();
       },
