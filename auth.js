@@ -119,6 +119,7 @@
             : new Date(Date.now() + 60 * 60 * 1000);
 
         saveJwtToStorage(token, expiresAt, walletAddress);
+        setLoginBroadcast(); // notify other .vulcan-x.io subdomains of the new session
 
         return { token: token, expiresAt: expiresAt, user: data.user || null };
     }
@@ -159,6 +160,7 @@
     // JS cookie clear belt-and-suspenders.
     function clearAuth() {
         clearLocalAuth();
+        setLogoutBroadcast(); // notify other .vulcan-x.io subdomains
         if (!GATEWAY_URL) {
             clearCookieClientSide();
             return Promise.resolve();
@@ -180,14 +182,147 @@
         } catch (e) { /* quota / private mode */ }
     }
 
+    // ── Cross-subdomain broadcast cookies ────────────────────────────────────
+    // JS-writable cookies on Domain=.vulcan-x.io shared across all subdomains.
+    // localStorage events are origin-scoped and cannot cross subdomains.
+
+    var LOGOUT_BROADCAST_KEY = 'vx_logout_ts';
+    var LOGIN_BROADCAST_KEY  = 'vx_login_ts';
+
+    function getRootDomain() {
+        if (typeof window === 'undefined') return undefined;
+        var parts = window.location.hostname.split('.');
+        if (parts.length < 2) return undefined;
+        return '.' + parts.slice(-2).join('.');
+    }
+
+    function writeBroadcastCookie(key) {
+        if (typeof document === 'undefined') return;
+        try {
+            var domain    = getRootDomain();
+            var secure    = location.protocol === 'https:' ? '; Secure' : '';
+            var domainAttr = domain ? '; Domain=' + domain : '';
+            var expires   = new Date(Date.now() + 5 * 60 * 1000).toUTCString();
+            document.cookie = key + '=' + Date.now() + '; Path=/; Expires=' + expires + '; SameSite=Strict' + domainAttr + secure;
+        } catch (e) { /* ignore */ }
+    }
+
+    function readBroadcastCookie(key) {
+        if (typeof document === 'undefined') return 0;
+        try {
+            var match = document.cookie.match(new RegExp('(?:^|;\\s*)' + key + '=([^;]+)'));
+            return match ? parseInt(match[1], 10) : 0;
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    function setLoginBroadcast()  { writeBroadcastCookie(LOGIN_BROADCAST_KEY); }
+    function setLogoutBroadcast() { writeBroadcastCookie(LOGOUT_BROADCAST_KEY); }
+    function getLoginBroadcast()  { return readBroadcastCookie(LOGIN_BROADCAST_KEY); }
+    function getLogoutBroadcast() { return readBroadcastCookie(LOGOUT_BROADCAST_KEY); }
+
+    /**
+     * Poll vx_logout_ts every 1.5s. Calls onLogout() when another subdomain logs out.
+     * Returns a cleanup function.
+     */
+    function startCrossdomainLogoutWatch(onLogout) {
+        var knownTs = { current: getLogoutBroadcast() };
+        var id = setInterval(function () {
+            var ts = getLogoutBroadcast();
+            if (ts !== knownTs.current) {
+                knownTs.current = ts;
+                if (ts > 0) {
+                    try { onLogout(); } catch (e) { /* never let the callback crash the poll */ }
+                }
+            }
+        }, 1500);
+        return function () { clearInterval(id); };
+    }
+
+    /**
+     * Full SSO sync — covers both while-tab-visible and tab-switch cases.
+     *
+     * Polls vx_login_ts and vx_logout_ts every 1.5s. When a login broadcast is
+     * detected and /me confirms the session, calls onLogin(user). When a logout
+     * broadcast is detected (or /me returns non-200 on a tab switch), calls
+     * onLogout(). Also fires on visibilitychange so a tab-switch back always
+     * re-validates.
+     *
+     * @param {(user: object) => void} onLogin   Called when an SSO login is detected
+     * @param {() => void}             onLogout  Called when a logout is detected
+     * @returns {() => void}                     Cleanup — call to stop all sync
+     */
+    function startSSOSync(onLogin, onLogout) {
+        if (!GATEWAY_URL) return function () {};
+
+        var knownLoginTs  = getLoginBroadcast();
+        var knownLogoutTs = getLogoutBroadcast();
+        var inFlight      = false;
+
+        async function runMeCheck() {
+            if (inFlight) return;
+            inFlight = true;
+            try {
+                var user = await verifyCookieIdentity();
+                if (user && user.walletAddress) {
+                    if (typeof onLogin === 'function') {
+                        try { onLogin(user); } catch (e) { /* ignore callback errors */ }
+                    }
+                } else {
+                    if (typeof onLogout === 'function') {
+                        try { onLogout(); } catch (e) { /* ignore callback errors */ }
+                    }
+                }
+            } catch (e) {
+                // network blip — keep current state
+            } finally {
+                inFlight = false;
+            }
+        }
+
+        var pollId = setInterval(function () {
+            var loginTs  = getLoginBroadcast();
+            var logoutTs = getLogoutBroadcast();
+
+            if (loginTs !== knownLoginTs) {
+                knownLoginTs = loginTs;
+                if (loginTs > 0) void runMeCheck();
+            }
+            if (logoutTs !== knownLogoutTs) {
+                knownLogoutTs = logoutTs;
+                if (logoutTs > 0 && typeof onLogout === 'function') {
+                    try { onLogout(); } catch (e) { /* ignore */ }
+                }
+            }
+        }, 1500);
+
+        function onVisibilityChange() {
+            if (document.visibilityState === 'visible') void runMeCheck();
+        }
+
+        document.addEventListener('visibilitychange', onVisibilityChange);
+
+        return function () {
+            clearInterval(pollId);
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+        };
+    }
+
     // Expose as window.vxAuth — wallet.js + inline boot code in index.html
     // both consume from this single global.
     global.vxAuth = {
-        isAuthEnabled:        isAuthEnabled,
-        loadCachedJwt:        loadCachedJwt,
-        verifyCookieIdentity: verifyCookieIdentity,
-        runAuthFlow:          runAuthFlow,
-        clearLocalAuth:       clearLocalAuth,
-        clearAuth:            clearAuth,
+        isAuthEnabled:               isAuthEnabled,
+        loadCachedJwt:               loadCachedJwt,
+        verifyCookieIdentity:        verifyCookieIdentity,
+        runAuthFlow:                 runAuthFlow,
+        clearLocalAuth:              clearLocalAuth,
+        clearAuth:                   clearAuth,
+        setLoginBroadcast:           setLoginBroadcast,
+        setLogoutBroadcast:          setLogoutBroadcast,
+        getLoginBroadcast:           getLoginBroadcast,
+        getLogoutBroadcast:          getLogoutBroadcast,
+        startCrossdomainLogoutWatch: startCrossdomainLogoutWatch,
+        startSSOSync:                startSSOSync,
     };
 })(typeof window !== 'undefined' ? window : this);
