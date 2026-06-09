@@ -16,3 +16,15 @@ allbloodlines_v1/
 
 # Old arena prototype screenshots (pre-Campaign era).
 arena-*.png
+
+# Farhan NFT art bundles (large; art is already served from evolution20/)
+Farhan_baby_mint_images/
+Farhan_baby_mint_images.zip
+Farhan_evolution_art_440/
+Farhan_evolution_art_440.zip
+
+# Superseded NFT spec drafts + scratch (nft_minting_spec_final.json is canonical)
+all_nft_minting_spec.json
+baby_nft_minting_spec.json
+generate_full_nft_spec.js
+bloodlines.json.bak
