@@ -6122,7 +6122,7 @@
 <!-- VulcanX quest tracker — ships metrics to the shared cross-game
      quest gateway (Runner/Poker/Champions). Pure ES module, no build.
      Exposes window.VxQuestTracker for inline scripts to call. -->
-<script type="module" src="vulcanx/index.js?v=20260609"></script>
+<script type="module" src="vulcanx/index.js?v=202606091"></script>
 <script>
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
@@ -14435,6 +14435,16 @@ async function signDummyTx(label) {
   } catch (e) {
     const msg = (e && e.message) || '';
     if (/session expired|not connected|Wallet not connected/i.test(msg)) {
+      // SSO-only session: wallet provider was never connected (user arrived via
+      // cookie from another app). Skip the "session expired" modal — go straight
+      // to the connect flow so the user can sign without seeing an error.
+      if (!window.vxWallet.connected) {
+        try {
+          await connectWallet(window.ethereum ? 'injected' : 'walletconnect');
+        } catch (_) {}
+        // connectWallet() reloads on success. If still here the user cancelled.
+        throw new Error('Wallet connection required.');
+      }
       await offerReconnect();
       // Whatever the user chose, the current flow is dead.
       throw new Error('Wallet session expired.');
@@ -17561,15 +17571,30 @@ async function refreshWalletBalance(wallet, forceRefresh = false) {
 // when stale so they can reconnect pre-emptively.
 let _walletStale = false;
 let _walletHeartbeatTimer = null;
+let _walletFailCount = 0;          // consecutive failures before marking stale
+const WALLET_FAIL_THRESHOLD = 2;   // two consecutive failures required
 
 async function runWalletHeartbeat() {
   if (!isAuthenticated() || !window.vxWallet) return;
   if (document.visibilityState !== 'visible') return;
+  // SSO-only session — wallet provider was never connected, nothing to ping.
+  // Marking it stale would wrongly show "Reconnect" on the wallet chip.
+  if (!window.vxWallet.connected) return;
   try {
     const alive = await window.vxWallet.verifyConnection();
-    const wasStale = _walletStale;
-    _walletStale = !alive;
-    if (wasStale !== _walletStale) updateWalletUI();
+    if (alive) {
+      _walletFailCount = 0;
+      const wasStale = _walletStale;
+      _walletStale = false;
+      if (wasStale !== _walletStale) updateWalletUI();
+    } else {
+      _walletFailCount++;
+      if (_walletFailCount >= WALLET_FAIL_THRESHOLD) {
+        const wasStale = _walletStale;
+        _walletStale = true;
+        if (wasStale !== _walletStale) updateWalletUI();
+      }
+    }
   } catch (_) { /* transient — retry next tick */ }
 }
 
