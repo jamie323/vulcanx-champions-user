@@ -16999,8 +16999,23 @@ async function boot() {
     // reflects without a full page refresh. Matches Runner's
     // visibilitychange→/me pattern.
     let _vxSsoRecheckInFlight = false;
+    let _lastSeenLogoutTs = window.vxAuth.getLogoutBroadcast();
     document.addEventListener('visibilitychange', async () => {
       if (document.visibilityState !== 'visible') return;
+
+      // Check vx_logout_ts first — if another app logged out, clear immediately
+      // without calling /me (a local JWT would still pass /me even after logout).
+      const logoutTs = window.vxAuth.getLogoutBroadcast();
+      if (logoutTs !== _lastSeenLogoutTs) {
+        _lastSeenLogoutTs = logoutTs;
+        if (logoutTs > 0 && localStorage.getItem('vx_auth') === '1') {
+          localStorage.removeItem('vx_wallet');
+          localStorage.removeItem('vx_auth');
+          location.reload();
+          return;
+        }
+      }
+
       if (_vxSsoRecheckInFlight) return;
       _vxSsoRecheckInFlight = true;
       try {
