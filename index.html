@@ -6091,9 +6091,41 @@
     font-size: 11px;
     margin-left: auto;
   }
+
+  /* ── Boot loader — hides page flash before auth check resolves ── */
+  #vxBootLoader {
+    position: fixed; inset: 0; z-index: 9500;
+    background: #050305;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 20px;
+    transition: opacity 0.25s ease;
+  }
+  #vxBootLoader .vbl-logo {
+    font-family: 'Cinzel', serif;
+    font-size: 15px; letter-spacing: 6px;
+    color: #ff7028; text-transform: uppercase;
+    opacity: 0.9;
+  }
+  #vxBootLoader .vbl-spinner {
+    width: 36px; height: 36px;
+    border: 3px solid rgba(255,112,40,0.2);
+    border-top-color: #ff7028;
+    border-radius: 50%;
+    animation: vbl-spin 0.8s linear infinite;
+  }
+  @keyframes vbl-spin { to { transform: rotate(360deg); } }
+  #vxBootLoader.vbl-hiding { opacity: 0; pointer-events: none; }
 </style>
 </head>
 <body>
+
+<!-- Boot loader — shown immediately, removed by boot() once auth state is
+     resolved. Prevents the flash of game UI before the wallet gate appears. -->
+<div id="vxBootLoader">
+  <div class="vbl-logo">Vulcan Champions</div>
+  <div class="vbl-spinner"></div>
+</div>
 
 <!-- Cache-bust on each deploy so stale wallet.js/stories.js can't hold
      testers on yesterday's bug. Bump the version string when either
@@ -17051,6 +17083,7 @@ async function boot() {
       });
       navTo('champion-card', { id: _shareId });
       applyDebugGate();
+      hideBootLoader();
       return;
     } catch (e) {
       console.error('[share] public load failed', e);
@@ -17178,6 +17211,7 @@ async function boot() {
         }
       }, 10000);
     }
+    hideBootLoader();
     return;
   }
 
@@ -17260,6 +17294,7 @@ async function boot() {
       await openChampion(ownedChamp.id);
       updateWalletUI();
       applyDebugGate();
+      hideBootLoader();
       startWalletHeartbeat();
       return;
     }
@@ -17268,6 +17303,7 @@ async function boot() {
       navTo('champion-card', { id: urlChampId });
       updateWalletUI();
       applyDebugGate();
+      hideBootLoader();
       startWalletHeartbeat();
       return;
     }
@@ -17275,11 +17311,20 @@ async function boot() {
     navTo('landing');
     updateWalletUI();
     applyDebugGate();
+    hideBootLoader();
     startWalletHeartbeat();
   } catch (e) {
+    hideBootLoader();
     alert('Failed to load bloodlines.json: ' + e.message);
     console.error(e);
   }
+}
+
+function hideBootLoader() {
+  const el = document.getElementById('vxBootLoader');
+  if (!el) return;
+  el.classList.add('vbl-hiding');
+  setTimeout(() => el.remove(), 270);
 }
 
 // Update anywhere that referenced SPECIES[currentSpecies].nameByStage directly:
