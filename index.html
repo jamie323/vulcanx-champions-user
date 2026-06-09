@@ -6092,40 +6092,9 @@
     margin-left: auto;
   }
 
-  /* ── Boot loader — hides page flash before auth check resolves ── */
-  #vxBootLoader {
-    position: fixed; inset: 0; z-index: 9500;
-    background: #050305;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 20px;
-    transition: opacity 0.25s ease;
-  }
-  #vxBootLoader .vbl-logo {
-    font-family: 'Cinzel', serif;
-    font-size: 15px; letter-spacing: 6px;
-    color: #ff7028; text-transform: uppercase;
-    opacity: 0.9;
-  }
-  #vxBootLoader .vbl-spinner {
-    width: 36px; height: 36px;
-    border: 3px solid rgba(255,112,40,0.2);
-    border-top-color: #ff7028;
-    border-radius: 50%;
-    animation: vbl-spin 0.8s linear infinite;
-  }
-  @keyframes vbl-spin { to { transform: rotate(360deg); } }
-  #vxBootLoader.vbl-hiding { opacity: 0; pointer-events: none; }
 </style>
 </head>
 <body>
-
-<!-- Boot loader — shown immediately, removed by boot() once auth state is
-     resolved. Prevents the flash of game UI before the wallet gate appears. -->
-<div id="vxBootLoader">
-  <div class="vbl-logo">Vulcan Champions</div>
-  <div class="vbl-spinner"></div>
-</div>
 
 <!-- Cache-bust on each deploy so stale wallet.js/stories.js can't hold
      testers on yesterday's bug. Bump the version string when either
@@ -17005,44 +16974,43 @@ document.getElementById('arenaResultModal')?.addEventListener('click', (e) => {
 // BOOT
 // ============================================================
 async function boot() {
+  console.log('[boot] started — vx_auth:', localStorage.getItem('vx_auth'), '| vx_wallet:', localStorage.getItem('vx_wallet'));
+
   // ── Cross-app SSO consumer hook ──
-  // Before deciding whether to show the wallet gate, check if any other
-  // vulcan-x.io app (Poker, Runner, dev-new) has set the shared SSO
-  // cookie. If /me returns 200, mirror the wallet into vx_auth/vx_wallet
-  // so the gate skips. If /me returns 401 while we still think we're
-  // signed in (vx_auth==='1'), clear the local flags — the user logged
-  // out from another tab/app. Pure no-op when the gateway URL isn't
-  // configured (isAuthEnabled() === false) → pre-SSO behaviour.
   if (window.vxAuth && window.vxAuth.isAuthEnabled()) {
+    console.log('[boot] SSO enabled, calling /me …');
     try {
       const ssoUser = await window.vxAuth.verifyCookieIdentity();
+      console.log('[boot] /me result:', ssoUser ? ssoUser.walletAddress : 'null (no session)');
       if (ssoUser && ssoUser.walletAddress) {
         localStorage.setItem('vx_wallet', ssoUser.walletAddress.toLowerCase());
         localStorage.setItem('vx_auth', '1');
+        console.log('[boot] SSO user stored from cookie');
       } else if (localStorage.getItem('vx_auth') === '1') {
-        // Cross-app logout: cookie gone but our local flag thought we
-        // were signed in. Clear so the gate re-engages on render.
         localStorage.removeItem('vx_wallet');
         localStorage.removeItem('vx_auth');
+        console.log('[boot] SSO cookie gone but vx_auth was set — cleared (cross-app logout)');
       }
-    } catch (_) { /* network blip — keep current local state */ }
+    } catch (err) {
+      console.warn('[boot] /me threw (network blip) — keeping current local state', err);
+    }
 
     // Use startSSOSync — polls every 1.5s so logout / login from another
-    // app is detected even while this tab is in focus (not just on tab switch).
+    // app is detected even while this tab is in focus.
     window.vxAuth.startSSOSync(
-      // onLogin: another app signed in → sync state and reload if needed
       function(user) {
         const incoming = user.walletAddress.toLowerCase();
         const localAuthed = localStorage.getItem('vx_auth') === '1';
         const localWallet = (localStorage.getItem('vx_wallet') || '').toLowerCase();
+        console.log('[ssoSync] onLogin fired — incoming:', incoming, '| localAuthed:', localAuthed, '| localWallet:', localWallet);
         if (!localAuthed || localWallet !== incoming) {
           localStorage.setItem('vx_wallet', incoming);
           localStorage.setItem('vx_auth', '1');
           location.reload();
         }
       },
-      // onLogout: another app (or expired session) → clear state and reload
       function() {
+        console.log('[ssoSync] onLogout fired — vx_auth:', localStorage.getItem('vx_auth'));
         if (localStorage.getItem('vx_auth') === '1') {
           localStorage.removeItem('vx_wallet');
           localStorage.removeItem('vx_auth');
@@ -17050,16 +17018,16 @@ async function boot() {
         }
       }
     );
+  } else {
+    console.log('[boot] SSO disabled (no gateway URL) — skipping /me check');
   }
 
+  console.log('[boot] isAuthenticated():', isAuthenticated(), '| vx_auth after SSO check:', localStorage.getItem('vx_auth'));
+
   // ── Share-link deep-link, public path ──
-  // If there's ?champion=<uuid> in the URL AND the visitor isn't signed
-  // in, render the read-only "Pokemon-card" view (Trello: "Sharing
-  // just goes to the Vulcan Champion homepage" stretch goal — Sean's
-  // request for a public shareable card). Skips the wallet gate so
-  // friends can view a champion without auth.
   const _shareId = new URLSearchParams(location.search).get('champion');
   if (_shareId && !isAuthenticated()) {
+    console.log('[boot] share-link public path — ?champion=', _shareId);
     try {
       const data = await fetch('bloodlines.json').then(r => r.json());
       Object.entries(data.species).forEach(([sp_id, sp]) => {
@@ -17083,17 +17051,17 @@ async function boot() {
       });
       navTo('champion-card', { id: _shareId });
       applyDebugGate();
-      hideBootLoader();
+      console.log('[boot] share-link rendered, returning');
       return;
     } catch (e) {
-      console.error('[share] public load failed', e);
+      console.error('[boot] share-link public load failed', e);
       // fall through to wallet gate
     }
   }
 
-  // WALLET GATE — if the user hasn't signed in with their wallet, show
-  // the connect screen instead of booting the app.
+  // WALLET GATE
   if (!isAuthenticated()) {
+    console.log('[boot] NOT authenticated — showing wallet gate');
     document.getElementById('walletGate').style.display = 'flex';
     // WC prewarm already fires on wallet.js DOMContentLoaded for users
     // without window.ethereum — but for mobile in-app browsers that DO
@@ -17211,17 +17179,20 @@ async function boot() {
         }
       }, 10000);
     }
-    hideBootLoader();
+    console.log('[boot] wallet gate shown — waiting for user to connect');
     return;
   }
 
-  // Authenticated path — try to silently rehydrate the wallet provider
-  // so signDummyTx (adopt / rename / shop) works without forcing a fresh
-  // prompt. If rehydrate fails the first on-chain action will re-auth.
-  try { await window.vxWallet?.tryResumeSession(); } catch (_) {}
+  // Authenticated path
+  console.log('[boot] authenticated as', localStorage.getItem('vx_wallet'), '— loading app …');
+  console.log('[boot] tryResumeSession …');
+  try { await window.vxWallet?.tryResumeSession(); } catch (err) { console.warn('[boot] tryResumeSession failed (non-fatal)', err); }
+  console.log('[boot] tryResumeSession done');
 
   try {
+    console.log('[boot] fetching bloodlines.json …');
     const data = await fetch('bloodlines.json').then(r => r.json());
+    console.log('[boot] bloodlines.json loaded, species keys:', Object.keys(data.species));
     // Transform bloodlines.json schema → runtime SPECIES
     Object.entries(data.species).forEach(([sp_id, sp]) => {
       SPECIES[sp_id] = {
@@ -17258,28 +17229,23 @@ async function boot() {
     renderSpeciesButtons();
 
     // User-first app: fetch champions from backend, land on landing page.
+    console.log('[boot] calling loadMyChampions …');
     await loadMyChampions();
+    console.log('[boot] loadMyChampions done —', myChampions.length, 'champions');
     adminMode = false;
     document.body.classList.remove('admin-on');
 
-    // Phase 3b: load equipment inventory from localStorage and grant a
-    // starter set if empty (mock — real NFT-backed items + ecosystem-side
-    // chest drops land in a later phase).
     if (window.Equipment) {
       loadInventory();
       grantStarterInventoryIfEmpty();
     }
 
-    // Phase K: refresh the daily-streak pill + auto-open the claim modal
-    // if today's reward hasn't been claimed yet. Tiny delay so users see
-    // the app fully load first.
-    // Phase 8.7: streak state is now server-side — fetch first, then render.
     if (window.VxDaily) {
+      console.log('[boot] VxDaily.refresh …');
       await VxDaily.refresh();
+      console.log('[boot] VxDaily.refresh done');
       VxDaily.refreshPill();
       VxDaily.maybeAutoOpen();
-      // Start the UTC-day-rollover watcher so tab-open users don't lose
-      // their streak when midnight passes (Trello 2026-05-25).
       VxDaily.watchUtcDayRollover();
     }
 
@@ -17294,7 +17260,7 @@ async function boot() {
       await openChampion(ownedChamp.id);
       updateWalletUI();
       applyDebugGate();
-      hideBootLoader();
+
       startWalletHeartbeat();
       return;
     }
@@ -17303,29 +17269,22 @@ async function boot() {
       navTo('champion-card', { id: urlChampId });
       updateWalletUI();
       applyDebugGate();
-      hideBootLoader();
+
       startWalletHeartbeat();
       return;
     }
 
+    console.log('[boot] navTo landing — boot complete ✓');
     navTo('landing');
     updateWalletUI();
     applyDebugGate();
-    hideBootLoader();
     startWalletHeartbeat();
   } catch (e) {
-    hideBootLoader();
-    alert('Failed to load bloodlines.json: ' + e.message);
-    console.error(e);
+    console.error('[boot] UNCAUGHT ERROR in authenticated path:', e);
+    alert('Failed to load champions app: ' + e.message);
   }
 }
 
-function hideBootLoader() {
-  const el = document.getElementById('vxBootLoader');
-  if (!el) return;
-  el.classList.add('vbl-hiding');
-  setTimeout(() => el.remove(), 270);
-}
 
 // Update anywhere that referenced SPECIES[currentSpecies].nameByStage directly:
 // we now reference SPECIES[currentSpecies].bloodlines[currentBloodline].nameByStage
