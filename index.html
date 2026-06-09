@@ -6096,18 +6096,20 @@
 </head>
 <body>
 
-<!-- Cache-bust on each deploy so stale wallet.js/stories.js can't hold
-     testers on yesterday's bug. Bump the version string when either
-     file changes (every commit is fine — it's just a cache key). -->
-<script src="wallet.js?v=20260426-d"></script>
-<!-- Vulcan-X gateway SSO config + helper module. Default points at the
-     dev-new gateway so an out-of-the-box static deploy works against a
-     real backend. Local dev (localhost / 127.x.x.x) auto-overrides to
-     http://localhost:8080 so you can hit a locally-run gateway without
-     editing the file. Anything earlier in the page can also set
-     window.__VX_GATEWAY_URL__ to take precedence over both defaults.
-     The Dockerfile sed-substitutes the dev-new URL at image-build time
-     for non-default prod targets. -->
+<!-- ── Asset version — bump this ONE value on every deploy ──────────────
+     The Dockerfile also auto-stamps this at docker build time via sed,
+     so manual bumps are only needed for non-Docker local deploys.       -->
+<script>window._V = '20260609';</script>
+
+<script>
+  // Load all versioned scripts with a single cache-bust stamp.
+  // Blocking (no async/defer) so execution order is preserved.
+  ['wallet.js','auth.js','stories.js','equipment.js'].forEach(function(s) {
+    document.write('<scr'+'ipt src="'+s+'?v='+window._V+'"><\/scr'+'ipt>');
+  });
+</script>
+
+<!-- Vulcan-X gateway SSO config + helper module. -->
 <script>
   if (!window.__VX_GATEWAY_URL__
       && (location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
@@ -6115,14 +6117,11 @@
   }
   window.__VX_GATEWAY_URL__ = window.__VX_GATEWAY_URL__ || 'https://dev-new-api.vulcan-x.io';
 </script>
-<script src="auth.js?v=20260514-a"></script>
-<script src="stories.js?v=20260425-a"></script>
-<script src="equipment.js?v=20260426-a"></script>
+
 <!-- VulcanX quest tracker — ships metrics to the shared cross-game
      quest gateway (Runner/Poker/Champions). Pure ES module, no build.
-     Exposes window.VxQuestTracker for inline scripts to call. See
-     vulcanx/index.js. -->
-<script type="module" src="vulcanx/index.js?v=20260515-a"></script>
+     Exposes window.VxQuestTracker for inline scripts to call. -->
+<script type="module" src="vulcanx/index.js?v=20260609"></script>
 <script>
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
@@ -16997,27 +16996,58 @@ async function boot() {
 
     // Use startSSOSync — polls every 1.5s so logout / login from another
     // app is detected even while this tab is in focus.
-    window.vxAuth.startSSOSync(
-      function(user) {
-        const incoming = user.walletAddress.toLowerCase();
-        const localAuthed = localStorage.getItem('vx_auth') === '1';
-        const localWallet = (localStorage.getItem('vx_wallet') || '').toLowerCase();
-        console.log('[ssoSync] onLogin fired — incoming:', incoming, '| localAuthed:', localAuthed, '| localWallet:', localWallet);
-        if (!localAuthed || localWallet !== incoming) {
-          localStorage.setItem('vx_wallet', incoming);
-          localStorage.setItem('vx_auth', '1');
-          location.reload();
+    // Guard: old cached auth.js versions may not have startSSOSync yet.
+    if (typeof window.vxAuth.startSSOSync === 'function') {
+      window.vxAuth.startSSOSync(
+        function(user) {
+          const incoming = user.walletAddress.toLowerCase();
+          const localAuthed = localStorage.getItem('vx_auth') === '1';
+          const localWallet = (localStorage.getItem('vx_wallet') || '').toLowerCase();
+          console.log('[ssoSync] onLogin fired — incoming:', incoming, '| localAuthed:', localAuthed, '| localWallet:', localWallet);
+          if (!localAuthed || localWallet !== incoming) {
+            localStorage.setItem('vx_wallet', incoming);
+            localStorage.setItem('vx_auth', '1');
+            location.reload();
+          }
+        },
+        function() {
+          console.log('[ssoSync] onLogout fired — vx_auth:', localStorage.getItem('vx_auth'));
+          if (localStorage.getItem('vx_auth') === '1') {
+            localStorage.removeItem('vx_wallet');
+            localStorage.removeItem('vx_auth');
+            location.reload();
+          }
         }
-      },
-      function() {
-        console.log('[ssoSync] onLogout fired — vx_auth:', localStorage.getItem('vx_auth'));
-        if (localStorage.getItem('vx_auth') === '1') {
-          localStorage.removeItem('vx_wallet');
-          localStorage.removeItem('vx_auth');
-          location.reload();
-        }
-      }
-    );
+      );
+    } else {
+      console.warn('[boot] startSSOSync not available (old auth.js cached) — falling back to visibilitychange');
+      let _inFlight = false;
+      const _onSsoSync = async () => {
+        if (document.visibilityState !== 'visible') return;
+        if (_inFlight) return;
+        _inFlight = true;
+        try {
+          const u = await window.vxAuth.verifyCookieIdentity();
+          const localAuthed = localStorage.getItem('vx_auth') === '1';
+          const localWallet = (localStorage.getItem('vx_wallet') || '').toLowerCase();
+          if (u && u.walletAddress) {
+            const incoming = u.walletAddress.toLowerCase();
+            if (!localAuthed || localWallet !== incoming) {
+              localStorage.setItem('vx_wallet', incoming);
+              localStorage.setItem('vx_auth', '1');
+              location.reload();
+            }
+          } else if (localAuthed) {
+            localStorage.removeItem('vx_wallet');
+            localStorage.removeItem('vx_auth');
+            location.reload();
+          }
+        } catch (_) {}
+        finally { _inFlight = false; }
+      };
+      document.addEventListener('visibilitychange', _onSsoSync);
+      window.addEventListener('focus', _onSsoSync);
+    }
   } else {
     console.log('[boot] SSO disabled (no gateway URL) — skipping /me check');
   }
@@ -17063,6 +17093,7 @@ async function boot() {
   if (!isAuthenticated()) {
     console.log('[boot] NOT authenticated — showing wallet gate');
     document.getElementById('walletGate').style.display = 'flex';
+    updateWalletUI(); // hides the wallet chip (green dot) when not logged in
     // WC prewarm already fires on wallet.js DOMContentLoaded for users
     // without window.ethereum — but for mobile in-app browsers that DO
     // inject ethereum we still want WC available as an option, so
@@ -17432,21 +17463,22 @@ function shortWallet(w) {
 }
 function updateWalletUI() {
   const w = getWallet();
+  const chipEl = document.getElementById('walletChip');
+
+  // Hide the entire chip when no wallet is set so the green dot never
+  // appears in an unauthenticated state (was showing "●  —" to logged-out users).
+  if (chipEl) chipEl.style.display = w ? '' : 'none';
+
   const chip = document.getElementById('walletChipAddr');
   if (chip) chip.textContent = shortWallet(w);
   const dbg = document.getElementById('dbgWalletAddr');
   if (dbg) dbg.textContent = w;
-  // Mark the chip visually stale/fresh based on the last heartbeat
-  const chipEl = document.getElementById('walletChip');
-  if (chipEl) {
+  if (chipEl && w) {
     chipEl.classList.toggle('stale', _walletStale === true);
     chipEl.title = _walletStale
       ? 'Wallet session expired — click to reconnect'
       : 'Your wallet · click to sign out';
   }
-  // Trello (28 Apr): "no balance report showing" — fetch native PYR
-  // balance from the Elysium chain and display it next to the wallet.
-  // Best-effort; failures just keep the placeholder hidden.
   if (w) refreshWalletBalance(w);
 }
 

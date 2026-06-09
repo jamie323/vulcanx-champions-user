@@ -42,6 +42,13 @@ COPY nft_images/       /usr/share/nginx/html/nft_images/
 ARG VX_GATEWAY_URL=https://dev-new-api.vulcan-x.io
 RUN sed -i "s|'https://dev-new-api.vulcan-x.io'|'${VX_GATEWAY_URL}'|g" /usr/share/nginx/html/index.html
 
+# ─── Bust asset cache on every build ──────────────────────────────────────
+# Replace every ?v=<anything> query string in index.html with the current
+# UTC build timestamp so browsers always fetch the latest JS files after a
+# redeploy. No manual version bumps needed.
+RUN BUILD_TS=$(date -u +%Y%m%d%H%M) && \
+    sed -i "s/?v=[^\"'&]*/\?v=${BUILD_TS}/g" /usr/share/nginx/html/index.html
+
 # Drop in our custom nginx config.
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
