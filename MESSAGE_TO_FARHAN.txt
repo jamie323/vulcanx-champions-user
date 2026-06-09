@@ -1,0 +1,80 @@
+SUBJECT: Champions NFT Minting + Evolution System — Ready for Deployment
+
+Hi Farhan,
+
+We're ready to launch the Champions NFT system. Here's everything you need:
+
+---
+
+MINTING SPEC:
+- Total NFTs: 5,500
+- Bloodlines: 22 (Orc: 4, Elf: 3, Goblin: 3, Flame Paladin: 3, Drakkin: 3, Dwarf: 3, Beastkin: 3)
+- Per bloodline: 250 NFTs (125 shop, 125 chests)
+- Removed: Tuskborn + Spirit-Warrior (mourner, voidstalker, sunspire)
+
+File: nft_minting_spec_final.json
+  - Complete metadata for all 22 bloodlines
+  - Pricing tiers (Acquisition/Standard/Premium)
+  - SKU naming convention
+  - Image paths
+
+---
+
+EVOLUTION SYSTEM (CRITICAL):
+
+Each NFT:
+- Starts at level 1 (Whelp baby stage)
+- User pays gas to increment level on-chain (1 → 2 → ... → 20)
+- Image updates dynamically: evolution20/{species}/{bloodline}/s{level:02d}.png
+- Frontend blocks evolution if user doesn't have enough PYR for gas
+
+Contract functions needed:
+  - mint(address to, string bloodline, string species) — Creates NFT with level=1
+  - evolveChampion(uint256 tokenId) — Increments level (validates gas payment)
+  - getLevel(uint256 tokenId) → uint8
+  - tokenURI(uint256 tokenId) → dynamic endpoint URL
+
+Frontend logic:
+  - Estimate gas for evolution before showing button
+  - Disable button if: level >= 20 OR balance < estimatedGas
+  - On evolution success, refresh metadata
+
+---
+
+COMPLETE HANDOFF DOCUMENT:
+File: FARHAN_NFT_HANDOFF.md
+  - Full minting spec
+  - Evolution mechanics walkthrough
+  - Smart contract requirements
+  - Frontend implementation examples
+  - Gas & payment model
+  - Stage names (Whelp → Legendary)
+  - Deployment checklist
+
+---
+
+IMAGE ASSETS:
+All pre-generated and ready:
+  - 22 bloodlines × 20 stages = 440 unique images
+  - Location: evolution20/{species_key}/{bloodline_key}/s{level:02d}.png
+  - Example: evolution20/orc/ironfang/s01.png (Level 1), s09.png (Level 9), s20.png (Legendary)
+
+---
+
+DEPLOYMENT CHECKLIST:
+☐ Deploy Champion NFT contract
+☐ Set up dynamic metadata endpoint (/api/champions/metadata/{tokenId})
+☐ Mint 5,500 NFTs at level=1
+☐ Allocate to shop/chests
+☐ Test evolution gas estimation
+☐ Integrate into frontend
+☐ Verify image serving
+☐ Full end-to-end test: Level 1 → Level 2
+
+---
+
+All files in: /Users/jamiethomson/vulcanx-champions-user/
+- FARHAN_NFT_HANDOFF.md (READ THIS FIRST)
+- nft_minting_spec_final.json (Minting data)
+
+Ready when you are. Let me know if you need any clarification.
