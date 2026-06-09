@@ -6442,7 +6442,7 @@
       <span class="streak-claim-dot" id="streakClaimDot" style="display:none;">●</span>
     </button>
     <button class="mute-btn" id="muteBtn" title="Toggle sound effects" onclick="VxAudio.toggle()">🔊</button>
-    <div class="wallet-chip" id="walletChip" title="Your wallet · click to copy" onclick="onWalletChipClick()">
+    <div class="wallet-chip" id="walletChip" title="Your wallet · click to sign out" onclick="onWalletChipClick()">
       <span class="dot-live">●</span>
       <span id="walletChipAddr">—</span>
       <!-- Trello (28 Apr): "no balance report showing" — surface the
@@ -16995,50 +16995,29 @@ async function boot() {
       }
     } catch (_) { /* network blip — keep current local state */ }
 
-    // Re-run the SSO check on tab focus so cross-tab login / logout
-    // reflects without a full page refresh. Matches Runner's
-    // visibilitychange→/me pattern.
-    let _vxSsoRecheckInFlight = false;
-    let _lastSeenLogoutTs = window.vxAuth.getLogoutBroadcast();
-    const _onSsoSync = async () => {
-      if (document.visibilityState !== 'visible') return;
-
-      // Check vx_logout_ts first — if another app logged out, clear immediately
-      // without calling /me (a local JWT would still pass /me even after logout).
-      const logoutTs = window.vxAuth.getLogoutBroadcast();
-      if (logoutTs !== _lastSeenLogoutTs) {
-        _lastSeenLogoutTs = logoutTs;
-        if (logoutTs > 0 && localStorage.getItem('vx_auth') === '1') {
-          localStorage.removeItem('vx_wallet');
-          localStorage.removeItem('vx_auth');
-          location.reload();
-          return;
-        }
-      }
-
-      if (_vxSsoRecheckInFlight) return;
-      _vxSsoRecheckInFlight = true;
-      try {
-        const u = await window.vxAuth.verifyCookieIdentity();
+    // Use startSSOSync — polls every 1.5s so logout / login from another
+    // app is detected even while this tab is in focus (not just on tab switch).
+    window.vxAuth.startSSOSync(
+      // onLogin: another app signed in → sync state and reload if needed
+      function(user) {
+        const incoming = user.walletAddress.toLowerCase();
         const localAuthed = localStorage.getItem('vx_auth') === '1';
         const localWallet = (localStorage.getItem('vx_wallet') || '').toLowerCase();
-        if (u && u.walletAddress) {
-          const incoming = u.walletAddress.toLowerCase();
-          if (!localAuthed || localWallet !== incoming) {
-            localStorage.setItem('vx_wallet', incoming);
-            localStorage.setItem('vx_auth', '1');
-            location.reload();
-          }
-        } else if (localAuthed) {
+        if (!localAuthed || localWallet !== incoming) {
+          localStorage.setItem('vx_wallet', incoming);
+          localStorage.setItem('vx_auth', '1');
+          location.reload();
+        }
+      },
+      // onLogout: another app (or expired session) → clear state and reload
+      function() {
+        if (localStorage.getItem('vx_auth') === '1') {
           localStorage.removeItem('vx_wallet');
           localStorage.removeItem('vx_auth');
           location.reload();
         }
-      } catch (_) { /* ignore */ }
-      finally { _vxSsoRecheckInFlight = false; }
-    };
-    document.addEventListener('visibilitychange', _onSsoSync);
-    window.addEventListener('focus', _onSsoSync);
+      }
+    );
   }
 
   // ── Share-link deep-link, public path ──
@@ -17459,7 +17438,7 @@ function updateWalletUI() {
     chipEl.classList.toggle('stale', _walletStale === true);
     chipEl.title = _walletStale
       ? 'Wallet session expired — click to reconnect'
-      : 'Your wallet · click to copy';
+      : 'Your wallet · click to sign out';
   }
   // Trello (28 Apr): "no balance report showing" — fetch native PYR
   // balance from the Elysium chain and display it next to the wallet.
@@ -17612,18 +17591,16 @@ function dbgCopyWallet() {
   alert('Copied: ' + w);
 }
 
-// Wallet chip click: if the heartbeat has flagged the session as stale,
-// offer to reconnect. Otherwise copy address to clipboard (existing
-// behaviour so devs can grab their wallet quickly).
+// Wallet chip click: stale session → offer reconnect; otherwise offer sign-out.
 function onWalletChipClick() {
   if (_walletStale) {
     offerReconnect();
     return;
   }
   const w = getWallet();
-  if (w) {
-    navigator.clipboard?.writeText(w);
-    showToast('📋 Wallet copied: ' + shortWallet(w), 'info', 2000);
+  if (!w) return;
+  if (confirm('Sign out?\n\nThis will sign you out across all Vulcan-X apps.')) {
+    disconnectWallet();
   }
 }
 
