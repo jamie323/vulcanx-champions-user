@@ -6453,6 +6453,9 @@
         <span class="wcb-num">0</span><span class="wcb-unit">PYR</span>
       </span>
     </div>
+    <!-- Logout (Discord bug: "player can't log out" — there was no logout
+         control at all). Disconnects the wallet + clears the shared SSO. -->
+    <button class="mute-btn" id="logoutBtn" title="Log out (disconnect wallet)" onclick="confirmLogout()">🚪</button>
   </div>
 </div>
 
@@ -13231,6 +13234,18 @@ async function disconnectWallet() {
   location.reload();
 }
 
+// Topbar logout button (Discord: "player can't log out" — there was no
+// logout control). Confirms, then disconnectWallet() clears the wallet +
+// shared SSO and reloads. NOTE: if the SSO gateway /logout doesn't clear
+// the cookie, boot() can re-mirror it on reload — that path is part of the
+// in-progress SSO rework, not this client button.
+async function confirmLogout() {
+  const ok = await vxConfirm(
+    'Log out and disconnect your wallet? You can reconnect any time — your champions and items are safe.',
+    { title: 'Log out?', icon: '🚪', okLabel: 'Log out', cancelLabel: 'Stay', variant: 'error' });
+  if (ok === true) await disconnectWallet();
+}
+
 // ── Connect flow ────────────────────────────────────────────────
 // method: 'injected' (MetaMask/extension) or 'walletconnect' (mobile QR)
 // Uses window.vxWallet (WalletManager from wallet.js) for the wallet
@@ -15824,17 +15839,6 @@ async function apiListWagerWinnings(wallet) {
   return data;  // { total_unclaimed, items: [{ match_id, payout_pyr, created_at }] }
 }
 
-// QA PYR balance (claimed wager winnings, pre on-chain escrow).
-async function apiGetQaPyrBalance(wallet) {
-  try {
-    const res = await apiFetch(`${FN_BASE}/qa_pyr_balance?wallet=${encodeURIComponent(wallet)}`, {
-      headers: AUTH_HEADERS,
-    });
-    const data = await res.json().catch(() => ({}));
-    return res.ok ? Number(data.balance || 0) : 0;
-  } catch (_) { return 0; }
-}
-
 // Populate + show/hide the persistent "Claim all" winnings banner in the
 // Arena view. Safe no-op if the wallet isn't connected or there's nothing.
 async function loadArenaWinnings() {
@@ -15937,15 +15941,16 @@ function renderInboxLists() {
     } else {
       sent.innerHTML = _inviteListCache.sent.map(s => {
         const elo = (s.from_elo_change != null) ? `${s.from_elo_change >= 0 ? '+' : ''}${s.from_elo_change}` : '';
-        // Trello (4 May): "Improve PvP challenge inbox result clarity" —
-        // tester couldn't tell win from loss because only ELO was shown.
-        // Now also surface a WIN/LOSS/DRAW badge derived from ELO change
-        // (positive = win, negative = loss, exactly zero with a battle =
-        // draw, no change yet = pending/awaiting fight).
+        // WIN/LOSS/DRAW badge from the AUTHORITATIVE match_winner, mapped to
+        // the sender's perspective (a sent challenge = current user is the
+        // from_wallet/sender). match_winner 'b' = sender won, 'a' = acceptor
+        // won, 'draw' = draw. Previously this was derived from from_elo_change,
+        // which can read 0 on a sender win → wins mis-showed as DRAW
+        // (Discord: "won but inbox Sent shows draw").
         let resultBadge = '';
-        if (s.from_elo_change != null && s.status !== 'pending' && s.status !== 'declined' && s.status !== 'expired' && s.status !== 'cancelled') {
-          if (s.from_elo_change > 0)      resultBadge = `<span style="background:rgba(125,255,154,0.18);color:#7dff9a;padding:2px 8px;border-radius:5px;font-weight:800;font-size:11px;letter-spacing:1px;margin-left:6px;">WIN</span>`;
-          else if (s.from_elo_change < 0) resultBadge = `<span style="background:rgba(255,107,107,0.18);color:#ff8888;padding:2px 8px;border-radius:5px;font-weight:800;font-size:11px;letter-spacing:1px;margin-left:6px;">LOSS</span>`;
+        if (s.match_winner === 'a' || s.match_winner === 'b' || s.match_winner === 'draw') {
+          if (s.match_winner === 'b')      resultBadge = `<span style="background:rgba(125,255,154,0.18);color:#7dff9a;padding:2px 8px;border-radius:5px;font-weight:800;font-size:11px;letter-spacing:1px;margin-left:6px;">WIN</span>`;
+          else if (s.match_winner === 'a') resultBadge = `<span style="background:rgba(255,107,107,0.18);color:#ff8888;padding:2px 8px;border-radius:5px;font-weight:800;font-size:11px;letter-spacing:1px;margin-left:6px;">LOSS</span>`;
           else                             resultBadge = `<span style="background:rgba(255,255,255,0.08);color:var(--muted);padding:2px 8px;border-radius:5px;font-weight:800;font-size:11px;letter-spacing:1px;margin-left:6px;">DRAW</span>`;
         }
         return `
@@ -17541,12 +17546,13 @@ async function refreshWalletBalance(wallet, forceRefresh = false) {
     });
     if (!hex) { balEl.style.display = 'none'; return; }
     // wei → PYR (1e18). Show 0 / int / 2-decimal-trimmed depending on
-    // size so the chip stays compact.
-    let wei = BigInt(hex);
-    // Fold in QA wager winnings (Supabase-side, pre on-chain escrow) so
-    // claimed winnings are reflected in the balance chip.
-    const qaPyr = await apiGetQaPyrBalance(wallet);
-    if (qaPyr > 0) wei += BigInt(qaPyr) * 10n ** 18n;
+    // size so the chip stays compact. The chip reflects the REAL on-chain
+    // PYR only — it must match the wallet exactly. (Earlier we folded in
+    // QA wager winnings here, but mixing Supabase-side QA PYR into the
+    // on-chain number made the chip disagree with MetaMask — Discord:
+    // "PYR not synced, shows a different amount". QA winnings surface via
+    // the claim toast + the Arena 'Claim all' banner instead.)
+    const wei = BigInt(hex);
     const whole = wei / 10n ** 18n;
     const frac = (wei % 10n ** 18n) / 10n ** 16n; // 2-decimal precision
     let display;
@@ -17740,6 +17746,20 @@ function vxPrompt(message, defaultValue = '', opts = {}) {
   });
 }
 
+// Styled OK/Cancel confirm (no text input). Resolves true on OK, null on cancel.
+function vxConfirm(message, opts = {}) {
+  return _vxShowDialog({
+    message,
+    title: opts.title || '',
+    icon: opts.icon ?? '❓',
+    okLabel: opts.okLabel || 'OK',
+    cancelLabel: opts.cancelLabel || 'Cancel',
+    variant: opts.variant || 'info',
+    isPrompt: false,
+    confirm: true,
+  });
+}
+
 function _vxShowDialog(cfg) {
   return new Promise((resolve) => {
     // If a dialog is already open, resolve the pending one with null
@@ -17774,11 +17794,15 @@ function _vxShowDialog(cfg) {
       input.value = cfg.defaultValue || '';
       input.placeholder = cfg.placeholder || '';
       input.maxLength = cfg.maxLength || 60;
-      cancel.style.display = '';
-      cancel.textContent = cfg.cancelLabel || 'Cancel';
       setTimeout(() => { input.focus(); input.select(); }, 60);
     } else {
       input.style.display = 'none';
+    }
+    // Cancel button shows for prompts AND plain confirms (OK/Cancel, no input).
+    if (cfg.isPrompt || cfg.confirm) {
+      cancel.style.display = '';
+      cancel.textContent = cfg.cancelLabel || 'Cancel';
+    } else {
       cancel.style.display = 'none';
     }
 
