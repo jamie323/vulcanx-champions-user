@@ -4954,6 +4954,18 @@
      convention as equipment). */
   .shop-item.tier-epic  .si-img { box-shadow: inset 0 0 16px rgba(190,120,255,0.28); }
   .shop-item.tier-major .si-img { box-shadow: inset 0 0 14px rgba(255,160,60,0.22); }
+
+  /* Painted game-icon set (Dizzydreamer round 3): inline icons that replace
+     emoji across traits / stances / energy / PYR. */
+  .ui-ico {
+    width: 20px; height: 20px; object-fit: contain;
+    vertical-align: -4px; display: inline-block;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
+  }
+  .ui-ico.lg { width: 26px; height: 26px; vertical-align: -7px; }
+  .ui-ico.sm { width: 15px; height: 15px; vertical-align: -3px; }
+  .trait-icon .ui-ico { width: 26px; height: 26px; vertical-align: middle; }
+  .stance-btn .ui-ico { width: 22px; height: 22px; vertical-align: -5px; margin-right: 4px; }
   .shop-item .si-nft-chip {
     position: absolute; top: 6px; left: 6px;
     background: linear-gradient(135deg, #6b85ff, #b169ff);
@@ -6351,7 +6363,7 @@
       </div>
       <div class="shop-cart-total">
         <div>Total</div>
-        <div><b id="shopTotalCount">0</b> potions &middot; <b id="shopTotalPyr">0</b> PYR</div>
+        <div><b id="shopTotalCount">0</b> potions &middot; <b id="shopTotalPyr">0</b> <img class="ui-ico sm" src="nft_images/icons/pyr_coin.png" alt="PYR" onerror="this.style.display='none'"/> PYR</div>
       </div>
       <div class="shop-actions">
         <button class="welcome-secondary" onclick="clearShopCart()">Clear</button>
@@ -8304,9 +8316,9 @@
       <div class="arena-stance-row" id="arenaStanceRow">
         <div class="arena-stance-label">Battle Stance</div>
         <div class="arena-stance-btns">
-          <button class="stance-btn" data-stance="aggressive" title="+15% damage, -15% defense">⚔️ Aggressive</button>
-          <button class="stance-btn active" data-stance="balanced" title="No modifiers">⚖️ Balanced</button>
-          <button class="stance-btn" data-stance="defensive" title="-15% damage, +15% defense">🛡️ Defensive</button>
+          <button class="stance-btn" data-stance="aggressive" title="+15% damage, -15% defense"><img class="ui-ico" src="nft_images/icons/stance_aggressive.png" alt="" onerror="this.style.display='none'"/> Aggressive</button>
+          <button class="stance-btn active" data-stance="balanced" title="No modifiers"><img class="ui-ico" src="nft_images/icons/stance_balanced.png" alt="" onerror="this.style.display='none'"/> Balanced</button>
+          <button class="stance-btn" data-stance="defensive" title="-15% damage, +15% defense"><img class="ui-ico" src="nft_images/icons/stance_defensive.png" alt="" onerror="this.style.display='none'"/> Defensive</button>
         </div>
         <div class="stance-detail" id="stanceDetail"></div>
       </div>
@@ -8326,9 +8338,9 @@
            remaining on the right. Updates whenever the active champion's
            energy changes (rendered alongside the existing vital bars). -->
       <div class="arena-energy-chip" id="arenaEnergyChip">
-        <span>Costs <b>15 ⚡</b></span>
+        <span>Costs <b>15 <img class="ui-ico sm" src="nft_images/icons/energy.png" alt="energy" onerror="this.style.display='none'"/></b></span>
         <span class="ae-sep">·</span>
-        <span>You have <b id="arenaEnergyNow">100</b> ⚡</span>
+        <span>You have <b id="arenaEnergyNow">100</b> <img class="ui-ico sm" src="nft_images/icons/energy.png" alt="energy" onerror="this.style.display='none'"/></span>
       </div>
       <div class="arena-bracket-hint" id="arenaBracketHint"></div>
     </div>
@@ -8397,9 +8409,9 @@
     <select id="aiChampionSelect" class="cm-input"></select>
     <div class="cm-label" style="margin-top:12px;">Your stance</div>
     <div class="ai-stance-row">
-      <button class="stance-btn ai-stance" data-stance="aggressive">⚔️ Aggressive</button>
-      <button class="stance-btn ai-stance active" data-stance="balanced">⚖️ Balanced</button>
-      <button class="stance-btn ai-stance" data-stance="defensive">🛡️ Defensive</button>
+      <button class="stance-btn ai-stance" data-stance="aggressive"><img class="ui-ico" src="nft_images/icons/stance_aggressive.png" alt="" onerror="this.style.display='none'"/> Aggressive</button>
+      <button class="stance-btn ai-stance active" data-stance="balanced"><img class="ui-ico" src="nft_images/icons/stance_balanced.png" alt="" onerror="this.style.display='none'"/> Balanced</button>
+      <button class="stance-btn ai-stance" data-stance="defensive"><img class="ui-ico" src="nft_images/icons/stance_defensive.png" alt="" onerror="this.style.display='none'"/> Defensive</button>
     </div>
     <div class="cm-actions">
       <button class="btn-secondary" onclick="closeAcceptInviteModal()">Cancel</button>
@@ -9320,6 +9332,26 @@ const TRAITS = ['STR','VIT','AGI','FER','INT','LCK'];
 const TRAIT_NAMES = { STR:'Strength',VIT:'Vitality',AGI:'Agility',
   FER:'Ferocity',INT:'Intelligence',LCK:'Luck' };
 const TRAIT_EMOJI = { STR:'💪', VIT:'❤️', AGI:'🏃', FER:'⚔️', INT:'🧠', LCK:'🍀' };
+// Painted game-icon set (Dizzydreamer: understand actions through visuals,
+// not text/emoji). Generated by scripts/gen_ui_icons.py in the same art
+// family as the equipment/potion renders.
+const UI_ICONS = {
+  STR: 'nft_images/icons/trait_str.png',
+  VIT: 'nft_images/icons/trait_vit.png',
+  AGI: 'nft_images/icons/trait_agi.png',
+  FER: 'nft_images/icons/trait_fer.png',
+  INT: 'nft_images/icons/trait_int.png',
+  LCK: 'nft_images/icons/trait_lck.png',
+  aggressive: 'nft_images/icons/stance_aggressive.png',
+  balanced:   'nft_images/icons/stance_balanced.png',
+  defensive:  'nft_images/icons/stance_defensive.png',
+  energy:     'nft_images/icons/energy.png',
+  pyr:        'nft_images/icons/pyr_coin.png',
+};
+function uiIcon(key, cls = 'ui-ico') {
+  const src = UI_ICONS[key];
+  return src ? `<img class="${cls}" src="${src}" alt="" decoding="async" onerror="this.style.display='none'"/>` : '';
+}
 // One-sentence descriptions for hover tooltips. Threaded into every
 // place that renders a bare 3-letter acronym (stat pills, stat rows,
 // allocation modal, adventure-card pills) via traitTitle() — see
@@ -12868,7 +12900,7 @@ function render() {
               : `Pour 1 ${TRAIT_NAMES[t]} potion → +${gain} ${t}`;
     tBox.insertAdjacentHTML('beforeend',
       `<div class="trait-row" data-trait-row="${t}">
-        <div class="trait-icon icon-${t}">${t}</div>
+        <div class="trait-icon icon-${t}" title="${TRAIT_NAMES[t]}">${uiIcon(t) || t}</div>
         <div class="trait-info">
           <div class="trait-name">${TRAIT_NAMES[t]}${leanFor(t)}
             <span class="info-dot" data-help="${t}">?</span></div>
@@ -12879,7 +12911,7 @@ function render() {
         <button class="${btnClass}" data-feed-trait="${t}"
           ${disabled?'disabled':''}
           title="${btnTitle.replace(/"/g,'&quot;')}">
-          <span class="tfb-emoji">${potionEmoji}</span>
+          <span class="tfb-emoji">${uiIcon(t, 'ui-ico sm') || potionEmoji}</span>
           <span class="tfb-count">×${count}</span>
           <span class="tfb-gain">${btnLabel}</span>
         </button>
@@ -14209,7 +14241,7 @@ async function renderChampionCard(payload) {
       const cap = capAtLevel(champ.level)[i];
       const val = champ.stats?.[t] || 0;
       statsBox.insertAdjacentHTML('beforeend',
-        `<div class="cc-stat-row" title="${traitTitle(t)}"><span class="lbl">${TRAIT_EMOJI[t]} ${t}</span><span class="val">${Math.round(val)}<span style="color:var(--muted);"> / ${cap}</span></span></div>`);
+        `<div class="cc-stat-row" title="${traitTitle(t)}"><span class="lbl">${uiIcon(t, 'ui-ico sm') || TRAIT_EMOJI[t]} ${t}</span><span class="val">${Math.round(val)}<span style="color:var(--muted);"> / ${cap}</span></span></div>`);
     });
   }
 
@@ -18560,7 +18592,7 @@ function _renderPotionTile(it) {
       <img class="si-img" src="${_potionArtSrc(it)}" alt="${esc(it.label)}" loading="lazy" decoding="async" onerror="vxImgRetry(this)" />
       <div class="si-name">${esc(it.label)}</div>
       <div class="si-tier">${esc(it.tier)}</div>
-      <div class="si-price">${it.price} PYR</div>
+      <div class="si-price">${it.price} <img class="ui-ico sm" src="nft_images/icons/pyr_coin.png" alt="PYR" onerror="this.style.display='none'"/> PYR</div>
     </div>`;
 }
 
@@ -18614,7 +18646,7 @@ function _renderNftTile(row) {
       ${img}
       <div class="si-name">${esc(row.title)}</div>
       <div class="si-tier">${esc(row.rarity || row.metadata?.tier || row.category.replace('_',' '))}</div>
-      <div class="si-price">${row.pyr_price} PYR</div>
+      <div class="si-price">${row.pyr_price} <img class="ui-ico sm" src="nft_images/icons/pyr_coin.png" alt="PYR" onerror="this.style.display='none'"/> PYR</div>
       <div class="si-supply ${supplyClass}">
         ${soldOut ? 'Sold out' : `<b>${remaining.toLocaleString()}</b> / ${total.toLocaleString()} left`}
       </div>
