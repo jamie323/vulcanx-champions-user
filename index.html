@@ -14130,10 +14130,19 @@ document.addEventListener('visibilitychange', _ensurePageScrollUnlocked);
 function navTo(viewName, payload) {
   currentView = viewName;
   _ensurePageScrollUnlocked();
-  // clear ALL views first, activate target
+  // clear ALL views first, activate target.
+  // Discord bug ("In adventure the screen is now cut and the choosing
+  // champion is not visible"): body ALSO carries the view-<name> class
+  // (line below), so when you re-navigate to the view you're already on,
+  // querySelector('.view-quests') matched BODY (ancestors precede
+  // descendants in document order) and 'active' landed on body instead of
+  // the view div — no view displayed → blank viewport-height screen.
+  // Scope the selector to .view elements, and heal any stray 'active'
+  // that previous sessions left on body.
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.body.classList.remove('active');
   const cls = VIEW_MAP[viewName];
-  if (cls) document.querySelector('.' + cls)?.classList.add('active');
+  if (cls) document.querySelector('.view.' + cls)?.classList.add('active');
   // body class (for css-grid toggling on champion view)
   document.body.className = document.body.className
     .replace(/view-\S+/g, '').trim();
