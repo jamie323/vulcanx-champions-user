@@ -13190,11 +13190,15 @@ window.SUPABASE_ANON_KEY = SUPABASE_ANON;
 // Elysium chain config — kept here for any read-only UI that references
 // it. The live connect flow uses the WalletManager (wallet.js) which
 // owns chain-switch + chain-add.
+const ELYSIUM_RPC = "https://rpc.elysiumchain.tech";
 const ELYSIUM_CHAIN = {
   chainId: "0x53B",  // 1339
   chainName: "Elysium",
-  nativeCurrency: { name: "LAVA", symbol: "LAVA", decimals: 18 },
-  rpcUrls: ["https://rpc.elysiumchain.tech"],
+  // PYR is now the NATIVE gas coin of Elysium (the chain was reconfigured;
+  // confirmed against live Runner's config). It used to read "LAVA" — that
+  // stale label is what made the wallet chip look wrong.
+  nativeCurrency: { name: "PYR", symbol: "PYR", decimals: 18 },
+  rpcUrls: [ELYSIUM_RPC],
   blockExplorerUrls: ["https://blockscout.elysiumchain.tech/"],
 };
 
@@ -17546,36 +17550,23 @@ async function refreshWalletBalance(wallet, forceRefresh = false) {
     return;
   }
   try {
-    const provider = window.ethereum;
-    if (!provider) { balEl.style.display = 'none'; return; }
-
-    // Ensure we're on Elysium (chain 1339) before fetching balance
-    try {
-      const currentChain = await provider.request({ method: 'eth_chainId' });
-      if (currentChain !== '0x53b') {  // 0x53b = 1339 in hex
-        // Try to switch to Elysium; if it fails, continue anyway
-        await provider.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: '0x53b' }],
-        }).catch(() => {});
-      }
-    } catch (e) {
-      // Ignore chain switch errors — proceed with balance fetch on current chain
-      console.warn('[wallet] chain switch failed', e);
-    }
-
-    const hex = await provider.request({
-      method: 'eth_getBalance',
-      params: [wallet, 'latest'],
+    // PYR is the native coin of Elysium. Read the balance by POSTing
+    // eth_getBalance DIRECTLY to the Elysium RPC — exactly what live
+    // Runner does. The old path went through window.ethereum (the wallet
+    // provider), which returns whatever chain the wallet is CURRENTLY on,
+    // so when the user sat on Polygon/ETH the chip showed a different
+    // coin's balance → Discord "PYR not synced, shows a different amount".
+    // A direct RPC read always reports the true Elysium PYR balance, no
+    // chain-switch dance required.
+    const resp = await fetch(ELYSIUM_RPC, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_getBalance', params: [wallet, 'latest'] }),
     });
+    const json = await resp.json().catch(() => ({}));
+    const hex = (json && !json.error) ? json.result : null;
     if (!hex) { balEl.style.display = 'none'; return; }
-    // wei → PYR (1e18). Show 0 / int / 2-decimal-trimmed depending on
-    // size so the chip stays compact. The chip reflects the REAL on-chain
-    // PYR only — it must match the wallet exactly. (Earlier we folded in
-    // QA wager winnings here, but mixing Supabase-side QA PYR into the
-    // on-chain number made the chip disagree with MetaMask — Discord:
-    // "PYR not synced, shows a different amount". QA winnings surface via
-    // the claim toast + the Arena 'Claim all' banner instead.)
+    // wei → PYR (1e18). Show 0 / int / 2-decimal-trimmed depending on size.
     const wei = BigInt(hex);
     const whole = wei / 10n ** 18n;
     const frac = (wei % 10n ** 18n) / 10n ** 16n; // 2-decimal precision
