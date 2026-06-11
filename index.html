@@ -8523,7 +8523,7 @@
   <main class="cc-col cc-col-center">
     <div class="stage-frame cc-stage-frame" id="stageFrame">
       <img id="stageImgPrev" class="stageImgPrev" src="" alt="" aria-hidden="true" />
-      <img id="stageImg" src="evolution/L01_whelp_final.jpg" />
+      <img id="stageImg" src="evolution/L01_whelp_final.jpg" decoding="async" onerror="vxImgRetry(this)" />
       <div class="aura"></div>
       <div class="evo-burst" id="stageBurst"></div>
       <div class="level-badge" id="levelBadge">L 01</div>
@@ -13229,6 +13229,12 @@ async function disconnectWallet() {
   // vulcan-x.io apps (Poker, Runner, dev-new) see this user logged out
   // too. Mirrors Runner / Poker disconnect semantics.
   try { await window.vxAuth?.clearAuth(); } catch (_) {}
+  // Explicit logged-out flag (Discord: "log out button not working").
+  // The SSO cookie is HttpOnly — if the gateway /logout fails to clear
+  // it, boot() + the 1.5s ssoSync poll would re-mirror the cookie and
+  // log the user straight back in. This flag suppresses ALL SSO
+  // re-mirroring until the user explicitly reconnects.
+  localStorage.setItem('vx_logged_out', '1');
   localStorage.removeItem('vx_wallet');
   localStorage.removeItem('vx_auth');
   location.reload();
@@ -13355,6 +13361,9 @@ async function connectWallet(method) {
 
     localStorage.setItem('vx_wallet', wallet);
     localStorage.setItem('vx_auth', '1');
+    // Explicit reconnect — lift the logged-out suppression so SSO
+    // mirroring works normally again.
+    localStorage.removeItem('vx_logged_out');
 
     setStatus('Connected · loading…');
     location.reload();
@@ -14238,7 +14247,7 @@ function renderStable() {
         <div class="champ-card ${legend ? 'legend' : ''}" onclick="openChampion('${c.id}')">
           <div class="stage-pill">${stageName}</div>
           <div class="lvl-pill">L${String(c.level).padStart(2,'0')}</div>
-          <div class="art"><img src="${imgSrc}" alt="${esc(c.name || '')}" loading="lazy" onerror="this.style.opacity='0.3';"/></div>
+          <div class="art"><img src="${imgSrc}" alt="${esc(c.name || '')}" loading="lazy" decoding="async" onerror="vxImgRetry(this)"/></div>
           <div class="meta">
             <div class="name">${esc(c.name)} ${affinityBadgeHtml(c.species_id, { compact: true })}</div>
             <div class="subname">${sp.label} · ${bl.label}</div>
@@ -14408,7 +14417,7 @@ function renderBuy() {
   const defaultName = `${bl.heroName} the ${stage0.name}`;
   const supplyHtml = _supplyBadge(sp_id, bl_id);
   document.getElementById('buyWrap').innerHTML = `
-    <div class="buy-art"><img src="${_portraitFor(sp_id, bl_id, 0)}" alt="${bl.label} stage 1"/></div>
+    <div class="buy-art"><img src="${_portraitFor(sp_id, bl_id, 0)}" alt="${bl.label} stage 1" decoding="async" onerror="vxImgRetry(this)"/></div>
     <div class="buy-summary">
       <h3 id="previewName">${defaultName}</h3>
       <div class="species">${sp.label} · ${bl.label} · Stage 1 ${stage0.name}</div>
@@ -16993,6 +17002,14 @@ async function boot() {
 
   // ── Cross-app SSO consumer hook ──
   if (window.vxAuth && window.vxAuth.isAuthEnabled()) {
+    // Explicit-logout suppression: the user logged out HERE, but the
+    // HttpOnly SSO cookie may have survived a failed gateway /logout.
+    // Don't re-mirror it — retry the cookie clear instead. The flag
+    // lifts when the user explicitly reconnects (connectWallet).
+    if (localStorage.getItem('vx_logged_out') === '1') {
+      console.log('[boot] vx_logged_out set — skipping SSO mirror, retrying cookie clear');
+      try { window.vxAuth.clearAuth(); } catch (_) {}
+    } else {
     console.log('[boot] SSO enabled, calling /me …');
     try {
       const ssoUser = await window.vxAuth.verifyCookieIdentity();
@@ -17009,6 +17026,7 @@ async function boot() {
     } catch (err) {
       console.warn('[boot] /me threw (network blip) — keeping current local state', err);
     }
+    }
 
     // Use startSSOSync — polls every 1.5s so logout / login from another
     // app is detected even while this tab is in focus.
@@ -17016,6 +17034,10 @@ async function boot() {
     if (typeof window.vxAuth.startSSOSync === 'function') {
       window.vxAuth.startSSOSync(
         function(user) {
+          // Respect an explicit local logout — a surviving HttpOnly SSO
+          // cookie must not log the user straight back in (Discord:
+          // "log out button not working").
+          if (localStorage.getItem('vx_logged_out') === '1') return;
           const incoming = user.walletAddress.toLowerCase();
           const localAuthed = localStorage.getItem('vx_auth') === '1';
           const localWallet = (localStorage.getItem('vx_wallet') || '').toLowerCase();
@@ -17040,6 +17062,8 @@ async function boot() {
       let _inFlight = false;
       const _onSsoSync = async () => {
         if (document.visibilityState !== 'visible') return;
+        // Respect an explicit local logout (see vx_logged_out above).
+        if (localStorage.getItem('vx_logged_out') === '1') return;
         if (_inFlight) return;
         _inFlight = true;
         try {
@@ -17925,6 +17949,18 @@ function setNarrationState(s) {
 
 // Remember what src we last showed so we can detect stage/image changes.
 let _lastStageSrc = null;
+
+// One-shot auto-retry for champion art (Discord: stage images sometimes
+// fail to render on mobile — "it should automatically load the image").
+// Retries the same src once with a cache-buster after 600ms; dims if it
+// fails twice so the card stays readable.
+function vxImgRetry(img) {
+  if (img.dataset.retried === '1') { img.style.opacity = '0.3'; return; }
+  img.dataset.retried = '1';
+  const base = (img.getAttribute('src') || '').split('?')[0];
+  if (!base) return;
+  setTimeout(() => { img.src = base + '?r=' + Date.now(); }, 600);
+}
 
 function setStageImage(newSrc) {
   const cur = document.getElementById('stageImg');
