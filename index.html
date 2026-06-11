@@ -6154,18 +6154,20 @@
   window.__VX_GATEWAY_URL__ = window.__VX_GATEWAY_URL__ || 'https://dev-new-api.vulcan-x.io';
 </script>
 
-<!-- ── Asset version — bump this ONE value on every deploy ──────────────
-     The Dockerfile also auto-stamps this at docker build time via sed,
-     so manual bumps are only needed for non-Docker local deploys.       -->
-<script>window._V = '20260609';</script>
-
-<script>
-  // Load all versioned scripts with a single cache-bust stamp.
-  // Blocking (no async/defer) so execution order is preserved.
-  ['wallet.js','auth.js','stories.js','equipment.js'].forEach(function(s) {
-    document.write('<scr'+'ipt src="'+s+'?v='+window._V+'"><\/scr'+'ipt>');
-  });
-</script>
+<!-- ── Versioned script tags (Rana, 11 Jun) ─────────────────────────────
+     STATIC tags, not a document.write loop. The Dockerfile sed rewrites
+     the full cache-bust query token (question-mark v equals stamp) at
+     build time; the old loop concatenated that token with window._V at
+     runtime, so the sed double-stamped it. Plain literal tags get stamped
+     cleanly, same as any HTML src attribute. Blocking (no async/defer) so
+     execution order is preserved. Bump the stamp manually only for
+     non-Docker local deploys. NOTE: never write the literal cache-bust
+     token in code or comments — the sed rewrites it wherever it appears
+     (caused the 11 Jun blank-app outage). -->
+<script src="wallet.js?v=20260609"></script>
+<script src="auth.js?v=20260609"></script>
+<script src="stories.js?v=20260609"></script>
+<script src="equipment.js?v=20260609"></script>
 
 <!-- VulcanX quest tracker — ships metrics to the shared cross-game
      quest gateway (Runner/Poker/Champions). Pure ES module, no build.
@@ -17306,10 +17308,13 @@ async function boot() {
     if (typeof window.vxAuth.startSSOSync === 'function') {
       window.vxAuth.startSSOSync(
         function(user) {
-          // Respect an explicit local logout — a surviving HttpOnly SSO
-          // cookie must not log the user straight back in (Discord:
-          // "log out button not working").
-          if (localStorage.getItem('vx_logged_out') === '1') return;
+          // Rana (11 Jun): onLogin only fires on a NEW login broadcast from
+          // another app (vx_login_ts change) — that's always an active
+          // fresh login, never the stale-cookie ghost the vx_logged_out
+          // flag exists for. So a cross-app login CLEARS the flag and
+          // proceeds; the flag is only respected at boot + the visibility
+          // fallback (cookie-poll paths, where the ghost can appear).
+          localStorage.removeItem('vx_logged_out');
           const incoming = user.walletAddress.toLowerCase();
           const localAuthed = localStorage.getItem('vx_auth') === '1';
           const localWallet = (localStorage.getItem('vx_wallet') || '').toLowerCase();
