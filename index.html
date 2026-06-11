@@ -16602,12 +16602,23 @@ function _pushTicker(msg, kindClass) {
 // disk regardless of approval state, so derive that path FIRST and
 // only use the legacy jpg if even the species/bloodline ids are
 // missing. Used by arena portraits + stable grid + album + buy view.
+// Cache-bust version for the champion art. The stage PNGs were re-encoded
+// 8x smaller (champions#11), but Cloudflare cached the old heavy files for
+// ~24 days under the same filenames, so testers kept getting the big ones.
+// Bumping IMG_VER changes the URL → CF treats it as a fresh key → serves
+// the optimized image. Bump this whenever the art is re-encoded again.
+const IMG_VER = '2';
+function _verImg(path) {
+  // Only version our evolution20 art (skip data:/http: and the legacy jpg).
+  return (path && path.indexOf('evolution20/') === 0) ? `${path}?v=${IMG_VER}` : path;
+}
+
 function _portraitFor(speciesId, bloodlineId, stageIdx) {
   const stage = SPECIES?.[speciesId]?.bloodlines?.[bloodlineId]?.stages?.[stageIdx];
-  if (stage?.img) return stage.img;
+  if (stage?.img) return _verImg(stage.img);
   if (speciesId && bloodlineId && Number.isFinite(stageIdx)) {
     const n = String((stageIdx ?? 0) + 1).padStart(2, '0');
-    return `evolution20/${speciesId}/${bloodlineId}/s${n}.png`;
+    return _verImg(`evolution20/${speciesId}/${bloodlineId}/s${n}.png`);
   }
   return 'evolution/L01_whelp_final.jpg';  // last-resort legacy
 }
@@ -17982,6 +17993,11 @@ function setStageImage(newSrc) {
     } catch (_) {
       newSrc = 'evolution/L01_whelp_final.jpg';
     }
+  }
+  // Apply the cache-bust version so we don't get Cloudflare's stale heavy
+  // copies (see _verImg / IMG_VER). Idempotent if already versioned.
+  if (newSrc && newSrc.indexOf('evolution20/') === 0 && newSrc.indexOf('?v=') === -1) {
+    newSrc = `${newSrc}?v=${IMG_VER}`;
   }
   // absolute url for equality
   const curAbs = cur.src;
