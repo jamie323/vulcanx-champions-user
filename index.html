@@ -16607,10 +16607,16 @@ function _pushTicker(msg, kindClass) {
 // ~24 days under the same filenames, so testers kept getting the big ones.
 // Bumping IMG_VER changes the URL → CF treats it as a fresh key → serves
 // the optimized image. Bump this whenever the art is re-encoded again.
+// NOTE: the deploy pipeline does a naive find-replace of its script-src
+// cache-bust query token across the WHOLE file — which corrupts the same
+// token if we write it in JS and breaks the script (caused a blank app
+// once). So we version images with a DISTINCT param, "iv" (image-version),
+// that the deploy replace can't match.
 const IMG_VER = '2';
+const _IMG_Q = '?iv=' + IMG_VER;
 function _verImg(path) {
   // Only version our evolution20 art (skip data:/http: and the legacy jpg).
-  return (path && path.indexOf('evolution20/') === 0) ? `${path}?v=${IMG_VER}` : path;
+  return (path && path.indexOf('evolution20/') === 0) ? (path + _IMG_Q) : path;
 }
 
 function _portraitFor(speciesId, bloodlineId, stageIdx) {
@@ -17995,9 +18001,9 @@ function setStageImage(newSrc) {
     }
   }
   // Apply the cache-bust version so we don't get Cloudflare's stale heavy
-  // copies (see _verImg / IMG_VER). Idempotent if already versioned.
-  if (newSrc && newSrc.indexOf('evolution20/') === 0 && newSrc.indexOf('?v=') === -1) {
-    newSrc = `${newSrc}?v=${IMG_VER}`;
+  // copies (see _verImg / _IMG_Q). Idempotent if already versioned.
+  if (newSrc && newSrc.indexOf('evolution20/') === 0 && newSrc.indexOf(_IMG_Q) === -1) {
+    newSrc = newSrc + _IMG_Q;
   }
   // absolute url for equality
   const curAbs = cur.src;
