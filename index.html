@@ -8886,25 +8886,105 @@
      this one auto-pops on completion across all 3 services
      (Runner / Poker / Champions). Same data shape regardless of
      which gateway quest fired. -->
+<!-- Ornate "game prize" popup styling (Dizzydreamer redesign): gold-framed
+     medieval prize card instead of the old plain website-popout look. The
+     .ornate-prize-* classes are reusable across quest/reward popups. -->
+<style>
+  .ornate-prize {
+    position: relative; width: 420px; max-width: 92vw;
+    padding: 30px 30px 26px; text-align: center;
+    background:
+      radial-gradient(120% 90% at 50% 0%, rgba(70,42,16,0.85), rgba(20,12,9,0.97));
+    border: 2px solid transparent;
+    border-radius: 14px;
+    background-clip: padding-box;
+    box-shadow: 0 0 0 1px rgba(255,205,107,0.35),
+                0 0 28px rgba(255,160,60,0.28),
+                inset 0 0 40px rgba(0,0,0,0.55);
+  }
+  /* Gold double-frame via a layered pseudo-border */
+  .ornate-prize::before {
+    content: ''; position: absolute; inset: 6px; border-radius: 9px;
+    border: 1px solid rgba(255,205,107,0.55);
+    box-shadow: inset 0 0 18px rgba(255,160,60,0.12);
+    pointer-events: none;
+  }
+  .ornate-prize .op-corner {
+    position: absolute; width: 16px; height: 16px; color: #ffcd6b;
+    font-size: 16px; line-height: 16px; opacity: 0.85; pointer-events: none;
+  }
+  .ornate-prize .op-corner.tl { top: 8px; left: 10px; }
+  .ornate-prize .op-corner.tr { top: 8px; right: 10px; }
+  .ornate-prize .op-corner.bl { bottom: 8px; left: 10px; }
+  .ornate-prize .op-corner.br { bottom: 8px; right: 10px; }
+  .ornate-prize .op-hd {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    margin-bottom: 4px;
+  }
+  .ornate-prize .op-hd h3 {
+    margin: 0; font-family: 'Cinzel', serif; font-weight: 800;
+    letter-spacing: 3px; text-transform: uppercase; font-size: 22px;
+    color: #ffd98a; text-shadow: 0 0 12px rgba(255,160,60,0.5);
+  }
+  .ornate-prize .op-hd .op-fl {
+    flex: 1; height: 1px; max-width: 56px;
+    background: linear-gradient(90deg, transparent, rgba(255,205,107,0.8), transparent);
+  }
+  .ornate-prize .op-name {
+    font-size: 19px; font-weight: 700; color: var(--text); margin-top: 6px;
+  }
+  .ornate-prize .op-desc {
+    color: rgba(255,235,205,0.65); font-size: 12.5px; line-height: 1.5;
+    margin: 6px 18px 16px; font-style: italic;
+  }
+  .ornate-prize .op-chest {
+    width: 104px; height: 104px; margin: 0 auto 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 56px; border-radius: 50%;
+    background: radial-gradient(circle at 50% 40%, rgba(255,180,80,0.28), rgba(0,0,0,0.2) 70%);
+    border: 1px solid rgba(255,205,107,0.5);
+    box-shadow: 0 0 26px rgba(255,160,60,0.35), inset 0 0 18px rgba(255,160,60,0.2);
+    animation: op-chest-glow 2.4s ease-in-out infinite;
+  }
+  @keyframes op-chest-glow {
+    0%,100% { box-shadow: 0 0 22px rgba(255,160,60,0.3), inset 0 0 16px rgba(255,160,60,0.18); }
+    50%     { box-shadow: 0 0 36px rgba(255,190,90,0.5), inset 0 0 22px rgba(255,190,90,0.3); }
+  }
+  .ornate-prize .op-reward {
+    font-size: 16px; font-weight: 800; color: var(--legend, #ffcd6b);
+    letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 20px;
+    text-shadow: 0 0 10px rgba(255,160,60,0.4);
+  }
+  .ornate-prize .op-actions { display: flex; flex-direction: column; gap: 9px; }
+  .ornate-prize .op-btn {
+    display: block; text-decoration: none; cursor: pointer;
+    padding: 12px 18px; border-radius: 9px; font-weight: 800;
+    letter-spacing: 1.5px; text-transform: uppercase; font-size: 13px;
+    color: #1a0a05; border: 1px solid rgba(255,205,107,0.7);
+    background: linear-gradient(180deg, #ffd98a, #ff9a3c);
+    box-shadow: 0 0 16px rgba(255,160,60,0.4);
+  }
+  .ornate-prize .op-btn:hover { filter: brightness(1.07); }
+  .ornate-prize .op-btn-ghost {
+    display: block; cursor: pointer; padding: 9px 18px; border-radius: 9px;
+    font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; font-size: 12px;
+    color: rgba(255,235,205,0.6); background: transparent;
+    border: 1px solid rgba(255,205,107,0.25);
+  }
+  .ornate-prize .op-btn-ghost:hover { color: #ffcd6b; border-color: rgba(255,205,107,0.5); }
+</style>
 <div class="modal-backdrop" id="vxQuestCelebrationModal">
-  <div class="modal" style="width: 440px; text-align: center;">
-    <div style="font-size: 56px; line-height: 1;">🎁</div>
-    <h3 style="margin: 14px 0 6px; color: var(--accent); letter-spacing: 2px;
-               font-family: 'Cinzel', serif; font-weight: 800;
-               text-transform: uppercase;">Quest Complete</h3>
-    <div id="vxqcName" style="font-size: 20px; font-weight: 700; color: var(--text);
-                              margin-bottom: 8px;">—</div>
-    <div id="vxqcDesc" style="color: var(--muted); font-size: 13px; line-height: 1.5;
-                              margin-bottom: 14px; font-style: italic;
-                              text-decoration: line-through;
-                              text-decoration-color: rgba(255,205,107,0.5);">—</div>
-    <div id="vxqcChests" style="font-size: 16px; font-weight: 700; color: var(--legend);
-                                margin-bottom: 18px; letter-spacing: 1px;">—</div>
-    <div style="display: flex; gap: 8px; justify-content: center;">
-      <a id="vxqcRevealBtn" class="btn-primary"
-         href="#" target="_blank" rel="noopener"
-         style="text-decoration: none; padding: 10px 18px;">Reveal on VulcanX ↗</a>
-      <button class="sp-btn" onclick="document.getElementById('vxQuestCelebrationModal').classList.remove('open')">Close</button>
+  <div class="ornate-prize">
+    <span class="op-corner tl">❖</span><span class="op-corner tr">❖</span>
+    <span class="op-corner bl">❖</span><span class="op-corner br">❖</span>
+    <div class="op-hd"><span class="op-fl"></span><h3>Quest Complete</h3><span class="op-fl"></span></div>
+    <div id="vxqcName" class="op-name">—</div>
+    <div id="vxqcDesc" class="op-desc">—</div>
+    <div class="op-chest">🎁</div>
+    <div id="vxqcChests" class="op-reward">—</div>
+    <div class="op-actions">
+      <a id="vxqcRevealBtn" class="op-btn" href="#" target="_blank" rel="noopener">Reveal on VulcanX ↗</a>
+      <button class="op-btn-ghost" onclick="document.getElementById('vxQuestCelebrationModal').classList.remove('open')">✕ Close</button>
     </div>
   </div>
 </div>
