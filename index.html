@@ -13472,12 +13472,38 @@ async function disconnectWallet() {
   // Explicit logged-out flag (Discord: "log out button not working").
   // The SSO cookie is HttpOnly — if the gateway /logout fails to clear
   // it, boot() + the 1.5s ssoSync poll would re-mirror the cookie and
-  // log the user straight back in. This flag suppresses ALL SSO
-  // re-mirroring until the user explicitly reconnects.
+  // log the user straight back in. The flag suppresses cookie-poll
+  // re-mirroring until either an explicit reconnect OR a NEW cross-app
+  // login. To tell those apart we snapshot the vx_login_ts broadcast at
+  // logout (Rana, 11 Jun): a later ts = fresh login from Runner/Poker →
+  // unblock; unchanged ts = the stale-cookie ghost → keep blocking.
   localStorage.setItem('vx_logged_out', '1');
+  try {
+    localStorage.setItem('vx_logged_out_ts', String(window.vxAuth?.getLoginBroadcast?.() ?? 0));
+  } catch (_) { localStorage.setItem('vx_logged_out_ts', '0'); }
   localStorage.removeItem('vx_wallet');
   localStorage.removeItem('vx_auth');
   location.reload();
+}
+
+// Should the SSO cookie-poll paths (boot + visibility fallback) skip
+// re-mirroring? True only while the user is explicitly logged out AND no
+// NEW cross-app login broadcast has fired since that logout (Rana, 11 Jun:
+// compare vx_login_ts against the snapshot taken at logout — a later ts is
+// an active fresh login from Runner/Poker, so unblock and proceed; an
+// unchanged ts is the stale-HttpOnly-cookie ghost, so keep blocking).
+function ssoMirrorBlocked() {
+  if (localStorage.getItem('vx_logged_out') !== '1') return false;
+  let tsNow = 0;
+  try { tsNow = Number(window.vxAuth?.getLoginBroadcast?.() ?? 0) || 0; } catch (_) {}
+  const tsAtLogout = Number(localStorage.getItem('vx_logged_out_ts') || 0) || 0;
+  if (tsNow > tsAtLogout) {
+    // Fresh cross-app login since our logout — lift the suppression.
+    localStorage.removeItem('vx_logged_out');
+    localStorage.removeItem('vx_logged_out_ts');
+    return false;
+  }
+  return true;
 }
 
 // Topbar logout button (Discord: "player can't log out" — there was no
@@ -13604,6 +13630,7 @@ async function connectWallet(method) {
     // Explicit reconnect — lift the logged-out suppression so SSO
     // mirroring works normally again.
     localStorage.removeItem('vx_logged_out');
+    localStorage.removeItem('vx_logged_out_ts');
 
     setStatus('Connected · loading…');
     location.reload();
@@ -17278,10 +17305,11 @@ async function boot() {
   if (window.vxAuth && window.vxAuth.isAuthEnabled()) {
     // Explicit-logout suppression: the user logged out HERE, but the
     // HttpOnly SSO cookie may have survived a failed gateway /logout.
-    // Don't re-mirror it — retry the cookie clear instead. The flag
-    // lifts when the user explicitly reconnects (connectWallet).
-    if (localStorage.getItem('vx_logged_out') === '1') {
-      console.log('[boot] vx_logged_out set — skipping SSO mirror, retrying cookie clear');
+    // Don't re-mirror it — retry the cookie clear instead. Lifts on an
+    // explicit reconnect OR a newer vx_login_ts broadcast (fresh
+    // cross-app login) — see ssoMirrorBlocked().
+    if (ssoMirrorBlocked()) {
+      console.log('[boot] vx_logged_out set (no new login since) — skipping SSO mirror, retrying cookie clear');
       try { window.vxAuth.clearAuth(); } catch (_) {}
     } else {
     console.log('[boot] SSO enabled, calling /me …');
@@ -17312,9 +17340,10 @@ async function boot() {
           // another app (vx_login_ts change) — that's always an active
           // fresh login, never the stale-cookie ghost the vx_logged_out
           // flag exists for. So a cross-app login CLEARS the flag and
-          // proceeds; the flag is only respected at boot + the visibility
-          // fallback (cookie-poll paths, where the ghost can appear).
+          // proceeds; the cookie-poll paths (boot + visibility fallback)
+          // use the vx_login_ts comparison in ssoMirrorBlocked().
           localStorage.removeItem('vx_logged_out');
+          localStorage.removeItem('vx_logged_out_ts');
           const incoming = user.walletAddress.toLowerCase();
           const localAuthed = localStorage.getItem('vx_auth') === '1';
           const localWallet = (localStorage.getItem('vx_wallet') || '').toLowerCase();
@@ -17339,8 +17368,11 @@ async function boot() {
       let _inFlight = false;
       const _onSsoSync = async () => {
         if (document.visibilityState !== 'visible') return;
-        // Respect an explicit local logout (see vx_logged_out above).
-        if (localStorage.getItem('vx_logged_out') === '1') return;
+        // Respect an explicit local logout — unless a NEW cross-app login
+        // broadcast arrived since (Rana, 11 Jun: vx_login_ts comparison;
+        // a blanket return here meant a Runner login while Champions was
+        // backgrounded never got picked up on tab switch).
+        if (ssoMirrorBlocked()) return;
         if (_inFlight) return;
         _inFlight = true;
         try {
