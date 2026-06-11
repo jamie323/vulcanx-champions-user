@@ -7648,11 +7648,11 @@
 <!-- ======== VIEW: CAMPAIGN (solo PvE story mode) ======== -->
 <div class="view view-campaign">
   <div class="campaign-wrap">
-    <div class="page-hd">
-      <div>
-        <h2>🏔 Campaign</h2>
-        <div class="sub">Five chapters. Five bosses. Solo PvE story mode for your champion. <button class="cmp-howbtn" id="cmpHowBtn">📖 How it works</button></div>
-      </div>
+    <!-- Redesign #3 (Dizzydreamer): ornate campaign banner -->
+    <div class="campaign-hero">
+      <div class="cmp-hero-title"><span class="cmp-hero-fl"></span>Campaign<span class="cmp-hero-fl"></span></div>
+      <div class="cmp-hero-tag">Prove your might. Conquer every trial.</div>
+      <button class="cmp-howbtn" id="cmpHowBtn">📖 How it works</button>
     </div>
 
     <!-- How-it-works panel (collapsible) -->
@@ -7870,13 +7870,30 @@
   .cmp-cp-select { background: rgba(20,12,20,0.85); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-size: 13px; min-width: 220px; }
   .cmp-cp-stats { color: var(--muted); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
 
+  /* Redesign #3: ornate campaign banner */
+  .campaign-hero { text-align: center; margin: 0 0 22px; }
+  .campaign-hero .cmp-hero-title {
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+    font-family: 'Cinzel', serif; font-weight: 800; letter-spacing: 5px;
+    text-transform: uppercase; font-size: 34px; color: #ffd98a;
+    text-shadow: 0 0 18px rgba(255,160,60,0.5);
+  }
+  .campaign-hero .cmp-hero-fl { flex: 0 0 70px; height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255,205,107,0.85), transparent); }
+  .campaign-hero .cmp-hero-tag {
+    font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 2px;
+    color: rgba(255,235,205,0.6); margin: 6px 0 12px; font-style: italic;
+  }
+
   .campaign-chapters { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
   .cmp-chapter-card {
-    background: rgba(20,12,20,0.85); border: 1px solid var(--border);
+    background: rgba(20,12,20,0.85);
+    border: 1px solid rgba(255,205,107,0.3);
     border-radius: 14px; overflow: hidden; cursor: pointer; transition: all 0.18s;
     display: flex; flex-direction: column;
+    box-shadow: 0 0 0 1px rgba(255,205,107,0.08), inset 0 0 24px rgba(0,0,0,0.4);
   }
-  .cmp-chapter-card:hover:not(.locked) { transform: translateY(-3px); box-shadow: 0 8px 26px rgba(0,0,0,0.5); border-color: var(--accent); }
+  .cmp-chapter-card:hover:not(.locked) { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.55), 0 0 18px rgba(255,160,60,0.3); border-color: var(--accent); }
   .cmp-chapter-card.locked { opacity: 0.55; cursor: not-allowed; filter: grayscale(0.6); }
   .cmp-chapter-card.completed { border-color: var(--ok); box-shadow: 0 0 18px rgba(125,255,154,0.18); }
   .cmp-chapter-card.in-progress { border-color: var(--accent); box-shadow: 0 0 14px rgba(255,205,107,0.2); }
