@@ -7464,6 +7464,50 @@
      140px top padding to clear the topbar (52) + nav (64) fixed overlay,
      but .quests-wrap was stuck at 24px so the Quests heading sat behind
      the nav. Bumped to match. */
+  /* Redesign #4: Arena VS battle hero (Dizzydreamer) */
+  .arena-vs-hero {
+    margin: -4px 0 18px; padding: 16px 14px 18px; border-radius: 12px; text-align: center;
+    background: radial-gradient(120% 100% at 50% 0%, rgba(70,42,16,0.55), rgba(20,12,9,0.6));
+    border: 1px solid rgba(255,205,107,0.28);
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.4);
+  }
+  .arena-vs-hero .avh-title {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    font-family: 'Cinzel', serif; font-weight: 800; letter-spacing: 3px;
+    text-transform: uppercase; font-size: 18px; color: #ffd98a;
+    text-shadow: 0 0 12px rgba(255,160,60,0.45);
+  }
+  .arena-vs-hero .avh-fl { flex: 0 0 48px; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,205,107,0.8), transparent); }
+  .arena-vs-hero .avh-sub {
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(255,235,205,0.5); margin: 2px 0 14px;
+  }
+  .arena-vs-hero .avh-row {
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px;
+  }
+  .arena-vs-hero .avh-fighter { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .arena-vs-hero .avh-frame {
+    width: 96px; height: 128px; border-radius: 10px; overflow: hidden;
+    border: 2px solid rgba(255,205,107,0.55);
+    box-shadow: 0 0 18px rgba(255,160,60,0.3), inset 0 0 12px rgba(0,0,0,0.5);
+    background: radial-gradient(circle at 50% 30%, rgba(255,180,80,0.18), rgba(10,8,8,0.9));
+    display: flex; align-items: center; justify-content: center;
+  }
+  .arena-vs-hero .avh-frame.foe { border-color: rgba(150,120,160,0.5); box-shadow: 0 0 18px rgba(120,80,160,0.25), inset 0 0 12px rgba(0,0,0,0.5); }
+  .arena-vs-hero .avh-frame img { width: 100%; height: 100%; object-fit: cover; }
+  .arena-vs-hero .avh-foe-q {
+    font-family: 'Cinzel', serif; font-size: 52px; font-weight: 800;
+    color: rgba(200,180,210,0.6); text-shadow: 0 0 16px rgba(150,110,180,0.5);
+  }
+  .arena-vs-hero .avh-name { font-weight: 700; color: var(--text); font-size: 13px; }
+  .arena-vs-hero .avh-elo { font-size: 11px; color: rgba(255,235,205,0.55); }
+  .arena-vs-hero .avh-elo b { color: var(--accent); }
+  .arena-vs-hero .avh-vs {
+    font-family: 'Cinzel', serif; font-weight: 800; font-size: 30px; color: #ffcd6b;
+    text-shadow: 0 0 18px rgba(255,160,60,0.6); padding: 0 4px;
+  }
+
   .quests-wrap { max-width: 880px; margin: 0 auto; padding: 140px 20px 80px; }
   .quests-active-list { margin: 16px 0 28px; display: flex; flex-direction: column; gap: 10px; }
   .quest-active-row {
@@ -8129,6 +8173,27 @@
     </div>
 
     <div class="arena-card">
+      <!-- Redesign #4 (Dizzydreamer): make the Arena read as a battle
+           screen — a champion-VS hero at the top of the card. Populated by
+           renderArena(); purely presentational, all the controls below are
+           unchanged. -->
+      <div class="arena-vs-hero" id="arenaVsHero">
+        <div class="avh-title"><span class="avh-fl"></span>Arena Challenge<span class="avh-fl"></span></div>
+        <div class="avh-sub">Match Champion</div>
+        <div class="avh-row">
+          <div class="avh-fighter">
+            <div class="avh-frame player"><img id="avhPlayerImg" src="" alt="" decoding="async" onerror="vxImgRetry(this)"/></div>
+            <div class="avh-name" id="avhPlayerName">Your Champion</div>
+            <div class="avh-elo">ELO <b id="avhPlayerElo">—</b></div>
+          </div>
+          <div class="avh-vs">VS</div>
+          <div class="avh-fighter">
+            <div class="avh-frame foe"><div class="avh-foe-q">?</div></div>
+            <div class="avh-name">Challenger</div>
+            <div class="avh-elo" id="avhFoeNote">matched on entry</div>
+          </div>
+        </div>
+      </div>
       <!-- Trello (29 Apr): "Add champion selection dropdown before
            entering Arena" — testers were confused which champion was
            active. Picker sits at the top of the arena card; switching
@@ -8201,7 +8266,7 @@
         <div class="arena-stance-label" style="margin-top:14px;">Pick an Ability</div>
         <div class="arena-ability-grid" id="arenaAbilityGrid"></div>
       </div>
-      <button class="btn-big arena-find-btn" id="arenaFindBtn">⚔️ Find Opponent + Fight</button>
+      <button class="btn-big arena-find-btn" id="arenaFindBtn">⚔️ Enter Arena</button>
       <!-- Trello 2026-05-26 (OfUu5ovP): "Energy not clear in arena. It
            should show how much energy is left for the champion."
            Tiny chip directly under the find button — cost on the left,
@@ -15469,8 +15534,16 @@ function renderArena() {
     findBtn.textContent = '🗺️ On Adventure';
     bracketHint.textContent = `${bracket} bracket — your champion is away on an adventure and can't fight until they return.`;
   } else {
-    findBtn.textContent = '⚔️ Find Opponent + Fight';
+    findBtn.textContent = '⚔️ Enter Arena';
   }
+
+  // Populate the VS battle hero (redesign #4) with the active champion.
+  const avhImg = document.getElementById('avhPlayerImg');
+  if (avhImg && champ) avhImg.src = _portraitFor(champ.species_id, champ.bloodline_id, champ.stageIdx ?? 0);
+  const avhName = document.getElementById('avhPlayerName');
+  if (avhName && champ) avhName.textContent = champ.name || 'Your Champion';
+  const avhElo = document.getElementById('avhPlayerElo');
+  if (avhElo) avhElo.textContent = (eloVal && eloVal.textContent) ? eloVal.textContent : (champ?.rank?.elo ?? '—');
 
   // Stance buttons sync with internal state
   document.querySelectorAll('.stance-btn').forEach(btn => {
@@ -15632,8 +15705,8 @@ function syncArenaModeBtns() {
   const findBtn = document.getElementById('arenaFindBtn');
   if (findBtn) {
     findBtn.textContent = _arenaMode === 'pvp'
-      ? '🥊 Find PvP Opponent + Fight'
-      : '⚔️ Find Opponent + Fight';
+      ? '🥊 Enter Arena (PvP)'
+      : '⚔️ Enter Arena';
   }
 }
 // Filter to [data-mode] so we don't also grab the [data-combat-mode]
