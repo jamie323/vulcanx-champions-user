@@ -1701,6 +1701,25 @@
      — desktop padding-top was 24px which sat behind the fixed topbar
      (52px) + nav (64px). Bumped to 140px to match the other wraps. */
   .arena-wrap { max-width: 880px; margin: 0 auto; padding: 140px 20px 60px; }
+
+  /* ── Desktop landscape pass (Jamie + Dizzydreamer, 12 Jun): on wide
+     screens the Arena becomes a two-column battle screen — the VS hero
+     is a sticky "stage" on the left, all controls flow on the right —
+     instead of a narrow portrait column with empty sides. Pure media
+     query: tablet/mobile layout untouched, no DOM changes (children are
+     simply assigned grid columns; the hero spans every row). */
+  @media (min-width: 1100px) {
+    .arena-wrap { max-width: 1340px; }
+    .arena-card { display: grid; grid-template-columns: 480px 1fr;
+                  column-gap: 36px; align-items: start; }
+    .arena-card > * { grid-column: 2; }
+    .arena-card > .arena-vs-hero {
+      grid-column: 1; grid-row: 1 / span 30;
+      position: sticky; top: 150px; margin-bottom: 0;
+    }
+    .arena-card > .arena-vs-hero .avh-frame { width: 150px; height: 200px; }
+    .arena-card > .arena-vs-hero .avh-vs { font-size: 40px; }
+  }
   .arena-elo-pill {
     display: inline-flex; align-items: center; gap: 10px;
     padding: 10px 18px; background: rgba(255,205,107,0.08);
@@ -7559,6 +7578,12 @@
   }
 
   .quests-wrap { max-width: 880px; margin: 0 auto; padding: 140px 20px 80px; }
+  /* Desktop landscape pass (12 Jun): fill the width — adventure cards
+     flow 4-5 across instead of a portrait column. */
+  @media (min-width: 1100px) {
+    .quests-wrap { max-width: 1340px; }
+    .quests-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  }
   .quests-active-list { margin: 16px 0 28px; display: flex; flex-direction: column; gap: 10px; }
   .quest-active-row {
     background: rgba(20,12,20,0.85); border: 1px solid rgba(255,205,107,0.3);
@@ -7855,6 +7880,10 @@
 
   /* Same fix as .quests-wrap — clear topbar+nav (140px combined). */
   .campaign-wrap { max-width: 1100px; margin: 0 auto; padding: 140px 20px 80px; }
+  /* Desktop landscape pass (12 Jun): chapter cards 4 across. */
+  @media (min-width: 1100px) {
+    .campaign-wrap { max-width: 1340px; }
+  }
 
   .campaign-howitworks { display: none; margin: 18px 0 24px; padding: 14px; background: rgba(20,12,20,0.85); border: 1px solid var(--border); border-radius: 12px; }
   .campaign-howitworks.open { display: block; }
