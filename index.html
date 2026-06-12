@@ -1702,23 +1702,38 @@
      (52px) + nav (64px). Bumped to 140px to match the other wraps. */
   .arena-wrap { max-width: 880px; margin: 0 auto; padding: 140px 20px 60px; }
 
-  /* ── Desktop landscape pass (Jamie + Dizzydreamer, 12 Jun): on wide
-     screens the Arena becomes a two-column battle screen — the VS hero
-     is a sticky "stage" on the left, all controls flow on the right —
-     instead of a narrow portrait column with empty sides. Pure media
-     query: tablet/mobile layout untouched, no DOM changes (children are
-     simply assigned grid columns; the hero spans every row). */
+  /* ── Arena layout v2 (Dizzydreamer mockup, 12 Jun): big VS stage in the
+     main column, ONE compact toggles row beneath it, abilities + bloodline
+     signature in a right sidebar, Enter Arena footer under the stage.
+     NOT sticky — the champion cards stay put when scrolling (v1's
+     follow-scroll was explicitly disliked). Mobile stacks the groups in
+     the original order. */
+  .arena-hd .arena-hd-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+  .arena-hd .arena-invite-row { margin: 0; display: flex; gap: 8px; }
   @media (min-width: 1100px) {
     .arena-wrap { max-width: 1340px; }
-    .arena-card { display: grid; grid-template-columns: 480px 1fr;
-                  column-gap: 36px; align-items: start; }
-    .arena-card > * { grid-column: 2; }
-    .arena-card > .arena-vs-hero {
-      grid-column: 1; grid-row: 1 / span 30;
-      position: sticky; top: 150px; margin-bottom: 0;
-    }
-    .arena-card > .arena-vs-hero .avh-frame { width: 150px; height: 200px; }
-    .arena-card > .arena-vs-hero .avh-vs { font-size: 40px; }
+    .arena-card { display: grid; grid-template-columns: minmax(0,1fr) 380px;
+                  column-gap: 36px; row-gap: 4px; align-items: start; }
+    .arena-main { grid-column: 1; grid-row: 1; }
+    .arena-side { grid-column: 2; grid-row: 1 / span 2; }
+    .arena-foot { grid-column: 1; grid-row: 2; }
+    /* Big battle stage — fills the empty space the mockup called out.
+       (.arena-card prefix: this block sits earlier in the stylesheet than
+       the base .avh-* rules, so it needs the extra specificity to win.) */
+    .arena-card .arena-vs-hero { padding: 26px 18px 28px; }
+    .arena-card .arena-vs-hero .avh-row { gap: 30px; }
+    .arena-card .arena-vs-hero .avh-frame { width: 230px; height: 310px; }
+    .arena-card .arena-vs-hero .avh-vs { font-size: 46px; }
+    .arena-card .arena-vs-hero .avh-name { font-size: 16px; }
+    .arena-card .arena-vs-hero .avh-foe-q { font-size: 92px; }
+    /* One toggles row: Match Mode · Combat Mode · Battle Stance */
+    .arena-toggles { display: grid; grid-template-columns: repeat(3, minmax(0,1fr));
+                     gap: 16px; align-items: start; }
+    .arena-toggles .arena-mode-row, .arena-toggles .arena-stance-row { margin: 6px 0; }
+    .arena-toggles .stance-btn { padding: 10px 6px; font-size: 12px; }
+    .arena-toggles .arena-mode-btn { padding: 10px 8px; font-size: 12px; }
+    /* Sidebar abilities read as a vertical list (mockup) */
+    .arena-side .arena-ability-grid { grid-template-columns: 1fr; }
   }
   .arena-elo-pill {
     display: inline-flex; align-items: center; gap: 10px;
@@ -5638,7 +5653,10 @@
      ================================================================ */
   .howto-view-wrap {
     max-width: 980px; margin: 0 auto;
-    padding: 32px 24px 64px;
+    /* Dizzydreamer (12 Jun): "How It Works" title was cut off — 32px top
+       padding left the hero behind the fixed topbar (52) + nav (64)
+       overlay. 140px matches every other view wrap. */
+    padding: 140px 24px 64px;
   }
   .howto-hero {
     text-align: center; margin-bottom: 28px;
@@ -7880,9 +7898,16 @@
 
   /* Same fix as .quests-wrap — clear topbar+nav (140px combined). */
   .campaign-wrap { max-width: 1100px; margin: 0 auto; padding: 140px 20px 80px; }
-  /* Desktop landscape pass (12 Jun): chapter cards 4 across. */
+  /* Desktop landscape pass v2 (Dizzydreamer 12 Jun): all 5 chapters in
+     ONE row — no side gaps, no scrolling past cards — and a bigger
+     CAMPAIGN banner title. */
   @media (min-width: 1100px) {
-    .campaign-wrap { max-width: 1340px; }
+    .campaign-wrap { max-width: 1480px; }
+    /* .campaign-wrap prefix: the base rules are declared later in the
+       stylesheet, so the media overrides need higher specificity. */
+    .campaign-wrap .campaign-chapters { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .campaign-wrap .campaign-hero .cmp-hero-title { font-size: 46px; letter-spacing: 7px; }
+    .campaign-wrap .campaign-hero .cmp-hero-tag { font-size: 15px; }
   }
 
   .campaign-howitworks { display: none; margin: 18px 0 24px; padding: 14px; background: rgba(20,12,20,0.85); border: 1px solid var(--border); border-radius: 12px; }
@@ -8227,24 +8252,31 @@
 <!-- ======== VIEW: ARENA (Phase 4 MVP — vs bots) ======== -->
 <div class="view view-arena">
   <div class="arena-wrap">
-    <div class="page-hd">
+    <!-- Arena layout v2 (Dizzydreamer mockup, 12 Jun): page header carries
+         the title + the invite/inbox actions; the card below is the
+         battle stage. -->
+    <div class="page-hd arena-hd">
       <div>
-        <h2>⚔️ The Arena</h2>
-        <div class="sub">Pick your stance, fight, climb the ELO ladder.</div>
+        <h2>⚔️ Arena Challenge</h2>
+        <div class="sub">Duel &amp; conquer — climb the ELO ladder.</div>
       </div>
-      <!-- Trello (29 Apr): "Fix Arena ranking/ELO naming inconsistency"
-           — Header pill said "Your Ranking" but the bracket pill below
-           said "ELO". Same number, two names. Unified to "ELO" since
-           that's what the matchmaker actually uses. -->
-      <div class="arena-elo-pill">
-        <span class="arena-elo-label">Your ELO</span>
-        <b id="arenaEloVal">100</b>
-        <!-- Trello (2 May): "Add help button explaining PvP ELO bracket
-             matchmaking" — testers see ELO but don't know what bracket
-             they're in or who they can match with. -->
-        <button class="arena-elo-help" type="button"
-                onclick="showEloHelp()"
-                title="How does ELO matchmaking work?">?</button>
+      <div class="arena-hd-right">
+        <!-- Phase 8.6: invite a specific wallet to a duel (moved up from
+             the card per the mockup) -->
+        <div class="arena-invite-row">
+          <button class="arena-invite-btn" id="arenaInviteBtn" title="Challenge a specific player by wallet">🎯 Challenge Player by Wallet</button>
+          <button class="arena-inbox-btn" id="arenaInboxBtn" title="See challenges sent to you">
+            📬 Inbox <span class="arena-inbox-badge" id="arenaInboxBadge" style="display:none;">0</span>
+          </button>
+        </div>
+        <!-- Trello (29 Apr): unified to "ELO" naming. -->
+        <div class="arena-elo-pill">
+          <span class="arena-elo-label">Your ELO</span>
+          <b id="arenaEloVal">100</b>
+          <button class="arena-elo-help" type="button"
+                  onclick="showEloHelp()"
+                  title="How does ELO matchmaking work?">?</button>
+        </div>
       </div>
     </div>
 
@@ -8269,111 +8301,96 @@
     </div>
 
     <div class="arena-card">
-      <!-- Redesign #4 (Dizzydreamer): make the Arena read as a battle
-           screen — a champion-VS hero at the top of the card. Populated by
-           renderArena(); purely presentational, all the controls below are
-           unchanged. -->
-      <div class="arena-vs-hero" id="arenaVsHero">
-        <div class="avh-title"><span class="avh-fl"></span>Arena Challenge<span class="avh-fl"></span></div>
-        <div class="avh-sub">Match Champion</div>
-        <div class="avh-row">
-          <div class="avh-fighter">
-            <div class="avh-frame player"><img id="avhPlayerImg" src="" alt="" decoding="async" onerror="vxImgRetry(this)"/></div>
-            <div class="avh-name" id="avhPlayerName">Your Champion</div>
-            <div class="avh-elo">ELO <b id="avhPlayerElo">—</b></div>
+      <!-- Arena layout v2 (Dizzydreamer mockup): three groups.
+           .arena-main  = big VS stage + picker/summary + one toggles row
+           .arena-side  = abilities + bloodline signature (desktop sidebar)
+           .arena-foot  = Enter Arena + energy + bracket hint
+           On mobile the groups simply stack in this order (same relative
+           order as before); on desktop a grid places side on the right. -->
+      <div class="arena-main">
+        <div class="arena-vs-hero" id="arenaVsHero">
+          <div class="avh-row">
+            <div class="avh-fighter">
+              <div class="avh-frame player"><img id="avhPlayerImg" src="" alt="" decoding="async" onerror="vxImgRetry(this)"/></div>
+              <div class="avh-name" id="avhPlayerName">Your Champion</div>
+              <div class="avh-elo">ELO <b id="avhPlayerElo">—</b></div>
+            </div>
+            <div class="avh-vs">VS</div>
+            <div class="avh-fighter">
+              <div class="avh-frame foe"><div class="avh-foe-q">?</div></div>
+              <div class="avh-name">Challenger</div>
+              <div class="avh-elo" id="avhFoeNote">matched on entry</div>
+            </div>
           </div>
-          <div class="avh-vs">VS</div>
-          <div class="avh-fighter">
-            <div class="avh-frame foe"><div class="avh-foe-q">?</div></div>
-            <div class="avh-name">Challenger</div>
-            <div class="avh-elo" id="avhFoeNote">matched on entry</div>
+        </div>
+        <!-- Trello (29 Apr): champion picker dropdown. -->
+        <div class="arena-champ-picker-row" id="arenaChampPickerRow" style="display:none;">
+          <span class="arena-stance-label">Champion</span>
+          <select id="arenaChampSelect" class="arena-champ-select"></select>
+        </div>
+        <div class="arena-champ-summary" id="arenaChampSummary">
+          <em>Open one of your champions to enter the arena.</em>
+        </div>
+
+        <!-- Phase 8.5: healing cooldown chip. -->
+        <div class="arena-cooldown-row" id="arenaCooldownRow" style="display:none;">
+          <span class="acr-icon">🩹</span>
+          <span class="acr-text">Healing — ready in <span class="acr-time" id="arenaCooldownTime">60s</span></span>
+          <button class="acr-heal" id="arenaHealBtn" title="Use 1 Healing Salve to fight now">Heal Now (1 🩹)</button>
+        </div>
+
+        <!-- One compact toggles row on desktop: Match Mode · Combat Mode ·
+             Battle Stance (mockup). Stacks on mobile as before. -->
+        <div class="arena-toggles">
+          <!-- Phase 8: bots vs PvP mode toggle. -->
+          <div class="arena-mode-row" id="arenaModeRow">
+            <div class="arena-stance-label">Match Mode</div>
+            <div class="arena-mode-btns">
+              <button class="arena-mode-btn active" data-mode="bots" title="Fight against synthesized bot opponents">🤖 vs Bots</button>
+              <button class="arena-mode-btn" data-mode="pvp" title="Fight against real player loadouts from the global pool">🥊 PvP</button>
+            </div>
           </div>
-        </div>
-      </div>
-      <!-- Trello (29 Apr): "Add champion selection dropdown before
-           entering Arena" — testers were confused which champion was
-           active. Picker sits at the top of the arena card; switching
-           re-renders the summary + bracket + ELO + healing chip. -->
-      <div class="arena-champ-picker-row" id="arenaChampPickerRow" style="display:none;">
-        <span class="arena-stance-label">Champion</span>
-        <select id="arenaChampSelect" class="arena-champ-select"></select>
-      </div>
-      <div class="arena-champ-summary" id="arenaChampSummary">
-        <em>Open one of your champions to enter the arena.</em>
-      </div>
-
-      <!-- Phase 8.5: healing cooldown chip. Hidden by default; shown
-           when next_battle_at is in the future. -->
-      <div class="arena-cooldown-row" id="arenaCooldownRow" style="display:none;">
-        <span class="acr-icon">🩹</span>
-        <span class="acr-text">Healing — ready in <span class="acr-time" id="arenaCooldownTime">60s</span></span>
-        <button class="acr-heal" id="arenaHealBtn" title="Use 1 Healing Salve to fight now">Heal Now (1 🩹)</button>
-      </div>
-
-      <!-- Phase 8: bots vs PvP mode toggle. Defaults to bots so first-
-           time players ramp up safely; flipping to PvP pulls a real
-           opponent loadout from the pool (falls back to bot if the
-           bracket pool is thin). -->
-      <div class="arena-mode-row" id="arenaModeRow">
-        <div class="arena-stance-label">Match Mode</div>
-        <div class="arena-mode-btns">
-          <button class="arena-mode-btn active" data-mode="bots" title="Fight against synthesized bot opponents">🤖 vs Bots</button>
-          <button class="arena-mode-btn" data-mode="pvp" title="Fight against real player loadouts from the global pool">🥊 PvP</button>
-        </div>
-      </div>
-
-      <!-- Trello (Ric O., 2026-05-21): "In campaigns we have the active
-           combat mode. Is it possible to get this mode also for the
-           arena? Would be a lot more fun." Same UX pattern as the
-           campaign combat-mode toggle. Auto = server resolves the
-           fight, animate the result. Active = pre-fight QTE combo,
-           timing-graded multiplier (±15%) sent to the server. -->
-      <div class="arena-mode-row" id="arenaCombatModeRow">
-        <div class="arena-stance-label">Combat Mode</div>
-        <div class="arena-mode-btns">
-          <button class="arena-mode-btn active" data-combat-mode="auto"   title="Auto-resolve the fight, watch the result animate. No reaction skill needed.">🎲 Auto</button>
-          <button class="arena-mode-btn"        data-combat-mode="active" title="Pre-fight QTE combo (3 runes). Perfect timing boosts your damage by up to +15%.">⚡ Active</button>
-        </div>
-      </div>
-
-      <!-- Phase 8.6: invite a specific wallet to a duel -->
-      <div class="arena-invite-row">
-        <button class="arena-invite-btn" id="arenaInviteBtn" title="Challenge a specific player by wallet">🎯 Challenge Player by Wallet</button>
-        <button class="arena-inbox-btn" id="arenaInboxBtn" title="See challenges sent to you">
-          📬 Inbox <span class="arena-inbox-badge" id="arenaInboxBadge" style="display:none;">0</span>
-        </button>
-      </div>
-
-      <div class="arena-stance-row" id="arenaStanceRow">
-        <div class="arena-stance-label">Battle Stance</div>
-        <div class="arena-stance-btns">
-          <button class="stance-btn" data-stance="aggressive" title="+15% damage, -15% defense"><img class="ui-ico" src="nft_images/icons/stance_aggressive.png" alt="" onerror="this.style.display='none'"/> Aggressive</button>
-          <button class="stance-btn active" data-stance="balanced" title="No modifiers"><img class="ui-ico" src="nft_images/icons/stance_balanced.png" alt="" onerror="this.style.display='none'"/> Balanced</button>
-          <button class="stance-btn" data-stance="defensive" title="-15% damage, +15% defense"><img class="ui-ico" src="nft_images/icons/stance_defensive.png" alt="" onerror="this.style.display='none'"/> Defensive</button>
+          <!-- Trello (Ric O., 2026-05-21): Auto / Active combat. -->
+          <div class="arena-mode-row" id="arenaCombatModeRow">
+            <div class="arena-stance-label">Combat Mode</div>
+            <div class="arena-mode-btns">
+              <button class="arena-mode-btn active" data-combat-mode="auto"   title="Auto-resolve the fight, watch the result animate. No reaction skill needed.">🎲 Auto</button>
+              <button class="arena-mode-btn"        data-combat-mode="active" title="Pre-fight QTE combo (3 runes). Perfect timing boosts your damage by up to +15%.">⚡ Active</button>
+            </div>
+          </div>
+          <div class="arena-stance-row" id="arenaStanceRow">
+            <div class="arena-stance-label">Battle Stance</div>
+            <div class="arena-stance-btns">
+              <button class="stance-btn" data-stance="aggressive" title="+15% damage, -15% defense"><img class="ui-ico" src="nft_images/icons/stance_aggressive.png" alt="" onerror="this.style.display='none'"/> Aggressive</button>
+              <button class="stance-btn active" data-stance="balanced" title="No modifiers"><img class="ui-ico" src="nft_images/icons/stance_balanced.png" alt="" onerror="this.style.display='none'"/> Balanced</button>
+              <button class="stance-btn" data-stance="defensive" title="-15% damage, +15% defense"><img class="ui-ico" src="nft_images/icons/stance_defensive.png" alt="" onerror="this.style.display='none'"/> Defensive</button>
+            </div>
+          </div>
         </div>
         <div class="stance-detail" id="stanceDetail"></div>
       </div>
 
-      <!-- Phase M: ability picker. Bloodline signature is locked + auto;
-           player picks 1 universal ability from a pool of 8. -->
-      <div class="arena-ability-row" id="arenaAbilityRow">
-        <div class="arena-stance-label">Bloodline Signature <span class="al-locked">(locked)</span></div>
-        <div class="arena-bloodline-sig" id="arenaBloodlineSig"></div>
-        <div class="arena-stance-label" style="margin-top:14px;">Pick an Ability</div>
-        <div class="arena-ability-grid" id="arenaAbilityGrid"></div>
+      <aside class="arena-side">
+        <!-- Phase M: ability picker. Bloodline signature is locked + auto;
+             player picks 1 universal ability from a pool of 8. -->
+        <div class="arena-ability-row" id="arenaAbilityRow">
+          <div class="arena-stance-label">Pick an Ability</div>
+          <div class="arena-ability-grid" id="arenaAbilityGrid"></div>
+          <div class="arena-stance-label" style="margin-top:14px;">Bloodline Signature <span class="al-locked">(locked)</span></div>
+          <div class="arena-bloodline-sig" id="arenaBloodlineSig"></div>
+        </div>
+      </aside>
+
+      <div class="arena-foot">
+        <button class="btn-big arena-find-btn" id="arenaFindBtn">⚔️ Enter Arena</button>
+        <!-- Trello 2026-05-26 (OfUu5ovP): energy cost + remaining chip. -->
+        <div class="arena-energy-chip" id="arenaEnergyChip">
+          <span>Costs <b>15 <img class="ui-ico sm" src="nft_images/icons/energy.png" alt="energy" onerror="this.style.display='none'"/></b></span>
+          <span class="ae-sep">·</span>
+          <span>You have <b id="arenaEnergyNow">100</b> <img class="ui-ico sm" src="nft_images/icons/energy.png" alt="energy" onerror="this.style.display='none'"/></span>
+        </div>
+        <div class="arena-bracket-hint" id="arenaBracketHint"></div>
       </div>
-      <button class="btn-big arena-find-btn" id="arenaFindBtn">⚔️ Enter Arena</button>
-      <!-- Trello 2026-05-26 (OfUu5ovP): "Energy not clear in arena. It
-           should show how much energy is left for the champion."
-           Tiny chip directly under the find button — cost on the left,
-           remaining on the right. Updates whenever the active champion's
-           energy changes (rendered alongside the existing vital bars). -->
-      <div class="arena-energy-chip" id="arenaEnergyChip">
-        <span>Costs <b>15 <img class="ui-ico sm" src="nft_images/icons/energy.png" alt="energy" onerror="this.style.display='none'"/></b></span>
-        <span class="ae-sep">·</span>
-        <span>You have <b id="arenaEnergyNow">100</b> <img class="ui-ico sm" src="nft_images/icons/energy.png" alt="energy" onerror="this.style.display='none'"/></span>
-      </div>
-      <div class="arena-bracket-hint" id="arenaBracketHint"></div>
     </div>
 
     <div class="arena-history">
