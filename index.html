@@ -13499,6 +13499,77 @@ const ELYSIUM_CHAIN = {
   blockExplorerUrls: ["https://blockscout.elysiumchain.tech/"],
 };
 
+// ============================================================
+// PYR Wager Escrow (on-chain) — STAGED, DORMANT until deployed.
+// ============================================================
+// Today wagers settle on the backend ledger. This module flips the
+// money flow on-chain (PyrWagerEscrow.sol, ~/VulcanX-Avatar-PoC/contracts):
+// sender deposits on invite → acceptor matches on accept → winner claims
+// via an oracle-signed voucher. It is ENTIRELY OFF until
+// WAGER_ESCROW.address is set to the deployed contract — while it's ''
+// every helper short-circuits and the wager flow runs exactly as it does
+// now. Activation steps + backend voucher signer: see
+// ~/VulcanX-Avatar-PoC/contracts/ESCROW_ACTIVATION.md.
+// Function selectors are keccak-derived from the live ABI (uint64 expiry).
+const WAGER_ESCROW = {
+  address: '',            // ← set to 0x… deployed PyrWagerEscrow to activate
+  chainIdHex: '0x53B',    // Elysium mainnet, chainId 1339
+};
+const Escrow = {
+  enabled() { return /^0x[a-fA-F0-9]{40}$/.test(WAGER_ESCROW.address); },
+  // integer PYR → wei (1e18), as a 0x hex string for eth_sendTransaction value
+  _pyrToWeiHex(pyr) {
+    const v = BigInt(Math.max(0, Math.floor(Number(pyr) || 0))) * (10n ** 18n);
+    return '0x' + v.toString(16);
+  },
+  _u(n) { return BigInt(n).toString(16).padStart(64, '0'); },          // uint → 32B word
+  _addr(a) { return a.replace(/^0x/, '').toLowerCase().padStart(64, '0'); },
+  _b32(h) { return h.replace(/^0x/, '').toLowerCase().padStart(64, '0'); },
+  async _ensureChain() {
+    try {
+      await window.ethereum.request({ method: 'wallet_switchEthereumChain',
+        params: [{ chainId: WAGER_ESCROW.chainIdHex }] });
+    } catch (e) {
+      if (e && e.code === 4902) {
+        await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [ELYSIUM_CHAIN] });
+      } else { throw e; }
+    }
+  },
+  async _send(data, valueHex) {
+    if (!window.ethereum) throw new Error('no_wallet');
+    const from = getWallet();
+    if (!from) throw new Error('not_connected');
+    await this._ensureChain();
+    return window.ethereum.request({
+      method: 'eth_sendTransaction',
+      params: [{ from, to: WAGER_ESCROW.address, data, ...(valueHex ? { value: valueHex } : {}) }],
+    });  // returns txHash; backend watches Created/Funded/Settled events to reconcile
+  },
+  // Sender deposits their stake when creating a wagered invite.
+  // idHex (bytes32) + expiry (uint64 unix) come from the invite-create response.
+  createWager(idHex, expiry, stakePyr) {
+    const data = '0x684e26dc' + this._b32(idHex) + this._u(expiry);
+    return this._send(data, this._pyrToWeiHex(stakePyr));
+  },
+  // Acceptor matches the stake on accept.
+  acceptWager(idHex, stakePyr) {
+    return this._send('0x4f3ae2d0' + this._b32(idHex), this._pyrToWeiHex(stakePyr));
+  },
+  // Winner claims: submit the oracle-signed voucher (id, winner, sig all
+  // returned by the backend when escrow is on). bytes is ABI dynamic-tail.
+  settle(idHex, winner, sigHex) {
+    const sig = sigHex.replace(/^0x/, '');
+    const sigLen = sig.length / 2;
+    const data = '0x1369b2b4'
+      + this._b32(idHex)
+      + this._addr(winner)
+      + this._u(96)                                       // offset to bytes (0x60)
+      + this._u(sigLen)                                   // bytes length
+      + sig.padEnd(Math.ceil(sigLen / 32) * 64, '0');     // right-padded to word
+    return this._send(data, null);
+  },
+};
+
 // QA (11 May, sognoDomhan): defense-in-depth XSS escape for any
 // user-controlled string about to be inserted into innerHTML. Backend
 // sanitizeChampionName() rejects bad input on save, but we also escape
@@ -16382,12 +16453,18 @@ bindIf('cmSendBtn', 'click', async () => {
   try {
     const wagerRaw = document.getElementById('cmWager')?.value || '';
     const wager_pyr = Math.max(0, Math.min(10000, Math.floor(Number(wagerRaw) || 0)));
-    await apiInviteCreate({
+    const created = await apiInviteCreate({
       champion_id: ch.id, to_wallet: toWallet,
       stance: _arenaStance, ability_id, equipped,
       message: msg || undefined,
       wager_pyr: wager_pyr || undefined,
     });
+    // ESCROW (dormant): when an escrow contract is configured, lock the
+    // sender's stake on-chain. No-op today (Escrow.enabled() === false).
+    if (Escrow.enabled() && wager_pyr > 0 && created?.escrow?.id) {
+      btn.textContent = 'Confirm deposit…';
+      await Escrow.createWager(created.escrow.id, created.escrow.expiry, wager_pyr);
+    }
     closeChallengeModal();
     vxAlert(`Challenge sent to ${toWallet.slice(0,6)}…${toWallet.slice(-4)}. Expires in 24h.`,
       { title: '🎯 Challenge sent', icon: '🎯' });
@@ -16487,6 +16564,14 @@ bindIf('aiAcceptBtn', 'click', async () => {
   const btn = document.getElementById('aiAcceptBtn');
   btn.disabled = true; btn.textContent = 'Fighting…';
   try {
+    // ESCROW (dormant): acceptor matches the stake on-chain BEFORE the
+    // battle resolves, so the pot is fully funded at settle time. No-op
+    // today (Escrow.enabled() === false → backend ledger handles it).
+    if (Escrow.enabled() && inv.wager_pyr > 0 && inv.escrow?.id) {
+      btn.textContent = 'Confirm deposit…';
+      await Escrow.acceptWager(inv.escrow.id, inv.wager_pyr);
+      btn.textContent = 'Fighting…';
+    }
     const resp = await apiInviteAccept({
       invite_id: inv.id,
       champion_id: championId,
@@ -17283,6 +17368,13 @@ bindIf('arClaimWagerBtn', 'click', async () => {
   btn.textContent = '⏳ Claiming…';
   try {
     const resp = await apiClaimWagerReward(window._pendingWagerClaim.match_id);
+    // ESCROW (dormant): when on, the backend returns an oracle-signed
+    // voucher instead of crediting the ledger; the winner submits it to
+    // collect from the contract. No-op today (no resp.escrow.voucher).
+    if (Escrow.enabled() && resp?.escrow?.voucher) {
+      btn.textContent = '⏳ Confirm claim…';
+      await Escrow.settle(resp.escrow.id, resp.escrow.winner, resp.escrow.voucher);
+    }
     const claimed = Number(resp?.pyr_claimed ?? window._pendingWagerClaim.pyr_amount);
     vxAlert(`Claimed ${claimed.toLocaleString()} PYR!`,
       {title: 'Winnings Claimed', icon: '💰', variant: 'success'});
@@ -17325,6 +17417,10 @@ bindIf('arenaClaimAllBtn', 'click', async () => {
   for (const it of items) {
     try {
       const r = await apiClaimWagerReward(it.match_id);
+      // ESCROW (dormant): submit the oracle voucher per match when on.
+      if (Escrow.enabled() && r?.escrow?.voucher) {
+        await Escrow.settle(r.escrow.id, r.escrow.winner, r.escrow.voucher);
+      }
       totalClaimed += Number(r.pyr_claimed || it.payout_pyr || 0);
     } catch (e) {
       // already_claimed elsewhere → just skip; anything else counts as failed.
