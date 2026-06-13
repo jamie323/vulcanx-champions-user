@@ -1712,20 +1712,31 @@
   .arena-hd .arena-invite-row { margin: 0; display: flex; gap: 8px; }
   @media (min-width: 1100px) {
     .arena-wrap { max-width: 1340px; }
-    .arena-card { display: grid; grid-template-columns: minmax(0,1fr) 380px;
-                  column-gap: 36px; row-gap: 4px; align-items: start; }
-    .arena-main { grid-column: 1; grid-row: 1; }
-    .arena-side { grid-column: 2; grid-row: 1 / span 2; }
-    .arena-foot { grid-column: 1; grid-row: 2; }
-    /* Big battle stage — fills the empty space the mockup called out.
-       (.arena-card prefix: this block sits earlier in the stylesheet than
-       the base .avh-* rules, so it needs the extra specificity to win.) */
-    .arena-card .arena-vs-hero { padding: 26px 18px 28px; }
-    .arena-card .arena-vs-hero .avh-row { gap: 30px; }
-    .arena-card .arena-vs-hero .avh-frame { width: 230px; height: 310px; }
-    .arena-card .arena-vs-hero .avh-vs { font-size: 46px; }
-    .arena-card .arena-vs-hero .avh-name { font-size: 16px; }
-    .arena-card .arena-vs-hero .avh-foe-q { font-size: 92px; }
+    /* Layout v3 (Dizzydreamer, 13 Jun): left column (champ + modes) is the
+       hero, right column stacks abilities THEN Enter Arena beneath them. */
+    .arena-card { display: grid; grid-template-columns: minmax(0,1fr) 360px;
+                  column-gap: 32px; row-gap: 16px; align-items: start; }
+    .arena-main { grid-column: 1; grid-row: 1 / span 2; }
+    .arena-side { grid-column: 2; grid-row: 1; }
+    .arena-foot { grid-column: 2; grid-row: 2; }       /* Enter Arena under abilities */
+    .arena-foot .arena-find-btn { max-width: none; width: 100%; }
+    /* Champion name + details TOP ROW: pill · name · weapon, full-width bar */
+    .arena-card .arena-champ-summary {
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      text-align: left; padding: 12px 18px; margin: 0 0 4px;
+    }
+    .arena-card .arena-champ-summary .arena-rank-row { margin: 0; }
+    .arena-card .arena-champ-summary .acs-name { font-size: 15px; }
+    .arena-card .arena-champ-summary > div:last-child { margin-left: auto; margin-top: 0 !important; }
+    /* Big battle stage — enlarged so the left column matches the right's
+       height (her "enlarge left to match right"). (.arena-card prefix wins
+       over the base .avh-* rules declared later.) */
+    .arena-card .arena-vs-hero { padding: 30px 22px 34px; }
+    .arena-card .arena-vs-hero .avh-row { gap: 40px; }
+    .arena-card .arena-vs-hero .avh-frame { width: 270px; height: 360px; }
+    .arena-card .arena-vs-hero .avh-vs { font-size: 52px; }
+    .arena-card .arena-vs-hero .avh-name { font-size: 17px; }
+    .arena-card .arena-vs-hero .avh-foe-q { font-size: 104px; }
     /* One toggles row: Match Mode · Combat Mode · Battle Stance */
     .arena-toggles { display: grid; grid-template-columns: repeat(3, minmax(0,1fr));
                      gap: 16px; align-items: start; }
@@ -8308,6 +8319,18 @@
            On mobile the groups simply stack in this order (same relative
            order as before); on desktop a grid places side on the right. -->
       <div class="arena-main">
+        <!-- Champion name + details as a TOP ROW above the stage
+             (Dizzydreamer, 13 Jun): avoids the centered text-orphan that
+             sat under the cards; on desktop it's a horizontal bar
+             (rank pill · name+details · weapon). -->
+        <div class="arena-champ-summary" id="arenaChampSummary">
+          <em>Open one of your champions to enter the arena.</em>
+        </div>
+        <!-- Trello (29 Apr): champion picker dropdown. -->
+        <div class="arena-champ-picker-row" id="arenaChampPickerRow" style="display:none;">
+          <span class="arena-stance-label">Champion</span>
+          <select id="arenaChampSelect" class="arena-champ-select"></select>
+        </div>
         <div class="arena-vs-hero" id="arenaVsHero">
           <div class="avh-row">
             <div class="avh-fighter">
@@ -8322,14 +8345,6 @@
               <div class="avh-elo" id="avhFoeNote">matched on entry</div>
             </div>
           </div>
-        </div>
-        <!-- Trello (29 Apr): champion picker dropdown. -->
-        <div class="arena-champ-picker-row" id="arenaChampPickerRow" style="display:none;">
-          <span class="arena-stance-label">Champion</span>
-          <select id="arenaChampSelect" class="arena-champ-select"></select>
-        </div>
-        <div class="arena-champ-summary" id="arenaChampSummary">
-          <em>Open one of your champions to enter the arena.</em>
         </div>
 
         <!-- Phase 8.5: healing cooldown chip. -->
@@ -15691,8 +15706,7 @@ function renderArena() {
         <span class="arp-elo">${arena.elo} ELO</span>
       </span>
     </div>
-    <b>${esc(champ.name)}</b> · ${SPECIES[champ.species_id]?.label || champ.species_id} ·
-    L${champ.level} · ${stageName}
+    <span class="acs-name"><b>${esc(champ.name)}</b> · ${SPECIES[champ.species_id]?.label || champ.species_id} · L${champ.level} · ${stageName}</span>
     ${equippedLine}
   `;
   bracketHint.textContent = `${bracket} bracket — opponents matched to your stage tier.`;
