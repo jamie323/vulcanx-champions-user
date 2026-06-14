@@ -308,6 +308,21 @@
     border-radius: 16px; overflow: hidden; position: relative;
     background: linear-gradient(180deg, #1a0f1a, #0a0608);
   }
+  /* Blurred, scaled, dimmed copy of the same art fills the frame edge to
+     edge so there's no visible black space behind the (contained) hero.
+     Sits below the sharp portrait (#stageImg z-index:1) and the crossfade
+     prev layer. Dizzydreamer: "characters must fill all of the black space". */
+  /* id selector so this beats the legacy contain/breathe img rules
+     (body.view-champion .stage-frame.cc-stage-frame img, .stage-frame img). */
+  body.view-champion #stageImgBg.stage-bg {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover !important; object-position: center;
+    transform: scale(1.18) !important;
+    filter: blur(30px) saturate(1.15) brightness(0.5) !important;
+    animation: none !important;
+    z-index: 0; pointer-events: none;
+  }
   /* Tester report 2026-04-27 (Ric O., refixing pass): feet still cut off
      on mobile after first attempt. Root cause: a LATER rule
      `.stage-frame img { object-fit: cover }` (legacy compact-view CSS)
@@ -8715,6 +8730,11 @@
   <!-- ═══════ CENTER COLUMN ═══════ -->
   <main class="cc-col cc-col-center">
     <div class="stage-frame cc-stage-frame" id="stageFrame">
+      <!-- Full-bleed backdrop: a blurred/scaled copy of the SAME stage art
+           so the character fills all the black space (Dizzydreamer mockup)
+           without cropping the sharp portrait on top. src kept in sync by
+           setStageImage(). -->
+      <img id="stageImgBg" class="stage-bg" src="evolution/L01_whelp_final.jpg" alt="" aria-hidden="true" />
       <img id="stageImgPrev" class="stageImgPrev" src="" alt="" aria-hidden="true" />
       <img id="stageImg" src="evolution/L01_whelp_final.jpg" decoding="async" onerror="vxImgRetry(this)" />
       <div class="aura"></div>
@@ -18449,6 +18469,10 @@ function setStageImage(newSrc) {
   if (newSrc && newSrc.indexOf('evolution20/') === 0 && newSrc.indexOf(_IMG_Q) === -1) {
     newSrc = newSrc + _IMG_Q;
   }
+  // Keep the blurred full-bleed backdrop in sync with the sharp art so the
+  // frame has no black space behind the (contained) hero on any stage.
+  const bg = document.getElementById('stageImgBg');
+  if (bg && bg.getAttribute('src') !== newSrc) bg.src = newSrc;
   // absolute url for equality
   const curAbs = cur.src;
   if (!_lastStageSrc) {
