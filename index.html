@@ -7524,16 +7524,6 @@
     </div>
 
     <div class="quests-grid" id="questsGrid"></div>
-
-    <!-- Difficulty legend -->
-    <div class="adv-legend">
-      <span class="adv-legend-title">Difficulty:</span>
-      <span class="adv-legend-item"><span class="qc-dia">◆</span> Easy</span>
-      <span class="adv-legend-item"><span class="qc-dia">◆◆</span> Moderate</span>
-      <span class="adv-legend-item"><span class="qc-dia">◆◆◆</span> Hard</span>
-      <span class="adv-legend-item"><span class="qc-dia">◆◆◆◆</span> Very Hard</span>
-      <span class="adv-legend-energy">⚡ Energy cost varies by duration and difficulty.</span>
-    </div>
   </div>
 </div>
 
@@ -7744,13 +7734,6 @@
     font-size: 9px; letter-spacing: 1px; font-weight: 700;
   }
   .qc-stat-pill.secondary { background: rgba(255,255,255,0.05); color: var(--muted); }
-  .quest-card .qc-meta {
-    display: flex; align-items: center; justify-content: space-between;
-    font-size: 11px; color: var(--muted); margin-top: 1px;
-  }
-  .quest-card .qc-energy { color: #ffd86b; font-weight: 700; }
-  .qc-dia { color: var(--accent); letter-spacing: 2px; }
-  .qc-dia .qc-dia-empty { color: rgba(255,205,107,0.25); }
   /* Send Champion CTA — gold gradient, matches the claim/feed buttons. */
   .quest-card .qc-send {
     margin-top: auto; width: 100%; border: 1px solid rgba(255,205,107,0.5);
@@ -7805,16 +7788,6 @@
   .adv-browse-hd { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 8px 0 6px; }
   .adv-browse-hd .quests-section-label { margin: 0; }
   .adv-browse-hd .quests-champ-picker { margin: 0; }
-
-  /* Difficulty legend footer. */
-  .adv-legend {
-    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-    margin-top: 22px; padding-top: 14px; border-top: 1px solid rgba(255,205,107,0.12);
-    font-size: 11px; color: var(--muted);
-  }
-  .adv-legend-title { color: var(--accent); font-weight: 700; letter-spacing: 1px; }
-  .adv-legend-item { display: inline-flex; align-items: center; gap: 5px; }
-  .adv-legend-energy { color: #ffd86b; margin-left: auto; }
 
   .qsm-duration-label { font-size: 11px; color: var(--muted); letter-spacing: 1.5px;
     text-transform: uppercase; margin: 14px 0 8px; }
@@ -11294,41 +11267,31 @@ window.VxBond = VxBond;
 const VxQuests = (() => {
   const KEY = 'vx_quests_v1'; // { [championId]: { eventId, adventureId, durationTier, startedAt, endsAt } }
   // Mirrors backend ADVENTURES — keep in sync.
-  // `difficulty` (1=Easy 2=Moderate 3=Hard) drives the diamond rating +
-  // teaser energy range shown on each card (Dizzydreamer Adventures-map
-  // pass). Actual energy cost is still per-duration (quick/standard/long).
   const ADVENTURES = {
-    hunting_grounds: { name:'Hunting Grounds', emoji:'🏹', difficulty:1,
+    hunting_grounds: { name:'Hunting Grounds', emoji:'🏹',
       blurb:'Stalk wild prey across rolling plains. Sharpens reflexes and raw strength.',
       primaries:['STR','AGI'], secondaries:['VIT','FER'] },
-    ancient_ruins:   { name:'Ancient Ruins', emoji:'🏛️', difficulty:2,
+    ancient_ruins:   { name:'Ancient Ruins', emoji:'🏛️',
       blurb:'Decipher faded glyphs in forgotten halls. The air hums with old magic.',
       primaries:['INT','LCK'], secondaries:['FER','AGI'] },
-    spirit_caves:    { name:'Spirit Caves', emoji:'👻', difficulty:1,
+    spirit_caves:    { name:'Spirit Caves', emoji:'👻',
       blurb:'Meditate among watchful spirits. Builds endurance of body and mind.',
       primaries:['INT','VIT'], secondaries:['LCK','FER'] },
-    treasure_crypts: { name:'Treasure Crypts', emoji:'💎', difficulty:3,
+    treasure_crypts: { name:'Treasure Crypts', emoji:'💎',
       blurb:'Tip-toe past trapped vaults. Fortune favors the nimble and the bold.',
       primaries:['LCK','FER'], secondaries:['AGI','INT'] },
-    forge_pits:      { name:'Forge Pits', emoji:'🔥', difficulty:2,
+    forge_pits:      { name:'Forge Pits', emoji:'🔥',
       blurb:'Train under hammer and heat. Forges raw power and resilience.',
       primaries:['STR','VIT'], secondaries:['FER','INT'] },
-    moonlit_glades:  { name:'Moonlit Glades', emoji:'🌙', difficulty:1,
+    moonlit_glades:  { name:'Moonlit Glades', emoji:'🌙',
       blurb:'Hunt by moonlight. Quickens the step and sharpens fortune\'s edge.',
       primaries:['AGI','LCK'], secondaries:['INT','FER'] },
-    ember_wastes:    { name:'Ember Wastes', emoji:'🌋', difficulty:3,
+    ember_wastes:    { name:'Ember Wastes', emoji:'🌋',
       blurb:'Survive the burning sands. Tempers focus and ferocity in equal measure.',
       primaries:['FER','INT'], secondaries:['STR','VIT'] },
-    whisper_marshes: { name:'Whisper Marshes', emoji:'🌿', difficulty:2,
+    whisper_marshes: { name:'Whisper Marshes', emoji:'🌿',
       blurb:'Tend strange herbs in mist-cloaked bogs. Restorative, lucky finds.',
       primaries:['VIT','LCK'], secondaries:['INT','AGI'] },
-  };
-  // Diamond rating + teaser energy range per difficulty tier.
-  const DIFF_META = {
-    1: { label:'Easy',     energy:'10–20' },
-    2: { label:'Moderate', energy:'15–25' },
-    3: { label:'Hard',     energy:'20–30' },
-    4: { label:'Very Hard',energy:'25–35' },
   };
   // `energy` mirrors the backend ENERGY_COST gate in champion_quest_start
   // (quick=10, standard=20, long=30). Keep in sync — it's shown on the
@@ -11666,9 +11629,9 @@ const VxQuests = (() => {
       const primaryPills = adv.primaries.map(t => `<span class="qc-stat-pill" title="${traitTitle(t)}">${t}</span>`).join('');
       const secondaryPills = adv.secondaries.map(t => `<span class="qc-stat-pill secondary" title="${traitTitle(t)}">${t}</span>`).join('');
       const disabled = champBusy ? 'disabled' : '';
-      const diff = adv.difficulty || 1;
-      const dm = DIFF_META[diff] || DIFF_META[1];
-      const diamonds = '◆'.repeat(diff) + `<span class="qc-dia-empty">${'◆'.repeat(Math.max(0, 3 - diff))}</span>`;
+      // Difficulty/energy-range removed from the card (Ric O., 15 Jun): energy
+      // + time are set by the DURATION picked in the modal, identical for
+      // every adventure, so a per-adventure rating/range was misleading.
       root.insertAdjacentHTML('beforeend', `
         <div class="quest-card ${disabled}" data-adv="${advId}">
           <div class="qc-img" style="background-image:url('adventures/${advId}.jpg')" role="img" aria-label="${adv.name}">
@@ -11678,10 +11641,6 @@ const VxQuests = (() => {
             <div class="qc-name">${adv.name}</div>
             <div class="qc-blurb">${adv.blurb}</div>
             <div class="qc-stats">${primaryPills}${secondaryPills}</div>
-            <div class="qc-meta">
-              <span class="qc-diff" title="${dm.label}">Difficulty <span class="qc-dia">${diamonds}</span></span>
-              <span class="qc-energy">⚡ ${dm.energy}</span>
-            </div>
             <button class="qc-send" type="button">Send Champion <span class="qc-send-arrow">›</span></button>
           </div>
         </div>
@@ -12098,6 +12057,11 @@ async function showLeaderboard() {
   // 8 May when an anonymous visitor clicked the new top-nav Ranks
   // button before signing in: stub crashed, modal stayed closed.
   document.getElementById('leaderboardModal').classList.add('open');
+  // Lock background scroll while the modal is up (Dizzydreamer, 15 Jun:
+  // "double scroll navigation at the back" on mobile — the page scrolled
+  // behind the leaderboard's own list). The 1.5s watchdog +
+  // visibilitychange handler restore it when the modal closes.
+  document.body.style.overflow = 'hidden';
   try { renderLeaderboard('all'); } catch (e) {
     console.warn('[leaderboard] stub render skipped:', e.message);
     document.getElementById('lbList').innerHTML =
@@ -12108,6 +12072,7 @@ async function showLeaderboard() {
 }
 function closeLeaderboard() {
   document.getElementById('leaderboardModal').classList.remove('open');
+  document.body.style.overflow = '';
 }
 
 // ─── Chest Quests (VulcanX Everything) ─────────────────────────────
