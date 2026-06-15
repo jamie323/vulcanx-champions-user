@@ -100,17 +100,20 @@
      Only visible in champion view. */
   #champBgFull {
     position: fixed; inset: 0; z-index: -1;
-    background-size: cover; background-position: center 30%;
+    background-size: cover; background-position: center top;
     background-repeat: no-repeat;
-    transform: scale(1.08);
-    filter: blur(40px) brightness(0.5) saturate(1.2);
+    /* Vivid full-page environment (Jamie's reference mockup): only a light
+       softening + mild dim so the champion's scene clearly spreads across
+       the whole page. The translucent cards provide their own legibility. */
+    filter: blur(14px) brightness(0.8) saturate(1.15);
+    transform: scale(1.06);
     opacity: 0; transition: opacity .45s ease; pointer-events: none;
   }
-  /* Dark scrim over the backdrop keeps card text legible while letting the
-     environment read more brightly than a flat dim would. */
+  /* Light edge scrim only — darkens the very top (under the nav) and bottom
+     (under the action bar) for legibility, leaving the centre scene vivid. */
   #champBgFull::after {
     content: ''; position: absolute; inset: 0;
-    background: radial-gradient(120% 100% at 50% 38%, rgba(10,6,8,0.25), rgba(10,6,8,0.72));
+    background: linear-gradient(180deg, rgba(10,6,8,0.55) 0%, rgba(10,6,8,0.0) 18%, rgba(10,6,8,0.0) 72%, rgba(10,6,8,0.6) 100%);
   }
   body.view-champion #champBgFull { opacity: 1; }
   /* The grid stays transparent so the backdrop shows through between the
@@ -330,8 +333,14 @@
        the source image's 2:3 ratio — no letterboxing, nothing
        peeks through. */
     width: 100%; aspect-ratio: 1024 / 1536;
-    border-radius: 16px; overflow: hidden; position: relative;
-    background: linear-gradient(180deg, #1a0f1a, #0a0608);
+    overflow: hidden; position: relative;
+    /* No box: transparent + a radial feather mask so the character bleeds
+       softly into the full-screen #champBgFull backdrop instead of sitting
+       in a hard-edged rounded rectangle (Jamie, 15 Jun — "boom here's a
+       box… bleed into the background, easier on the eyes"). */
+    background: transparent;
+    -webkit-mask-image: radial-gradient(ellipse 86% 94% at 50% 42%, #000 52%, rgba(0,0,0,0.45) 76%, transparent 100%);
+            mask-image: radial-gradient(ellipse 86% 94% at 50% 42%, #000 52%, rgba(0,0,0,0.45) 76%, transparent 100%);
   }
   /* Blurred, scaled, dimmed copy of the same art fills the frame edge to
      edge so there's no visible black space behind the (contained) hero.
