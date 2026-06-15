@@ -93,6 +93,31 @@
     display: block;
     padding: 140px 16px 0;
   }
+  /* Full-bleed champion backdrop — the stage art spread across the whole
+     screen (heavily blurred + darkened) so there is NO flat black space;
+     the cards (translucent) float over the champion's environment. Sits
+     behind all content via z-index:-1 (above the page bg, below the grid).
+     Only visible in champion view. */
+  #champBgFull {
+    position: fixed; inset: 0; z-index: -1;
+    background-size: cover; background-position: center 30%;
+    background-repeat: no-repeat;
+    transform: scale(1.08);
+    filter: blur(40px) brightness(0.5) saturate(1.2);
+    opacity: 0; transition: opacity .45s ease; pointer-events: none;
+  }
+  /* Dark scrim over the backdrop keeps card text legible while letting the
+     environment read more brightly than a flat dim would. */
+  #champBgFull::after {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(120% 100% at 50% 38%, rgba(10,6,8,0.25), rgba(10,6,8,0.72));
+  }
+  body.view-champion #champBgFull { opacity: 1; }
+  /* The grid stays transparent so the backdrop shows through between the
+     translucent cards. */
+  body.view-champion, body.view-champion .view-champion, body.view-champion .cc-grid {
+    background: transparent;
+  }
   .cc-grid {
     display: grid;
     grid-template-columns: 360px 1fr 360px;
@@ -6206,6 +6231,12 @@
 </style>
 </head>
 <body>
+
+<!-- Full-bleed champion backdrop: the current stage art spread across the
+     whole screen (blurred + darkened) so the champion view has NO flat
+     black space — the cards float over the champion's environment, like
+     the mockup. src set by setStageImage(); only visible in champion view. -->
+<div id="champBgFull" aria-hidden="true"></div>
 
 <!-- ── Gateway URL — MUST run before auth.js loads (auth.js captures
      GATEWAY_URL as a closure variable at IIFE execution time).         -->
@@ -18575,6 +18606,13 @@ function setStageImage(newSrc) {
   // frame has no black space behind the (contained) hero on any stage.
   const bg = document.getElementById('stageImgBg');
   if (bg && bg.getAttribute('src') !== newSrc) bg.src = newSrc;
+  // Full-bleed champion backdrop — same art spread across the whole screen
+  // so the champion view has no flat black space (Jamie, 15 Jun).
+  const full = document.getElementById('champBgFull');
+  if (full) {
+    const want = `url("${newSrc}")`;
+    if (full.style.backgroundImage !== want) full.style.backgroundImage = want;
+  }
   // absolute url for equality
   const curAbs = cur.src;
   if (!_lastStageSrc) {
