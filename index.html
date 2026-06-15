@@ -7492,36 +7492,48 @@
 <!-- ======== VIEW: QUESTS / ADVENTURES (Phase L) ======== -->
 <div class="view view-quests">
   <div class="quests-wrap">
-    <div class="ornate-frame" style="padding: 24px; margin-bottom: 24px;">
-      <div class="ornate-header" style="margin: -24px -24px 16px; padding-bottom: 0;">
-        <span class="eyebrow">🗺️ ADVENTURE AWAITS 🗺️</span>
-        <h2 style="margin-bottom: 8px;">Send Champions on Adventures</h2>
-      </div>
-      <div class="sub" style="text-align: center;">Rewards apply directly to stats + Evolution Bar.</div>
-      <!-- Energy chip (2026-05-29, Jamie): adventures cost energy
-           (quick 10 / standard 20 / long 30 ⚡) but the page never showed
-           it. Mirrors the arena chip; reflects the picked champion. -->
-      <div class="adv-energy-chip" id="advEnergyChip" style="display:none;margin-top:12px;">
-        <span id="advEnergyText">⚡ —</span>
+    <!-- Cinematic hero banner — wide landscape feathered at the sides with
+         the Adventures title overlaid (Dizzydreamer Adventures-map pass). -->
+    <div class="adv-hero">
+      <div class="adv-hero-bg"></div>
+      <div class="adv-hero-inner">
+        <div class="adv-hero-titlerow">
+          <span class="adv-hero-crest">⚔️</span>
+          <h1 class="adv-hero-title">Adventures</h1>
+        </div>
+        <div class="adv-hero-sub">Send champions on adventures. Rewards apply directly to stats + Evolution Bar.</div>
+        <!-- Energy chip (2026-05-29, Jamie): adventures cost energy
+             (quick 10 / standard 20 / long 30 ⚡). Reflects the picked champion. -->
+        <div class="adv-energy-chip" id="advEnergyChip" style="display:none;">
+          <span id="advEnergyText">⚡ —</span>
+        </div>
       </div>
     </div>
-    <div class="page-hd" style="display:none;">
-      <div>
-        <h2>🗺️ Adventures</h2>
-        <div class="sub">Send champions on adventures. Rewards apply directly to stats + Evolution Bar.</div>
+
+    <!-- Browse header row: section label left, champion picker right -->
+    <div class="adv-browse-hd">
+      <div class="quests-section-label">🧭 Browse Adventures</div>
+      <div class="quests-champ-picker" id="questsChampPicker">
+        <span class="qcp-label">For champion:</span>
+        <select id="questsChampSelect" class="qcp-select"></select>
       </div>
     </div>
 
     <div class="quests-active-list" id="questsActiveList">
-      <!-- Active quests rendered here by VxQuests.renderActive() -->
+      <!-- Active quests / empty-state note rendered by VxQuests.renderActive() -->
     </div>
 
-    <div class="quests-section-label">🏞️ Browse Adventures</div>
-    <div class="quests-champ-picker" id="questsChampPicker">
-      <span class="qcp-label">For champion:</span>
-      <select id="questsChampSelect" class="qcp-select"></select>
-    </div>
     <div class="quests-grid" id="questsGrid"></div>
+
+    <!-- Difficulty legend -->
+    <div class="adv-legend">
+      <span class="adv-legend-title">Difficulty:</span>
+      <span class="adv-legend-item"><span class="qc-dia">◆</span> Easy</span>
+      <span class="adv-legend-item"><span class="qc-dia">◆◆</span> Moderate</span>
+      <span class="adv-legend-item"><span class="qc-dia">◆◆◆</span> Hard</span>
+      <span class="adv-legend-item"><span class="qc-dia">◆◆◆◆</span> Very Hard</span>
+      <span class="adv-legend-energy">⚡ Energy cost varies by duration and difficulty.</span>
+    </div>
   </div>
 </div>
 
@@ -7693,36 +7705,116 @@
     margin-top: 16px;
   }
   .quest-card {
-    background: rgba(20,12,20,0.85); border: 1.5px solid rgba(255,205,107,0.25);
-    border-radius: 10px; padding: 14px; cursor: pointer; transition: all 0.25s;
-    position: relative;
-    overflow: hidden;
-  }
-  .quest-card::before {
-    content: '';
-    position: absolute;
-    top: 0; right: 0;
-    width: 40px; height: 40px;
-    background: radial-gradient(circle, rgba(255,205,107,0.2), transparent);
-    border-radius: 0 10px 0 100%;
+    background: linear-gradient(180deg, rgba(28,18,30,0.92), rgba(16,10,18,0.96));
+    border: 1.5px solid rgba(255,205,107,0.22);
+    border-radius: 12px; cursor: pointer; transition: transform .2s, border-color .2s, box-shadow .2s;
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
   }
   .quest-card:hover {
-    border-color: rgba(255,205,107,0.45); transform: translateY(-4px);
-    box-shadow: 0 12px 28px rgba(255,205,107,0.15);
+    border-color: rgba(255,205,107,0.5); transform: translateY(-4px);
+    box-shadow: 0 14px 30px rgba(0,0,0,0.45), 0 0 18px rgba(255,205,107,0.12);
   }
-  .quest-card.disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .quest-card.disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
   .quest-card.disabled:hover { border-color: rgba(255,205,107,0.18); transform: none; box-shadow: none; }
-  .quest-card .qc-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-  .quest-card .qc-emoji { font-size: 22px; }
-  .quest-card .qc-name { font-weight: 700; font-size: 14px; color: var(--text); }
-  .quest-card .qc-blurb { font-size: 11px; color: var(--muted); line-height: 1.5; min-height: 44px; }
-  .quest-card .qc-stats { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; }
+  /* Location art header — fixed-ratio strip, fades into the card body. */
+  .quest-card .qc-img {
+    position: relative; width: 100%; aspect-ratio: 16 / 9;
+    background-size: cover; background-position: center;
+    background-color: #140c14;
+  }
+  .quest-card .qc-img::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(16,10,18,0) 55%, rgba(16,10,18,0.95) 100%);
+  }
+  .quest-card .qc-img-emoji {
+    position: absolute; top: 8px; left: 8px; z-index: 1;
+    width: 28px; height: 28px; display: grid; place-items: center;
+    font-size: 15px; border-radius: 8px;
+    background: rgba(12,8,14,0.6); border: 1px solid rgba(255,205,107,0.3);
+    backdrop-filter: blur(3px);
+  }
+  .quest-card .qc-body { padding: 10px 13px 13px; display: flex; flex-direction: column; gap: 7px; flex: 1; }
+  .quest-card .qc-name { font-weight: 800; font-size: 15px; color: var(--text); font-family: 'Cinzel', serif; }
+  .quest-card .qc-blurb { font-size: 11px; color: var(--muted); line-height: 1.45; min-height: 32px; }
+  .quest-card .qc-stats { display: flex; gap: 4px; flex-wrap: wrap; }
   .qc-stat-pill {
-    background: rgba(255,205,107,0.12); color: var(--accent);
+    background: rgba(255,205,107,0.14); color: var(--accent);
     padding: 2px 7px; border-radius: 4px;
     font-size: 9px; letter-spacing: 1px; font-weight: 700;
   }
   .qc-stat-pill.secondary { background: rgba(255,255,255,0.05); color: var(--muted); }
+  .quest-card .qc-meta {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 11px; color: var(--muted); margin-top: 1px;
+  }
+  .quest-card .qc-energy { color: #ffd86b; font-weight: 700; }
+  .qc-dia { color: var(--accent); letter-spacing: 2px; }
+  .qc-dia .qc-dia-empty { color: rgba(255,205,107,0.25); }
+  /* Send Champion CTA — gold gradient, matches the claim/feed buttons. */
+  .quest-card .qc-send {
+    margin-top: auto; width: 100%; border: 1px solid rgba(255,205,107,0.5);
+    background: linear-gradient(180deg, rgba(255,205,107,0.18), rgba(255,142,46,0.16));
+    color: #ffe7b0; font-weight: 800; font-size: 12px; letter-spacing: 0.5px;
+    padding: 9px 12px; border-radius: 8px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: filter .15s, background .15s;
+  }
+  .quest-card .qc-send:hover { filter: brightness(1.12); background: linear-gradient(180deg, rgba(255,205,107,0.28), rgba(255,142,46,0.24)); }
+  .quest-card .qc-send-arrow { font-size: 14px; }
+  .quest-card.disabled .qc-send { pointer-events: none; }
+
+  /* ── Adventures hero banner ── */
+  .adv-hero {
+    position: relative; border-radius: 16px; overflow: hidden;
+    border: 1px solid rgba(255,205,107,0.22);
+    margin-bottom: 22px; min-height: 150px;
+    display: flex; align-items: stretch;
+  }
+  .adv-hero-bg {
+    position: absolute; inset: 0;
+    background: url('adventures/banner.jpg') center 38% / cover no-repeat;
+  }
+  /* Feather the right/side so the art melts into the panel + text stays legible. */
+  .adv-hero-bg::after {
+    content: ''; position: absolute; inset: 0;
+    background:
+      /* heavy dark on the left for legible title, feather back to dark at
+         the far-right edge so the art melts into the panel on both sides */
+      linear-gradient(90deg, rgba(14,9,16,0.97) 0%, rgba(14,9,16,0.74) 32%, rgba(14,9,16,0.14) 60%, rgba(14,9,16,0.0) 80%, rgba(14,9,16,0.0) 90%, rgba(14,9,16,0.55) 100%),
+      linear-gradient(180deg, rgba(14,9,16,0.0) 50%, rgba(14,9,16,0.55) 100%);
+  }
+  .adv-hero-inner {
+    position: relative; z-index: 1; padding: 22px 26px;
+    display: flex; flex-direction: column; justify-content: center; gap: 8px;
+    max-width: 620px;
+  }
+  .adv-hero-titlerow { display: flex; align-items: center; gap: 12px; }
+  .adv-hero-crest {
+    font-size: 24px; width: 44px; height: 44px; display: grid; place-items: center;
+    border-radius: 10px; background: rgba(12,8,14,0.55);
+    border: 1px solid rgba(255,205,107,0.4);
+  }
+  .adv-hero-title {
+    font-family: 'Cinzel', serif; font-weight: 800; font-size: 38px; line-height: 1;
+    color: #ffe7b0; text-shadow: 0 2px 14px rgba(255,160,60,0.45), 0 2px 6px rgba(0,0,0,0.7); margin: 0;
+  }
+  .adv-hero-sub { font-size: 13px; color: rgba(255,255,255,0.82); max-width: 460px; line-height: 1.4; }
+
+  /* Browse header row — label left, champion picker pushed right. */
+  .adv-browse-hd { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 8px 0 6px; }
+  .adv-browse-hd .quests-section-label { margin: 0; }
+  .adv-browse-hd .quests-champ-picker { margin: 0; }
+
+  /* Difficulty legend footer. */
+  .adv-legend {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    margin-top: 22px; padding-top: 14px; border-top: 1px solid rgba(255,205,107,0.12);
+    font-size: 11px; color: var(--muted);
+  }
+  .adv-legend-title { color: var(--accent); font-weight: 700; letter-spacing: 1px; }
+  .adv-legend-item { display: inline-flex; align-items: center; gap: 5px; }
+  .adv-legend-energy { color: #ffd86b; margin-left: auto; }
 
   .qsm-duration-label { font-size: 11px; color: var(--muted); letter-spacing: 1.5px;
     text-transform: uppercase; margin: 14px 0 8px; }
@@ -11202,31 +11294,41 @@ window.VxBond = VxBond;
 const VxQuests = (() => {
   const KEY = 'vx_quests_v1'; // { [championId]: { eventId, adventureId, durationTier, startedAt, endsAt } }
   // Mirrors backend ADVENTURES — keep in sync.
+  // `difficulty` (1=Easy 2=Moderate 3=Hard) drives the diamond rating +
+  // teaser energy range shown on each card (Dizzydreamer Adventures-map
+  // pass). Actual energy cost is still per-duration (quick/standard/long).
   const ADVENTURES = {
-    hunting_grounds: { name:'Hunting Grounds', emoji:'🏹',
+    hunting_grounds: { name:'Hunting Grounds', emoji:'🏹', difficulty:1,
       blurb:'Stalk wild prey across rolling plains. Sharpens reflexes and raw strength.',
       primaries:['STR','AGI'], secondaries:['VIT','FER'] },
-    ancient_ruins:   { name:'Ancient Ruins', emoji:'🏛️',
+    ancient_ruins:   { name:'Ancient Ruins', emoji:'🏛️', difficulty:2,
       blurb:'Decipher faded glyphs in forgotten halls. The air hums with old magic.',
       primaries:['INT','LCK'], secondaries:['FER','AGI'] },
-    spirit_caves:    { name:'Spirit Caves', emoji:'👻',
+    spirit_caves:    { name:'Spirit Caves', emoji:'👻', difficulty:1,
       blurb:'Meditate among watchful spirits. Builds endurance of body and mind.',
       primaries:['INT','VIT'], secondaries:['LCK','FER'] },
-    treasure_crypts: { name:'Treasure Crypts', emoji:'💎',
+    treasure_crypts: { name:'Treasure Crypts', emoji:'💎', difficulty:3,
       blurb:'Tip-toe past trapped vaults. Fortune favors the nimble and the bold.',
       primaries:['LCK','FER'], secondaries:['AGI','INT'] },
-    forge_pits:      { name:'Forge Pits', emoji:'🔥',
+    forge_pits:      { name:'Forge Pits', emoji:'🔥', difficulty:2,
       blurb:'Train under hammer and heat. Forges raw power and resilience.',
       primaries:['STR','VIT'], secondaries:['FER','INT'] },
-    moonlit_glades:  { name:'Moonlit Glades', emoji:'🌙',
+    moonlit_glades:  { name:'Moonlit Glades', emoji:'🌙', difficulty:1,
       blurb:'Hunt by moonlight. Quickens the step and sharpens fortune\'s edge.',
       primaries:['AGI','LCK'], secondaries:['INT','FER'] },
-    ember_wastes:    { name:'Ember Wastes', emoji:'🌋',
+    ember_wastes:    { name:'Ember Wastes', emoji:'🌋', difficulty:3,
       blurb:'Survive the burning sands. Tempers focus and ferocity in equal measure.',
       primaries:['FER','INT'], secondaries:['STR','VIT'] },
-    whisper_marshes: { name:'Whisper Marshes', emoji:'🌿',
+    whisper_marshes: { name:'Whisper Marshes', emoji:'🌿', difficulty:2,
       blurb:'Tend strange herbs in mist-cloaked bogs. Restorative, lucky finds.',
       primaries:['VIT','LCK'], secondaries:['INT','AGI'] },
+  };
+  // Diamond rating + teaser energy range per difficulty tier.
+  const DIFF_META = {
+    1: { label:'Easy',     energy:'10–20' },
+    2: { label:'Moderate', energy:'15–25' },
+    3: { label:'Hard',     energy:'20–30' },
+    4: { label:'Very Hard',energy:'25–35' },
   };
   // `energy` mirrors the backend ENERGY_COST gate in champion_quest_start
   // (quick=10, standard=20, long=30). Keep in sync — it's shown on the
@@ -11564,11 +11666,24 @@ const VxQuests = (() => {
       const primaryPills = adv.primaries.map(t => `<span class="qc-stat-pill" title="${traitTitle(t)}">${t}</span>`).join('');
       const secondaryPills = adv.secondaries.map(t => `<span class="qc-stat-pill secondary" title="${traitTitle(t)}">${t}</span>`).join('');
       const disabled = champBusy ? 'disabled' : '';
+      const diff = adv.difficulty || 1;
+      const dm = DIFF_META[diff] || DIFF_META[1];
+      const diamonds = '◆'.repeat(diff) + `<span class="qc-dia-empty">${'◆'.repeat(Math.max(0, 3 - diff))}</span>`;
       root.insertAdjacentHTML('beforeend', `
         <div class="quest-card ${disabled}" data-adv="${advId}">
-          <div class="qc-head"><span class="qc-emoji">${adv.emoji}</span><span class="qc-name">${adv.name}</span></div>
-          <div class="qc-blurb">${adv.blurb}</div>
-          <div class="qc-stats">${primaryPills}${secondaryPills}</div>
+          <div class="qc-img" style="background-image:url('adventures/${advId}.jpg')" role="img" aria-label="${adv.name}">
+            <span class="qc-img-emoji">${adv.emoji}</span>
+          </div>
+          <div class="qc-body">
+            <div class="qc-name">${adv.name}</div>
+            <div class="qc-blurb">${adv.blurb}</div>
+            <div class="qc-stats">${primaryPills}${secondaryPills}</div>
+            <div class="qc-meta">
+              <span class="qc-diff" title="${dm.label}">Difficulty <span class="qc-dia">${diamonds}</span></span>
+              <span class="qc-energy">⚡ ${dm.energy}</span>
+            </div>
+            <button class="qc-send" type="button">Send Champion <span class="qc-send-arrow">›</span></button>
+          </div>
         </div>
       `);
     }
@@ -11579,7 +11694,11 @@ const VxQuests = (() => {
          </div>`);
     } else {
       root.querySelectorAll('.quest-card').forEach(card => {
-        card.addEventListener('click', () => openStartModal(card.dataset.adv));
+        const open = () => openStartModal(card.dataset.adv);
+        card.addEventListener('click', open);
+        // The Send Champion button shares the card's click target; stop it
+        // double-firing the modal open.
+        card.querySelector('.qc-send')?.addEventListener('click', (e) => { e.stopPropagation(); open(); });
       });
     }
   }

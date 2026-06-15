@@ -28,3 +28,5 @@ all_nft_minting_spec.json
 baby_nft_minting_spec.json
 generate_full_nft_spec.js
 bloodlines.json.bak
+.claude/
+adventures/_raw/
