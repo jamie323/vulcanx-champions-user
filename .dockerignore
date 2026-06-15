@@ -14,6 +14,9 @@ scripts/
 # champion images (Trello eyc94EPh chain, 2026-05-27).
 allbloodlines/
 allbloodlines_v1/
+# adventures/ IS served (location tiles + banner); only the raw 1536px PNG
+# source masters are excluded — the optimized JPEGs beside them ship.
+adventures/_raw/
 
 # ── OS noise ───────────────────────────────────────────────────────────────
 .DS_Store

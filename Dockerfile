@@ -30,6 +30,7 @@ COPY howto/            /usr/share/nginx/html/howto/
 COPY icons/            /usr/share/nginx/html/icons/
 COPY img/              /usr/share/nginx/html/img/
 COPY nft_images/       /usr/share/nginx/html/nft_images/
+COPY adventures/       /usr/share/nginx/html/adventures/
 
 # ─── Bake the Vulcan-X gateway URL into index.html at image-build time ────
 # index.html ships `'https://dev-new-api.vulcan-x.io'` as the default
