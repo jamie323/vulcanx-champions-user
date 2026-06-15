@@ -6549,9 +6549,9 @@
     <div class="coin gold"><span class="icon">G</span><span id="curGold">1,540</span></div>
     <div class="coin gem"><span class="icon">V</span><span id="curGem">15,320</span></div>
     <div class="coin ess"><span class="icon">E</span><span id="curEss">420</span></div>
-    <button class="shop-btn" onclick="openShop()">🛒 Shop</button>
+    <button class="shop-btn" onclick="openShop()"><img class="ui-ico" src="nft_images/icons/shop.png" alt="" decoding="async" onerror="this.style.display='none'"/> Shop</button>
     <button class="streak-pill" id="streakPill" title="Daily login streak — click to claim today's reward" onclick="VxDaily.openModal()" style="display:none;">
-      <span class="streak-flame">🔥</span><b id="streakDay">1</b>
+      <span class="streak-flame"><img class="ui-ico" src="nft_images/icons/fire.png" alt="" decoding="async" onerror="this.style.display='none'"/></span><b id="streakDay">1</b>
       <span class="streak-claim-label" id="streakClaimLabel" style="display:none;">CLAIM</span>
       <span class="streak-claim-dot" id="streakClaimDot" style="display:none;">●</span>
     </button>
@@ -7498,7 +7498,7 @@
       <div class="adv-hero-bg"></div>
       <div class="adv-hero-inner">
         <div class="adv-hero-titlerow">
-          <span class="adv-hero-crest">⚔️</span>
+          <span class="adv-hero-crest"><img src="nft_images/icons/map.png" alt="" decoding="async" style="width:30px;height:30px;" onerror="this.style.display='none'"/></span>
           <h1 class="adv-hero-title">Adventures</h1>
         </div>
         <div class="adv-hero-sub">Send champions on adventures. Rewards apply directly to stats + Evolution Bar.</div>
@@ -7512,7 +7512,7 @@
 
     <!-- Browse header row: section label left, champion picker right -->
     <div class="adv-browse-hd">
-      <div class="quests-section-label">🧭 Browse Adventures</div>
+      <div class="quests-section-label"><img class="ui-ico sm" src="nft_images/icons/map.png" alt="" decoding="async" onerror="this.style.display='none'"/> Browse Adventures</div>
       <div class="quests-champ-picker" id="questsChampPicker">
         <span class="qcp-label">For champion:</span>
         <select id="questsChampSelect" class="qcp-select"></select>
@@ -8817,7 +8817,7 @@
            cleaner with just FEED + BATCH. -->
       <div class="cc-action-row two-col">
         <button class="feed-top-bar cc-feed-big" id="feedHero">
-          <span class="feed-top-label">🧪 Feed Me!</span>
+          <span class="feed-top-label"><img class="ui-ico lg" src="nft_images/icons/potion.png" alt="" decoding="async" onerror="this.style.display='none'"/> Feed Me!</span>
           <span class="feed-top-count" id="feedCount">0 ready</span>
         </button>
         <button class="cc-side-btn" id="batchFeedBtn"
@@ -8864,7 +8864,7 @@
          below the stats"). -->
     <div class="cc-blessing-bar" id="allocPotionRow"
          title="Blessing — distribute 40 stat points freely">
-      <span class="cep-icon">✨</span>
+      <span class="cep-icon"><img class="ui-ico lg" src="nft_images/icons/blessing.png" alt="" decoding="async" onerror="this.style.display='none'"/></span>
       <span class="cep-label">Blessing</span>
       <span class="cep-count" id="invAlloc">×0</span>
       <span class="cep-hint">Distribute 40 free stat points</span>
@@ -9495,6 +9495,24 @@ const UI_ICONS = {
   defensive:  'nft_images/icons/stance_defensive.png',
   energy:     'nft_images/icons/energy.png',
   pyr:        'nft_images/icons/pyr_coin.png',
+  // Unification pass (15 Jun) — painted replacements for recurring emoji.
+  blessing:   'nft_images/icons/blessing.png',
+  potion:     'nft_images/icons/potion.png',
+  trophy:     'nft_images/icons/trophy.png',
+  fire:       'nft_images/icons/fire.png',
+  heal:       'nft_images/icons/heal.png',
+  map:        'nft_images/icons/map.png',
+  egg:        'nft_images/icons/egg.png',
+  hourglass:  'nft_images/icons/hourglass.png',
+  shop:       'nft_images/icons/shop.png',
+  target:     'nft_images/icons/target.png',
+  chest:      'nft_images/icons/chest.png',
+  book:       'nft_images/icons/book.png',
+  crown:      'nft_images/icons/crown.png',
+  // reuse existing trait art where the emoji meaning matches
+  health:     'nft_images/icons/trait_vit.png',  // ❤️ → ruby heart
+  luck:       'nft_images/icons/trait_lck.png',  // 🍀 → clover
+  arena:      'nft_images/icons/stance_aggressive.png',  // ⚔️ → crossed swords
 };
 function uiIcon(key, cls = 'ui-ico') {
   const src = UI_ICONS[key];

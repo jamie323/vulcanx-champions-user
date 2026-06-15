@@ -52,6 +52,22 @@ ICONS = [
     # Resource icons
     ("energy", "A jagged lightning bolt carved from glowing amber crystal. Energy emblem."),
     ("pyr_coin", "A thick gold coin embossed with a stylised flame, ember-orange rim light. PYR currency coin."),
+    # ── Unification pass (Dizzydreamer/AngelHorn 15 Jun): painted assets to
+    #    replace the recurring functional emoji across the app. Same emblem
+    #    family so the whole UI reads as one set. ──
+    ("blessing",  "A radiant golden eight-pointed star burst with a glowing white core and divine sparkle. Blessing emblem."),
+    ("potion",    "A rounded glass potion flask with glowing teal liquid, a cork stopper, and a soft bubble highlight. Potion emblem."),
+    ("trophy",    "A golden two-handled victory chalice trophy on a small base with a warm gold gleam. Ranks/leaderboard emblem."),
+    ("fire",      "A stylised orange-red flame with a bright yellow-white core. Fire emblem."),
+    ("heal",      "A white medical cross over a folded bandage with a soft emerald-green heal glow. Healing emblem."),
+    ("map",       "A rolled-open treasure-map parchment with a dotted route and a red X, warm amber tone. Adventures map emblem."),
+    ("egg",       "A speckled dragon egg resting in a small twig nest with a soft warm rim light. Adopt/hatch emblem."),
+    ("hourglass", "An ornate brass hourglass with glowing amber sand falling through it. Time/duration emblem."),
+    ("shop",      "A merchant's market-stall awning over a leather coin pouch with a single gold coin, warm tone. Shop emblem."),
+    ("target",    "A red-and-white concentric archery target with an arrow struck in the bullseye. Challenge emblem."),
+    ("chest",     "A closed ornate wooden treasure chest with gold iron bands and a lock, faint gold glow from the lid seam. Reward chest emblem."),
+    ("book",      "An open leather-bound spellbook with a faint glowing rune on the page and gilded edges. Guide emblem."),
+    ("crown",     "A golden royal crown set with red gems, rim-lit. Legendary/royalty emblem."),
 ]
 
 
