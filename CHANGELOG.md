@@ -5,9 +5,9 @@ if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
 ## 16 Jun 2026
 **Champion screen**
-- The character is now a full-page **hero**: big, centred, with its
-  background spread across the whole screen and the sides softly blurred —
-  no more "boxed-in" character. Works on desktop and mobile.
+- The character is a clear, visible image in the centre again, with its
+  background spread across the whole page behind it (sides softly blurred)
+  and the info cards floating on top — no hard box around the character.
 - **Evolution Milestones fixed**: no more "L51" (max level is 50) and the
   level ranges on each stage now read correctly.
 
