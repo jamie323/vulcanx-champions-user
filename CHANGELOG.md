@@ -30,10 +30,12 @@ if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 - Fixed the **double-scroll** on mobile (the page no longer scrolls behind
   the leaderboard list).
 
-**Visuals**
-- Replaced emoji with **painted game-asset icons** across the main screens
-  (Shop, daily streak, Adventures, Feed, Blessing, champion Energy/Health,
-  Evolution Potion) for a more unified, immersive look.
+**Visuals (emoji → painted icons — IN PROGRESS, partial)**
+- Started replacing emoji with painted game-asset icons. Done so far: topbar
+  Shop, daily streak, Adventures banner + Browse, Feed button, Blessing bar,
+  champion Energy/Health, Evolution Potion, Evolve button.
+- Still emoji (not yet converted): much of the rest of the app — this is an
+  ongoing sweep, not finished.
 
 ## 12–13 Jun 2026
 **Arena**
