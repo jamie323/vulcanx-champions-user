@@ -13,6 +13,11 @@ if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 - **EVOLVE button** uses a painted icon (was the ⚡ emoji).
 - Earlier milestone fix: no more "L51" (max level is 50).
 
+**Leaderboard**
+- Fixed the **double-scroll** for real — the background page no longer scrolls
+  behind the open leaderboard (the lock was being applied to the wrong element
+  before). Affects desktop + mobile.
+
 
 ## 15 Jun 2026
 **Adventures**
