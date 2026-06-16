@@ -5,11 +5,17 @@ if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
 ## 16 Jun 2026
 **Champion screen**
-- The character is a clear, visible image in the centre again, with its
-  background spread across the whole page behind it (sides softly blurred)
-  and the info cards floating on top — no hard box around the character.
-- **Evolution Milestones fixed**: no more "L51" (max level is 50) and the
-  level ranges on each stage now read correctly.
+- Character art now sits **centred within the layout**, sized to fit between
+  the side cards — the **whole figure (head to feet) is visible**, no more
+  head cut-off or overflow. Soft-blended into the background (sides + bottom),
+  head kept crisp.
+- The character's environment is spread across the page as a blurred backdrop
+  behind the cards (a true full-page scene would need every champion re-drawn
+  as a wide image — this is the agreed compromise).
+- **EVOLVE button** now uses a painted icon instead of the ⚡ emoji.
+- **Evolution Milestones fixed**: no more "L51" (max level is 50); stage
+  level-ranges read correctly.
+
 
 ## 15 Jun 2026
 **Adventures**
