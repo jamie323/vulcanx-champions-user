@@ -116,6 +116,25 @@
     background: linear-gradient(180deg, rgba(10,6,8,0.55) 0%, rgba(10,6,8,0.0) 18%, rgba(10,6,8,0.0) 72%, rgba(10,6,8,0.6) 100%);
   }
   body.view-champion #champBgFull { opacity: 1; }
+  /* Big centred character — FULL figure via contain, positioned BELOW the top
+     nav (top:124px) so the head is never cut, feet within the viewport. Its
+     blurred environment (#champBgFull) extends across the page behind it. */
+  #champHero {
+    position: fixed; left: 0; right: 0; top: 124px; bottom: 6px;
+    z-index: -1; pointer-events: none;
+    background-repeat: no-repeat; background-position: center top;
+    background-size: contain;
+    filter: saturate(1.06);
+    opacity: 0; transition: opacity .4s ease;
+  }
+  body.view-champion #champHero { opacity: 1; }
+  /* No boxed centre frame — the hero IS the character now. */
+  body.view-champion #stageFrame { display: none; }
+  /* Desktop: push the centre controls (Feed/Evolve/milestones) to the bottom
+     so they sit over the hero's lower body, not across its face. */
+  @media (min-width: 1100px) {
+    body.view-champion .cc-col-center { min-height: calc(100vh - 196px); justify-content: flex-end; }
+  }
   /* The grid stays transparent so the backdrop shows through between the
      translucent cards. */
   body.view-champion, body.view-champion .view-champion, body.view-champion .cc-grid {
@@ -6256,6 +6275,12 @@
      black space — the cards float over the champion's environment, like
      the mockup. src set by setStageImage(); only visible in champion view. -->
 <div id="champBgFull" aria-hidden="true"></div>
+<!-- Big centred character hero: the FULL figure (contain) sized to the area
+     below the top nav so head + feet are always visible, with its blurred
+     environment (#champBgFull) extended across the page behind it. No frame
+     box (Dizzydreamer 16 Jun: "enlarged, centre placed, extend the background,
+     blur the sides"). src kept in sync by setStageImage(). -->
+<div id="champHero" aria-hidden="true"></div>
 
 <!-- ── Gateway URL — MUST run before auth.js loads (auth.js captures
      GATEWAY_URL as a closure variable at IIFE execution time).         -->
@@ -13194,7 +13219,11 @@ function render() {
       // Stage i is reached at its gate level and lasts until the next gate.
       // Clamp to L50 (max) and never run backwards — fixes "L51-L50" and
       // "L50-L49" from the duplicate/terminal gate levels (AngelHorn, 16 Jun).
-      const lo = Math.min(50, GATE_LEVELS[i]);
+      // Start one above the previous stage's gate so consecutive duplicate
+      // gates (…,49,49,50) don't overlap — turns the ugly "L49–L50" into
+      // "L50" (Dizzydreamer, 16 Jun).
+      const loRaw = i === 0 ? GATE_LEVELS[0] : Math.max(GATE_LEVELS[i], GATE_LEVELS[i - 1] + 1);
+      const lo = Math.min(50, loRaw);
       const hi = Math.min(50, i < STAGES.length - 1 ? GATE_LEVELS[i + 1] : 50);
       const top = Math.max(lo, hi);
       return lo === top ? `L${lo}` : `L${lo}–L${top}`;
@@ -18640,6 +18669,8 @@ function setStageImage(newSrc) {
   const want = `url("${newSrc}")`;
   const full = document.getElementById('champBgFull');
   if (full && full.style.backgroundImage !== want) full.style.backgroundImage = want;
+  const hero = document.getElementById('champHero');
+  if (hero && hero.style.backgroundImage !== want) hero.style.backgroundImage = want;
   // absolute url for equality
   const curAbs = cur.src;
   if (!_lastStageSrc) {
