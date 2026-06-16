@@ -3374,8 +3374,12 @@
 
   .modal-backdrop { position: fixed; inset: 0;
     background: rgba(0,0,0,0.85); display: none;
-    align-items: center; justify-content: center; z-index: 200; }
+    align-items: center; justify-content: center; z-index: 200;
+    /* Stop touch/wheel scroll from chaining to the page behind the modal
+       (the other half of the leaderboard "double scroll", 16 Jun). */
+    overscroll-behavior: contain; }
   .modal-backdrop.open { display: flex; }
+  #lbList { overscroll-behavior: contain; }
   .modal { background: linear-gradient(135deg,#1f1418,#0a0608);
     border: 1px solid var(--border-glow); border-radius: 14px;
     padding: 24px; width: 400px;
@@ -12150,10 +12154,12 @@ async function showLeaderboard() {
   // 8 May when an anonymous visitor clicked the new top-nav Ranks
   // button before signing in: stub crashed, modal stayed closed.
   document.getElementById('leaderboardModal').classList.add('open');
-  // Lock background scroll while the modal is up (Dizzydreamer, 15 Jun:
-  // "double scroll navigation at the back" on mobile — the page scrolled
-  // behind the leaderboard's own list). The 1.5s watchdog +
-  // visibilitychange handler restore it when the modal closes.
+  // Lock background scroll while the modal is up. The page's scroll container
+  // is the <html> element (document.scrollingElement === HTML), NOT <body> —
+  // so locking body alone did nothing (Dizzydreamer's "double scroll" was
+  // still there, 16 Jun). Lock BOTH. The 1.5s watchdog + visibilitychange
+  // handler restore them when the modal closes.
+  document.documentElement.style.overflow = 'hidden';
   document.body.style.overflow = 'hidden';
   try { renderLeaderboard('all'); } catch (e) {
     console.warn('[leaderboard] stub render skipped:', e.message);
@@ -12165,6 +12171,7 @@ async function showLeaderboard() {
 }
 function closeLeaderboard() {
   document.getElementById('leaderboardModal').classList.remove('open');
+  document.documentElement.style.overflow = '';
   document.body.style.overflow = '';
 }
 
@@ -14492,8 +14499,11 @@ function _anyModalVisible() {
     '.modal-backdrop.open');
 }
 function _ensurePageScrollUnlocked() {
-  if (document.body.style.overflow === 'hidden' && !_anyModalVisible()) {
+  const locked = document.body.style.overflow === 'hidden'
+    || document.documentElement.style.overflow === 'hidden';
+  if (locked && !_anyModalVisible()) {
     document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
   }
 }
 setInterval(_ensurePageScrollUnlocked, 1500);
