@@ -8866,7 +8866,7 @@
           <span class="cc-side-label">Batch</span>
         </button>
       </div>
-      <button class="evolve-btn-center cc-evolve-btn" id="evolveBtn" disabled>⚡ Evolve (locked)</button>
+      <button class="evolve-btn-center cc-evolve-btn" id="evolveBtn" disabled><img class="ui-ico" id="evoBtnIcon" src="nft_images/icons/energy.png" alt="" decoding="async" onerror="this.style.display='none'"/><span id="evoBtnLabel">Evolve (locked)</span></button>
     </div>
 
     <!-- Evolution Milestones — collapsed by default. Tester feedback
@@ -13058,10 +13058,16 @@ function render() {
     && (_activeCh.levelMinutesRemaining ?? 0) > 0;
   evoBtn.disabled = !ok || levelLocked;
   evoBtn.classList.toggle('ready', ok && !levelLocked);
-  evoBtn.textContent = levelLocked
-    ? '⏳ Resting…'
-    : (ok && next ? '⚡ Evolve to ' + next.name
-      : next ? '⚡ Evolve (locked)' : 'Max form reached');
+  // Painted icon + text span (no emoji); setting the span keeps the icon.
+  const _evoLbl = document.getElementById('evoBtnLabel');
+  const _evoIc  = document.getElementById('evoBtnIcon');
+  const _evoText = levelLocked
+    ? 'Resting…'
+    : (ok && next ? 'Evolve to ' + next.name
+      : next ? 'Evolve (locked)' : 'Max form reached');
+  if (_evoLbl) { _evoLbl.textContent = _evoText; }
+  else { evoBtn.textContent = _evoText; }   // fallback if markup not present
+  if (_evoIc) _evoIc.src = levelLocked ? 'nft_images/icons/hourglass.png' : 'nft_images/icons/energy.png';
 
   // ── TRAITS (in right panel stats card)
   const tBox = document.getElementById('traits');
