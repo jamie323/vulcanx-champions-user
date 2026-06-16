@@ -333,14 +333,24 @@
        the source image's 2:3 ratio — no letterboxing, nothing
        peeks through. */
     width: 100%; aspect-ratio: 1024 / 1536;
-    overflow: hidden; position: relative;
-    /* No box: transparent + a radial feather mask so the character bleeds
-       softly into the full-screen #champBgFull backdrop instead of sitting
-       in a hard-edged rounded rectangle (Jamie, 15 Jun — "boom here's a
-       box… bleed into the background, easier on the eyes"). */
+    overflow: hidden; position: relative; margin: 0 auto;
     background: transparent;
-    -webkit-mask-image: radial-gradient(ellipse 86% 94% at 50% 42%, #000 52%, rgba(0,0,0,0.45) 76%, transparent 100%);
-            mask-image: radial-gradient(ellipse 86% 94% at 50% 42%, #000 52%, rgba(0,0,0,0.45) 76%, transparent 100%);
+    /* Feather the SIDES + BOTTOM into the blurred #champBgFull backdrop, but
+       keep the TOP opaque so the character's head is never faded/cut
+       (Jamie, 16 Jun). No hard box. */
+    -webkit-mask-image: linear-gradient(180deg,#000 0%,#000 82%,transparent 100%), linear-gradient(90deg,transparent 0%,#000 11%,#000 89%,transparent 100%);
+    -webkit-mask-composite: source-in;
+            mask-image: linear-gradient(180deg,#000 0%,#000 82%,transparent 100%), linear-gradient(90deg,transparent 0%,#000 11%,#000 89%,transparent 100%);
+            mask-composite: intersect;
+  }
+  /* Desktop: size the character to the visible band so the whole figure
+     (head + feet) sits BETWEEN the side cards instead of overflowing past
+     their bottoms — height-driven + centred (Jamie's red-margin note). */
+  @media (min-width: 1100px) {
+    body.view-champion .cc-stage-frame {
+      width: auto; max-width: 100%;
+      height: clamp(440px, calc(100vh - 205px), 800px);
+    }
   }
   /* Blurred, scaled, dimmed copy of the same art fills the frame edge to
      edge so there's no visible black space behind the (contained) hero.
