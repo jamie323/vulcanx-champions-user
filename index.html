@@ -116,29 +116,6 @@
     background: linear-gradient(180deg, rgba(10,6,8,0.55) 0%, rgba(10,6,8,0.0) 18%, rgba(10,6,8,0.0) 72%, rgba(10,6,8,0.6) 100%);
   }
   body.view-champion #champBgFull { opacity: 1; }
-  /* Sharp full character — height-filled + centred, layered above the blurred
-     sides. This is the page hero (replaces the boxed centre frame), so it's
-     always big + centred regardless of how the columns stack. */
-  #champHero {
-    position: fixed; inset: 0; z-index: -1; pointer-events: none;
-    background-repeat: no-repeat; background-position: center top;
-    background-size: auto 100%;
-    filter: brightness(0.97) drop-shadow(0 10px 40px rgba(0,0,0,0.5));
-    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 16%, #000 84%, transparent 100%);
-            mask-image: linear-gradient(90deg, transparent 0%, #000 16%, #000 84%, transparent 100%);
-    opacity: 0; transition: opacity .45s ease;
-  }
-  body.view-champion #champHero { opacity: 1; }
-  /* The old boxed centre character is replaced by the full-page hero. */
-  body.view-champion #stageFrame { display: none; }
-  /* Push the centre column's controls (Feed/Evolve/milestones) to the bottom
-     so they sit over the hero's lower body, not across its face. */
-  body.view-champion .cc-col-center { min-height: 78vh; justify-content: flex-end; }
-  @media (max-width: 1100px) {
-    /* Stacked layout: character fits width, controls flow normally. */
-    #champHero { background-size: contain; background-position: center 30%; }
-    body.view-champion .cc-col-center { min-height: 0; }
-  }
   /* The grid stays transparent so the backdrop shows through between the
      translucent cards. */
   body.view-champion, body.view-champion .view-champion, body.view-champion .cc-grid {
@@ -6269,10 +6246,6 @@
      black space — the cards float over the champion's environment, like
      the mockup. src set by setStageImage(); only visible in champion view. -->
 <div id="champBgFull" aria-hidden="true"></div>
-<!-- Sharp full character, height-filled + centred, sits ON TOP of the
-     blurred sides (#champBgFull) so the champion is the big centred hero of
-     the whole page — no frame box, sides blurred (Dizzydreamer 16 Jun). -->
-<div id="champHero" aria-hidden="true"></div>
 
 <!-- ── Gateway URL — MUST run before auth.js loads (auth.js captures
      GATEWAY_URL as a closure variable at IIFE execution time).         -->
@@ -18651,8 +18624,6 @@ function setStageImage(newSrc) {
   const want = `url("${newSrc}")`;
   const full = document.getElementById('champBgFull');
   if (full && full.style.backgroundImage !== want) full.style.backgroundImage = want;
-  const hero = document.getElementById('champHero');
-  if (hero && hero.style.backgroundImage !== want) hero.style.backgroundImage = want;
   // absolute url for equality
   const curAbs = cur.src;
   if (!_lastStageSrc) {
