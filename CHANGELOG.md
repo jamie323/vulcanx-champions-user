@@ -5,6 +5,7 @@ if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
 ## 16 Jun 2026
 **Champion screen**
+- The character art now stops **above** the Feed/Evolve + Milestones bars (no longer overlaps them).
 - The character is now a **big, centred hero** — the full figure (head to
   feet) is visible, with its environment spread across the page behind the
   cards (sides blurred). No frame box, and it no longer sits "far down" — it's
