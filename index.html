@@ -132,13 +132,22 @@
     filter: saturate(1.06);
     opacity: 0; transition: opacity .4s ease;
   }
-  body.view-champion #champHero { opacity: 1; }
-  /* No boxed centre frame — the hero IS the character now. */
-  body.view-champion #stageFrame { display: none; }
-  /* Desktop: push the centre controls (Feed/Evolve/milestones) to the bottom
-     so they sit over the hero's lower body, not across its face. */
-  @media (min-width: 1100px) {
+  /* 3-COLUMN DESKTOP (>1400px, before the grid stacks): the character is the
+     full-page fixed hero; hide the in-flow frame and push the centre controls
+     to the bottom so they sit below the figure. */
+  @media (min-width: 1401px) {
+    body.view-champion #champHero { opacity: 1; }
+    body.view-champion #stageFrame { display: none; }
     body.view-champion .cc-col-center { min-height: calc(100vh - 196px); justify-content: flex-end; }
+  }
+  /* STACKED (≤1400px — tablet + phone): the fixed hero reads as "just a
+     background" behind the scrolling cards (Jamie, 16 Jun). Hide it and show
+     the in-flow character image instead, moved to the TOP so it's a distinct,
+     prominent picture you see first (not buried below the cards). */
+  @media (max-width: 1400px) {
+    #champHero { display: none; }
+    body.view-champion #stageFrame { display: block; }
+    body.view-champion .cc-col-center { order: -1; }
   }
   /* The grid stays transparent so the backdrop shows through between the
      translucent cards. */
