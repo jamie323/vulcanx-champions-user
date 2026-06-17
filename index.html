@@ -120,7 +120,12 @@
      nav (top:124px) so the head is never cut, feet within the viewport. Its
      blurred environment (#champBgFull) extends across the page behind it. */
   #champHero {
-    position: fixed; left: 0; right: 0; top: 124px; bottom: 6px;
+    position: fixed; left: 0; right: 0; top: 124px;
+    /* Stop the figure ABOVE the Feed/Evolve + Milestones bars so the art
+       doesn't run behind them (Jamie, 16 Jun). The Feed block sits ~232px
+       off the bottom (centre col is min-height:100vh-196 + flex-end); 248
+       clears it with margin on any viewport height. */
+    bottom: 248px;
     z-index: -1; pointer-events: none;
     background-repeat: no-repeat; background-position: center top;
     background-size: contain;
