@@ -3,6 +3,12 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 17 Jun 2026
+**Champion screen**
+- The champion image now **scrolls with the page** (it was staying fixed /
+  "left behind" while everything else scrolled).
+- The character is **aligned with the Champion + Stats cards** at the top.
+
 ## 16 Jun 2026
 **Champion screen**
 - The character art now stops **above** the Feed/Evolve + Milestones bars (no longer overlaps them).
