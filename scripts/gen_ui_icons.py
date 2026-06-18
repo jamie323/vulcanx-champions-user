@@ -68,6 +68,18 @@ ICONS = [
     ("chest",     "A closed ornate wooden treasure chest with gold iron bands and a lock, faint gold glow from the lid seam. Reward chest emblem."),
     ("book",      "An open leather-bound spellbook with a faint glowing rune on the page and gilded edges. Guide emblem."),
     ("crown",     "A golden royal crown set with red gems, rim-lit. Legendary/royalty emblem."),
+    # ── Arena pass (Dizzydreamer/AngelHorn 18 Jun): mode toggles + ability
+    #    picker still used emoji. Same painted emblem family. ──
+    ("mode_bots", "A mechanical automaton head with glowing eye, riveted steel plates. Versus-bots emblem."),
+    ("mode_pvp",  "Two armored gauntlet fists bumping/clashing, sparks between them. Player-versus-player emblem."),
+    ("mode_auto", "A pair of tumbling six-sided dice with glowing pips. Auto-resolve emblem."),
+    ("ab_power_strike", "An armored fist slamming down with an explosive impact shockwave, orange burst. Power Strike ability emblem."),
+    ("ab_iron_skin",    "A segmented metal scale-armor plate with a steel-blue sheen. Iron Skin defensive ability emblem."),
+    ("ab_rally",        "A raised war banner on a spear, red pennant flying, gold trim. Rally ability emblem."),
+    ("ab_drain_touch",  "A clawed hand drawing a swirling red life-energy wisp toward it. Drain Touch lifesteal ability emblem."),
+    ("ab_quickstep",    "A winged leather boot mid-dash with cyan wind speed-streaks. Quickstep evasion ability emblem."),
+    ("ab_stone_wall",   "A solid grey stone-brick wall segment with mossy edges. Stone Wall defensive ability emblem."),
+    ("ab_pact_of_blood","A curved dagger with a single red blood droplet and a dark sigil glow. Pact of Blood ability emblem."),
 ]
 
 

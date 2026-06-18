@@ -5081,6 +5081,14 @@
   .ui-ico.sm { width: 15px; height: 15px; vertical-align: -3px; }
   .trait-icon .ui-ico { width: 26px; height: 26px; vertical-align: middle; }
   .stance-btn .ui-ico { width: 22px; height: 22px; vertical-align: -5px; margin-right: 4px; }
+  /* Match-mode + combat-mode buttons use the same icon treatment as the
+     stance buttons so all three toggle rows align (Dizzydreamer 18 Jun). */
+  .arena-mode-btn .ui-ico { width: 22px; height: 22px; vertical-align: -5px; margin-right: 4px; }
+  /* Normalize the balanced-stance emblem, which fills more of its canvas and
+     read bigger than the swords/shield at the same box size. */
+  .stance-btn[data-stance="balanced"] .ui-ico { transform: scale(0.9); }
+  /* Ability-picker icon (painted, replaces the emoji). */
+  .ability-btn .ab-icon .ui-ico { width: 30px; height: 30px; }
   .shop-item .si-nft-chip {
     position: absolute; top: 6px; left: 6px;
     background: linear-gradient(135deg, #6b85ff, #b169ff);
@@ -8502,16 +8510,16 @@
           <div class="arena-mode-row" id="arenaModeRow">
             <div class="arena-stance-label">Match Mode</div>
             <div class="arena-mode-btns">
-              <button class="arena-mode-btn active" data-mode="bots" title="Fight against synthesized bot opponents">🤖 vs Bots</button>
-              <button class="arena-mode-btn" data-mode="pvp" title="Fight against real player loadouts from the global pool">🥊 PvP</button>
+              <button class="arena-mode-btn active" data-mode="bots" title="Fight against synthesized bot opponents"><img class="ui-ico" src="nft_images/icons/mode_bots.png" alt="" onerror="this.style.display='none'"/> vs Bots</button>
+              <button class="arena-mode-btn" data-mode="pvp" title="Fight against real player loadouts from the global pool"><img class="ui-ico" src="nft_images/icons/mode_pvp.png" alt="" onerror="this.style.display='none'"/> PvP</button>
             </div>
           </div>
           <!-- Trello (Ric O., 2026-05-21): Auto / Active combat. -->
           <div class="arena-mode-row" id="arenaCombatModeRow">
             <div class="arena-stance-label">Combat Mode</div>
             <div class="arena-mode-btns">
-              <button class="arena-mode-btn active" data-combat-mode="auto"   title="Auto-resolve the fight, watch the result animate. No reaction skill needed.">🎲 Auto</button>
-              <button class="arena-mode-btn"        data-combat-mode="active" title="Pre-fight QTE combo (3 runes). Perfect timing boosts your damage by up to +15%.">⚡ Active</button>
+              <button class="arena-mode-btn active" data-combat-mode="auto"   title="Auto-resolve the fight, watch the result animate. No reaction skill needed."><img class="ui-ico" src="nft_images/icons/mode_auto.png" alt="" onerror="this.style.display='none'"/> Auto</button>
+              <button class="arena-mode-btn"        data-combat-mode="active" title="Pre-fight QTE combo (3 runes). Perfect timing boosts your damage by up to +15%."><img class="ui-ico" src="nft_images/icons/energy.png" alt="" onerror="this.style.display='none'"/> Active</button>
             </div>
           </div>
           <div class="arena-stance-row" id="arenaStanceRow">
@@ -9574,6 +9582,20 @@ const UI_ICONS = {
   health:     'nft_images/icons/trait_vit.png',  // ❤️ → ruby heart
   luck:       'nft_images/icons/trait_lck.png',  // 🍀 → clover
   arena:      'nft_images/icons/stance_aggressive.png',  // ⚔️ → crossed swords
+  // Arena pass (18 Jun) — match-mode + combat-mode buttons.
+  bots:       'nft_images/icons/mode_bots.png',   // 🤖
+  pvp:        'nft_images/icons/mode_pvp.png',    // 🥊
+  auto:       'nft_images/icons/mode_auto.png',   // 🎲
+  active:     'nft_images/icons/energy.png',      // ⚡ (reuse energy)
+  // Arena ability picker (keyed by ability id; hunters_mark reuses target).
+  power_strike:  'nft_images/icons/ab_power_strike.png',
+  iron_skin:     'nft_images/icons/ab_iron_skin.png',
+  rally:         'nft_images/icons/ab_rally.png',
+  drain_touch:   'nft_images/icons/ab_drain_touch.png',
+  quickstep:     'nft_images/icons/ab_quickstep.png',
+  hunters_mark:  'nft_images/icons/target.png',
+  stone_wall:    'nft_images/icons/ab_stone_wall.png',
+  pact_of_blood: 'nft_images/icons/ab_pact_of_blood.png',
 };
 function uiIcon(key, cls = 'ui-ico') {
   const src = UI_ICONS[key];
@@ -16051,7 +16073,7 @@ function renderArena() {
       grid.insertAdjacentHTML('beforeend', `
         <button class="ability-btn ${currentAbility === id ? 'active' : ''}" data-ability="${id}"
                 title="${a.blurb}">
-          <div class="ab-icon">${a.emoji}</div>
+          <div class="ab-icon">${uiIcon(id, 'ui-ico lg') || a.emoji}</div>
           <div class="ab-info">
             <div class="ab-name">${a.name}</div>
             <div class="ab-blurb">${a.blurb}</div>
