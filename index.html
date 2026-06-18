@@ -7309,9 +7309,9 @@
 
       <h3>Mood — how your champion feels</h3>
       <div class="howto-feature-grid">
-        <div class="howto-feature-card"><div class="ic">😊</div><h4>Happy</h4><p>Fed within 12h. Ready for adventure.</p></div>
-        <div class="howto-feature-card"><div class="ic">🙂</div><h4>Content</h4><p>Fed in last 24h. Slightly peckish.</p></div>
-        <div class="howto-feature-card"><div class="ic">🥺</div><h4>Hungry</h4><p>1–2 days no feed. Time to stop by.</p></div>
+        <div class="howto-feature-card"><div class="ic">😊</div><h4>Happy</h4><p>Active in the last 12h. Ready for adventure.</p></div>
+        <div class="howto-feature-card"><div class="ic">🙂</div><h4>Content</h4><p>Active in the last 24h. Doing fine.</p></div>
+        <div class="howto-feature-card"><div class="ic">🥺</div><h4>Hungry</h4><p>1–2 days idle. Time to stop by.</p></div>
         <div class="howto-feature-card"><div class="ic">😴</div><h4>Restless</h4><p>2–3 days idle. Feed or fight.</p></div>
         <div class="howto-feature-card"><div class="ic">😤</div><h4>Neglected</h4><p>3+ days alone. Cosmetic only — no penalty.</p></div>
       </div>
@@ -11147,11 +11147,11 @@ const VxBond = (() => {
   // can't drop below "Content"; Companion (50+) can't drop below
   // "Hungry". Below 50 bond, time-since-fed runs the whole show.
   const MOODS = [
-    { id: 'happy',      emoji: '😊', label: 'Happy',         blurb: 'Well-fed and ready for adventure.' },
-    { id: 'content',    emoji: '🙂', label: 'Content',       blurb: 'Doing fine. A snack would be nice.' },
-    { id: 'hungry',     emoji: '🥺', label: 'Hungry',        blurb: "It's been a while. Feed me?" },
-    { id: 'restless',   emoji: '😴', label: 'Restless',      blurb: 'Bored and a bit grumpy. Let\'s fight or eat.' },
-    { id: 'distressed', emoji: '😤', label: 'Neglected',     blurb: 'Where have you been? I miss you.' },
+    { id: 'happy',      emoji: '😊', label: 'Happy',         blurb: 'Active in the last 12h. Ready for adventure.' },
+    { id: 'content',    emoji: '🙂', label: 'Content',       blurb: 'Active in the last 24h. Doing fine.' },
+    { id: 'hungry',     emoji: '🥺', label: 'Hungry',        blurb: '1–2 days idle. Time to stop by.' },
+    { id: 'restless',   emoji: '😴', label: 'Restless',      blurb: '2–3 days idle. Feed or fight.' },
+    { id: 'distressed', emoji: '😤', label: 'Neglected',     blurb: '3+ days alone. Cosmetic only — no penalty.' },
   ];
   function moodFor(championId) {
     const rec = get(championId);
