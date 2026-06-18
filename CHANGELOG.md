@@ -4,11 +4,14 @@ _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
 ## 18 Jun 2026
+**Arena**
+- Match Mode, Combat Mode and the ability picker now use **painted game icons**
+  instead of emoji, and the three toggle rows line up (balanced stance no
+  longer looks bigger).
 **Champion screen**
-- **Bond & Mood now reflects how active you've been** with a champion — it
-  decays through Happy → Content → Hungry → Restless → Neglected based on the
-  last time you fed, fought, adventured, or claimed daily, not just feeding.
-  (Fixes maxed/idle champs getting stuck on "Content".)
+- Mood wording now **matches the Guide** and reflects any activity (feed /
+  fight / adventure / daily), not just feeding.
+- **Bond & Mood** decays Happy → Content → Hungry → Restless → Neglected based on the last time you fed, fought, adventured, or claimed daily (fixes maxed/idle champs stuck on "Content").
 
 ## 17 Jun 2026
 **Champion screen**
