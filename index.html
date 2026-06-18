@@ -116,37 +116,11 @@
     background: linear-gradient(180deg, rgba(10,6,8,0.55) 0%, rgba(10,6,8,0.0) 18%, rgba(10,6,8,0.0) 72%, rgba(10,6,8,0.6) 100%);
   }
   body.view-champion #champBgFull { opacity: 1; }
-  /* Big centred character — FULL figure via contain, positioned BELOW the top
-     nav (top:124px) so the head is never cut, feet within the viewport. Its
-     blurred environment (#champBgFull) extends across the page behind it. */
-  #champHero {
-    position: fixed; left: 0; right: 0; top: 124px;
-    /* Stop the figure ABOVE the Feed/Evolve + Milestones bars so the art
-       doesn't run behind them (Jamie, 16 Jun). The Feed block sits ~232px
-       off the bottom (centre col is min-height:100vh-196 + flex-end); 248
-       clears it with margin on any viewport height. */
-    bottom: 248px;
-    z-index: -1; pointer-events: none;
-    background-repeat: no-repeat; background-position: center top;
-    background-size: contain;
-    filter: saturate(1.06);
-    opacity: 0; transition: opacity .4s ease;
-  }
-  /* 3-COLUMN DESKTOP (>1400px, before the grid stacks): the character is the
-     full-page fixed hero; hide the in-flow frame and push the centre controls
-     to the bottom so they sit below the figure. */
-  @media (min-width: 1401px) {
-    body.view-champion #champHero { opacity: 1; }
-    body.view-champion #stageFrame { display: none; }
-    body.view-champion .cc-col-center { min-height: calc(100vh - 196px); justify-content: flex-end; }
-  }
-  /* STACKED (≤1400px — tablet + phone): the fixed hero reads as "just a
-     background" behind the scrolling cards (Jamie, 16 Jun). Hide it and show
-     the in-flow character image instead, moved to the TOP so it's a distinct,
-     prominent picture you see first (not buried below the cards). */
+  /* The champion is an IN-FLOW image (scrolls with the page — AngelHorn 17 Jun:
+     the fixed hero was "left behind, not moving"), feathered into the extended
+     blurred backdrop (#champBgFull). On the stacked layout it's moved to the
+     TOP so it's the first thing you see (not buried below the cards). */
   @media (max-width: 1400px) {
-    #champHero { display: none; }
-    body.view-champion #stageFrame { display: block; }
     body.view-champion .cc-col-center { order: -1; }
   }
   /* The grid stays transparent so the backdrop shows through between the
@@ -6293,12 +6267,6 @@
      black space — the cards float over the champion's environment, like
      the mockup. src set by setStageImage(); only visible in champion view. -->
 <div id="champBgFull" aria-hidden="true"></div>
-<!-- Big centred character hero: the FULL figure (contain) sized to the area
-     below the top nav so head + feet are always visible, with its blurred
-     environment (#champBgFull) extended across the page behind it. No frame
-     box (Dizzydreamer 16 Jun: "enlarged, centre placed, extend the background,
-     blur the sides"). src kept in sync by setStageImage(). -->
-<div id="champHero" aria-hidden="true"></div>
 
 <!-- ── Gateway URL — MUST run before auth.js loads (auth.js captures
      GATEWAY_URL as a closure variable at IIFE execution time).         -->
@@ -18693,8 +18661,6 @@ function setStageImage(newSrc) {
   const want = `url("${newSrc}")`;
   const full = document.getElementById('champBgFull');
   if (full && full.style.backgroundImage !== want) full.style.backgroundImage = want;
-  const hero = document.getElementById('champHero');
-  if (hero && hero.style.backgroundImage !== want) hero.style.backgroundImage = want;
   // absolute url for equality
   const curAbs = cur.src;
   if (!_lastStageSrc) {
