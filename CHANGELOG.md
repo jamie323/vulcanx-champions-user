@@ -3,6 +3,13 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 18 Jun 2026
+**Champion screen**
+- **Bond & Mood now reflects how active you've been** with a champion — it
+  decays through Happy → Content → Hungry → Restless → Neglected based on the
+  last time you fed, fought, adventured, or claimed daily, not just feeding.
+  (Fixes maxed/idle champs getting stuck on "Content".)
+
 ## 17 Jun 2026
 **Champion screen**
 - The champion image now **scrolls with the page** (it was staying fixed /
