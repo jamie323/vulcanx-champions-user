@@ -11155,23 +11155,30 @@ const VxBond = (() => {
   ];
   function moodFor(championId) {
     const rec = get(championId);
-    const fed = rec.lastFedAt ? new Date(rec.lastFedAt).getTime() : null;
-    if (!fed) {
-      // Trello 2026-06-01 (EoCZKJEL — "Level 8 Mood just hatched"):
-      // lastFedAt only gets set by onFeed, so a champion that levelled
-      // via Blessings/Adventures with no trait-potion feeds would read
-      // "Newly hatched" at high stages. Only use that copy at stage 1;
-      // beyond that fall back to a neutral "Content" so the mood line
-      // doesn't lie about a Champion-stage warrior.
-      const lvl = (Array.isArray(myChampions) && myChampions.find(m => m.id === championId)?.level) || 1;
+    // Mood decays from the most recent CARE action — feeding, a won battle,
+    // a completed adventure, OR a daily claim — not feeding alone. A maxed
+    // (L50) champ can't be trait-fed, and a champ levelled purely via
+    // Adventures never set lastFedAt, so the old "feed only" clock left them
+    // stuck at "Content" forever regardless of how long you were away
+    // (Discord, 18 Jun: 3 idle days, still Content).
+    const stamps = [rec.lastFedAt, rec.lastBattleAt, rec.lastCareAt]
+      .map((s) => (s ? new Date(s).getTime() : 0))
+      .filter(Boolean);
+    let last = stamps.length ? Math.max(...stamps) : null;
+    if (last === null) {
+      // No interaction ever recorded. Brand-new champ → hatch copy; otherwise
+      // start the clock now so the mood decays from here on (instead of
+      // sticking at "Content" permanently).
+      const lvl = (Array.isArray(myChampions) && myChampions.find((m) => m.id === championId)?.level) || 1;
       if (lvl <= 2) {
         return { id: 'new', emoji: '🥚', label: 'Newly hatched',
                  blurb: 'Feed me to get started!' };
       }
-      return { id: 'content', emoji: '🙂', label: 'Content',
-               blurb: 'Doing fine. A snack would be nice.' };
+      rec.lastCareAt = new Date().toISOString();
+      put(championId, rec);
+      last = Date.now();
     }
-    const hoursSince = (Date.now() - fed) / 3_600_000;
+    const hoursSince = (Date.now() - last) / 3_600_000;
     const timeMood = hoursSince < 12 ? 0
                    : hoursSince < 24 ? 1
                    : hoursSince < 48 ? 2
@@ -11250,15 +11257,22 @@ const VxBond = (() => {
     return null;
   }
   function onQuestComplete(championId) {
+    const rec = get(championId);
+    rec.lastCareAt = new Date().toISOString();   // adventure counts as care
+    put(championId, rec);
     return addBond(championId, 5, 'quest');
   }
   function onArenaWin(championId) {
     const rec = get(championId);
     rec.lastBattleAt = new Date().toISOString();
+    rec.lastCareAt   = rec.lastBattleAt;
     put(championId, rec);
     return addBond(championId, 6, 'arena_win');
   }
   function onDailyClaim(championId) {
+    const rec = get(championId);
+    rec.lastCareAt = new Date().toISOString();
+    put(championId, rec);
     return addBond(championId, 3, 'daily');
   }
 
