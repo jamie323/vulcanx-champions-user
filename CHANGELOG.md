@@ -4,6 +4,12 @@ _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
 ## 19 Jun 2026
+**Adopt — all species & bloodlines unlocked** 🎉
+- **You can now adopt any of the 8 species and all 26 bloodlines** — every one
+  has its own full 20-stage art (no more "Coming soon" locks, no placeholders).
+  Orc, Elf, Goblin, Demon, Drakkin, Dwarf, Beastkin and Wraith are all live.
+- Adoption is still free in QA (signed in your wallet, no PYR deducted).
+
 **Champion screen**
 - **Inside the Blessing window, Apply is now grayed out and unclickable until
   you've distributed all your points** (it was clickable with 0 points
