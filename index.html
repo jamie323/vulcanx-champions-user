@@ -3641,6 +3641,14 @@
     color: #1a0a05; font-weight: 700; letter-spacing: 1px;
     border: none; border-radius: 8px; cursor: pointer;
     font-size: 13px; text-transform: uppercase; }
+  /* Disabled primary buttons (e.g. Blessing Apply before all 40 points are
+     distributed) must clearly read as locked — they had no :disabled style,
+     so they kept the gold gradient and looked clickable (Ric O. 19 Jun). */
+  .btn-primary:disabled {
+    background: linear-gradient(90deg,#5f5343,#4a3f31);
+    color: rgba(255,235,205,0.4); cursor: not-allowed;
+    box-shadow: none; filter: none;
+  }
 
   /* ============================================================
      LANDING PAGE
@@ -10433,11 +10441,16 @@ function openAllocModal(sourceEl) {
       updateAllocRemaining();
     });
   });
-  updateAllocRemaining();
-  // Reset the Apply button text — after a successful Blessing it stays
-  // as '✨ Blessing…' until next page load, which confused Acadian.
+  // Reset the Apply button label BEFORE the gate runs — after a successful
+  // Blessing it stays as '✨ Blessing…' until next page load (confused
+  // Acadian). We must NOT also force disabled=false here: updateAllocRemaining
+  // is the single authority on the disabled state, and forcing it open left
+  // Apply clickable with 0 points distributed (Ric O. 19 Jun: "I can still
+  // use the blessing without distributing the 40 points — Apply should be
+  // grayed out"). Reset label first, then let the gate set disabled + label.
   const applyBtn = document.getElementById('allocApply');
-  if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = 'Apply'; }
+  if (applyBtn) applyBtn.textContent = 'Apply';
+  updateAllocRemaining();
   document.getElementById('allocModal').classList.add('open');
 }
 // Total stat points the champion can still legitimately absorb at its current
