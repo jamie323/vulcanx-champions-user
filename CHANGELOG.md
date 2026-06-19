@@ -5,6 +5,9 @@ if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
 ## 19 Jun 2026
 **Champion screen**
+- **Inside the Blessing window, Apply is now grayed out and unclickable until
+  you've distributed all your points** (it was clickable with 0 points
+  assigned). The button clearly shows as locked with "X pts left".
 - **Blessing is now grayed out + locked until your champion has room for a full
   40 stat points.** A Blessing always grants 40 points, so using it near your
   stat cap wasted points — it now stays locked (with a "level up first" hint)
