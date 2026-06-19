@@ -17204,6 +17204,11 @@ function handleResolvedMatch(resp, champ, arena) {
     // Re-render the champion view too so the vital bars + arena energy
     // chip refresh immediately (render() reads from myChampions).
     if (typeof render === 'function') render();
+    // Show the healing cooldown immediately after the fight ends, instead of
+    // waiting for the player to click "Enter Arena" again and hit the
+    // healing_cooldown error (Discord, 18 Jun). The backend applies a fixed
+    // 60s next_battle_at on every resolved match; mirror it here.
+    showCooldownChip(60);
   } catch (e) {
     console.error('[arena] render failed after successful match', e);
     const stack = (e && e.stack ? String(e.stack).split('\n').slice(0, 4).join('\n') : '(no stack)');
