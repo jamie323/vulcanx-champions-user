@@ -4,6 +4,12 @@ _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
 ## 19 Jun 2026
+**Arena**
+- **Match Mode, Combat Mode and Battle Stance rows now line up** — same button
+  size, same icon size, and the rows share the same width so their edges align.
+  The Battle Stance buttons were taller than the mode rows and the Balanced
+  emblem looked oversized; both are now consistent.
+
 **Shop — real PYR payments are LIVE**
 - Shop checkout now **charges real PYR** from your connected wallet on Elysium
   (chain 1339). Make sure you're connected with a **funded wallet** before
