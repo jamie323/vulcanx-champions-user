@@ -4,6 +4,12 @@ _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
 ## 19 Jun 2026
+**Champion screen**
+- **Blessing is now grayed out + locked until your champion has room for a full
+  40 stat points.** A Blessing always grants 40 points, so using it near your
+  stat cap wasted points — it now stays locked (with a "level up first" hint)
+  until there's room, and tells you how much room you have if you tap it early.
+
 **Arena**
 - **Match Mode, Combat Mode and Battle Stance rows now line up** — same button
   size, same icon size, and the rows share the same width so their edges align.
