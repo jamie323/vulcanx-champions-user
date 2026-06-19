@@ -5,6 +5,7 @@ if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
 ## 18 Jun 2026
 **Arena**
+- The **healing cooldown now appears automatically when a fight ends** (with the Heal Now button) — no need to click “Enter Arena” again to see it.
 - Match Mode, Combat Mode and the ability picker now use **painted game icons**
   instead of emoji, and the three toggle rows line up (balanced stance no
   longer looks bigger).
