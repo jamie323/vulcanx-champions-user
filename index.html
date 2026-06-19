@@ -6473,7 +6473,7 @@
           NFTs (equipment, limited potions, champion eggs) are batch-delivered to your wallet within a few days of purchase.
           Standard potions are credited to your inventory instantly.
         </span>
-        <br/><span style="color:var(--muted);font-size:11px;">QA note: PYR transfer is signed but zero-value during testing — no PYR is actually deducted yet.</span>
+        <br/><span style="color:var(--muted);font-size:11px;">Checkout charges real PYR from your wallet on Elysium — make sure you're connected with a funded wallet.</span>
       </p>
       <!-- Shop tabs. Updated 2026-05-21 — Champion eggs moved out of the
            shop; they live in the dedicated Adopt nav-button flow instead
@@ -7387,7 +7387,7 @@
       <div class="howto-twocol">
         <div class="col">
           <h5>Out of potions?</h5>
-          <p>Buy more in the <b>🛒 Shop</b> (top bar) — Minors 5 PYR, Majors 15 PYR, Epics 40 PYR. Dummy TX in QA, no PYR deducted. In prod, potions drop from chests across the Vulcan Forged ecosystem.</p>
+          <p>Buy more in the <b>🛒 Shop</b> (top bar) — Minors 5 PYR, Majors 15 PYR, Epics 40 PYR. Shop checkout charges real PYR from your wallet. In prod, potions also drop from chests across the Vulcan Forged ecosystem.</p>
         </div>
         <div class="col">
           <h5>Which trait will Feed Me fire?</h5>
@@ -13756,7 +13756,7 @@ const WAGER_ESCROW = {
 // PYR flows are off-chain ledger / simulated (QA is free), so this is recorded
 // but NOT yet charged — flip PYR_PAYMENTS_ENABLED to go live.
 const PYR_TREASURY = '0xA396e3F33E36728FA9384ea7d7F42e5e00873508';
-const PYR_PAYMENTS_ENABLED = false;   // OFF: QA stays free; no real PYR moved
+const PYR_PAYMENTS_ENABLED = true;    // LIVE: shop checkout charges real PYR (Jamie, 19 Jun)
 const Escrow = {
   enabled() { return /^0x[a-fA-F0-9]{40}$/.test(WAGER_ESCROW.address); },
   // integer PYR → wei (1e18), as a 0x hex string for eth_sendTransaction value
@@ -15091,6 +15091,20 @@ function renderBuy() {
       e.target.value.trim() || defaultName;
   });
 }
+// Real PYR payment to the treasury (Jamie, 19 Jun). When PYR_PAYMENTS_ENABLED
+// is on, transfers `amountPyr` native PYR to PYR_TREASURY on Elysium and
+// returns the tx hash; otherwise falls back to the free signature ceremony so
+// QA stays free. Payment runs BEFORE the item is granted, so a rejected/failed
+// tx throws and the caller must not deliver the item (fail-safe: no charge → no
+// item, no item → no charge).
+async function payTreasury(amountPyr, label) {
+  if (!PYR_PAYMENTS_ENABLED || !(amountPyr > 0)) return signDummyTx(label);
+  const wm = window.vxWallet;
+  if (!wm || typeof wm.sendPyr !== 'function') throw new Error('Wallet payment unavailable');
+  const valueHex = Escrow._pyrToWeiHex(amountPyr);
+  return wm.sendPyr(PYR_TREASURY, valueHex, label);
+}
+
 // Send a dummy 0-value TX on Elysium so the user signs a real transaction
 // but no PYR is deducted. Routes through the WalletManager so MetaMask AND
 // WalletConnect (mobile) both work.
@@ -18992,7 +19006,7 @@ function shopTooltipFor(it) {
     lines.push(`Evolution Bar fill: ${info.barFill} per use`);
   }
   if (desc) lines.push(desc);
-  lines.push(`Price: ${it.price} PYR  ·  dummy TX in QA, no PYR deducted`);
+  lines.push(`Price: ${it.price} PYR  ·  charged from your wallet at checkout`);
   // Bloodline-weight disclaimer (post-flat-gain pass): some bloodlines
   // gain a bit more from their aligned trait (e.g. STR-aligned might
   // see +6 from a Minor STR instead of +5). That's a feature.
@@ -19213,9 +19227,12 @@ async function checkoutShop() {
   btn.textContent = '🦊 Sign in wallet…';
 
   try {
-    // Dummy TX on Elysium — zero value in QA. Label encodes the purchase.
+    // Charge real PYR to the treasury on Elysium (Jamie, 19 Jun — shop is
+    // the first flow live; rename/adopt/skip stay on the free ceremony until
+    // this is verified on-chain). Runs before any grant: a rejected/failed
+    // payment throws here, so nothing is delivered. Label encodes the purchase.
     const label = `shop:${totalQ}x@${totalP}PYR`;
-    await signDummyTx(label);
+    await payTreasury(totalP, label);
 
     // ── 1) Standard potions: instant grant ─────────────────────
     if (potionLines.length) {
@@ -19340,7 +19357,7 @@ async function checkoutShop() {
         lines.push('');
         lines.push(`The matching NFTs will be batch-delivered to your wallet within a few days. Your gameplay use of these items doesn't wait on the chain — keep playing.`);
         lines.push('');
-        lines.push(`Total: ${queueResult?.total_pyr_charged ?? totalP} PYR (zero-value dummy TX during QA).`);
+        lines.push(`Total: ${queueResult?.total_pyr_charged ?? totalP} PYR charged from your wallet.`);
 
         vxAlert(
           `Your order is in:\n\n${lines.join('\n')}`,
@@ -19354,7 +19371,7 @@ async function checkoutShop() {
         if (potQty) toastBits.push(`🧪 ${potQty} potion${potQty>1?'s':''}`);
         showToast(`🎁 Added: ${toastBits.join(' · ')}`, 'success', 5000);
       } else {
-        showToast(`🧪 ${totalQ} potion${totalQ>1?'s':''} delivered · ${totalP} PYR (dummy)`, 'success', 3200);
+        showToast(`🧪 ${totalQ} potion${totalQ>1?'s':''} delivered · ${totalP} PYR charged`, 'success', 3200);
       }
       btn.textContent = origText;
       btn.disabled = false;

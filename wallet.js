@@ -494,6 +494,25 @@
       return signature;
     }
 
+    // Real native-PYR transfer (Elysium) to a recipient — the production
+    // payment path that replaces the sendDummyTx ceremony. NO `data` field
+    // (Elysium rejects external-to-EOA txs that carry data — the same quirk
+    // that broke the old self-send tx). valueHex is 0x-prefixed wei.
+    // Returns the tx hash.
+    async sendPyr(to, valueHex, label) {
+      const alive = await this.verifyConnection();
+      if (!alive) {
+        const recovered = await this.tryAutoReconnect();
+        if (!recovered) throw new Error('Wallet session expired — please reconnect.');
+      }
+      const txHash = await this._provider.request({
+        method: 'eth_sendTransaction',
+        params: [{ from: this.address, to, value: valueHex }],
+      });
+      console.log('[pay]', label, '→', to, txHash);
+      return txHash;
+    }
+
     explorerTx(hash) { return `${ELYSIUM_EXPLORER}/tx/${hash}`; }
 
     // ── Listeners + external-disconnect polling ──────────────────

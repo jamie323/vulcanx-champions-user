@@ -3,6 +3,16 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 19 Jun 2026
+**Shop — real PYR payments are LIVE**
+- Shop checkout now **charges real PYR** from your connected wallet on Elysium
+  (chain 1339). Make sure you're connected with a **funded wallet** before
+  buying. If you reject the wallet prompt or the transaction fails, **nothing is
+  charged and nothing is delivered** — it's safe to cancel.
+- The "no PYR deducted in QA" notes in the Shop have been updated to reflect this.
+- _Rename (5 PYR), Adopt (10 PYR) and Skip-timer are still free for now_ — only
+  the Shop charges real PYR at this stage.
+
 ## 18 Jun 2026
 **Arena**
 - The **healing cooldown now appears automatically when a fight ends** (with the Heal Now button) — no need to click “Enter Arena” again to see it.
