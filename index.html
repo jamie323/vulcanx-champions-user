@@ -13751,6 +13751,12 @@ const WAGER_ESCROW = {
   address: '',            // ← set to 0x… deployed PyrWagerEscrow to activate
   chainIdHex: '0x53B',    // Elysium mainnet, chainId 1339
 };
+// PYR purchase treasury (Jamie, 19 Jun). Destination for real PYR from the
+// shop / rename / adopt once on-chain payments are switched on. Today all
+// PYR flows are off-chain ledger / simulated (QA is free), so this is recorded
+// but NOT yet charged — flip PYR_PAYMENTS_ENABLED to go live.
+const PYR_TREASURY = '0xA396e3F33E36728FA9384ea7d7F42e5e00873508';
+const PYR_PAYMENTS_ENABLED = false;   // OFF: QA stays free; no real PYR moved
 const Escrow = {
   enabled() { return /^0x[a-fA-F0-9]{40}$/.test(WAGER_ESCROW.address); },
   // integer PYR → wei (1e18), as a 0x hex string for eth_sendTransaction value
