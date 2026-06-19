@@ -693,6 +693,8 @@
   .cc-blessing-bar.empty {
     opacity: 0.55;
   }
+  /* Blessing locked because the champion has < 40 pts of stat room. */
+  .cc-blessing-bar.locked { cursor: not-allowed; }
 
   /* Center action row in two-col mode (after Boosts button removal) */
   .cc-action-row.two-col {
@@ -10438,6 +10440,23 @@ function openAllocModal(sourceEl) {
   if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = 'Apply'; }
   document.getElementById('allocModal').classList.add('open');
 }
+// Total stat points the champion can still legitimately absorb at its current
+// level (sum of remaining headroom across all traits). The Blessing always
+// distributes a full 40 points, so it's only usable when there's room for all
+// 40 — otherwise points are wasted. (Jamie, 19 Jun: "Blessing should be
+// grayed out / unusable until the champion has 40 pts of room for stats.")
+const BLESSING_MIN_HEADROOM = 40;
+function blessingHeadroom() {
+  return TRAITS.reduce((total, t) => {
+    const idx = TRAITS.indexOf(t);
+    const cur = state.stats[t] || STAGE_FLOORS[state.stageIdx][idx];
+    const cap = capAtLevel(state.level)[idx];
+    return total + Math.max(0, cap - cur);
+  }, 0);
+}
+function blessingUsable() {
+  return (state.inv?.alloc > 0) && blessingHeadroom() >= BLESSING_MIN_HEADROOM;
+}
 function updateAllocRemaining() {
   const sum = Object.values(allocState.values).reduce((a,b)=>a+b, 0);
   allocState.remaining = 40 - sum;
@@ -13417,7 +13436,21 @@ function render() {
     evoRow.classList.toggle('empty', !state.inv.evo);
   }
   const allocRow = document.getElementById('allocPotionRow');
-  if (allocRow) allocRow.classList.toggle('empty', !state.inv.alloc);
+  if (allocRow) {
+    // Gray out + lock the Blessing unless the champion both owns one AND has
+    // room for a full 40-point distribution (Jamie, 19 Jun). The click handler
+    // enforces the same rule so the modal can't open when locked.
+    const owned  = state.inv.alloc > 0;
+    const hasRoom = blessingHeadroom() >= BLESSING_MIN_HEADROOM;
+    allocRow.classList.toggle('empty', !(owned && hasRoom));
+    allocRow.classList.toggle('locked', owned && !hasRoom);
+    const hint = allocRow.querySelector('.cep-hint');
+    if (hint) {
+      hint.textContent = (owned && !hasRoom)
+        ? 'Locked — needs room for 40 stat points (level up first)'
+        : 'Distribute 40 free stat points';
+    }
+  }
 
   // ── POTIONS card — toggle empty state vs full inventory (LEFT panel)
   const totalPotions =
@@ -13611,6 +13644,20 @@ bindIf('allocPotionRow', 'click', (e) => {
   if (window.VxQuests && state.championId && VxQuests.getActiveQuest(state.championId)) {
     vxAlert('Your champion is away on an adventure. They\'ll be back soon — adventure progress fills the Evolution Bar without potions.',
       { title: '🗺️ On Adventure', icon: '🗺️' });
+    return;
+  }
+  // Anti-waste gate (Jamie, 19 Jun): a Blessing distributes a full 40 points,
+  // so block it unless the champion has room for all 40. Replaces the old
+  // "open anyway, modal handles the capped case" behaviour.
+  if (!(state.inv?.alloc > 0)) {
+    vxAlert('You don\'t have any Blessings yet. Earn them from the daily streak or buy them in the Shop.',
+      { title: 'No Blessing available', icon: '✨' });
+    return;
+  }
+  const room = blessingHeadroom();
+  if (room < BLESSING_MIN_HEADROOM) {
+    vxAlert(`A Blessing grants 40 stat points, but your champion only has room for ${room} more right now. Level up to raise your stat caps, then use the Blessing so none of the points are wasted.`,
+      { title: 'Not enough stat room', icon: '✨' });
     return;
   }
   useAllocationPotion(e.currentTarget);
