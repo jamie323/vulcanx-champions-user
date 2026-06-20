@@ -4,6 +4,15 @@ _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
 ## 20 Jun 2026
+**Shop / potions — QA testing unblocked**
+- **Trait, Evolution and Blessing potions are now free during QA** so you can
+  level up any of the new species without spending PYR. NFT items (equipment,
+  limited drops, eggs) still charge real PYR.
+- **Potions are now granted for your current champion's species** — buying
+  potions while playing an Elf gives you Elf potions (before, the shop only ever
+  handed out Orc potions, so they wouldn't feed other species).
+- Reminder: potions are species-specific — Orc potions only feed Orcs, etc.
+
 **Guide & FAQ**
 - Fixed the feeding tip: stat gains are **flat** (+5 Minor / +15 Major / +40
   Epic) — the old "diminishing returns" text was stale.
