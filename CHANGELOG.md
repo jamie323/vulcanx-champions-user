@@ -10,6 +10,10 @@ if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
   message to confirm the adoption.
 
 **Shop / potions — QA testing unblocked**
+- **Every species now gets a free 80-potion starter pack** the first time you
+  open one of its champions (was Orc-only) — so Elf, Drakkin, etc. are
+  immediately feedable. (Potions are species-specific, so each species needs
+  its own.)
 - **Trait, Evolution and Blessing potions are now free during QA** so you can
   level up any of the new species without spending PYR. NFT items (equipment,
   limited drops, eggs) still charge real PYR.
