@@ -3,6 +3,17 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 20 Jun 2026
+**Guide & FAQ**
+- Fixed the feeding tip: stat gains are **flat** (+5 Minor / +15 Major / +40
+  Epic) — the old "diminishing returns" text was stale.
+- **Special potions** section now also covers the **Healing Salve**, the
+  Blessing's "needs room for 40 points" rule, and points to the Limited Drops.
+- "What's real vs dummy in QA" updated: **real PvP**, **Shop charges real PYR**,
+  wagers on the QA ledger.
+- A full **player FAQ** covering the whole game is now written up (going on the
+  site soon).
+
 ## 19 Jun 2026
 **Adopt — all species & bloodlines unlocked** 🎉
 - **You can now adopt any of the 8 species and all 26 bloodlines** — every one
