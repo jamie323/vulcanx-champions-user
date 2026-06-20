@@ -15443,9 +15443,34 @@ function findPotion({ trait, kind, tier } = {}) {
 }
 
 
+// QA: grant a free 80-potion starter pack for a species (10 of each trait
+// Minor + 10 Evolution + 10 Blessing) — same as the server's orc-only starter,
+// but for ANY species. potion_grant accepts all 8 species.
+const _qaStarterGranted = new Set();
+async function grantSpeciesStarter(species_id) {
+  await Promise.all([
+    ...TRAITS.map(t => apiGrantPotion({ species_id, kind: 'minor', trait: t, quantity: 10 })),
+    apiGrantPotion({ species_id, kind: 'evolution',  quantity: 10 }),
+    apiGrantPotion({ species_id, kind: 'allocation', quantity: 10 }),
+  ]);
+}
+
 async function reloadPotions() {
   if (!currentSpecies) return;
   state.potions = await apiListPotions(currentSpecies);
+  // QA fix (AngelHorn, 20 Jun): the server starter pack is orc-only, so a
+  // newly-adopted non-orc champion has NO usable potions and its species can't
+  // be fed/tested. If this species has none, grant a free starter for it (once
+  // per species per session) so every species is playable like orc.
+  if (QA_FREE_POTIONS
+      && !state.potions.some(p => (p.quantity || 0) > 0)
+      && !_qaStarterGranted.has(currentSpecies)) {
+    _qaStarterGranted.add(currentSpecies);
+    try {
+      await grantSpeciesStarter(currentSpecies);
+      state.potions = await apiListPotions(currentSpecies);
+    } catch (e) { console.warn('[qa-starter] grant failed:', e?.message); }
+  }
   deriveInv();
 }
 
