@@ -4,6 +4,11 @@ _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
 ## 20 Jun 2026
+**Adopt**
+- The adopt button no longer says "10 PYR" — adoption is **free in QA** (10 PYR
+  at launch), so the label now matches. You still sign a quick (free) wallet
+  message to confirm the adoption.
+
 **Shop / potions — QA testing unblocked**
 - **Trait, Evolution and Blessing potions are now free during QA** so you can
   level up any of the new species without spending PYR. NFT items (equipment,
