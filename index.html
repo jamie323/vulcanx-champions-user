@@ -15150,9 +15150,9 @@ function renderBuy() {
       <input type="text" id="buyNameInput" value="${defaultName}" maxlength="48" />
       <div class="buy-price">
         <span class="label">Adoption fee</span>
-        <span class="value">10 PYR</span>
+        <span class="value">Free in QA <span style="color:var(--muted);font-weight:400;font-size:11px;">(10 PYR at launch)</span></span>
       </div>
-      <button class="btn-big" id="confirmAdoptBtn" onclick="confirmAdopt()">🥚 Adopt this Champion — 10 PYR</button>
+      <button class="btn-big" id="confirmAdoptBtn" onclick="confirmAdopt()">🥚 Adopt this Champion — Free in QA</button>
     </div>
   `;
   document.getElementById('buyNameInput').addEventListener('input', e => {
@@ -15292,7 +15292,7 @@ async function confirmAdopt() {
   } catch (e) {
     const msg = (e && e.code === 4001) ? 'You rejected the wallet prompt.' : (e.message || String(e));
     vxAlert(msg, {title: 'Adopt failed', icon: '🥚', variant: 'error'});
-    if (btn) { btn.disabled = false; btn.textContent = '🥚 Adopt this Champion — 10 PYR'; }
+    if (btn) { btn.disabled = false; btn.textContent = '🥚 Adopt this Champion — Free in QA'; }
   }
 }
 
