@@ -3,6 +3,13 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 21 Jun 2026
+**Shop**
+- **Trimmed the intro text** so the potions show higher up — less scrolling to
+  reach the actual shop, especially on mobile.
+- **Potion bottles are now a uniform size** — the middle column (Vitality /
+  Intelligence) no longer looks bigger than the ones beside it.
+
 ## 20 Jun 2026
 **Arena**
 - **Match Mode / Combat Mode / Battle Stance now line up on desktop too.** On
