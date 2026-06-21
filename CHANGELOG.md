@@ -4,11 +4,22 @@ _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
 ## 21 Jun 2026
+**Champion**
+- **Blessing works again on fully-maxed champions** — if every stat is at its
+  cap you can still use it for the **Evolution-Bar fill** (you just won't spend
+  stat points). It only stays locked when *partly* capped (to avoid waste).
+
+**Arena**
+- **Battle Stance icons are now the same size as Match/Combat** — the Balanced
+  emblem was reading bigger; the icon art is now normalized so all toggle icons
+  match.
+
 **Shop**
 - **Trimmed the intro text** so the potions show higher up — less scrolling to
   reach the actual shop, especially on mobile.
 - **Potion bottles are now a uniform size** — the middle column (Vitality /
-  Intelligence) no longer looks bigger than the ones beside it.
+  Intelligence) no longer looks bigger. _(If you still saw old art, that was a
+  caching issue — now fixed so updated art always loads.)_
 
 ## 20 Jun 2026
 **Arena**
