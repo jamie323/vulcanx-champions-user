@@ -1805,12 +1805,15 @@
     .arena-card .arena-vs-hero .avh-vs { font-size: 52px; }
     .arena-card .arena-vs-hero .avh-name { font-size: 17px; }
     .arena-card .arena-vs-hero .avh-foe-q { font-size: 104px; }
-    /* One toggles row: Match Mode · Combat Mode · Battle Stance */
-    .arena-toggles { display: grid; grid-template-columns: repeat(3, minmax(0,1fr));
+    /* One toggles row: Match Mode · Combat Mode · Battle Stance.
+       Columns are proportional to button count (2:2:3) so EVERY toggle button
+       is the same width across all three rows — otherwise the 3-button Battle
+       Stance column crammed its buttons narrower than the 2-button columns and
+       its icons read oversized (Dizzydreamer/AngelHorn, re-reported 20 Jun). */
+    .arena-toggles { display: grid; grid-template-columns: 2fr 2fr 3fr;
                      gap: 16px; align-items: start; }
     .arena-toggles .arena-mode-row, .arena-toggles .arena-stance-row { margin: 6px 0; }
-    .arena-toggles .stance-btn { padding: 10px 6px; font-size: 12px; }
-    .arena-toggles .arena-mode-btn { padding: 10px 8px; font-size: 12px; }
+    .arena-toggles .stance-btn, .arena-toggles .arena-mode-btn { padding: 10px 8px; font-size: 12px; }
     /* Sidebar abilities read as a vertical list (mockup) */
     .arena-side .arena-ability-grid { grid-template-columns: 1fr; }
   }
@@ -7516,7 +7519,7 @@
     <div class="page-hd">
       <div>
         <h2>Choose Your Species</h2>
-        <div class="sub">Each species has its own traits. You can own up to 10 champions.</div>
+        <div class="sub">Each species has its own traits. Collect all 26 bloodlines — your stable holds up to 100 champions.</div>
       </div>
     </div>
     <div class="species-grid" id="speciesGrid"></div>
@@ -15267,8 +15270,8 @@ function offerReconnect() {
 async function confirmAdopt() {
   const name = (document.getElementById('buyNameInput').value || '').trim();
   if (!name) { vxAlert('Enter a name for your champion before you adopt.', {title: 'Name required', icon: '✏️'}); return; }
-  if (myChampions.length >= 10) {
-    vxAlert('You already own 10 champions (the maximum). Retire or evolve existing ones before adopting more.', {title: 'Stable full', icon: '🏛'});
+  if (myChampions.length >= 100) {
+    vxAlert('You already own 100 champions (the maximum). That\'s a huge stable!', {title: 'Stable full', icon: '🏛'});
     return;
   }
 
