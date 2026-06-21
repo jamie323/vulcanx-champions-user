@@ -5102,11 +5102,10 @@
   .ui-ico.lg { width: 26px; height: 26px; vertical-align: -7px; }
   .ui-ico.sm { width: 15px; height: 15px; vertical-align: -3px; }
   .trait-icon .ui-ico { width: 26px; height: 26px; vertical-align: middle; }
-  /* All three toggle rows (Match Mode · Combat Mode · Battle Stance) share
-     one icon treatment + one balanced-emblem normalise so every emblem reads
-     at the same visual size (Dizzydreamer 18–19 Jun). */
+  /* All three toggle rows (Match Mode · Combat Mode · Battle Stance) share one
+     icon treatment. The emblem ART itself is now normalised to a uniform
+     footprint on disk (21 Jun), so no per-icon scale hack is needed. */
   .stance-btn .ui-ico, .arena-mode-btn .ui-ico { width: 20px; height: 20px; vertical-align: -5px; margin-right: 5px; }
-  .stance-btn[data-stance="balanced"] .ui-ico { transform: scale(0.88); }
   /* Ability-picker icon (painted, replaces the emoji). */
   .ability-btn .ab-icon .ui-ico { width: 30px; height: 30px; }
   .shop-item .si-nft-chip {
@@ -6939,7 +6938,7 @@
       <h3>Special potions</h3>
       <ul>
         <li><b>⚡ Evolution Potion</b> — consumed at a stage-gate level with a full Evolution Bar to advance to the next life stage.</li>
-        <li><b>✨ Blessing</b> — distribute 40 stat points freely across any traits. Also fills 10–25% of the Evolution Bar regardless of distribution. Stays <b>locked until your champion has room for all 40 points</b> (level up to raise your caps) so none are wasted.</li>
+        <li><b>✨ Blessing</b> — distribute 40 stat points freely across any traits. Also fills 10–25% of the Evolution Bar. It's <b>locked only when partly capped</b> (so you don't waste points) — but once your champion is <b>fully maxed</b> you can still use it for the Evolution-Bar fill alone.</li>
         <li><b>🧪 Healing Salve</b> — instantly restores your champion's HP after Arena fights.</li>
       </ul>
       <p style="color:var(--muted);font-size:13px;">Looking for the rare ones? The <b>✨ Limited Drops</b> tab in the Shop has the Founder's Elixir (+5 all stats), Stage Skip, Phoenix Tear, Bond Bloom and Whispered Trinket.</p>
@@ -9618,7 +9617,7 @@ const UI_ICONS = {
 };
 function uiIcon(key, cls = 'ui-ico') {
   const src = UI_ICONS[key];
-  return src ? `<img class="${cls}" src="${src}" alt="" decoding="async" onerror="this.style.display='none'"/>` : '';
+  return src ? `<img class="${cls}" src="${_verImg(src)}" alt="" decoding="async" onerror="this.style.display='none'"/>` : '';
 }
 // One-sentence descriptions for hover tooltips. Threaded into every
 // place that renders a bare 3-letter acronym (stat pills, stat rows,
@@ -10475,8 +10474,15 @@ function blessingHeadroom() {
     return total + Math.max(0, cap - cur);
   }, 0);
 }
+// A Blessing is usable when there's room for a full 40-point distribution OR
+// when the champion is FULLY MAXED (headroom 0) — the max-stats exception
+// (Jamie, 21 Jun): a maxed champion can't spend the 40 stat points, but the
+// Blessing should still fire for its 10–25% Evolution-Bar fill so it can keep
+// progressing. Only the wasteful in-between (1–39 room) stays blocked.
 function blessingUsable() {
-  return (state.inv?.alloc > 0) && blessingHeadroom() >= BLESSING_MIN_HEADROOM;
+  if (!(state.inv?.alloc > 0)) return false;
+  const room = blessingHeadroom();
+  return room >= BLESSING_MIN_HEADROOM || room === 0;
 }
 function updateAllocRemaining() {
   const sum = Object.values(allocState.values).reduce((a,b)=>a+b, 0);
@@ -13458,18 +13464,21 @@ function render() {
   }
   const allocRow = document.getElementById('allocPotionRow');
   if (allocRow) {
-    // Gray out + lock the Blessing unless the champion both owns one AND has
-    // room for a full 40-point distribution (Jamie, 19 Jun). The click handler
-    // enforces the same rule so the modal can't open when locked.
+    // Gray/lock the Blessing unless usable: owned AND (room for 40 OR fully
+    // maxed). The fully-maxed case (room 0) is allowed — it fires bar-only for
+    // the Evo Bar fill. Only the wasteful 1–39 middle is locked (Jamie 19+21 Jun).
     const owned  = state.inv.alloc > 0;
-    const hasRoom = blessingHeadroom() >= BLESSING_MIN_HEADROOM;
-    allocRow.classList.toggle('empty', !(owned && hasRoom));
-    allocRow.classList.toggle('locked', owned && !hasRoom);
+    const room   = blessingHeadroom();
+    const usable = owned && (room >= BLESSING_MIN_HEADROOM || room === 0);
+    allocRow.classList.toggle('empty', !usable);
+    allocRow.classList.toggle('locked', owned && !usable);
     const hint = allocRow.querySelector('.cep-hint');
     if (hint) {
-      hint.textContent = (owned && !hasRoom)
+      hint.textContent = (owned && !usable)
         ? 'Locked — needs room for 40 stat points (level up first)'
-        : 'Distribute 40 free stat points';
+        : (owned && room === 0)
+          ? 'Stats maxed — fills your Evolution Bar 10–25%'
+          : 'Distribute 40 free stat points';
     }
   }
 
@@ -13675,8 +13684,11 @@ bindIf('allocPotionRow', 'click', (e) => {
       { title: 'No Blessing available', icon: '✨' });
     return;
   }
+  // Block only the wasteful in-between (1–39 room). room===0 (fully maxed) is
+  // the allowed exception — the modal fires it bar-only for the 10–25% Evo Bar
+  // fill (Jamie, 21 Jun: "should still give evolution bar if stats are maxed").
   const room = blessingHeadroom();
-  if (room < BLESSING_MIN_HEADROOM) {
+  if (room > 0 && room < BLESSING_MIN_HEADROOM) {
     vxAlert(`A Blessing grants 40 stat points, but your champion only has room for ${room} more right now. Level up to raise your stat caps, then use the Blessing so none of the points are wasted.`,
       { title: 'Not enough stat room', icon: '✨' });
     return;
@@ -17399,11 +17411,16 @@ function _pushTicker(msg, kindClass) {
 // token if we write it in JS and breaks the script (caused a blank app
 // once). So we version images with a DISTINCT param, "iv" (image-version),
 // that the deploy replace can't match.
-const IMG_VER = '2';
+const IMG_VER = '3';   // bump when any versioned art changes (busts CDN cache)
 const _IMG_Q = '?iv=' + IMG_VER;
 function _verImg(path) {
-  // Only version our evolution20 art (skip data:/http: and the legacy jpg).
-  return (path && path.indexOf('evolution20/') === 0) ? (path + _IMG_Q) : path;
+  // Version our own art (evolution20 + nft_images) so a CDN that cached the
+  // OLD file serves the new one. (21 Jun: normalised potion + arena-icon art
+  // wasn't showing because nft_images had no cache-bust.) Skip data:/http: and
+  // already-queried paths.
+  if (!path) return path;
+  const ours = path.indexOf('evolution20/') === 0 || path.indexOf('nft_images/') === 0;
+  return (ours && path.indexOf('?') === -1) ? (path + _IMG_Q) : path;
 }
 
 function _portraitFor(speciesId, bloodlineId, stageIdx) {
@@ -19146,11 +19163,15 @@ function renderShop() {
 // One image per BASE potion; tier = UI frame glow, same convention as
 // equipment rarity.
 function _potionArtSrc(it) {
-  if (it.kind === 'evolution')  return 'nft_images/potions/special_evolution.png';
-  if (it.kind === 'allocation') return 'nft_images/potions/special_blessing.png';
-  if (it.kind === 'healing')    return 'nft_images/potions/special_healing.png';
-  const t = (it.trait || '').toLowerCase();
-  return t ? `nft_images/potions/trait_${t}.png` : 'nft_images/potions/special_blessing.png';
+  let p;
+  if (it.kind === 'evolution')       p = 'nft_images/potions/special_evolution.png';
+  else if (it.kind === 'allocation') p = 'nft_images/potions/special_blessing.png';
+  else if (it.kind === 'healing')    p = 'nft_images/potions/special_healing.png';
+  else {
+    const t = (it.trait || '').toLowerCase();
+    p = t ? `nft_images/potions/trait_${t}.png` : 'nft_images/potions/special_blessing.png';
+  }
+  return _verImg(p);   // cache-bust so the normalised art serves through the CDN
 }
 
 function _renderPotionTile(it) {
