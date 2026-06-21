@@ -4700,6 +4700,12 @@
     font-size: 15px; line-height: 1.55;
     margin: 0 auto 22px; max-width: 520px;
   }
+  /* Compact shop intro so the actual potions show above the fold on mobile
+     (Ric O., 21 Jun: "reduce the text size so more of the shop is visible"). */
+  .welcome-sub.shop-intro {
+    font-size: 12px; line-height: 1.4;
+    margin: 4px auto 10px; max-width: 460px;
+  }
   .welcome-potions {
     display: flex; flex-direction: column; gap: 14px;
     margin: 18px 0 24px;
@@ -6481,13 +6487,8 @@
     <div class="shop-header">
       <div class="welcome-eyebrow">✦ The Apothecary ✦</div>
       <h2 class="guide-title">Shop</h2>
-      <p class="welcome-sub">
-        Buy potions and NFT items with <b>PYR</b>.
-        <br/><span style="color:var(--muted);font-size:12px;">
-          NFTs (equipment, limited potions, champion eggs) are batch-delivered to your wallet within a few days of purchase.
-          Standard potions are credited to your inventory instantly.
-        </span>
-        <br/><span style="color:var(--muted);font-size:11px;">🧪 QA: trait, evolution &amp; blessing potions are <b>free</b> so you can test any species. NFT items (equipment, limited drops, eggs) charge real PYR on Elysium — connect a funded wallet for those.</span>
+      <p class="welcome-sub shop-intro">
+        <b style="color:var(--text);">🧪 Potions are free in QA.</b> NFT items (gear, limited drops, eggs) charge real <b>PYR</b> on Elysium &amp; batch-deliver to your wallet; standard potions land instantly.
       </p>
       <!-- Shop tabs. Updated 2026-05-21 — Champion eggs moved out of the
            shop; they live in the dedicated Adopt nav-button flow instead
