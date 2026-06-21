@@ -4,6 +4,16 @@ _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
 ## 20 Jun 2026
+**Arena**
+- **Match Mode / Combat Mode / Battle Stance now line up on desktop too.** On
+  wide screens the three sit side-by-side; the Battle Stance group was being
+  squeezed narrower (so its icons looked bigger) — all toggle buttons are now
+  the same width. (The earlier fix only covered narrow/phone layouts.)
+
+**Stable**
+- **You can now own up to 100 champions** (was 10) — collect all 26 bloodlines
+  with room to spare. _(Takes full effect once the backend cap is deployed.)_
+
 **Adopt**
 - The adopt button no longer says "10 PYR" — adoption is **free in QA** (10 PYR
   at launch), so the label now matches. You still sign a quick (free) wallet
