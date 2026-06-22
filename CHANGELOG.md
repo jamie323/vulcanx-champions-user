@@ -12,6 +12,9 @@ if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
   Quick ~1–3%, Standard ~5–7%, Long ~10–15%.
 **Energy**
 - **Energy now regenerates at 4/hour** (was 5) — a full bar in ~25h.
+**Potions**
+- **Potions are now universal** — any potion feeds *any* of your champions,
+  new or old (no longer species-locked). One shared inventory across your stable.
 
 ## 21 Jun 2026 (later)
 **Arena — PYR wagers are LIVE on-chain** 🎲
