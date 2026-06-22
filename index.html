@@ -984,7 +984,7 @@
 
     /* Arena result modal: portraits smaller */
     .arena-result-modal { width: calc(100vw - 24px) !important; }
-    .ar-portrait { width: 96px; height: 96px; }
+    .ar-portrait { width: 96px; height: auto; }
     .ar-fighter-name { font-size: 12px; }
     .ar-fighter-context { font-size: 10px; }
     .ar-vs-divider { font-size: 14px; }
@@ -1082,7 +1082,7 @@
     .cc-name { font-size: 20px; }
     /* same fix on small phones — aspect-ratio drives the height now */
     /* .cc-stage-frame { max-height: 280px; } — removed */
-    .ar-portrait { width: 80px; height: 80px; }
+    .ar-portrait { width: 80px; height: auto; }
 
     /* On the smallest phones (≤480px), the 2-col NFT tile grid is
        still legible. Single-col would shrink the catalogue scroll
@@ -2399,8 +2399,8 @@
   /* Phase 5.7: portraits in the result modal — the orc baby is the
      game's identity, can't have a battle screen without it. */
   .ar-portrait {
-    width: 140px; height: 140px; border-radius: 12px;
-    object-fit: cover; display: block; margin: 0 auto 10px;
+    width: 130px; aspect-ratio: 2/3; height: auto; border-radius: 12px;
+    object-fit: cover; object-position: center top; display: block; margin: 0 auto 10px;
     background: rgba(20,12,20,0.6);
     border: 2px solid var(--border);
   }
