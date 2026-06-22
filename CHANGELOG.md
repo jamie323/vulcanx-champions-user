@@ -3,6 +3,16 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 22 Jun 2026
+**Arena**
+- **Battle-log champion portraits now show the full character** (head to feet) —
+  they were cropped to a square before.
+**Adventures**
+- **Adventure Evolution-Bar fill reduced** for slower, more deliberate levelling:
+  Quick ~1–3%, Standard ~5–7%, Long ~10–15%.
+**Energy**
+- **Energy now regenerates at 4/hour** (was 5) — a full bar in ~25h.
+
 ## 21 Jun 2026 (later)
 **Arena — PYR wagers are LIVE on-chain** 🎲
 - When you send a PvP challenge you can now attach a **real PYR wager** (up to
