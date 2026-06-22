@@ -15493,19 +15493,20 @@ async function grantSpeciesStarter(species_id) {
 }
 
 async function reloadPotions() {
-  if (!currentSpecies) return;
-  state.potions = await apiListPotions(currentSpecies);
-  // QA fix (AngelHorn, 20 Jun): the server starter pack is orc-only, so a
-  // newly-adopted non-orc champion has NO usable potions and its species can't
-  // be fed/tested. If this species has none, grant a free starter for it (once
-  // per species per session) so every species is playable like orc.
+  // Potions are UNIVERSAL now (Jamie, 22 Jun) — any potion feeds any champion —
+  // so load the WHOLE wallet's potion inventory (no species filter) and let
+  // deriveInv() aggregate by trait/kind. This is also why old + new champions
+  // share one pool.
+  state.potions = await apiListPotions();
+  // QA: if the wallet has NO potions at all, grant one free starter so there's
+  // something to test with (once per session). Universal, not per-species.
   if (QA_FREE_POTIONS
       && !state.potions.some(p => (p.quantity || 0) > 0)
-      && !_qaStarterGranted.has(currentSpecies)) {
-    _qaStarterGranted.add(currentSpecies);
+      && !_qaStarterGranted.has('all')) {
+    _qaStarterGranted.add('all');
     try {
-      await grantSpeciesStarter(currentSpecies);
-      state.potions = await apiListPotions(currentSpecies);
+      await grantSpeciesStarter(currentSpecies || 'orc');
+      state.potions = await apiListPotions();
     } catch (e) { console.warn('[qa-starter] grant failed:', e?.message); }
   }
   deriveInv();
