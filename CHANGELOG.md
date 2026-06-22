@@ -4,6 +4,14 @@ _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
 ## 21 Jun 2026 (later)
+**Arena — PYR wagers are LIVE on-chain** 🎲
+- When you send a PvP challenge you can now attach a **real PYR wager** (up to
+  **50 PYR** during the launch soak). Both sides' stakes are **escrowed in a
+  smart contract on Elysium**; the winner claims **95% of the pot** (5% rake).
+- Connect a funded Elysium wallet to wager. Reject the wallet prompt and nothing
+  is staked.
+
+## 21 Jun 2026 (later)
 **Guide**
 - The six **stat icons are now painted game icons** (not emoji) — in both the
   stats grid and the potion-trait list. More of the guide's emoji will follow.
