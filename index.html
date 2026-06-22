@@ -7401,7 +7401,7 @@
         <div class="howto-feature-card"><div class="ic">🎨</div><h4>Art</h4><p>All <b>26 bloodlines</b> have full 20-stage art — pick any species.</p></div>
         <div class="howto-feature-card"><div class="ic">⚔️</div><h4>Arena</h4><p>Live — vs bots <b>and</b> real-player PvP.</p></div>
         <div class="howto-feature-card"><div class="ic">🛒</div><h4>Shop</h4><p><b>Charges real PYR</b> on Elysium. Adopt/rename still free in QA.</p></div>
-        <div class="howto-feature-card"><div class="ic">💰</div><h4>Wagers</h4><p>QA ledger for now. On-chain escrow at launch.</p></div>
+        <div class="howto-feature-card"><div class="ic">💰</div><h4>Wagers</h4><p><b>Live on-chain</b> — real PYR escrowed on Elysium (max 50 during soak).</p></div>
         <div class="howto-feature-card"><div class="ic">🗺️</div><h4>Adventures</h4><p>Live, server-timed. Async — close the tab and come back.</p></div>
         <div class="howto-feature-card"><div class="ic">🔥</div><h4>Daily streak</h4><p>Live. Resets if you skip a calendar day.</p></div>
       </div>
@@ -8598,18 +8598,17 @@
     <input type="text" id="cmWallet" class="cm-input" placeholder="0x1234…abcd" autocomplete="off" />
     <label class="cm-label" style="margin-top:12px;">Message (optional, ≤120 chars)</label>
     <input type="text" id="cmMessage" class="cm-input" placeholder="See you in the arena!" maxlength="120" />
-    <!-- Optional wager — DECLARATIVE for now; no PYR moves until the
-         on-chain escrow contract lands. UI surfaces the stake so the
-         recipient knows what's on the line. Winner takes 95% of pot;
-         5% goes to treasury. -->
+    <!-- Optional wager — LIVE on-chain (21 Jun). Real PYR is escrowed in
+         PyrWagerEscrow on Elysium: each side deposits their stake, winner
+         settles for 95% of pot, 5% to treasury. Launch soak cap: 50 PYR. -->
     <label class="cm-label" style="margin-top:12px;">
-      Wager PYR (optional, 0–10,000)
+      Wager PYR (optional, 0–50)
       <span style="color:var(--muted); font-size:11px; font-weight:400;">
-        Winner takes 95% of pot · 5% treasury rake
+        Real PYR · escrowed on-chain · winner takes 95% (5% rake) · max 50 during soak
       </span>
     </label>
     <input type="number" id="cmWager" class="cm-input"
-           placeholder="0 (no stake)" min="0" max="10000" step="1" />
+           placeholder="0 (no stake)" min="0" max="50" step="1" />
     <div class="cm-summary" id="cmSummary"></div>
     <div class="cm-actions">
       <button class="btn-secondary" onclick="closeChallengeModal()">Cancel</button>
@@ -13834,7 +13833,7 @@ const ELYSIUM_CHAIN = {
 // ~/VulcanX-Avatar-PoC/contracts/ESCROW_ACTIVATION.md.
 // Function selectors are keccak-derived from the live ABI (uint64 expiry).
 const WAGER_ESCROW = {
-  address: '',            // ← set to 0x… deployed PyrWagerEscrow to activate
+  address: '0x31FD9Fb9130b6a77324F21B3B932a7a42d79ca8B',  // LIVE on Elysium (21 Jun) — 50 PYR soak cap, 5% rake
   chainIdHex: '0x53B',    // Elysium mainnet, chainId 1339
 };
 // PYR purchase treasury (Jamie, 19 Jun). Destination for real PYR from the
