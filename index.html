@@ -13886,6 +13886,23 @@ const Escrow = {
   acceptWager(idHex, stakePyr) {
     return this._send('0x4f3ae2d0' + this._b32(idHex), this._pyrToWeiHex(stakePyr));
   },
+  // Read-only: on-chain wager state (0 None,1 Open,2 Funded,3 Settled,4 Refunded).
+  // Lets us pre-check before accept/settle so an un-funded invite shows a clear
+  // message instead of a raw "not open" / "not funded" on-chain revert.
+  async wagerState(idHex) {
+    try {
+      const data = '0x323650a1' + this._b32(idHex);   // wagers(bytes32) getter
+      const r = await fetch(ELYSIUM_RPC, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc:'2.0', id:1, method:'eth_call',
+          params: [{ to: WAGER_ESCROW.address, data }, 'latest'] }),
+      });
+      const j = await r.json();
+      const res = j.result;
+      if (!res || res === '0x') return 0;
+      return parseInt(res.slice(2 + 4*64, 2 + 5*64), 16);  // 5th word = state
+    } catch (e) { console.warn('[escrow] wagerState read failed:', e?.message); return null; }
+  },
   // Winner claims: submit the oracle-signed voucher (id, winner, sig all
   // returned by the backend when escrow is on). bytes is ABI dynamic-tail.
   settle(idHex, winner, sigHex) {
@@ -16825,18 +16842,31 @@ bindIf('cmSendBtn', 'click', async () => {
   btn.disabled = true; btn.textContent = 'Sending…';
   try {
     const wagerRaw = document.getElementById('cmWager')?.value || '';
-    const wager_pyr = Math.max(0, Math.min(10000, Math.floor(Number(wagerRaw) || 0)));
+    // Cap at the on-chain soak limit (maxStake = 50 PYR). Anything higher would
+    // revert "bad stake" in createWager.
+    const wager_pyr = Math.max(0, Math.min(50, Math.floor(Number(wagerRaw) || 0)));
     const created = await apiInviteCreate({
       champion_id: ch.id, to_wallet: toWallet,
       stance: _arenaStance, ability_id, equipped,
       message: msg || undefined,
       wager_pyr: wager_pyr || undefined,
     });
-    // ESCROW (dormant): when an escrow contract is configured, lock the
-    // sender's stake on-chain. No-op today (Escrow.enabled() === false).
+    // ESCROW: lock the sender's stake on-chain. The invite already exists in
+    // the DB, so if the deposit is rejected/fails we VOID the invite (best
+    // effort) — otherwise it sits there un-funded and the recipient's accept
+    // would fail "not open".
     if (Escrow.enabled() && wager_pyr > 0 && created?.escrow?.id) {
       btn.textContent = 'Confirm deposit…';
-      await Escrow.createWager(created.escrow.id, created.escrow.expiry, wager_pyr);
+      try {
+        await Escrow.createWager(created.escrow.id, created.escrow.expiry, wager_pyr);
+      } catch (depErr) {
+        try { await apiInviteDecline(created.invite_id || created.id); } catch (_) {}
+        btn.disabled = false; btn.textContent = 'Send Challenge';
+        const m = (depErr && depErr.code === 4001) ? 'You rejected the deposit.' : (depErr?.message || 'Deposit failed.');
+        vxAlert(`Your wager deposit didn't go through (${m}), so the challenge was cancelled — no PYR was staked. Try again.`,
+          { title: '💰 Wager not placed', icon: '⚠️' });
+        return;
+      }
     }
     closeChallengeModal();
     vxAlert(`Challenge sent to ${toWallet.slice(0,6)}…${toWallet.slice(-4)}. Expires in 24h.`,
@@ -16941,6 +16971,17 @@ bindIf('aiAcceptBtn', 'click', async () => {
     // battle resolves, so the pot is fully funded at settle time. No-op
     // today (Escrow.enabled() === false → backend ledger handles it).
     if (Escrow.enabled() && inv.wager_pyr > 0 && inv.escrow?.id) {
+      // Pre-check the on-chain wager is actually OPEN before we deposit. If the
+      // challenger's createWager never landed (rejected popup, or invite made
+      // before on-chain wagers went live), acceptWager would revert "not open"
+      // and cost gas — so bail with a clear message instead. (1 = Open)
+      const st = await Escrow.wagerState(inv.escrow.id);
+      if (st !== null && st !== 1) {
+        btn.disabled = false; btn.textContent = 'Accept';
+        vxAlert('This challenge was never funded on-chain — the challenger\'s PYR deposit didn\'t go through (or it was sent before on-chain wagers went live). Ask them to send a fresh challenge.',
+          { title: '⚠️ Wager not funded', icon: '💰' });
+        return;
+      }
       btn.textContent = 'Confirm deposit…';
       await Escrow.acceptWager(inv.escrow.id, inv.wager_pyr);
       btn.textContent = 'Fighting…';
@@ -17755,6 +17796,18 @@ bindIf('arClaimWagerBtn', 'click', async () => {
     // voucher instead of crediting the ledger; the winner submits it to
     // collect from the contract. No-op today (no resp.escrow.voucher).
     if (Escrow.enabled() && resp?.escrow?.voucher) {
+      // Pre-check the on-chain wager is FUNDED (2) before settling, so a wager
+      // that was never funded (e.g. opponent's accept-deposit failed) shows a
+      // clear message instead of a raw "not funded" revert. (3 = already settled)
+      const st = await Escrow.wagerState(resp.escrow.id);
+      if (st !== null && st !== 2) {
+        btn.disabled = false; btn.textContent = 'Claim PYR';
+        vxAlert(st === 3
+          ? 'These winnings were already claimed on-chain.'
+          : 'This wager was never fully funded on-chain (the opponent\'s deposit didn\'t complete), so there\'s nothing to pay out. No PYR was lost.',
+          { title: '💰 Nothing to claim', icon: '⚠️' });
+        return;
+      }
       btn.textContent = '⏳ Confirm claim…';
       await Escrow.settle(resp.escrow.id, resp.escrow.winner, resp.escrow.voucher);
     }
@@ -17800,8 +17853,12 @@ bindIf('arenaClaimAllBtn', 'click', async () => {
   for (const it of items) {
     try {
       const r = await apiClaimWagerReward(it.match_id);
-      // ESCROW (dormant): submit the oracle voucher per match when on.
+      // ESCROW: submit the oracle voucher per match when on — but only if the
+      // on-chain wager is actually FUNDED (2); skip un-funded ones instead of
+      // a guaranteed revert.
       if (Escrow.enabled() && r?.escrow?.voucher) {
+        const st = await Escrow.wagerState(r.escrow.id);
+        if (st !== null && st !== 2) { failed++; continue; }
         await Escrow.settle(r.escrow.id, r.escrow.winner, r.escrow.voucher);
       }
       totalClaimed += Number(r.pyr_claimed || it.payout_pyr || 0);
