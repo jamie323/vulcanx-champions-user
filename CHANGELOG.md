@@ -3,6 +3,15 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 21 Jun 2026 (later)
+**Guide**
+- The six **stat icons are now painted game icons** (not emoji) — in both the
+  stats grid and the potion-trait list. More of the guide's emoji will follow.
+- Fixed a stale line that said potion gains "decay" — they're flat (+5/+15/+40).
+
+**Stable**
+- Champion card art is now centred (removed a slight vertical bias).
+
 ## 21 Jun 2026
 **Champion**
 - **Blessing works again on fully-maxed champions** — if every stat is at its
