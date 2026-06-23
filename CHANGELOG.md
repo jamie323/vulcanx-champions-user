@@ -7,6 +7,8 @@ if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 **Arena**
 - **Battle-log champion portraits now show the full character** (head to feet) —
   they were cropped to a square before.
+- **Enemy champion picture now loads reliably on mobile** — it was sometimes
+  blank because the (uncached) enemy art had no load-retry; added one.
 **Adventures**
 - **Adventure Evolution-Bar fill reduced** for slower, more deliberate levelling:
   Quick ~1–3%, Standard ~5–7%, Long ~10–15%.
