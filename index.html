@@ -8836,10 +8836,10 @@
       </div>
       <!-- Energy + HP bars (Trello: 2026-04-28 "After a fight, you need
            a healing potion", 2026-05-01 "energy consumption per champion
-           for quest and arena"). Energy regenerates +5/hr passively;
+           for quest and arena"). Energy regenerates +4/hr passively;
            HP regenerates +5%/hr or instantly via Healing Salve. -->
       <div class="cc-vitals" id="ccVitals">
-        <div class="cc-vital-row" title="Energy regenerates +5 per hour. Used by adventures, arena, and campaign fights.">
+        <div class="cc-vital-row" title="Energy regenerates +4 per hour. Used by adventures, arena, and campaign fights.">
           <span class="cc-vital-icon"><img class="ui-ico sm" src="nft_images/icons/energy.png?iv=2" alt="" decoding="async" onerror="this.style.display='none'"/></span>
           <span class="cc-vital-label">Energy</span>
           <div class="cc-vital-bar"><div class="cc-vital-fill cc-vital-energy" id="energyFill" style="width:100%"></div></div>
@@ -11897,7 +11897,7 @@ const VxQuests = (() => {
     if (have) {
       have.innerHTML = (en === null)
         ? ''
-        : `This champion has <b>${en} ⚡</b> · regenerates +5/hr`;
+        : `This champion has <b>${en} ⚡</b> · regenerates +4/hr`;
     }
     document.getElementById('questStartModal').classList.add('open');
   }
@@ -11915,7 +11915,7 @@ const VxQuests = (() => {
     const cost = DURATIONS[durationTier]?.energy ?? 10;
     const en = activeChampEnergy();
     if (en !== null && en < cost) {
-      vxAlert(`This adventure costs ${cost} ⚡ but your champion only has ${en}. Energy regenerates +5/hr, or feed a Healing Salve.`,
+      vxAlert(`This adventure costs ${cost} ⚡ but your champion only has ${en}. Energy regenerates +4/hr, or feed a Healing Salve.`,
         { title: '⚡ Too tired', icon: '⚡' });
       return;
     }
@@ -16539,7 +16539,7 @@ async function handleEnergyHpError(err, championId) {
   if (!isTired && !isHurt) return false;
   const title = isTired ? '⚡ Too tired' : '🩹 Too hurt';
   const detail = isTired
-    ? 'Energy regenerates +5 per hour. A Healing Salve also tops them up.'
+    ? 'Energy regenerates +4 per hour. A Healing Salve also tops them up.'
     : 'Feed your champion a Healing Salve to restore +50% HP instantly.';
   const haveSalve = (state?.inv?.healing || 0) > 0;
   const useSalve = await vxAlert(
@@ -17033,10 +17033,10 @@ bindIf('aiAcceptBtn', 'click', async () => {
   const ability_id = getAbilityForChamp(championId);
   const btn = document.getElementById('aiAcceptBtn');
   btn.disabled = true; btn.textContent = 'Fighting…';
+  let deposited = false;   // true once the on-chain stake is submitted
   try {
-    // ESCROW (dormant): acceptor matches the stake on-chain BEFORE the
-    // battle resolves, so the pot is fully funded at settle time. No-op
-    // today (Escrow.enabled() === false → backend ledger handles it).
+    // ESCROW: acceptor matches the stake on-chain BEFORE the battle
+    // resolves, so the pot is fully funded at settle time.
     if (Escrow.enabled() && inv.wager_pyr > 0 && inv.escrow?.id) {
       // Need a connected wallet to match the stake (clear message instead of a
       // cryptic address error on mobile/SSO — AngelHorn, 22 Jun).
@@ -17058,6 +17058,7 @@ bindIf('aiAcceptBtn', 'click', async () => {
       }
       btn.textContent = 'Confirm deposit…';
       await Escrow.acceptWager(inv.escrow.id, inv.wager_pyr);
+      deposited = true;
       btn.textContent = 'Fighting…';
     }
     const resp = await apiInviteAccept({
@@ -17075,7 +17076,19 @@ bindIf('aiAcceptBtn', 'click', async () => {
     refreshInbox(true);
   } catch (e) {
     const msg = String(e?.message || 'Accept failed');
-    if (msg.includes('healing_cooldown')) {
+    if (deposited) {
+      // The stake is already in the escrow contract but the battle didn't
+      // resolve (network/server hiccup). Don't leave the player thinking
+      // their PYR vanished — it's safe and recoverable (Ric O., 23 Jun:
+      // "accepted, my pyr is gone but I can't see the result").
+      console.error('[accept-wager] battle resolve failed AFTER deposit:', msg);
+      closeAcceptInviteModal();
+      closeInboxModal();
+      refreshInbox(true);
+      if (typeof loadArenaWinnings === 'function') loadArenaWinnings();
+      vxAlert('Your PYR stake is safely escrowed on-chain. The battle didn\'t finish resolving just now — refresh the Arena to see the result (any winnings show in the Claim banner). If the match never resolves, your stake is refundable from the contract after the wager expires. No PYR is lost.',
+        { title: '💰 Stake is safe', icon: '🛡️' });
+    } else if (msg.includes('healing_cooldown')) {
       const m = msg.match(/Ready in (\d+)s/);
       const seconds = m ? parseInt(m[1], 10) : 60;
       showCooldownChip(seconds);

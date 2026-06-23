@@ -3,6 +3,23 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 23 Jun 2026 (later 2)
+**Arena**
+- **Battle Stance icons no longer look bigger than Match/Combat Mode.** The
+  stance emblems were drawn edge-to-edge in their image files while the mode
+  icons had padding, so at the same size the stance ones rendered ~20% taller.
+  Re-normalized all 7 toggle icons so every icon reads the same size. _(Hard
+  refresh if you still see the old art.)_
+- **Wager accept is safer:** if your stake deposits on-chain but the battle
+  can't finish resolving (network blip), you now get a clear "your PYR is safe
+  in escrow" message (with where to find the result / refund) instead of a bare
+  error. No PYR is ever lost.
+**Energy**
+- Fixed the on-screen text that still said energy regenerates **+5/hr** — it's
+  **+4/hr** (the actual rate; the text was just stale).
+**Potions**
+- Re-confirmed **potions feed any champion, new or old** (universal) end-to-end.
+
 ## 23 Jun 2026 (later)
 **Arena — wager 5% rake now shows correctly** 🎲
 - The **5% rake is now reflected everywhere** in the wager UI. It was always
