@@ -1818,6 +1818,11 @@
                      gap: 16px; align-items: start; }
     .arena-toggles .arena-mode-row, .arena-toggles .arena-stance-row { margin: 6px 0; }
     .arena-toggles .stance-btn, .arena-toggles .arena-mode-btn { padding: 10px 8px; font-size: 12px; }
+    /* Drop the 440px button-group cap in the grid so buttons fill their
+       2fr/2fr/3fr columns evenly — otherwise on a wide (1340px) arena the
+       3-button Battle Stance group hit the cap and its buttons came out
+       smaller/uneven vs the 2-button groups (desktop, 22 Jun). */
+    .arena-toggles .arena-mode-btns, .arena-toggles .arena-stance-btns { max-width: none; }
     /* Sidebar abilities read as a vertical list (mockup) */
     .arena-side .arena-ability-grid { grid-template-columns: 1fr; }
   }
