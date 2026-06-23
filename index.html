@@ -2105,6 +2105,16 @@
      centring so their left/right edges line up despite the 2-vs-3 button
      count (Dizzydreamer 19 Jun). */
   .arena-mode-btns, .arena-stance-btns { display: flex; gap: 8px; justify-content: center; max-width: 440px; margin: 0 auto; }
+  /* Stacked layout (below the desktop side-by-side grid): the 2-button rows
+     (Match/Combat) and the 3-button row (Battle Stance) both cap at 440px, so
+     with flex:1 the 2-button rows got 216px buttons and the stance row 141px —
+     the rows didn't line up and the stance icons looked bigger inside the
+     narrower buttons (AngelHorn, repeatedly). Fix: pin EVERY toggle button to
+     exactly one-third of the (capped) row width so all 7 buttons are identical
+     and centred at every width below 1100px. (Desktop grid ≥1100 untouched.) */
+  @media (max-width: 1099px) {
+    .arena-mode-btn { flex: 0 0 calc((min(100%, 440px) - 16px) / 3); }
+  }
   .arena-mode-btn {
     flex: 1; padding: 10px 12px;
     background: linear-gradient(180deg, rgba(46,30,16,0.85), rgba(22,14,10,0.9));
@@ -7052,11 +7062,11 @@
 
       <h3>Three durations</h3>
       <div class="howto-twocol">
-        <div class="col"><h5>⚡ Quick · 15 min</h5><p>+1–3 stat to primaries · +2–5% bar fill. Quick stat top-up.</p></div>
-        <div class="col"><h5>⏳ Standard · 1 hour</h5><p>+5–12 stat to primaries · +8–15% bar fill. The everyday quest.</p></div>
+        <div class="col"><h5>⚡ Quick · 15 min</h5><p>+1–3 stat to primaries · +1–3% bar fill. Quick stat top-up.</p></div>
+        <div class="col"><h5>⏳ Standard · 1 hour</h5><p>+5–12 stat to primaries · +5–7% bar fill. The everyday quest.</p></div>
       </div>
       <div class="howto-twocol">
-        <div class="col"><h5>🌙 Long · 4 hours</h5><p>+15–30 stat to primaries · +20–40% bar fill. Send before bed.</p></div>
+        <div class="col"><h5>🌙 Long · 4 hours</h5><p>+15–30 stat to primaries · +10–15% bar fill. Send before bed.</p></div>
         <div class="col"><h5>🤝 Multi-champion</h5><p>Each champion can adventure independently. No shared cooldown.</p></div>
       </div>
 
@@ -7645,21 +7655,21 @@
         <span class="qd-emoji">⚡</span>
         <span class="qd-name">Quick</span>
         <span class="qd-time">15 min</span>
-        <span class="qd-reward" id="qsmRewardQuick">+1-3 / +2-5%</span>
+        <span class="qd-reward" id="qsmRewardQuick">+1-3 / +1-3%</span>
         <span class="qd-energy" id="qsmEnergyQuick">10 ⚡</span>
       </button>
       <button class="qsm-dur-btn" data-tier="standard">
         <span class="qd-emoji">⏳</span>
         <span class="qd-name">Standard</span>
         <span class="qd-time">1 hour</span>
-        <span class="qd-reward" id="qsmRewardStandard">+5-12 / +8-15%</span>
+        <span class="qd-reward" id="qsmRewardStandard">+5-12 / +5-7%</span>
         <span class="qd-energy" id="qsmEnergyStandard">20 ⚡</span>
       </button>
       <button class="qsm-dur-btn" data-tier="long">
         <span class="qd-emoji">🌙</span>
         <span class="qd-name">Long</span>
         <span class="qd-time">4 hours</span>
-        <span class="qd-reward" id="qsmRewardLong">+15-30 / +20-40%</span>
+        <span class="qd-reward" id="qsmRewardLong">+15-30 / +10-15%</span>
         <span class="qd-energy" id="qsmEnergyLong">30 ⚡</span>
       </button>
     </div>
@@ -11477,9 +11487,9 @@ const VxQuests = (() => {
   // (quick=10, standard=20, long=30). Keep in sync — it's shown on the
   // duration buttons + used to disable tiers the champion can't afford.
   const DURATIONS = {
-    quick:    { seconds: 15*60,   label:'Quick · 15 min',    emoji:'⚡', primary:[1,3],   bar:[2,5],   energy:10 },
-    standard: { seconds: 60*60,   label:'Standard · 1 hr',   emoji:'⏳', primary:[5,12],  bar:[8,15],  energy:20 },
-    long:     { seconds: 4*60*60, label:'Long · 4 hrs',      emoji:'🌙', primary:[15,30], bar:[20,40], energy:30 },
+    quick:    { seconds: 15*60,   label:'Quick · 15 min',    emoji:'⚡', primary:[1,3],   bar:[1,3],   energy:10 },
+    standard: { seconds: 60*60,   label:'Standard · 1 hr',   emoji:'⏳', primary:[5,12],  bar:[5,7],   energy:20 },
+    long:     { seconds: 4*60*60, label:'Long · 4 hrs',      emoji:'🌙', primary:[15,30], bar:[10,15], energy:30 },
   };
 
   // QA feedback (Kueenie, 14 May 2026): "Adventures Lack Tension — currently
@@ -15436,8 +15446,11 @@ async function openChampion(championId) {
   state.championId = championId;
   state.evoMaxLevel = GATE_LEVELS[state.stageIdx + 1] || 50;
   activeChampionId = championId;
-  // Fetch potions for this champion's species — powers the feed UI.
-  state.potions = await apiListPotions(champ.species_id);
+  // Fetch ALL the wallet's potions (NOT filtered by species) — potions are
+  // universal now, so every champion (new or old, any species) feeds from the
+  // one shared inventory. Filtering by champ.species_id was why a newly-adopted
+  // champ of a different species saw an empty potion list (AngelHorn #2).
+  state.potions = await apiListPotions();
   deriveInv();
   // Trello "weapon supposed to be a hammer": if this champion has no
   // weapon equipped, silently equip the species' lore weapon (war_maul
