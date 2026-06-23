@@ -5109,7 +5109,11 @@
   /* All three toggle rows (Match Mode · Combat Mode · Battle Stance) share one
      icon treatment. The emblem ART itself is now normalised to a uniform
      footprint on disk (21 Jun), so no per-icon scale hack is needed. */
-  .stance-btn .ui-ico, .arena-mode-btn .ui-ico { width: 20px; height: 20px; vertical-align: -5px; margin-right: 5px; }
+  /* Uniform HEIGHT (not a square box) so every toggle icon reads the same size
+     — the emblems have different aspect ratios, so a fixed 20×20 contain box
+     made the squarer stance icons look bigger than the wide-short mode icons
+     (AngelHorn screenshot, 22 Jun). */
+  .stance-btn .ui-ico, .arena-mode-btn .ui-ico { width: auto; height: 17px; max-width: 24px; object-fit: contain; vertical-align: -4px; margin-right: 5px; }
   /* Ability-picker icon (painted, replaces the emoji). */
   .ability-btn .ab-icon .ui-ico { width: 30px; height: 30px; }
   .shop-item .si-nft-chip {
