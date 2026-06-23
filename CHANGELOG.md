@@ -3,6 +3,13 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 23 Jun 2026
+**Leaderboard & weekly quests**
+- **Weekly reset moved to Monday 00:00 UTC (midnight)** — it was Monday 16:00 UTC
+  (4pm GMT). The weekly leaderboard window and the chest-quest weekly bucket now
+  both roll over at the start of Monday. New window opens immediately, scores
+  start from 0.
+
 ## 22 Jun 2026
 **Arena**
 - **Battle-log champion portraits now show the full character** (head to feet) —

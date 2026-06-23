@@ -6881,7 +6881,7 @@
         <div class="howto-feature-card">
           <div class="ic">🏆</div>
           <h4>9. Ranks</h4>
-          <p>Live all-time + weekly leaderboards (Mon 16:00 UTC reset). Your champion's rank shows on its profile. Embedded on VulcanX.</p>
+          <p>Live all-time + weekly leaderboards (Mon 00:00 UTC reset). Your champion's rank shows on its profile. Embedded on VulcanX.</p>
         </div>
         <div class="howto-feature-card">
           <div class="ic">👑</div>
@@ -7140,7 +7140,7 @@
         <div class="howto-feature-card">
           <div class="ic">📅</div>
           <h4>This week</h4>
-          <p>Top 20 by <b>ELO gained</b> in arena matches inside the current weekly window. Resets every <b>Monday at 16:00 UTC (4pm GMT)</b>. New window opens immediately, scores start from 0.</p>
+          <p>Top 20 by <b>ELO gained</b> in arena matches inside the current weekly window. Resets every <b>Monday at 00:00 UTC (midnight)</b>. New window opens immediately, scores start from 0.</p>
         </div>
       </div>
 
@@ -9441,7 +9441,7 @@ window.VxQuestCelebration = {
     </div>
     <div class="ornate-divider"></div>
     <!-- Period toggle (8 May): all-time vs current week. Weekly resets
-         every Monday 16:00 UTC (4pm GMT) and is sorted by ELO gained
+         every Monday 00:00 UTC (midnight) and is sorted by ELO gained
          in arena matches during the window. -->
     <div style="display:flex; gap:4px; margin-bottom:12px; flex-wrap: wrap;">
       <button class="sp-btn lb-period active" data-period="all" style="flex:1;min-width:120px;">⏳ All-time</button>
@@ -9470,7 +9470,7 @@ window.VxQuestCelebration = {
 <div class="modal-backdrop" id="chestQuestsModal">
   <div class="modal" style="width: 520px;">
     <h3>🎁 VulcanX Chest Quests</h3>
-    <div class="sub">Play Champions, earn chests in the VulcanX Everything dApp. Weekly quests reset Mon 16:00 UTC.</div>
+    <div class="sub">Play Champions, earn chests in the VulcanX Everything dApp. Weekly quests reset Mon 00:00 UTC.</div>
     <div id="cqTabs" style="display:flex; gap:4px; margin-bottom:14px;">
       <button class="sp-btn cq-period active" data-period="daily">☀️ Today</button>
       <button class="sp-btn cq-period" data-period="weekly">📅 This week</button>
@@ -12172,7 +12172,7 @@ function computePowerScore() {
 // open we fetch the live top-20 from /functions/v1/leaderboard,
 // passing the connected wallet so the response highlights the
 // caller's rank. Supports period=all (default) and period=week.
-// Weekly window resets every Monday 16:00 UTC (4pm GMT).
+// Weekly window resets every Monday 00:00 UTC (midnight).
 // Phase 8 (8 May): per-champion rank lookup. Returns the global rank
 // of one champion (default by power_score) so the champion-profile
 // view can show "Iron III · #234" inline on the rank pill.
