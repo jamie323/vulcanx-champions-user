@@ -3,6 +3,21 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 23 Jun 2026 (later 4)
+**Arena**
+- **Match Mode / Combat Mode / Battle Stance toggles now line up at all sizes.**
+  Below the wide-desktop layout, the 2-button rows and the 3-button Battle Stance
+  row were sizing their buttons differently — so the stance buttons were narrower
+  and their icons looked bigger. Every toggle button is now the same width.
+**Potions**
+- **Your potions now show on every champion, including newly-adopted ones.** The
+  champion screen was only loading potions tagged to that champion's species, so
+  a new champ of a different species saw an empty bag. It now loads your whole
+  shared potion inventory (potions are universal).
+**Adventures**
+- **The shown Evolution-Bar fill % now matches what you actually get:** Quick
+  **1–3%**, Standard **5–7%**, Long **10–15%** (the UI was showing old values).
+
 ## 23 Jun 2026 (later 3) — Economy rebalance ⚖️
 **Potions**
 - **One potion per trait now** — the Minor / Major / Epic tiers are gone. Every
