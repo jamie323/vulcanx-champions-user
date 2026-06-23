@@ -13835,6 +13835,10 @@ const ELYSIUM_CHAIN = {
   blockExplorerUrls: ["https://blockscout.elysiumchain.tech/"],
 };
 
+// Format a PYR amount for display: trims trailing zeros so the 5% rake
+// shows correctly on small wagers (1 PYR → win 1.9, not a floored "2").
+function fmtPyr(n) { return String(Math.round(Number(n) * 100) / 100); }
+
 // ============================================================
 // PYR Wager Escrow (on-chain) — STAGED, DORMANT until deployed.
 // ============================================================
@@ -16760,7 +16764,7 @@ function renderInboxLists() {
             </div>
             <div class="ir-summary">${summary} · ${stance} · ${ability}</div>
             ${i.message ? `<div class="ir-msg">"${i.message}"</div>` : ''}
-            ${i.wager_pyr > 0 ? `<div class="ir-wager">💰 ${i.wager_pyr} PYR wagered · winner takes ${Math.floor(i.wager_pyr * 2 * 0.95)} PYR</div>` : ''}
+            ${i.wager_pyr > 0 ? `<div class="ir-wager">💰 ${i.wager_pyr} PYR wagered · winner takes ${fmtPyr(i.wager_pyr * 2 * 0.95)} PYR</div>` : ''}
             <div class="ir-actions">
               <button class="ir-accept" data-action="accept" data-id="${i.id}">⚔️ Accept</button>
               <button class="ir-decline" data-action="decline" data-id="${i.id}">✕ Decline</button>
@@ -16988,7 +16992,7 @@ function openAcceptInviteModal(inviteId) {
         ${inv.from_loadout?.weapon_id ? ` · Weapon: ${inv.from_loadout.weapon_id.replace(/_/g,' ')}` : ''}
       </div>
       ${inv.message ? `<div class="aio-msg">"${inv.message}"</div>` : ''}
-      ${inv.wager_pyr > 0 ? `<div class="ir-wager" style="margin-top:8px;">💰 ${inv.wager_pyr} PYR wagered · winner takes ${Math.floor(inv.wager_pyr * 2 * 0.95)} PYR (after 5% rake)</div>` : ''}
+      ${inv.wager_pyr > 0 ? `<div class="ir-wager" style="margin-top:8px;">💰 ${inv.wager_pyr} PYR wagered · winner takes ${fmtPyr(inv.wager_pyr * 2 * 0.95)} PYR (after 5% rake)</div>` : ''}
     `;
   }
   // Populate champion select with the player's owned champions
@@ -17757,10 +17761,11 @@ function _revealFinalResult(resp) {
   // Show PYR wager reward if the match was wagered and the player won
   const wagerEl = document.getElementById('arWagerReward');
   if (resp.result === 'win' && resp.wager_pyr && resp.wager_pyr > 0) {
-    // Match the backend payout exactly: pot minus floor(5% rake). Using
-    // floor(pot*0.95) can differ by 1 PYR from what's actually credited.
-    const pyr_won = (resp.wager_pyr * 2) - Math.floor(resp.wager_pyr * 2 * 0.05);
-    document.getElementById('arWagerAmount').textContent = `${pyr_won} PYR`;
+    // Winner takes the pot minus the 5% rake (matches the on-chain
+    // contract: payout = pot * 0.95). Keep full precision — flooring the
+    // rake hid it entirely on sub-10-PYR wagers (1 PYR showed "win 2").
+    const pyr_won = resp.wager_pyr * 2 * 0.95;
+    document.getElementById('arWagerAmount').textContent = `${fmtPyr(pyr_won)} PYR`;
     wagerEl.style.display = '';
     window._pendingWagerClaim = { match_id: resp.match_id, pyr_amount: pyr_won };
   } else {
@@ -17882,7 +17887,7 @@ bindIf('arClaimWagerBtn', 'click', async () => {
       await Escrow.settle(resp.escrow.id, resp.escrow.winner, resp.escrow.voucher);
     }
     const claimed = Number(resp?.pyr_claimed ?? window._pendingWagerClaim.pyr_amount);
-    vxAlert(`Claimed ${claimed.toLocaleString()} PYR!`,
+    vxAlert(`Claimed ${fmtPyr(claimed)} PYR!`,
       {title: 'Winnings Claimed', icon: '💰', variant: 'success'});
     window._pendingWagerClaim = null;
     document.getElementById('arWagerReward').style.display = 'none';

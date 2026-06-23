@@ -3,6 +3,14 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 23 Jun 2026 (later)
+**Arena — wager 5% rake now shows correctly** 🎲
+- The **5% rake is now reflected everywhere** in the wager UI. It was always
+  taken on-chain (the winner really did get 95%), but the *displayed* winnings
+  rounded the rake down to zero on small wagers — so a 1 PYR wager showed
+  "win 2 PYR" instead of **1.9**. Invite cards, the win screen and the claim
+  message now all show the true post-rake amount (e.g. **1.9 / 3.8 / 15.2 / 95**).
+
 ## 23 Jun 2026
 **Leaderboard & weekly quests**
 - **Weekly reset moved to Monday 00:00 UTC (midnight)** — it was Monday 16:00 UTC
