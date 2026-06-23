@@ -1489,7 +1489,11 @@
   .sp-btn { padding: 5px 10px; background: rgba(40,20,10,0.5);
     border: 1px solid var(--border); border-radius: 14px;
     font-size: 11px; font-weight: 700; cursor: pointer;
-    color: var(--muted); }
+    color: var(--muted);
+    /* Mobile: register taps immediately and don't let the tap be eaten as a
+       scroll/zoom gesture inside the scrollable modal (chest-quest tabs
+       "not clickable on mobile", 22 Jun). */
+    touch-action: manipulation; min-height: 34px; }
   .sp-btn.active { background: rgba(255,205,107,0.15);
     border-color: var(--accent); color: var(--accent); }
 
@@ -9458,7 +9462,7 @@ window.VxQuestCelebration = {
   <div class="modal" style="width: 520px;">
     <h3>🎁 VulcanX Chest Quests</h3>
     <div class="sub">Play Champions, earn chests in the VulcanX Everything dApp. Weekly quests reset Mon 16:00 UTC.</div>
-    <div style="display:flex; gap:4px; margin-bottom:14px;">
+    <div id="cqTabs" style="display:flex; gap:4px; margin-bottom:14px;">
       <button class="sp-btn cq-period active" data-period="daily">☀️ Today</button>
       <button class="sp-btn cq-period" data-period="weekly">📅 This week</button>
       <button class="sp-btn cq-period" data-period="lifetime">🏆 Lifetime</button>
@@ -13705,13 +13709,15 @@ bindIf('globalRankBar', 'click', showLeaderboard);  // (legacy; kept for any old
 bindIf('leaderboardNavBtn', 'click', showLeaderboard);
 bindIf('chestQuestsNavBtn', 'click', showChestQuests);
 bindIf('cqCloseBtn', 'click', closeChestQuests);
-document.querySelectorAll('.cq-period').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.cq-period').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    _cqState.period = btn.dataset.period;
-    renderChestQuestsList();
-  });
+// Delegated on the container so a tap anywhere in a tab registers regardless of
+// timing/re-render (the per-button bind was unreliable on mobile, 22 Jun).
+document.getElementById('cqTabs')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('.cq-period');
+  if (!btn) return;
+  document.querySelectorAll('.cq-period').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _cqState.period = btn.dataset.period;
+  renderChestQuestsList();
 });
 document.querySelectorAll('.lb-filter').forEach(btn => {
   btn.addEventListener('click', () => {
