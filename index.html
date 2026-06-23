@@ -13872,6 +13872,13 @@ const Escrow = {
       } else { throw e; }
     }
   },
+  // True only when a real injected wallet provider is connected (not an
+  // SSO-cookie-only session). Wagering needs this to sign deposits — on mobile
+  // browsers without an in-app wallet it was failing with a cryptic address
+  // error (AngelHorn, 22 Jun).
+  hasWallet() {
+    return !!(window.ethereum && getWallet() && window.vxWallet?.connected);
+  },
   async _send(data, valueHex) {
     if (!window.ethereum) throw new Error('no_wallet');
     const from = getWallet();
@@ -13891,6 +13898,11 @@ const Escrow = {
   // Acceptor matches the stake on accept.
   acceptWager(idHex, stakePyr) {
     return this._send('0x4f3ae2d0' + this._b32(idHex), this._pyrToWeiHex(stakePyr));
+  },
+  // Creator reclaims their own un-accepted (Open) wager instantly — used when
+  // the challenge is declined or cancelled (v2 contract). Refunds the stake.
+  cancelWager(idHex) {
+    return this._send('0x0385341f' + this._b32(idHex), null);
   },
   // Read-only: on-chain wager state (0 None,1 Open,2 Funded,3 Settled,4 Refunded).
   // Lets us pre-check before accept/settle so an un-funded invite shows a clear
@@ -16785,6 +16797,9 @@ function renderInboxLists() {
               </div>
               <span class="ir-time">${relTime(s.created_at)}</span>
             </div>
+            ${(s.wager_pyr > 0 && s.escrow?.id && ['pending','declined','expired','cancelled'].includes(s.status))
+              ? `<button class="ir-decline" style="margin-top:8px;" onclick="handleReclaimWager('${s.escrow.id}', ${s.wager_pyr})">↩ Reclaim ${s.wager_pyr} PYR stake</button>`
+              : ''}
           </div>
         `;
       }).join('');
@@ -16813,6 +16828,30 @@ function closeInboxModal() {
 async function handleDecline(id) {
   await apiInviteDecline(id);
   await refreshInbox();
+}
+
+// Inviter reclaims their staked PYR from a wager that was declined / never
+// accepted (v2 contract cancelWager — instant, no expiry wait). Wager #3 fix.
+async function handleReclaimWager(idHex, pyr) {
+  if (!Escrow.enabled() || !Escrow.hasWallet()) {
+    return vxAlert('Connect your wallet (e.g. MetaMask) to reclaim your staked PYR.',
+      { title: '🦊 Connect a wallet', icon: '💰' });
+  }
+  const st = await Escrow.wagerState(idHex);
+  if (st === 4) return vxAlert('This stake was already refunded.', { title: 'Already reclaimed', icon: '💰' });
+  if (st !== 1) return vxAlert('This wager can no longer be cancelled — it was already accepted or settled.',
+    { title: '⚠️ Can\'t reclaim', icon: '💰' });
+  try {
+    await Escrow.cancelWager(idHex);
+    vxAlert(`Reclaimed your ${pyr} PYR stake.`, { title: '💰 Stake reclaimed', icon: '✅', variant: 'success' });
+    await refreshInbox();
+    if (typeof refreshWalletBalance === 'function' && typeof getWallet === 'function') {
+      const w = getWallet(); if (w) refreshWalletBalance(w, true);
+    }
+  } catch (e) {
+    const m = (e && e.code === 4001) ? 'You rejected the transaction.' : (e?.message || 'Reclaim failed');
+    vxAlert(m, { title: 'Reclaim failed', icon: '⚠️', variant: 'error' });
+  }
 }
 
 // Send-challenge modal
@@ -16852,6 +16891,14 @@ bindIf('cmSendBtn', 'click', async () => {
     // Cap at the on-chain soak limit (maxStake = 50 PYR). Anything higher would
     // revert "bad stake" in createWager.
     const wager_pyr = Math.max(0, Math.min(50, Math.floor(Number(wagerRaw) || 0)));
+    // Wagering needs a real connected wallet to escrow the stake — block early
+    // (before creating the invite) with a clear message instead of a cryptic
+    // address error on mobile/SSO sessions (AngelHorn, 22 Jun).
+    if (wager_pyr > 0 && Escrow.enabled() && !Escrow.hasWallet()) {
+      btn.disabled = false; btn.textContent = 'Send Challenge';
+      return vxAlert('To stake PYR you need a connected wallet (e.g. MetaMask). Connect your wallet, then send the wagered challenge. (You can still send a no-wager challenge.)',
+        { title: '💰 Connect a wallet to wager', icon: '🦊' });
+    }
     const created = await apiInviteCreate({
       champion_id: ch.id, to_wallet: toWallet,
       stance: _arenaStance, ability_id, equipped,
@@ -16978,6 +17025,13 @@ bindIf('aiAcceptBtn', 'click', async () => {
     // battle resolves, so the pot is fully funded at settle time. No-op
     // today (Escrow.enabled() === false → backend ledger handles it).
     if (Escrow.enabled() && inv.wager_pyr > 0 && inv.escrow?.id) {
+      // Need a connected wallet to match the stake (clear message instead of a
+      // cryptic address error on mobile/SSO — AngelHorn, 22 Jun).
+      if (!Escrow.hasWallet()) {
+        btn.disabled = false; btn.textContent = 'Accept';
+        return vxAlert('To match this PYR wager you need a connected wallet (e.g. MetaMask). Connect your wallet, then accept.',
+          { title: '💰 Connect a wallet to wager', icon: '🦊' });
+      }
       // Pre-check the on-chain wager is actually OPEN before we deposit. If the
       // challenger's createWager never landed (rejected popup, or invite made
       // before on-chain wagers went live), acceptWager would revert "not open"
