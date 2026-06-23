@@ -6505,7 +6505,7 @@
       <div class="welcome-eyebrow">✦ The Apothecary ✦</div>
       <h2 class="guide-title">Shop</h2>
       <p class="welcome-sub shop-intro">
-        <b style="color:var(--text);">🧪 Potions are free in QA.</b> NFT items (gear, limited drops, eggs) charge real <b>PYR</b> on Elysium &amp; batch-deliver to your wallet; standard potions land instantly.
+        <b style="color:var(--text);">🧪 Potions cost real PYR</b> (3 PYR each, 8 for Evolution/Blessing) and land instantly. NFT items (gear, limited drops, eggs) also charge real <b>PYR</b> on Elysium &amp; batch-deliver to your wallet.
       </p>
       <!-- Shop tabs. Updated 2026-05-21 — Champion eggs moved out of the
            shop; they live in the dedicated Adopt nav-button flow instead
@@ -6574,8 +6574,8 @@
 
     <div class="guide-section">
       <h3>🧪 Trait potions — the six colors</h3>
-      <p>Each trait has its own potion. Gains are <b>flat</b> — Minor +5, Major +15, Epic +40 —
-      nudged a little by your bloodline's weighting for that trait.</p>
+      <p>Each trait has its own potion. Every potion gives a <b>flat +15</b> to that
+      trait — nudged a little by your bloodline's weighting for that trait.</p>
       <div class="guide-traits">
         <div class="gt"><span class="gt-e"><img src="nft_images/icons/trait_str.png?iv=3" alt=""></span><span class="gt-n">Strength</span><span class="gt-d">Raw damage output</span></div>
         <div class="gt"><span class="gt-e"><img src="nft_images/icons/trait_vit.png?iv=3" alt=""></span><span class="gt-n">Vitality</span><span class="gt-d">Health &amp; survivability</span></div>
@@ -6587,13 +6587,14 @@
     </div>
 
     <div class="guide-section">
-      <h3>🎚️ Three tiers — Minor, Major, Epic</h3>
-      <p>Same trait, different potency. Stronger tiers drop rarely from chests.</p>
+      <h3>🎚️ One potion per trait</h3>
+      <p>The old Minor/Major/Epic tiers are gone — there's now a single potion
+      per trait, for a clean, predictable economy.</p>
       <table class="guide-table">
-        <tr><th>Tier</th><th>Stat gain</th><th>Bar fill (random)</th><th>Drop rarity</th></tr>
-        <tr><td><b>Minor</b></td><td>+5 stat</td><td>2–6%</td><td>~70% of chest rolls</td></tr>
-        <tr><td><b>Major</b></td><td>+15 stat (×3)</td><td>6–12%</td><td>~25%</td></tr>
-        <tr><td><b>Epic</b></td><td>+40 stat (×8)</td><td>12–20%</td><td>~5%</td></tr>
+        <tr><th>Potion</th><th>Stat gain</th><th>Bar fill (random)</th><th>Price</th></tr>
+        <tr><td><b>Trait potion</b></td><td>+15 stat</td><td>2–6%</td><td>3 PYR</td></tr>
+        <tr><td><b>Evolution Potion</b></td><td>—</td><td>fills evo bar</td><td>8 PYR</td></tr>
+        <tr><td><b>Blessing (40 pts)</b></td><td>distribute 40</td><td>10–25%</td><td>8 PYR</td></tr>
       </table>
       <p style="margin-top:10px;font-size:13px;color:var(--muted);">
         <b>Heads-up:</b> the stat gain is the same at every level — pacing
@@ -6841,7 +6842,7 @@
         <div class="howto-feature-card">
           <div class="ic">🥚</div>
           <h4>1. Adopt</h4>
-          <p>Sign in with your wallet, pick a bloodline, name your champion. Get 80 free starter potions.</p>
+          <p>Sign in with your wallet, pick a bloodline, name your champion (20 PYR to adopt), then buy potions from the Shop to start levelling.</p>
         </div>
         <div class="howto-feature-card">
           <div class="ic">🧪</div>
@@ -6910,7 +6911,7 @@
 
       <ol class="howto-numbered">
         <li><b>Connect your wallet.</b> The wallet gate prompts MetaMask or WalletConnect. We'll switch you to Elysium (chain 1339) automatically if needed, then ask you to sign a short message to prove wallet ownership. Free — no gas.</li>
-        <li><b>Get 80 free starter potions.</b> First sign-in grants 10 of each trait Minor (STR/VIT/AGI/FER/INT/LCK), 10 Evolution Potions, and 10 Blessings. Enough to test the full 20-stage loop.</li>
+        <li><b>Stock up in the Shop.</b> Buy trait potions (3 PYR each), Evolution Potions and Blessings (8 PYR), and a Full Energy Recharge (10 PYR) — all charged in PYR from your wallet.</li>
         <li><b>Click "Adopt a Baby Champion".</b> Pick any of the 8 species, then one of its bloodlines, then name your champion. Names are permanent and shown on the NFT.</li>
         <li><b>Sign the adoption ceremony.</b> Your wallet pops up to sign a "VulcanX:adopt:&lt;name&gt;" message. No PYR moves, no gas — purely proof you authorized the action.</li>
         <li><b>Egg cracks open.</b> A 3-second cinematic plays as your Whelp emerges from the nest. You land in the champion view ready to feed, equip, and quest.</li>
@@ -6967,7 +6968,7 @@
       </div>
       <div class="howto-tip">
         <span class="ti">📈</span>
-        <div><b>Flat stat gains:</b> every Minor gives <b>+5</b>, Major <b>+15</b> (3×) and Epic <b>+40</b> (8×) — no diminishing returns. Your bloodline's weighting nudges aligned traits a little higher. Switch to Major/Epic tiers mid-game to keep progression brisk.</div>
+        <div><b>Flat stat gains:</b> every trait potion gives <b>+15</b> to its stat — no tiers, no diminishing returns. Your bloodline's weighting nudges aligned traits a little higher.</div>
       </div>
 
       <p style="text-align:center; margin-top:24px;">
@@ -7413,7 +7414,7 @@
         <div class="howto-feature-card"><div class="ic">🐲</div><h4>Champions</h4><p>DB-backed for QA. ERC-721 after launch.</p></div>
         <div class="howto-feature-card"><div class="ic">🎨</div><h4>Art</h4><p>All <b>26 bloodlines</b> have full 20-stage art — pick any species.</p></div>
         <div class="howto-feature-card"><div class="ic">⚔️</div><h4>Arena</h4><p>Live — vs bots <b>and</b> real-player PvP.</p></div>
-        <div class="howto-feature-card"><div class="ic">🛒</div><h4>Shop</h4><p><b>Charges real PYR</b> on Elysium. Adopt/rename still free in QA.</p></div>
+        <div class="howto-feature-card"><div class="ic">🛒</div><h4>Shop</h4><p><b>Charges real PYR</b> on Elysium. Adopt is 20 PYR; rename still free in QA.</p></div>
         <div class="howto-feature-card"><div class="ic">💰</div><h4>Wagers</h4><p><b>Live on-chain</b> — real PYR escrowed on Elysium (max 50 during soak).</p></div>
         <div class="howto-feature-card"><div class="ic">🗺️</div><h4>Adventures</h4><p>Live, server-timed. Async — close the tab and come back.</p></div>
         <div class="howto-feature-card"><div class="ic">🔥</div><h4>Daily streak</h4><p>Live. Resets if you skip a calendar day.</p></div>
@@ -7423,7 +7424,7 @@
       <div class="howto-twocol">
         <div class="col">
           <h5>Out of potions?</h5>
-          <p>Buy more in the <b>🛒 Shop</b> (top bar) — Minors 5 PYR, Majors 15 PYR, Epics 40 PYR. 🧪 Potions are <b>free during QA</b> (granted for your current champion's species). In prod they cost PYR and also drop from chests across the Vulcan Forged ecosystem.</p>
+          <p>Buy them in the <b>🛒 Shop</b> (top bar) — one potion per trait at <b>3 PYR</b> each (Evolution &amp; Blessing 8 PYR). 🧪 Potions charge real PYR from your wallet and land instantly. In prod they also drop from chests across the Vulcan Forged ecosystem.</p>
         </div>
         <div class="col">
           <h5>Which trait will Feed Me fire?</h5>
@@ -7443,7 +7444,7 @@
         </div>
         <div class="col">
           <h5>Potions to reach Legendary?</h5>
-          <p>Each Minor adds <b>+5 stat</b>, Major <b>+15</b>, Epic <b>+40</b> — same at every level. Mixing tiers, expect a few thousand potions across all six stats to fill from L1 to Legendary. Long-term collectible economy by design.</p>
+          <p>Each trait potion adds <b>+15 stat</b> — same at every level. Expect a good number of potions across all six stats to fill from L1 to Legendary. Long-term collectible economy by design.</p>
         </div>
       </div>
 
@@ -13419,10 +13420,9 @@ function render() {
       const tooltipTitle = (
         `${TRAIT_NAMES[t]} Potions — ${count} total` +
         (nextTier ? ` (next pour: ${nextTier})` : '') + `\n\n` +
-        `  • Minor ×${minorN}  ·  +5 stat, 2–6% bar\n` +
-        `  • Major ×${majorN}  ·  +15 stat, 6–12% bar\n` +
-        `  • Epic  ×${epicN}   ·  +40 stat, 12–20% bar\n\n` +
-        `Clicking pours the highest-priority tier you own (Minor first), so stronger tiers save for later stages.` +
+        `  • Each potion · +15 stat, 2–6% bar (${count} owned)\n` +
+        (majorN + epicN > 0 ? `  • (legacy Major/Epic you own also give +15 now)\n` : '') + `\n` +
+        `Clicking pours one potion (+15 to this trait).` +
         (atCap ? `\n\n⚠️ ${TRAIT_NAMES[t]} is maxed for this stage — the potion still fills your Evolution Bar.` : '')
       );
       // Tier pills (Trello "tier potions don't give correct stat points"):
@@ -13864,7 +13864,7 @@ const PYR_PAYMENTS_ENABLED = true;    // LIVE: shop checkout charges real PYR (J
 // QA (Jamie, 20 Jun — AngelHorn): trait/evolution/blessing potions are FREE in
 // QA so testers can level the newly-unlocked species (potions are species-locked
 // and L50 needs many). NFT items still charge real PYR. Flip to false for prod.
-const QA_FREE_POTIONS = true;
+const QA_FREE_POTIONS = false;   // 23 Jun: potions now charge real PYR (economy rebalance — Jamie)
 const Escrow = {
   enabled() { return /^0x[a-fA-F0-9]{40}$/.test(WAGER_ESCROW.address); },
   // integer PYR → wei (1e18), as a 0x hex string for eth_sendTransaction value
@@ -14366,6 +14366,22 @@ async function apiGrantPotion({ species_id, kind, trait, quantity = 1 }) {
     throw new Error(`${code}: ${data.message || ''}`.trim());
   }
   return data.potion;
+}
+
+// Full energy recharge — paid shop item (10 PYR, charged at checkout). Sets the
+// champion to full energy server-side. Added 23 Jun (economy rebalance).
+async function apiEnergyRefill(champion_id) {
+  const res = await apiFetch(`${FN_BASE}/champion_energy_refill`, {
+    method: 'POST',
+    headers: AUTH_HEADERS,
+    body: JSON.stringify({ wallet: getWallet(), champion_id }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const code = data.error || `http_${res.status}`;
+    throw new Error(`${code}: ${data.message || ''}`.trim());
+  }
+  return data;
 }
 
 // Daily streak — server-side, keyed by wallet (replaces per-device localStorage).
@@ -15218,9 +15234,9 @@ function renderBuy() {
       <input type="text" id="buyNameInput" value="${defaultName}" maxlength="48" />
       <div class="buy-price">
         <span class="label">Adoption fee</span>
-        <span class="value">Free in QA <span style="color:var(--muted);font-weight:400;font-size:11px;">(10 PYR at launch)</span></span>
+        <span class="value">20 PYR</span>
       </div>
-      <button class="btn-big" id="confirmAdoptBtn" onclick="confirmAdopt()">🥚 Adopt this Champion — Free in QA</button>
+      <button class="btn-big" id="confirmAdoptBtn" onclick="confirmAdopt()">🥚 Adopt this Champion — 20 PYR</button>
     </div>
   `;
   document.getElementById('buyNameInput').addEventListener('input', e => {
@@ -15343,9 +15359,9 @@ async function confirmAdopt() {
   const btn = document.getElementById('confirmAdoptBtn');
   if (btn) { btn.disabled = true; btn.textContent = '🦊 Sign in wallet…'; }
   try {
-    // QA payment: user signs a real TX on Elysium for UX realism.
-    // Value is 0 — no PYR deducted during QA. Prod will swap to a 10 PYR transfer.
-    await signDummyTx(`adopt:${name}`);
+    // Adoption costs 20 PYR (economy rebalance 23 Jun). Charged to the PYR
+    // treasury before minting — reject/fail throws → no champion, no charge.
+    await payTreasury(20, `adopt:${name}`);
     if (btn) btn.textContent = '🥚 Minting champion…';
     const c = await addChampion({
       species_id: adoptFlow.species_id,
@@ -15360,7 +15376,7 @@ async function confirmAdopt() {
   } catch (e) {
     const msg = (e && e.code === 4001) ? 'You rejected the wallet prompt.' : (e.message || String(e));
     vxAlert(msg, {title: 'Adopt failed', icon: '🥚', variant: 'error'});
-    if (btn) { btn.disabled = false; btn.textContent = '🥚 Adopt this Champion — Free in QA'; }
+    if (btn) { btn.disabled = false; btn.textContent = '🥚 Adopt this Champion — 20 PYR'; }
   }
 }
 
@@ -15477,8 +15493,8 @@ function predictPotionGain(trait, tier) {
   const cap = capAtLevel(state.level)[traitIdx] ?? 9999;
   const current = state.stats[trait] ?? 0;
   if (current >= cap) return 0;
-  const baseGain = 5;
-  const tierMult = tier === 'epic' ? 8 : tier === 'major' ? 3 : 1;
+  const baseGain = 15;   // flat +15 per trait potion (tiers collapsed 23 Jun)
+  const tierMult = 1;    // all tiers give the same +15 now
   // Pull bloodline stat-growth weight if available — defaults to 1.0
   const bl = SPECIES?.[currentSpecies]?.bloodlines?.[currentBloodline];
   const bw = bl?.stat_weights?.[trait] ?? 1.0;
@@ -19097,12 +19113,13 @@ function glowStatRow(trait) {
 // The SHOP_TIER_INFO block below feeds per-tier tooltips (stat gain + bar
 // fill), addressing "how much does each tier add to my stat?".
 const SHOP_TIER_INFO = {
-  minor:      { statGain: '+5 stat (every level)', barFill: '2–6%' },
-  major:      { statGain: '+15 stat (×3 Minor)',   barFill: '6–12%' },
-  epic:       { statGain: '+40 stat (×8 Minor)',   barFill: '12–20%' },
-  evolution:  { statGain: '—', barFill: '—' },
-  allocation: { statGain: 'distribute 40 points across any traits', barFill: '10–25%' },
-  healing:    { statGain: '—', barFill: '—' },
+  minor:        { statGain: '+15 stat', barFill: '2–6%' },
+  major:        { statGain: '+15 stat', barFill: '2–6%' },   // legacy holders
+  epic:         { statGain: '+15 stat', barFill: '2–6%' },   // legacy holders
+  evolution:    { statGain: '—', barFill: '—' },
+  allocation:   { statGain: 'distribute 40 points across any traits', barFill: '10–25%' },
+  energy_refill:{ statGain: 'refills your champion to full energy', barFill: '—' },
+  healing:      { statGain: '—', barFill: '—' },
 };
 const SHOP_DESCRIPTIONS = {
   evolution:  'Consumed at a stage-gate level (L3, 5, 7, 10, 13, 15, 18, 22, 26, 30, 34, 38, 41, 44, 46, 48, 49, 49, 50) with a full Evolution Bar. Advances your champion to the next life stage — new art, new stat caps, new chapter of the saga.',
@@ -19111,30 +19128,20 @@ const SHOP_DESCRIPTIONS = {
 };
 
 const SHOP_ITEMS = [
-  // Trait potions — six traits × three tiers. Label convention is
-  // "<Trait> · <Tier>" across the board for consistency.
-  { kind: 'minor', trait: 'STR', label: 'Strength · Minor', emoji: '💪', tier: 'Minor', price: 5 },
-  { kind: 'minor', trait: 'VIT', label: 'Vitality · Minor', emoji: '❤️', tier: 'Minor', price: 5 },
-  { kind: 'minor', trait: 'AGI', label: 'Agility · Minor',  emoji: '🏃', tier: 'Minor', price: 5 },
-  { kind: 'minor', trait: 'FER', label: 'Ferocity · Minor', emoji: '⚔️', tier: 'Minor', price: 5 },
-  { kind: 'minor', trait: 'INT', label: 'Intelligence · Minor', emoji: '🧠', tier: 'Minor', price: 5 },
-  { kind: 'minor', trait: 'LCK', label: 'Luck · Minor', emoji: '🍀', tier: 'Minor', price: 5 },
-  { kind: 'major', trait: 'STR', label: 'Strength · Major', emoji: '💪', tier: 'Major', price: 15 },
-  { kind: 'major', trait: 'VIT', label: 'Vitality · Major', emoji: '❤️', tier: 'Major', price: 15 },
-  { kind: 'major', trait: 'AGI', label: 'Agility · Major',  emoji: '🏃', tier: 'Major', price: 15 },
-  { kind: 'major', trait: 'FER', label: 'Ferocity · Major', emoji: '⚔️', tier: 'Major', price: 15 },
-  { kind: 'major', trait: 'INT', label: 'Intelligence · Major', emoji: '🧠', tier: 'Major', price: 15 },
-  { kind: 'major', trait: 'LCK', label: 'Luck · Major', emoji: '🍀', tier: 'Major', price: 15 },
-  { kind: 'epic',  trait: 'STR', label: 'Strength · Epic',  emoji: '💪', tier: 'Epic',  price: 40 },
-  { kind: 'epic',  trait: 'VIT', label: 'Vitality · Epic',  emoji: '❤️', tier: 'Epic',  price: 40 },
-  { kind: 'epic',  trait: 'AGI', label: 'Agility · Epic',   emoji: '🏃', tier: 'Epic',  price: 40 },
-  { kind: 'epic',  trait: 'FER', label: 'Ferocity · Epic',  emoji: '⚔️', tier: 'Epic',  price: 40 },
-  { kind: 'epic',  trait: 'INT', label: 'Intelligence · Epic', emoji: '🧠', tier: 'Epic',  price: 40 },
-  { kind: 'epic',  trait: 'LCK', label: 'Luck · Epic', emoji: '🍀', tier: 'Epic',  price: 40 },
+  // One trait potion per stat (economy rebalance 23 Jun): the Minor/Major/Epic
+  // tiers were collapsed into a single +15 potion per trait, priced 3 PYR.
+  // (kind stays 'minor' = the trait-potion kind; gain is flat +15 server-side.)
+  { kind: 'minor', trait: 'STR', label: 'Strength Potion',     emoji: '💪', tier: 'Standard', price: 3 },
+  { kind: 'minor', trait: 'VIT', label: 'Vitality Potion',     emoji: '❤️', tier: 'Standard', price: 3 },
+  { kind: 'minor', trait: 'AGI', label: 'Agility Potion',      emoji: '🏃', tier: 'Standard', price: 3 },
+  { kind: 'minor', trait: 'FER', label: 'Ferocity Potion',     emoji: '⚔️', tier: 'Standard', price: 3 },
+  { kind: 'minor', trait: 'INT', label: 'Intelligence Potion', emoji: '🧠', tier: 'Standard', price: 3 },
+  { kind: 'minor', trait: 'LCK', label: 'Luck Potion',         emoji: '🍀', tier: 'Standard', price: 3 },
   // Specials
-  { kind: 'evolution',  trait: null, label: 'Evolution Potion', emoji: '⚡', tier: 'Special', price: 20 },
-  { kind: 'allocation', trait: null, label: 'Blessing · 40 pts', emoji: '✨', tier: 'Special', price: 25 },
-  { kind: 'healing',    trait: null, label: 'Healing Salve',    emoji: '🩹', tier: 'Special', price: 3  },
+  { kind: 'evolution',    trait: null, label: 'Evolution Potion',     emoji: '⚡', tier: 'Special', price: 8  },
+  { kind: 'allocation',   trait: null, label: 'Blessing · 40 pts',    emoji: '✨', tier: 'Special', price: 8  },
+  { kind: 'energy_refill',trait: null, label: 'Full Energy Recharge', emoji: '⚡', tier: 'Special', price: 10 },
+  { kind: 'healing',      trait: null, label: 'Healing Salve',        emoji: '🩹', tier: 'Special', price: 3  },
 ];
 
 // QA (11 May, sognoDomhan): "Cart contents are lost when the Shop window
@@ -19316,6 +19323,7 @@ function _potionArtSrc(it) {
   if (it.kind === 'evolution')       p = 'nft_images/potions/special_evolution.png';
   else if (it.kind === 'allocation') p = 'nft_images/potions/special_blessing.png';
   else if (it.kind === 'healing')    p = 'nft_images/potions/special_healing.png';
+  else if (it.kind === 'energy_refill') p = 'nft_images/icons/energy.png?iv=2';
   else {
     const t = (it.trait || '').toLowerCase();
     p = t ? `nft_images/potions/trait_${t}.png` : 'nft_images/potions/special_blessing.png';
@@ -19517,14 +19525,27 @@ async function checkoutShop() {
     // ── 1) Standard potions: instant grant ─────────────────────
     // Grant for the ACTIVE champion's species (not hardcoded orc) so the
     // potions actually feed newly-adopted species (AngelHorn, 20 Jun).
-    if (potionLines.length) {
+    // Energy refill is not a potion — it's an instant effect on the active
+    // champion, so route it separately from the potion grant flow.
+    const energyRefills = potionLines.filter(l => l.item.kind === 'energy_refill');
+    const realPotions   = potionLines.filter(l => l.item.kind !== 'energy_refill');
+    if (realPotions.length) {
       btn.textContent = '🧪 Brewing…';
       const species_id = currentSpecies || 'orc';
-      for (const { item, qty } of potionLines) {
+      for (const { item, qty } of realPotions) {
         await apiGrantPotion({
           species_id, kind: item.kind, trait: item.trait, quantity: qty,
         });
       }
+    }
+    if (energyRefills.length) {
+      btn.textContent = '⚡ Recharging…';
+      if (!state.championId) {
+        throw new Error('open_a_champion: Open a champion first so the energy can be recharged.');
+      }
+      await apiEnergyRefill(state.championId);   // full recharge is idempotent (caps at 100)
+      const meLocal = myChampions.find(c => c.id === state.championId);
+      if (meLocal) meLocal.energy = 100;
     }
 
     // ── 2) NFT items: queue for batch delivery AND grant immediately ─

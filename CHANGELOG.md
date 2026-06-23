@@ -3,6 +3,20 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 23 Jun 2026 (later 3) — Economy rebalance ⚖️
+**Potions**
+- **One potion per trait now** — the Minor / Major / Epic tiers are gone. Every
+  trait potion gives a **flat +15** to its stat. (Any old Major/Epic potions
+  still in your bag also give +15 now.)
+- **Real PYR prices:** trait potions **3 PYR**, Evolution Potion & Blessing
+  **8 PYR** each. Potions are no longer free in QA — they charge real PYR from
+  your wallet (and land instantly).
+**Energy**
+- New shop item: **Full Energy Recharge — 10 PYR** (instantly tops your active
+  champion to 100 energy). Pairs with the 4/hr passive regen.
+**Adopt**
+- Adopting a champion now costs **20 PYR** (was free in QA).
+
 ## 23 Jun 2026 (later 2)
 **Arena**
 - **Battle Stance icons no longer look bigger than Match/Combat Mode.** The
