@@ -280,6 +280,15 @@
     font-size: 11px;
     cursor: help;
   }
+  .cc-recharge-btn {
+    width: 100%; margin: 2px 0 4px; padding: 7px 10px;
+    background: linear-gradient(180deg, rgba(255,205,107,0.16), rgba(120,70,20,0.18));
+    border: 1px solid rgba(255,205,107,0.4); border-radius: 8px;
+    color: #ffd98a; font-size: 11px; font-weight: 800; letter-spacing: 1px;
+    text-transform: uppercase; cursor: pointer; transition: all 0.15s;
+  }
+  .cc-recharge-btn:hover { border-color: var(--accent); background: linear-gradient(180deg, rgba(255,205,107,0.26), rgba(120,70,20,0.28)); }
+  .cc-recharge-btn:disabled { opacity: 0.55; cursor: default; }
   .cc-vital-icon { font-size: 14px; line-height: 1; }
   .cc-vital-label { color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
   .cc-vital-bar {
@@ -8857,6 +8866,7 @@
           <div class="cc-vital-bar"><div class="cc-vital-fill cc-vital-energy" id="energyFill" style="width:100%"></div></div>
           <span class="cc-vital-val" id="energyVal">100</span>
         </div>
+        <button class="cc-recharge-btn" id="energyRechargeBtn" onclick="handleEnergyRecharge()" title="Instantly refill this champion's energy to full — 10 PYR">⚡ Full Energy Recharge · 10 PYR</button>
         <div class="cc-vital-row" title="HP persists between fights. Regenerates +5% per hour, or use a Healing Salve to top up instantly.">
           <span class="cc-vital-icon"><img class="ui-ico sm" src="nft_images/icons/heal.png" alt="" decoding="async" onerror="this.style.display='none'"/></span>
           <span class="cc-vital-label">Health</span>
@@ -14393,6 +14403,35 @@ async function apiEnergyRefill(champion_id) {
     throw new Error(`${code}: ${data.message || ''}`.trim());
   }
   return data;
+}
+
+// Full Energy Recharge button (champion page) — 10 PYR. Charges the treasury,
+// then refills the active champion to full. AngelHorn/Ric O. (24 Jun): wanted a
+// recharge button on the champion page (energy is used in arena/adventures), not
+// only buried in the shop.
+async function handleEnergyRecharge() {
+  if (!state.championId) {
+    return vxAlert('Open a champion first to recharge its energy.', { title: 'No champion', icon: '⚡' });
+  }
+  const champ = myChampions.find(c => c.id === state.championId);
+  if ((champ?.energy ?? 100) >= 100) {
+    return vxAlert('This champion is already at full energy.', { title: '⚡ Already full', icon: '⚡' });
+  }
+  const btn = document.getElementById('energyRechargeBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '🦊 Sign in wallet…'; }
+  try {
+    await payTreasury(10, `energy_refill:${state.championId}`);   // 10 PYR — reject/fail throws → no refill
+    if (btn) btn.textContent = '⚡ Recharging…';
+    await apiEnergyRefill(state.championId);
+    if (champ) { champ.energy = 100; champ.energy_now = 100; }
+    if (typeof render === 'function') render();
+    vxAlert('Energy fully recharged to 100!', { title: '⚡ Recharged', icon: '⚡', variant: 'success' });
+  } catch (e) {
+    const msg = (e && e.code === 4001) ? 'You rejected the wallet prompt — no PYR charged.' : (e?.message || 'Recharge failed');
+    vxAlert(msg, { title: 'Recharge failed', icon: '⚡', variant: 'error' });
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '⚡ Full Energy Recharge · 10 PYR'; }
+  }
 }
 
 // Daily streak — server-side, keyed by wallet (replaces per-device localStorage).

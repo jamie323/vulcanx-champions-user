@@ -3,6 +3,20 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 24 Jun 2026
+**Champion / Potions**
+- **Blessing & Evolution potions now work on any champion.** They were still
+  throwing a species "mismatch" error on cross-species champions (the universal-
+  potion change had only covered trait potions) — fixed, all potion types are
+  now truly universal.
+**Champion page**
+- **New "⚡ Full Energy Recharge · 10 PYR" button** right under the Energy bar —
+  instantly tops the champion to full (no need to dig through the Shop).
+**Arena**
+- **Bot opponents vary more in strength.** They're still matched to your level/
+  stage, but with a wider spread so you'll face some that are weaker and some
+  tougher, instead of near-mirror matches every time.
+
 ## 23 Jun 2026 (later 5)
 **Arena**
 - **Toggle rows are now properly proportionate.** Match Mode / Combat Mode /
