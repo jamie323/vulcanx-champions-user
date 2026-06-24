@@ -2112,8 +2112,12 @@
      narrower buttons (AngelHorn, repeatedly). Fix: pin EVERY toggle button to
      exactly one-third of the (capped) row width so all 7 buttons are identical
      and centred at every width below 1100px. (Desktop grid ≥1100 untouched.) */
+  /* NOTE: selector is `.arena-toggles .arena-mode-btn` (specificity 0,2,0) so it
+     beats the base `.arena-mode-btn { flex:1 }` below REGARDLESS of source order
+     — an earlier version of this rule used `.arena-mode-btn` and was silently
+     overridden by the later base rule, so the fix never actually applied live. */
   @media (max-width: 1099px) {
-    .arena-mode-btn { flex: 0 0 calc((min(100%, 440px) - 16px) / 3); }
+    .arena-toggles .arena-mode-btn { flex: 0 0 calc((min(100%, 440px) - 16px) / 3); }
   }
   .arena-mode-btn {
     flex: 1; padding: 10px 12px;
