@@ -3,6 +3,15 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 23 Jun 2026 (later 5)
+**Arena**
+- **Toggle rows are now properly proportionate.** Match Mode / Combat Mode /
+  Battle Stance now stack as centred rows with **every button the exact same
+  size** — the Battle Stance group no longer renders wider ("huge on the right")
+  than the others. The old side-by-side desktop layout couldn't fit three
+  readable Battle-Stance buttons without that group ballooning; stacked + equal
+  buttons is balanced at every screen width.
+
 ## 23 Jun 2026 (later 4)
 **Arena**
 - **Match Mode / Combat Mode / Battle Stance toggles now line up at all sizes.**
