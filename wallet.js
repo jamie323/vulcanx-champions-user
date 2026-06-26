@@ -451,6 +451,21 @@
       } catch (_) { return false; }
     }
 
+    // Interactive reconnect: when the silent resume fails, ACTIVELY prompt the
+    // wallet so MetaMask actually pops up — instead of throwing "please
+    // reconnect" and forcing the user to manually disconnect/reconnect
+    // (AngelHorn, 24 Jun). Injected → _connectInjected() fires
+    // wallet_requestPermissions/eth_requestAccounts (guaranteed popup);
+    // WalletConnect → re-open the WC modal. Returns true if reconnected.
+    async promptReconnect() {
+      try {
+        if (typeof window !== 'undefined' && window.ethereum) {
+          return await this._connectInjected();
+        }
+        return await this._connectWalletConnect();
+      } catch (_) { return false; }
+    }
+
     // ── Signing helpers ──────────────────────────────────────────
     async personalSign(message) {
       // Pre-flight: verify the provider still has accounts. Fixes the
@@ -458,7 +473,8 @@
       // has evicted our session.
       const alive = await this.verifyConnection();
       if (!alive) {
-        const recovered = await this.tryAutoReconnect();
+        let recovered = await this.tryAutoReconnect();
+        if (!recovered) recovered = await this.promptReconnect();  // pop the wallet (MetaMask) instead of forcing a manual reconnect
         if (!recovered) throw new Error('Wallet session expired — please reconnect.');
       }
       return await this._provider.request({
@@ -470,7 +486,8 @@
     async sendDummyTx(label) {
       const alive = await this.verifyConnection();
       if (!alive) {
-        const recovered = await this.tryAutoReconnect();
+        let recovered = await this.tryAutoReconnect();
+        if (!recovered) recovered = await this.promptReconnect();  // pop the wallet (MetaMask) instead of forcing a manual reconnect
         if (!recovered) throw new Error('Wallet session expired — please reconnect.');
       }
       // QA "ceremony" — proves the user signed off on the action
@@ -502,7 +519,8 @@
     async sendPyr(to, valueHex, label) {
       const alive = await this.verifyConnection();
       if (!alive) {
-        const recovered = await this.tryAutoReconnect();
+        let recovered = await this.tryAutoReconnect();
+        if (!recovered) recovered = await this.promptReconnect();  // pop the wallet (MetaMask) instead of forcing a manual reconnect
         if (!recovered) throw new Error('Wallet session expired — please reconnect.');
       }
       const txHash = await this._provider.request({

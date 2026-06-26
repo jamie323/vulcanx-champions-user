@@ -6931,7 +6931,7 @@
 
       <ol class="howto-numbered">
         <li><b>Connect your wallet.</b> The wallet gate prompts MetaMask or WalletConnect. We'll switch you to Elysium (chain 1339) automatically if needed, then ask you to sign a short message to prove wallet ownership. Free — no gas.</li>
-        <li><b>Stock up in the Shop.</b> Buy trait potions (3 PYR each), Evolution Potions and Blessings (8 PYR), and a Full Energy Recharge (10 PYR) — all charged in PYR from your wallet.</li>
+        <li><b>Stock up in the Shop.</b> Buy trait potions (3 PYR each) and Evolution Potions and Blessings (8 PYR) — all charged in PYR from your wallet. A <b>Full Energy Recharge (10 PYR)</b> button lives on the champion page itself.</li>
         <li><b>Click "Adopt a Baby Champion".</b> Pick any of the 8 species, then one of its bloodlines, then name your champion. Names are permanent and shown on the NFT.</li>
         <li><b>Sign the adoption ceremony.</b> Your wallet pops up to sign a "VulcanX:adopt:&lt;name&gt;" message. No PYR moves, no gas — purely proof you authorized the action.</li>
         <li><b>Egg cracks open.</b> A 3-second cinematic plays as your Whelp emerges from the nest. You land in the champion view ready to feed, equip, and quest.</li>
@@ -19171,7 +19171,6 @@ const SHOP_TIER_INFO = {
   epic:         { statGain: '+15 stat', barFill: '2–6%' },   // legacy holders
   evolution:    { statGain: '—', barFill: '—' },
   allocation:   { statGain: 'distribute 40 points across any traits', barFill: '10–25%' },
-  energy_refill:{ statGain: 'refills your champion to full energy', barFill: '—' },
   healing:      { statGain: '—', barFill: '—' },
 };
 const SHOP_DESCRIPTIONS = {
@@ -19193,7 +19192,6 @@ const SHOP_ITEMS = [
   // Specials
   { kind: 'evolution',    trait: null, label: 'Evolution Potion',     emoji: '⚡', tier: 'Special', price: 8  },
   { kind: 'allocation',   trait: null, label: 'Blessing · 40 pts',    emoji: '✨', tier: 'Special', price: 8  },
-  { kind: 'energy_refill',trait: null, label: 'Full Energy Recharge', emoji: '⚡', tier: 'Special', price: 10 },
   { kind: 'healing',      trait: null, label: 'Healing Salve',        emoji: '🩹', tier: 'Special', price: 3  },
 ];
 
@@ -19578,27 +19576,14 @@ async function checkoutShop() {
     // ── 1) Standard potions: instant grant ─────────────────────
     // Grant for the ACTIVE champion's species (not hardcoded orc) so the
     // potions actually feed newly-adopted species (AngelHorn, 20 Jun).
-    // Energy refill is not a potion — it's an instant effect on the active
-    // champion, so route it separately from the potion grant flow.
-    const energyRefills = potionLines.filter(l => l.item.kind === 'energy_refill');
-    const realPotions   = potionLines.filter(l => l.item.kind !== 'energy_refill');
-    if (realPotions.length) {
+    if (potionLines.length) {
       btn.textContent = '🧪 Brewing…';
       const species_id = currentSpecies || 'orc';
-      for (const { item, qty } of realPotions) {
+      for (const { item, qty } of potionLines) {
         await apiGrantPotion({
           species_id, kind: item.kind, trait: item.trait, quantity: qty,
         });
       }
-    }
-    if (energyRefills.length) {
-      btn.textContent = '⚡ Recharging…';
-      if (!state.championId) {
-        throw new Error('open_a_champion: Open a champion first so the energy can be recharged.');
-      }
-      await apiEnergyRefill(state.championId);   // full recharge is idempotent (caps at 100)
-      const meLocal = myChampions.find(c => c.id === state.championId);
-      if (meLocal) meLocal.energy = 100;
     }
 
     // ── 2) NFT items: queue for batch delivery AND grant immediately ─

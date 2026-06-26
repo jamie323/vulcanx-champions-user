@@ -3,6 +3,23 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 24 Jun 2026 (later)
+**Energy**
+- **Full Energy Recharge is now one clear action.** It was both a Shop item *and*
+  a champion-page button, which was confusing — buying it in the Shop didn't give
+  you something to "use", so the champion button looked like it was charging you
+  again. Removed the Shop version; the **⚡ Full Energy Recharge · 10 PYR button
+  on the champion page** (right under the Energy bar) is now the single way to do
+  it — one tap, pay 10 PYR, instantly full.
+**Wallet**
+- **The wallet now pops up to reconnect automatically.** When your session had
+  quietly expired (idle/phone-sleep), an action would just error with "please
+  reconnect" and you had to manually disconnect + reconnect. Now it actively
+  re-opens MetaMask (or WalletConnect) so you can approve and continue.
+**Arena**
+- **Enemy stats now mirror your champion's for its level** (with a small ±12%
+  swing so some are a touch weaker/stronger) — instead of drifting far from you.
+
 ## 24 Jun 2026
 **Champion / Potions**
 - **Blessing & Evolution potions now work on any champion.** They were still
