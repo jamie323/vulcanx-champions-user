@@ -3,6 +3,14 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 24 Jun 2026 (later 2)
+**Arena**
+- **The enemy's shown level now matches its stats.** The arena was displaying the
+  opponent at *your* champion's level while its stats were its own — so a PvP
+  opponent of a different level looked like its stats didn't fit its level. The
+  enemy now shows its **own** level (bots mirror your level; PvP opponents show
+  their real level), so the level and stats line up.
+
 ## 24 Jun 2026 (later)
 **Energy**
 - **Full Energy Recharge is now one clear action.** It was both a Shop item *and*

@@ -17698,7 +17698,7 @@ function showArenaResult(resp, champ) {
   document.getElementById('arPlayerContext').innerHTML =
     `<span class="emoji">${playerSpEmoji}</span> <span class="level">L${champ.level}</span> · <span class="stage">${playerStageName}</span> ${affinityBadgeHtml(champ.species_id, { compact: true })}`;
   document.getElementById('arBotContext').innerHTML =
-    `<span class="emoji">${botSpEmoji}</span> <span class="level">L${champ.level}</span> · <span class="stage">${botStageName}</span> ${affinityBadgeHtml(resp.opponent.species_id, { compact: true })}`;
+    `<span class="emoji">${botSpEmoji}</span> <span class="level">L${resp.opponent.level ?? champ.level}</span> · <span class="stage">${botStageName}</span> ${affinityBadgeHtml(resp.opponent.species_id, { compact: true })}`;
 
   // 2026-05-21 — surface the Active-mode QTE contribution so the player
   // sees their reaction skill mattered. The server returns qte_multiplier
