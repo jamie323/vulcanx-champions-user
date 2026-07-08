@@ -3,6 +3,15 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 8 Jul 2026 (later)
+**Wallet**
+- **WalletConnect now works on mobile.** The connection was requiring the Elysium
+  chain up-front, which mobile wallets that don't already have Elysium (most of
+  them) couldn't approve — so the pairing failed. It now connects on a chain every
+  wallet supports and switches to Elysium automatically when you make a
+  transaction. (Also fixed the Add-Network prompt to say **PYR**, not the old
+  "LAVA" label.)
+
 ## 8 Jul 2026
 **Adventures & Arena**
 - **Champion pickers now show who's actually free.** The dropdowns (Adventures,

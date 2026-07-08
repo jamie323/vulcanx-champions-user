@@ -29,7 +29,7 @@
   const ELYSIUM_CHAIN_PARAMS = {
     chainId: ELYSIUM_CHAIN_ID,
     chainName: 'Elysium',
-    nativeCurrency: { name: 'LAVA', symbol: 'LAVA', decimals: 18 },
+    nativeCurrency: { name: 'PYR', symbol: 'PYR', decimals: 18 },
     rpcUrls: [ELYSIUM_RPC],
     blockExplorerUrls: [ELYSIUM_EXPLORER + '/'],
   };
@@ -189,10 +189,12 @@
       if (!EthereumProvider) return false;
       const provider = await EthereumProvider.init({
         projectId: WC_PROJECT_ID,
-        chains: [ELYSIUM_CHAIN_ID_DEC],
-        optionalChains: [1, 137],
+        // Match _initWalletConnectProvider: mainnet required, Elysium optional,
+        // so a resumed session doesn't break on wallets without Elysium.
+        chains: [1],
+        optionalChains: [ELYSIUM_CHAIN_ID_DEC, 137],
         showQrModal: false,
-        rpcMap: { [ELYSIUM_CHAIN_ID_DEC]: ELYSIUM_RPC },
+        rpcMap: { [ELYSIUM_CHAIN_ID_DEC]: ELYSIUM_RPC, 1: 'https://ethereum-rpc.publicnode.com' },
         metadata: this._metadata(),
       });
       if (!provider.accounts?.length || !provider.session) {
@@ -304,14 +306,19 @@
         const EthereumProvider = await loadWalletConnectScript();
         const p = await EthereumProvider.init({
           projectId: WC_PROJECT_ID,
-          chains: [ELYSIUM_CHAIN_ID_DEC],
-          optionalChains: [1, 137], // mainnet + polygon for session handshake compat
+          // Require only Ethereum mainnet (every mobile wallet supports it) and
+          // offer Elysium as OPTIONAL. Requiring Elysium (1339) made mobile
+          // wallets that don't have it fail the pairing ("chains not supported")
+          // — that's why WalletConnect wasn't working on mobile. After connect we
+          // switch to Elysium via _ensureChain / wallet_addEthereumChain.
+          chains: [1],
+          optionalChains: [ELYSIUM_CHAIN_ID_DEC, 137],
           showQrModal: true,
           qrModalOptions: {
             themeMode: 'dark',
             themeVariables: { '--wcm-z-index': '20000', '--w3m-z-index': '20000' },
           },
-          rpcMap: { [ELYSIUM_CHAIN_ID_DEC]: ELYSIUM_RPC },
+          rpcMap: { [ELYSIUM_CHAIN_ID_DEC]: ELYSIUM_RPC, 1: 'https://ethereum-rpc.publicnode.com' },
           metadata: this._metadata(),
         });
         this._wcProvider = p;
