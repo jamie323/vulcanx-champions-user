@@ -14411,11 +14411,11 @@ async function apiCampaignBattle({
   return data;  // { ok, progress, event_id?, recorded, awards_chest, chest_count, server_resolved?, server_won?, battle? }
 }
 
-async function apiCreateChampion({ species_id, bloodline_id, name }) {
+async function apiCreateChampion({ species_id, bloodline_id, name, adopt_tx_hash, adopt_paid_pyr }) {
   const res = await apiFetch(`${FN_BASE}/champion_create`, {
     method: 'POST',
     headers: AUTH_HEADERS,
-    body: JSON.stringify({ wallet: getWallet(), species_id, bloodline_id, name }),
+    body: JSON.stringify({ wallet: getWallet(), species_id, bloodline_id, name, adopt_tx_hash, adopt_paid_pyr }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -14751,8 +14751,8 @@ function makeChampionId() {
   return 'ch_' + Math.random().toString(36).slice(2, 10);
 }
 
-async function addChampion({ species_id, bloodline_id, name }) {
-  const champion = await apiCreateChampion({ species_id, bloodline_id, name });
+async function addChampion({ species_id, bloodline_id, name, adopt_tx_hash, adopt_paid_pyr }) {
+  const champion = await apiCreateChampion({ species_id, bloodline_id, name, adopt_tx_hash, adopt_paid_pyr });
   myChampions.push(champion);
   // Supply-cache is now stale — next adopt screen visit will re-fetch.
   if (typeof invalidateSupplyCache === 'function') invalidateSupplyCache();
@@ -15479,12 +15479,17 @@ async function confirmAdopt() {
   try {
     // Adoption costs 20 PYR (economy rebalance 23 Jun). Charged to the PYR
     // treasury before minting — reject/fail throws → no champion, no charge.
-    await payTreasury(20, `adopt:${name}`);
+    // The tx hash is stored ON the champion (adopt_tx_hash) so paid champions
+    // are permanently distinguishable from free/QA ones — any future data
+    // cleanup must never delete a paid champion (8 Jul incident).
+    const adoptTx = await payTreasury(20, `adopt:${name}`);
     if (btn) btn.textContent = '🥚 Minting champion…';
     const c = await addChampion({
       species_id: adoptFlow.species_id,
       bloodline_id: adoptFlow.bloodline_id,
       name,
+      adopt_tx_hash: (typeof adoptTx === 'string' && adoptTx.startsWith('0x')) ? adoptTx : undefined,
+      adopt_paid_pyr: PYR_PAYMENTS_ENABLED ? 20 : undefined,
     });
     adoptFlow = { species_id: null, bloodline_id: null };
     // Play the egg-hatch cinematic — ~3s. Loads the champion view

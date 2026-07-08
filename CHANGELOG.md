@@ -3,6 +3,15 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 8 Jul 2026 (later 3)
+**Champions restored + payment protection**
+- **If your adopted champion vanished today, it's back.** The test-phase reset
+  accidentally included champions that players had paid 20 PYR to adopt — all
+  of them (6 players, 16 champions, plus their potions) have been restored from
+  backup. Sorry about the scare.
+- **Paid adoptions are now recorded on the champion itself** (payment tx hash),
+  so paid champions can never be swept up in a data reset again.
+
 ## 8 Jul 2026 (later 2)
 **Adventures**
 - **Fixed "Claim failed: quest_not_found" on old adventures.** If a champion was
