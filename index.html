@@ -11658,6 +11658,19 @@ const VxQuests = (() => {
     else delete all[championId];
     save(all);
   }
+  // Drop locally-tracked quests whose champion no longer exists (e.g. after a
+  // champion reset/wipe) — otherwise a dead adventure sits in the list and Claim
+  // fails server-side with quest_not_found. Guard on myChampions being loaded so
+  // we don't wipe valid quests during the pre-load window.
+  function pruneOrphanedQuests() {
+    if (!Array.isArray(myChampions) || myChampions.length === 0) return;
+    const all = load();
+    let changed = false;
+    for (const champId of Object.keys(all)) {
+      if (!myChampions.some(c => c.id === champId)) { delete all[champId]; changed = true; }
+    }
+    if (changed) save(all);
+  }
 
   // Format milliseconds as MM:SS or HH:MM:SS
   function fmtTimer(ms) {
@@ -11691,6 +11704,7 @@ const VxQuests = (() => {
 
   function renderView() {
     if (!document.querySelector('.view-quests')) return;
+    pruneOrphanedQuests();   // clear adventures for champions that no longer exist
     // Champion picker
     const sel = document.getElementById('questsChampSelect');
     if (sel) {
@@ -12034,7 +12048,18 @@ const VxQuests = (() => {
       renderActive();
       renderGrid();
     } catch (e) {
-      vxAlert(e.message || 'Failed to claim', { title: 'Claim failed', icon: '🗺️', variant: 'error' });
+      const msg = e?.message || 'Failed to claim';
+      // The quest (or its champion) no longer exists server-side — e.g. the
+      // champion was reset/wiped. Clear the orphaned local quest and show a
+      // friendly message instead of the raw PostgREST "cannot coerce" error.
+      if (/quest_not_found|champion_not_found|quest_champ_mismatch/.test(msg)) {
+        setActiveQuest(championId, null);
+        try { renderActive(); renderGrid(); } catch (_) {}
+        vxAlert('This adventure is no longer available (the champion was reset). It has been cleared.',
+          { title: '🗺️ Adventure cleared', icon: '🗺️' });
+        return;
+      }
+      vxAlert(msg, { title: 'Claim failed', icon: '🗺️', variant: 'error' });
     }
   }
 

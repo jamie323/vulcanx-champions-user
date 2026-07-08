@@ -3,6 +3,14 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 8 Jul 2026 (later 2)
+**Adventures**
+- **Fixed "Claim failed: quest_not_found" on old adventures.** If a champion was
+  reset while it had an adventure in progress, claiming it errored with a raw
+  message. Now the stale adventure is cleared automatically (and pruned on the
+  Adventures screen), with a clear "this adventure is no longer available" note
+  instead of the error.
+
 ## 8 Jul 2026 (later)
 **Wallet**
 - **WalletConnect now works on mobile.** The connection was requiring the Elysium
