@@ -3,6 +3,17 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 8 Jul 2026
+**Adventures & Arena**
+- **Champion pickers now show who's actually free.** The dropdowns (Adventures,
+  Arena, and accept-a-challenge) annotate every champion with its status —
+  **⚡energy**, **🗺️ on adventure**, or **too tired** — and sort the free ones to
+  the top, so you don't have to open each champion to see who can go (thanks Bergz).
+- **Heads-up when a quest would be wasted.** If you send a champion on an
+  adventure whose main traits are already **maxed for its level**, you now get a
+  warning (stat points would be wasted — only Evolution-Bar fill) with the option
+  to send anyway or pick another (thanks Bergz & Ric).
+
 ## 24 Jun 2026 (later 2)
 **Arena**
 - **The enemy's shown level now matches its stats.** The arena was displaying the

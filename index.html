@@ -11694,17 +11694,13 @@ const VxQuests = (() => {
     // Champion picker
     const sel = document.getElementById('questsChampSelect');
     if (sel) {
-      sel.innerHTML = '';
-      myChampions.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.id;
-        opt.textContent = `${c.name} · L${c.level} · ${SPECIES[c.species_id]?.label || c.species_id}`;
-        sel.appendChild(opt);
-      });
       if (!_activeChampForBrowse || !myChampions.find(c => c.id === _activeChampForBrowse)) {
         _activeChampForBrowse = myChampions[0]?.id;
       }
-      if (_activeChampForBrowse) sel.value = _activeChampForBrowse;
+      // Annotate each champion with availability (⚡energy / on-adventure) and
+      // sort free-first so the keeper can see who can go without opening each
+      // champion (Bergz, 8 Jul). Cheapest adventure = 10 energy.
+      sel.innerHTML = championOptionsWithStatus(10, _activeChampForBrowse);
       sel.onchange = () => { _activeChampForBrowse = sel.value; renderGrid(); updateEnergyChip(); };
     }
     updateEnergyChip();
@@ -11940,6 +11936,21 @@ const VxQuests = (() => {
       vxAlert(`This adventure costs ${cost} ⚡ but your champion only has ${en}. Energy regenerates +4/hr, or feed a Healing Salve.`,
         { title: '⚡ Too tired', icon: '⚡' });
       return;
+    }
+    // Warn if this adventure's PRIMARY traits are already at cap for the
+    // champion's level — the stat points would be wasted (only Evolution-Bar
+    // fill remains). Warn, don't block: bar fill is still useful (Bergz, 8 Jul).
+    const advDef = ADVENTURES[_selectedAdventure];
+    const champ = myChampions.find(c => c.id === champId);
+    if (advDef && champ && typeof capAtLevel === 'function' && champ.stats) {
+      const caps = capAtLevel(champ.level);
+      const allMaxed = advDef.primaries.every(t => (champ.stats[t] ?? 0) >= (caps[TRAITS.indexOf(t)] ?? Infinity));
+      if (allMaxed) {
+        const ok = await vxConfirm(
+          `${champ.name}'s ${advDef.primaries.join(' & ')} are already maxed for L${champ.level}, so this adventure won't add stat points — you'd only get Evolution-Bar fill. Send anyway?`,
+          { title: '⚠️ Traits already maxed', icon: '⚠️', okLabel: 'Send anyway', cancelLabel: 'Pick another' });
+        if (!ok) return;
+      }
     }
     try {
       const resp = await apiQuestStart({
@@ -13969,6 +13980,38 @@ const Escrow = {
     return this._send(data, null);
   },
 };
+
+// Champion availability for the Adventures/Arena pickers (Bergz, 8 Jul: "the
+// dropdown should filter on which champions are actually free — too cumbersome
+// to check each one individually"). Returns a status used to annotate + sort
+// the option list so free champions are obvious at a glance.
+function champAvailability(c, minEnergy) {
+  const onQuest = !!(window.VxQuests && VxQuests.getActiveQuest && VxQuests.getActiveQuest(c.id));
+  const energy = Math.max(0, Math.min(100, Math.round(c.energy ?? 100)));
+  const low = energy < minEnergy;
+  const tag = onQuest ? '🗺️ on adventure'
+            : low     ? `⚡${energy} · too tired`
+            :           `⚡${energy}`;
+  return { onQuest, energy, low, available: !onQuest && !low, tag };
+}
+// Build <option>s for a champion <select>, annotated with availability and
+// sorted free-first (then too-tired, then on-adventure) so the user doesn't
+// have to open each champion to see who can go.
+function championOptionsWithStatus(minEnergy, selectedId) {
+  return myChampions
+    .map(c => ({ c, st: champAvailability(c, minEnergy) }))
+    .sort((a, b) => {
+      const rank = s => s.available ? 0 : s.onQuest ? 2 : 1;   // free < tired < adventuring
+      return rank(a.st) - rank(b.st);
+    })
+    .map(({ c, st }) => {
+      const bl = SPECIES[c.species_id]?.bloodlines?.[c.bloodline_id]?.label;
+      return `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>`
+        + `${esc(c.name)} · L${c.level} · ${SPECIES[c.species_id]?.label || c.species_id}`
+        + (bl ? ` (${bl})` : '') + ` · ${st.tag}</option>`;
+    })
+    .join('');
+}
 
 // QA (11 May, sognoDomhan): defense-in-depth XSS escape for any
 // user-controlled string about to be inserted into innerHTML. Backend
@@ -16209,9 +16252,9 @@ function renderArena() {
   if (pickerRow && pickerSelect) {
     if (myChampions.length > 1) {
       pickerRow.style.display = '';
-      pickerSelect.innerHTML = myChampions.map(c =>
-        `<option value="${c.id}" ${c.id === champ?.id ? 'selected' : ''}>${esc(c.name)} · L${c.level} · ${SPECIES[c.species_id]?.label || c.species_id} (${SPECIES[c.species_id]?.bloodlines?.[c.bloodline_id]?.label || c.bloodline_id})</option>`
-      ).join('');
+      // Annotate + sort free-first so the keeper sees which champions can
+      // actually fight (energy / not on adventure) — Bergz, 8 Jul. Arena costs 15.
+      pickerSelect.innerHTML = championOptionsWithStatus(15, champ?.id);
       pickerSelect.onchange = () => {
         const newId = pickerSelect.value;
         if (newId && newId !== state.championId) {
@@ -17067,9 +17110,8 @@ function openAcceptInviteModal(inviteId) {
   // Populate champion select with the player's owned champions
   const sel = document.getElementById('aiChampionSelect');
   if (sel) {
-    sel.innerHTML = myChampions.map(c =>
-      `<option value="${c.id}">${esc(c.name)} · L${c.level} · ${SPECIES[c.species_id]?.label || c.species_id}</option>`
-    ).join('');
+    // Annotate + sort free-first (energy / not on adventure) — Bergz, 8 Jul.
+    sel.innerHTML = championOptionsWithStatus(15, sel.value);
     if (state.championId && myChampions.some(c => c.id === state.championId)) {
       sel.value = state.championId;
     }
