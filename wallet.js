@@ -189,12 +189,10 @@
       if (!EthereumProvider) return false;
       const provider = await EthereumProvider.init({
         projectId: WC_PROJECT_ID,
-        // Match _initWalletConnectProvider: mainnet required, Elysium optional,
-        // so a resumed session doesn't break on wallets without Elysium.
-        chains: [1],
-        optionalChains: [ELYSIUM_CHAIN_ID_DEC, 137],
-        showQrModal: false,
-        rpcMap: { [ELYSIUM_CHAIN_ID_DEC]: ELYSIUM_RPC, 1: 'https://ethereum-rpc.publicnode.com' },
+        chains: [ELYSIUM_CHAIN_ID_DEC],
+        optionalChains: [137, 1],
+        showQrModal: false,   // resume — never show QR
+        rpcMap: { [ELYSIUM_CHAIN_ID_DEC]: ELYSIUM_RPC },
         metadata: this._metadata(),
       });
       if (!provider.accounts?.length || !provider.session) {
@@ -306,21 +304,28 @@
         const EthereumProvider = await loadWalletConnectScript();
         const p = await EthereumProvider.init({
           projectId: WC_PROJECT_ID,
-          // Require only Ethereum mainnet (every mobile wallet supports it) and
-          // offer Elysium as OPTIONAL. Requiring Elysium (1339) made mobile
-          // wallets that don't have it fail the pairing ("chains not supported")
-          // — that's why WalletConnect wasn't working on mobile. After connect we
-          // switch to Elysium via _ensureChain / wallet_addEthereumChain.
-          chains: [1],
-          optionalChains: [ELYSIUM_CHAIN_ID_DEC, 137],
-          showQrModal: true,
-          qrModalOptions: {
-            themeMode: 'dark',
-            themeVariables: { '--wcm-z-index': '20000', '--w3m-z-index': '20000' },
-          },
-          rpcMap: { [ELYSIUM_CHAIN_ID_DEC]: ELYSIUM_RPC, 1: 'https://ethereum-rpc.publicnode.com' },
+          // EXACT mirror of Runner's PROVEN mobile config (runner.vulcan-x.io
+          // works on mobile with this same project id). Runner discovered
+          // (Trello WedQFISY, 27 May) that the BUILT-IN @walletconnect/modal is
+          // broken — it opens an EMPTY QR (no pairing URI, no relay WebSocket).
+          // That's why "wallet connect does not work": the modal never pairs.
+          // Fix = showQrModal:false + our own display_uri QR/deeplink overlay
+          // (wired below), same as Runner.
+          chains: [ELYSIUM_CHAIN_ID_DEC],
+          optionalChains: [137, 1],
+          showQrModal: false,
+          rpcMap: { [ELYSIUM_CHAIN_ID_DEC]: ELYSIUM_RPC },
           metadata: this._metadata(),
         });
+        // Hand the pairing URI to our own QR/deeplink overlay (Runner pattern).
+        try {
+          p.on('display_uri', (uri) => {
+            console.log('[wallet] WC display_uri:', String(uri).slice(0, 60) + '…');
+            if (typeof window !== 'undefined' && typeof window.__showWalletConnectQR === 'function') {
+              window.__showWalletConnectQR(uri);
+            }
+          });
+        } catch (e) { console.warn('[wallet] display_uri listener attach failed:', e?.message); }
         this._wcProvider = p;
         return p;
       })().catch((e) => {
@@ -359,9 +364,11 @@
 
       try {
         this._emit('chainStatus', 'Opening wallet…');
-        if (!provider.session) await provider.connect();
+        if (!provider.session) await provider.connect();   // display_uri fires → our QR overlay opens
         else                    await provider.enable();
+        if (typeof window.__hideWalletConnectQR === 'function') { try { window.__hideWalletConnectQR(); } catch (_) {} }
       } catch (e) {
+        if (typeof window.__hideWalletConnectQR === 'function') { try { window.__hideWalletConnectQR(); } catch (_) {} }
         this._emit('error', (e && e.message) || 'Connection cancelled');
         console.warn('[wallet] WC connect error:', e);
         return false;
@@ -619,6 +626,47 @@
   }
 
   // Expose to the page
+
+  // ─── WalletConnect QR / deep-link overlay ─────────────────────────
+  // Ported from Runner (the proven mobile flow): the built-in WC modal is
+  // broken (empty QR), so we render the pairing URI ourselves — QR for
+  // desktop scan + a tap-to-open deep link for mobile.
+  window.__showWalletConnectQR = function (uri) {
+    try { window.__hideWalletConnectQR(); } catch (_) {}
+    const overlay = document.createElement('div');
+    overlay.id = 'vx-wc-qr-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:20000;background:rgba(10,6,2,0.88);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);';
+    const qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=' + encodeURIComponent(uri) + '&bgcolor=ffffff&color=000000&qzone=1';
+    const deepLink = String(uri).startsWith('wc:') ? ('https://metamask.app.link/wc?uri=' + encodeURIComponent(uri)) : uri;
+    overlay.innerHTML = `
+      <div style="width:min(360px,92vw);padding:24px;border-radius:14px;background:linear-gradient(180deg,rgba(46,30,16,0.97),rgba(22,14,10,0.97));border:2px solid rgba(255,205,107,0.5);box-shadow:0 24px 80px rgba(0,0,0,0.6);color:#ffeccd;text-align:center;font-family:inherit;">
+        <div style="font-size:15px;letter-spacing:3px;color:#ffcd6b;margin-bottom:8px;font-weight:800;">CONNECT VIA WALLETCONNECT</div>
+        <div style="font-size:11px;opacity:0.65;margin-bottom:16px;">Scan with your wallet app, or tap below if you're on mobile</div>
+        <div style="background:#fff;padding:12px;border-radius:10px;display:inline-block;margin-bottom:14px;">
+          <img src="${qrSrc}" alt="WalletConnect QR" style="display:block;width:260px;height:260px;max-width:70vw;max-height:70vw;" />
+        </div>
+        <a href="${deepLink}" target="_blank" rel="noopener noreferrer"
+           style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px;margin-bottom:8px;border-radius:8px;background:linear-gradient(135deg,#3b99fc,#1e5ca8);color:#fff;font-weight:800;letter-spacing:1px;text-decoration:none;font-size:13px;">🦊 OPEN IN METAMASK APP</a>
+        <button id="vx-wc-copy" style="width:100%;padding:9px;font-size:11px;letter-spacing:1.5px;margin-bottom:6px;background:none;border:1px solid rgba(255,205,107,0.35);border-radius:8px;color:#ffeccd;cursor:pointer;">📋 COPY PAIRING LINK</button>
+        <button id="vx-wc-cancel" style="width:100%;padding:9px;font-size:11px;letter-spacing:2px;opacity:0.7;background:none;border:1px solid rgba(255,205,107,0.25);border-radius:8px;color:#ffeccd;cursor:pointer;">CANCEL</button>
+      </div>`;
+    document.body.appendChild(overlay);
+    const copy = overlay.querySelector('#vx-wc-copy');
+    copy.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(uri);
+        copy.textContent = '✓ COPIED'; copy.style.color = '#7ed26b';
+        setTimeout(() => { copy.textContent = '📋 COPY PAIRING LINK'; copy.style.color = ''; }, 1500);
+      } catch (_) { copy.textContent = '⚠ COPY FAILED — long-press the QR'; }
+    });
+    overlay.querySelector('#vx-wc-cancel').addEventListener('click', () => window.__hideWalletConnectQR());
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) window.__hideWalletConnectQR(); });
+  };
+  window.__hideWalletConnectQR = function () {
+    const el = document.getElementById('vx-wc-qr-overlay');
+    if (el) el.remove();
+  };
+
   window.VXWalletManager = WalletManager;
   window.vxWallet = new WalletManager();
 

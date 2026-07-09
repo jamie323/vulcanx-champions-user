@@ -3,6 +3,25 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 9 Jul 2026
+**Wallet**
+- **WalletConnect rebuilt on the flow that already works in Vulcan Runner.** The
+  built-in WalletConnect popup has a known bug (it opens with an empty QR code
+  that never connects). Champions now shows its own pairing screen — a working
+  **QR code** to scan on desktop plus an **"Open in MetaMask app"** button on
+  mobile, with a copy-link fallback.
+**Landing page**
+- Removed the outdated "testing phase / no PYR deducted" wording — the game
+  charges real PYR now, and the copy says so plainly (every charge is confirmed
+  in your wallet first). Swept the guide's remaining "free in QA" lines too.
+**New players**
+- **Free starter pack with your first champion:** 10 potions of every trait
+  (60 total) + **20 Evolution Potions**, granted automatically the moment you
+  adopt your first champion.
+**Adventures**
+- Hardened the claim path further — a rare raw database error on claim now
+  returns a clear message instead.
+
 ## 8 Jul 2026 (later 3)
 **Champions restored + payment protection**
 - **If your adopted champion vanished today, it's back.** The test-phase reset
