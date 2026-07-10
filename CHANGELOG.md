@@ -3,6 +3,20 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 9 Jul 2026 (later)
+**Adventures**
+- **No more stuck "error when claiming".** If a claim went through but the
+  response got lost (double-tap / flaky connection), every retry used to error
+  forever. It now recognises the rewards were already granted, clears the
+  adventure, and refreshes your champion — "All good!".
+**FAQ**
+- **Rewritten to actually answer the questions** — real numbers throughout:
+  20 PYR adopt (+ free starter pack), 3/8 PYR potions with exact effects, how
+  levelling & the 20 stages work, energy costs & the 10 PYR recharge, adventure
+  reward ranges, PYR wagers (95% to the winner), and how to earn chests.
+**New players**
+- Starter pack finalised: 10 potions per trait + **10** Evolution Potions.
+
 ## 9 Jul 2026
 **Wallet**
 - **WalletConnect rebuilt on the flow that already works in Vulcan Runner.** The
