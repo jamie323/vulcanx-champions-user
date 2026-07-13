@@ -14738,6 +14738,9 @@ async function loadMyChampions() {
     console.error('loadMyChampions failed', e);
     myChampions = [];
   }
+  // Auto-mint any paid-but-unminted adopt from a previous session (payment
+  // saved by confirmAdopt; backend verifies the tx on-chain, one mint per tx).
+  try { redeemPendingAdopt(); } catch (_) {}
   // Warm the chest-quest catalog cache so the quest-completion toast
   // (vxToastQuestCompletions) can show proper names instead of titleized
   // quest_ids. Fire-and-forget; the toast fall-back covers the cold case.
@@ -15512,13 +15515,32 @@ async function confirmAdopt() {
     // cleanup must never delete a paid champion (8 Jul incident).
     const adoptTx = await payTreasury(20, `adopt:${name}`);
     if (btn) btn.textContent = '🥚 Minting champion…';
-    const c = await addChampion({
+    // Persist the paid adopt BEFORE minting: if create fails after payment
+    // (mrMinimal, 8 Jul — paid 20 PYR, got nothing), the tx + choice survive
+    // and redeemPendingAdopt() auto-mints on retry/next visit. The backend
+    // verifies the tx on-chain and enforces one-mint-per-tx, so this is safe.
+    const adoptArgs = {
       species_id: adoptFlow.species_id,
       bloodline_id: adoptFlow.bloodline_id,
       name,
       adopt_tx_hash: (typeof adoptTx === 'string' && adoptTx.startsWith('0x')) ? adoptTx : undefined,
       adopt_paid_pyr: PYR_PAYMENTS_ENABLED ? 20 : undefined,
-    });
+    };
+    if (adoptArgs.adopt_tx_hash) {
+      try { localStorage.setItem('vx_pending_adopt', JSON.stringify(adoptArgs)); } catch (_) {}
+    }
+    let c;
+    try {
+      c = await addChampion(adoptArgs);
+    } catch (firstErr) {
+      // One immediate retry — transient network/server blips shouldn't cost
+      // a paid mint. Skip retry when the tx itself was rejected/duplicated.
+      const m = String(firstErr?.message || '');
+      if (/adopt_payment_invalid|adopt_tx_used/.test(m)) throw firstErr;
+      await new Promise(r => setTimeout(r, 1500));
+      c = await addChampion(adoptArgs);
+    }
+    try { localStorage.removeItem('vx_pending_adopt'); } catch (_) {}
     adoptFlow = { species_id: null, bloodline_id: null };
     // Play the egg-hatch cinematic — ~3s. Loads the champion view
     // underneath while the egg is on-screen so when the overlay fades
@@ -15526,8 +15548,43 @@ async function confirmAdopt() {
     await playEggHatchCinematic(name, () => { openChampion(c.id); });
   } catch (e) {
     const msg = (e && e.code === 4001) ? 'You rejected the wallet prompt.' : (e.message || String(e));
-    vxAlert(msg, {title: 'Adopt failed', icon: '🥚', variant: 'error'});
+    let pendingPaid = false;
+    try { pendingPaid = !!localStorage.getItem('vx_pending_adopt'); } catch (_) {}
+    if (pendingPaid) {
+      // Payment went through but the mint didn't — the tx + choice are saved
+      // and redeemPendingAdopt() will mint automatically. Don't let the keeper
+      // think their PYR vanished (mrMinimal, 8 Jul).
+      vxAlert('Your 20 PYR payment went through, but the mint hit a snag. Don\'t worry — your payment is saved and your champion will be minted automatically the next time the app loads (or tap Adopt again; you will NOT be charged twice).',
+        {title: '🥚 Payment safe — mint pending', icon: '🛡️'});
+    } else {
+      vxAlert(msg, {title: 'Adopt failed', icon: '🥚', variant: 'error'});
+    }
     if (btn) { btn.disabled = false; btn.textContent = '🥚 Adopt this Champion — 20 PYR'; }
+  }
+}
+
+// Redeem a paid-but-unminted adopt (saved by confirmAdopt before minting).
+// Backend verifies the tx on-chain + one-mint-per-tx, so retrying is safe and
+// free. Called at boot once the wallet/session is up.
+async function redeemPendingAdopt() {
+  let pending = null;
+  try { pending = JSON.parse(localStorage.getItem('vx_pending_adopt') || 'null'); } catch (_) {}
+  if (!pending || !pending.adopt_tx_hash || !getWallet()) return;
+  try {
+    const c = await addChampion(pending);
+    try { localStorage.removeItem('vx_pending_adopt'); } catch (_) {}
+    vxAlert(`${esc(pending.name || 'Your champion')} has been minted from your earlier payment — welcome to the stable!`,
+      { title: '🥚 Pending adoption redeemed', icon: '🎉', variant: 'success' });
+    if (typeof renderStable === 'function') renderStable();
+    return c;
+  } catch (e) {
+    const m = String(e?.message || '');
+    // Tx already redeemed (e.g. the original create DID land) → clear the record.
+    if (/adopt_tx_used/.test(m)) {
+      try { localStorage.removeItem('vx_pending_adopt'); } catch (_) {}
+      return;
+    }
+    console.warn('[adopt-redeem] retry failed, will try next boot:', m);
   }
 }
 

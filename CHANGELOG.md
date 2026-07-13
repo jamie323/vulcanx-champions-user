@@ -3,6 +3,17 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 13 Jul 2026
+**Adopt — your payment can never be lost again** 🛡️
+- Previously, if the mint failed *after* your 20 PYR payment went through, the
+  PYR was gone and no champion arrived (this happened to a real player — being
+  made whole). Now: the payment + your species/bloodline choice are **saved
+  before minting**, the mint **retries automatically**, and if it still fails
+  your champion is **minted automatically on your next visit** — one mint per
+  payment, verified on-chain, you can never be double-charged.
+- The server now **verifies adoption payments on-chain** (right amount, right
+  wallet, to the treasury, confirmed) before minting.
+
 ## 9 Jul 2026 (later)
 **Adventures**
 - **No more stuck "error when claiming".** If a claim went through but the
