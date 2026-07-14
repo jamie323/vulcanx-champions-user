@@ -3,6 +3,16 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 14 Jul 2026 (later 10)
+**Adventures** (thanks Coin1x1 — both fixed)
+- **Running adventures no longer vanish when you close the browser.** They were
+  only tracked on your device; now the server remembers them and they're
+  **automatically recovered** when you come back — any browser, any device.
+- **Difficulty is now visible.** Durations are labelled everywhere: **Quick ·
+  Easy** (green), **Standard · Medium** (gold), **Long · Hard** (red) — in the
+  send-adventure picker, on active adventure cards and in the rewards popup, so
+  you always know which quest was which.
+
 ## 14 Jul 2026 (later 9)
 **Equipment**
 - **Every champion now gets a free basic weapon of its species** — automatically

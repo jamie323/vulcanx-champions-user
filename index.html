@@ -7707,21 +7707,21 @@
       <button class="qsm-dur-btn" data-tier="quick">
         <span class="qd-emoji">⚡</span>
         <span class="qd-name">Quick</span>
-        <span class="qd-time">15 min</span>
+        <span class="qd-time">15 min · <b style="color:#7ed26b;">Easy</b></span>
         <span class="qd-reward" id="qsmRewardQuick">+1-3 / +1-3%</span>
         <span class="qd-energy" id="qsmEnergyQuick">10 ⚡</span>
       </button>
       <button class="qsm-dur-btn" data-tier="standard">
         <span class="qd-emoji">⏳</span>
         <span class="qd-name">Standard</span>
-        <span class="qd-time">1 hour</span>
+        <span class="qd-time">1 hour · <b style="color:#ffd98a;">Medium</b></span>
         <span class="qd-reward" id="qsmRewardStandard">+5-12 / +5-7%</span>
         <span class="qd-energy" id="qsmEnergyStandard">20 ⚡</span>
       </button>
       <button class="qsm-dur-btn" data-tier="long">
         <span class="qd-emoji">🌙</span>
         <span class="qd-name">Long</span>
-        <span class="qd-time">4 hours</span>
+        <span class="qd-time">4 hours · <b style="color:#ff8a7d;">Hard</b></span>
         <span class="qd-reward" id="qsmRewardLong">+15-30 / +10-15%</span>
         <span class="qd-energy" id="qsmEnergyLong">30 ⚡</span>
       </button>
@@ -11575,9 +11575,9 @@ const VxQuests = (() => {
   // (quick=10, standard=20, long=30). Keep in sync — it's shown on the
   // duration buttons + used to disable tiers the champion can't afford.
   const DURATIONS = {
-    quick:    { seconds: 15*60,   label:'Quick · 15 min',    emoji:'⚡', primary:[1,3],   bar:[1,3],   energy:10 },
-    standard: { seconds: 60*60,   label:'Standard · 1 hr',   emoji:'⏳', primary:[5,12],  bar:[5,7],   energy:20 },
-    long:     { seconds: 4*60*60, label:'Long · 4 hrs',      emoji:'🌙', primary:[15,30], bar:[10,15], energy:30 },
+    quick:    { seconds: 15*60,   label:'Quick · 15 min · Easy',    emoji:'⚡', difficulty:'Easy',   primary:[1,3],   bar:[1,3],   energy:10 },
+    standard: { seconds: 60*60,   label:'Standard · 1 hr · Medium', emoji:'⏳', difficulty:'Medium', primary:[5,12],  bar:[5,7],   energy:20 },
+    long:     { seconds: 4*60*60, label:'Long · 4 hrs · Hard',      emoji:'🌙', difficulty:'Hard',   primary:[15,30], bar:[10,15], energy:30 },
   };
 
   // QA feedback (Kueenie, 14 May 2026): "Adventures Lack Tension — currently
@@ -11709,6 +11709,41 @@ const VxQuests = (() => {
   let _tickInterval = null;
 
   function load() { try { return JSON.parse(localStorage.getItem(KEY)||'{}'); } catch (_) { return {}; } }
+
+  // Rebuild active adventures from the SERVER (champion_active_quests) — they
+  // were tracked only in localStorage, so closing the browser / clearing data /
+  // switching devices made running adventures vanish (Coin1x1, asked 3x).
+  // Server entries fill in champions with no local record; fresher local
+  // records are left alone.
+  async function hydrateFromServer() {
+    const wallet = typeof getWallet === 'function' ? getWallet() : null;
+    if (!wallet) return;
+    try {
+      const res = await apiFetch(`${FN_BASE}/champion_active_quests?wallet=${encodeURIComponent(wallet)}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const all = load();
+      let added = 0;
+      for (const q of (data.quests || [])) {
+        if (all[q.champion_id]) continue;   // local record exists — keep it
+        if (!q.ends_at || !q.adventure_id) continue;
+        all[q.champion_id] = {
+          eventId: q.event_id,
+          adventureId: q.adventure_id,
+          durationTier: q.duration_tier,
+          startedAt: q.started_at,
+          endsAt: q.ends_at,
+        };
+        added++;
+      }
+      if (added) {
+        save(all);
+        console.log(`[adventures] recovered ${added} running adventure(s) from the server`);
+        try { renderActive(); renderGrid(); } catch (_) {}
+        try { if (typeof render === 'function') render(); } catch (_) {}
+      }
+    } catch (e) { console.warn('[adventures] server hydrate failed:', e?.message); }
+  }
   function save(o) { try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (_) {} }
 
   function getActiveQuest(championId) {
@@ -12180,7 +12215,7 @@ const VxQuests = (() => {
     document.getElementById('questCompleteModal').classList.add('open');
   }
 
-  return { renderView, renderActive, claim, startQuest, ADVENTURES, DURATIONS, getActiveQuest };
+  return { renderView, renderActive, claim, startQuest, ADVENTURES, DURATIONS, getActiveQuest, hydrateFromServer };
 })();
 window.VxQuests = VxQuests;
 
@@ -14935,6 +14970,9 @@ async function loadMyChampions() {
   // Auto-mint any paid-but-unminted adopt from a previous session (payment
   // saved by confirmAdopt; backend verifies the tx on-chain, one mint per tx).
   try { redeemPendingAdopt(); } catch (_) {}
+  // Recover running adventures from the server (survives browser close /
+  // cleared storage / device switch — Coin1x1).
+  try { window.VxQuests?.hydrateFromServer?.(); } catch (_) {}
   // Warm the chest-quest catalog cache so the quest-completion toast
   // (vxToastQuestCompletions) can show proper names instead of titleized
   // quest_ids. Fire-and-forget; the toast fall-back covers the cold case.
