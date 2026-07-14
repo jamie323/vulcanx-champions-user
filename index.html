@@ -2630,6 +2630,10 @@
   .equip-slot:hover { border-color: var(--accent-dim); transform: translateY(-1px); }
   .equip-slot.filled { border-color: var(--rarity-color, var(--accent-dim)); }
   .equip-slot .es-icon { font-size: 22px; line-height: 1; opacity: 0.85; }
+  .es-icon .slot-icon-img, .epi-icon .slot-icon-img {
+    width: 30px; height: 30px; object-fit: contain; vertical-align: middle;
+    filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
+  }
   .equip-slot .es-label { font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase;
     color: var(--muted); margin-top: 4px; }
   .equip-slot .es-name { font-size: 11px; font-weight: 700; margin-top: 4px;
@@ -12804,6 +12808,12 @@ function getInventoryForSlot(slot) {
 }
 
 // Render the 5 slot pills under "Equipment" on the champion view.
+// Painted slot icon (14 Jul — replace slot emoji with painted art; emoji is
+// the onerror fallback). Used by the champion equip panel + the equip modal.
+function slotIconHtml(slot, slotDef) {
+  return `<img class="slot-icon-img" src="nft_images/icons/slot_${slot}.png" alt="${slotDef.label}" loading="lazy" onerror="this.outerHTML='${slotDef.icon}'"/>`;
+}
+
 function renderEquipSlots() {
   const root = document.getElementById('equipSlots');
   if (!root || !window.Equipment) return;
@@ -12827,7 +12837,7 @@ function renderEquipSlots() {
            title="${fullName.replace(/"/g, '&quot;')}"
            ${rarColor ? `style="--rarity-color:${rarColor};"` : ''}>
         ${filled ? `<div class="es-pwr">+${pwr}</div>` : ''}
-        <div class="es-icon">${slotDef.icon}</div>
+        <div class="es-icon">${slotIconHtml(slot, slotDef)}</div>
         <div class="es-label">${slotDef.label}</div>
         ${filled
           ? `<div class="es-name">${Equipment.itemDisplayName(inst).split(' ').slice(1).join(' ')}</div>`
@@ -12870,7 +12880,7 @@ function openEquipPicker(slot) {
         <div class="equip-picker-item ${isEquipped ? 'equipped' : ''}"
              data-inst-id="${inst.id}"
              style="--rarity-color:${rar.color};">
-          <div class="epi-icon">${slotDef.icon}</div>
+          <div class="epi-icon">${slotIconHtml(slot, slotDef)}</div>
           <div class="epi-info">
             <div class="epi-name">${Equipment.itemDisplayName(inst)}${isEquipped ? ' · equipped' : ''}</div>
             <div class="epi-desc">${cat.description}</div>
@@ -12986,7 +12996,7 @@ function showFullInventory() {
         <div class="equip-picker-item ${isEquipped ? 'equipped' : ''}"
              data-inst-id="${inst.id}" data-slot="${cat.slot}"
              style="--rarity-color:${rar.color}; ${!compatible ? 'opacity:0.4;' : ''}">
-          <div class="epi-icon">${slotDef.icon}</div>
+          <div class="epi-icon">${slotIconHtml(cat.slot, slotDef)}</div>
           <div class="epi-info">
             <div class="epi-name">${Equipment.itemDisplayName(inst)}${isEquipped ? ' · equipped' : (compatible ? '' : ' · wrong species')}</div>
             <div class="epi-desc">${cat.description}</div>

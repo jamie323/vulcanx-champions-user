@@ -3,6 +3,13 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 14 Jul 2026 (later 3)
+**Champion page**
+- **Equipment slots got painted icons too** — Weapon, Armor, Trinket, Boots and
+  Aura now show painted art (crossed blades, embossed breastplate, arcane ring,
+  adventurer boots, radiant sigil) instead of emoji, in the champion panel and
+  the equip picker.
+
 ## 14 Jul 2026 (later 2)
 **Adopt**
 - **The Choose-Your-Species screen got real artwork.** The eight generic emoji
