@@ -7666,7 +7666,7 @@
       <div class="quests-section-label"><img class="ui-ico sm" src="nft_images/icons/map.png" alt="" decoding="async" onerror="this.style.display='none'"/> Browse Adventures</div>
       <div class="quests-champ-picker" id="questsChampPicker">
         <span class="qcp-label">For champion:</span>
-        <select id="questsChampSelect" class="qcp-select"></select>
+        <div class="vx-dd" id="questsChampDD"></div>
       </div>
     </div>
 
@@ -7839,6 +7839,37 @@
     border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px;
     font-size: 13px; min-width: 200px;
   }
+  /* Custom game-styled champion dropdown (AweSumOne, 14 Jul: the native
+     select "doesn't feel right" next to the rest of the clickable UI). */
+  .vx-dd { position: relative; min-width: 240px; }
+  .vx-dd-btn {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    width: 100%; padding: 9px 12px; cursor: pointer;
+    background: linear-gradient(180deg, rgba(46,30,16,0.85), rgba(22,14,10,0.9));
+    border: 1px solid rgba(255,205,107,0.35); border-radius: 8px;
+    color: var(--text); font-size: 13px; font-weight: 700; text-align: left;
+    transition: border-color 0.15s;
+  }
+  .vx-dd-btn:hover { border-color: var(--accent); }
+  .vx-dd-btn .chev { color: var(--accent); font-size: 10px; transition: transform 0.2s; }
+  .vx-dd.open .vx-dd-btn .chev { transform: rotate(180deg); }
+  .vx-dd-list {
+    display: none; position: absolute; z-index: 300; top: calc(100% + 6px); left: 0; right: 0;
+    max-height: 280px; overflow-y: auto;
+    background: linear-gradient(180deg, rgba(34,22,14,0.98), rgba(18,12,8,0.98));
+    border: 1px solid rgba(255,205,107,0.4); border-radius: 10px;
+    box-shadow: 0 16px 44px rgba(0,0,0,0.65); padding: 4px;
+  }
+  .vx-dd.open .vx-dd-list { display: block; }
+  .vx-dd-opt {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 9px 10px; border-radius: 7px; cursor: pointer; font-size: 13px;
+    color: var(--text);
+  }
+  .vx-dd-opt:hover { background: rgba(255,205,107,0.12); }
+  .vx-dd-opt.selected { background: rgba(255,205,107,0.18); }
+  .vx-dd-opt .st { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .vx-dd-opt.busy { opacity: 0.55; }
 
   .quests-grid {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -11731,16 +11762,46 @@ const VxQuests = (() => {
     if (!document.querySelector('.view-quests')) return;
     pruneOrphanedQuests();   // clear adventures for champions that no longer exist
     // Champion picker
-    const sel = document.getElementById('questsChampSelect');
-    if (sel) {
+    const dd = document.getElementById('questsChampDD');
+    if (dd) {
       if (!_activeChampForBrowse || !myChampions.find(c => c.id === _activeChampForBrowse)) {
         _activeChampForBrowse = myChampions[0]?.id;
       }
-      // Annotate each champion with availability (⚡energy / on-adventure) and
-      // sort free-first so the keeper can see who can go without opening each
-      // champion (Bergz, 8 Jul). Cheapest adventure = 10 energy.
-      sel.innerHTML = championOptionsWithStatus(10, _activeChampForBrowse);
-      sel.onchange = () => { _activeChampForBrowse = sel.value; renderGrid(); updateEnergyChip(); };
+      // Game-styled dropdown (AweSumOne): availability-annotated, free-first
+      // (Bergz). Cheapest adventure = 10 energy.
+      const rows = myChampions
+        .map(c => ({ c, st: champAvailability(c, 10) }))
+        .sort((a, b) => {
+          const rank = s => s.available ? 0 : s.onQuest ? 2 : 1;
+          return rank(a.st) - rank(b.st);
+        });
+      const cur = rows.find(r => r.c.id === _activeChampForBrowse) || rows[0];
+      const optHtml = rows.map(({ c, st }) => `
+        <div class="vx-dd-opt ${c.id === _activeChampForBrowse ? 'selected' : ''} ${st.available ? '' : 'busy'}" data-id="${c.id}">
+          <span>${esc(c.name)} · L${c.level} · ${SPECIES[c.species_id]?.label || c.species_id}</span>
+          <span class="st">${st.tag}</span>
+        </div>`).join('');
+      dd.innerHTML = `
+        <button class="vx-dd-btn" type="button">
+          <span>${cur ? `${esc(cur.c.name)} · L${cur.c.level} · ${SPECIES[cur.c.species_id]?.label || cur.c.species_id}` : '— no champions —'}</span>
+          <span class="chev">▼</span>
+        </button>
+        <div class="vx-dd-list">${optHtml}</div>`;
+      const btn = dd.querySelector('.vx-dd-btn');
+      btn.onclick = (e) => { e.stopPropagation(); dd.classList.toggle('open'); };
+      dd.querySelectorAll('.vx-dd-opt').forEach(opt => {
+        opt.onclick = (e) => {
+          e.stopPropagation();
+          _activeChampForBrowse = opt.dataset.id;
+          dd.classList.remove('open');
+          renderView();   // re-render button label + selection
+          renderGrid(); updateEnergyChip();
+        };
+      });
+      if (!dd._outsideCloser) {
+        dd._outsideCloser = true;
+        document.addEventListener('click', () => dd.classList.remove('open'));
+      }
     }
     updateEnergyChip();
     // Defensive: renderActive can throw on legacy / malformed localStorage
@@ -13678,8 +13739,11 @@ function render() {
     // keepers were wasting potions feeding a capped-bar champion at a
     // gate level when the right next action is to click Evolve.
     const evoReady = canEvolve();
-    feedBtn.disabled = totalReady === 0 || evoReady;
+    // When out of potions the button stays CLICKABLE and opens the Shop —
+    // testers had no path from 'spent' to 'get more' (AweSumOne, 14 Jul).
+    feedBtn.disabled = evoReady;
     feedBtn.classList.toggle('locked-evolve', evoReady);
+    feedBtn.dataset.shopMode = (!evoReady && totalReady === 0) ? '1' : '';
     const nextEmoji = nextTrait ? (TRAIT_EMOJI[nextTrait] || '') : '';
     // When every trait is capped, point the keeper at a Blessing if they
     // have one (fills the bar 3-4× faster than a capped Minor) or at the
@@ -13688,7 +13752,7 @@ function render() {
     if (evoReady) {
       label = '⚡ Evolve first — bar full + at gate';
     } else if (totalReady === 0) {
-      label = 'No potions yet — open a chest';
+      label = '🛒 Out of potions — tap to shop';
     } else if (allCapped && state.inv.alloc > 0) {
       label = `${nextEmoji} next · try ✨×${state.inv.alloc} for faster bar`;
     } else if (allCapped) {
@@ -13727,6 +13791,11 @@ function bindIf(id, event, handler) {
 //      it still consumes the potion and fills the Evolution Bar.
 // Only alerts when the inventory is truly empty.
 bindIf('feedHero', 'click', () => {
+  // Out of potions → the button becomes the path to the Shop (AweSumOne).
+  if (document.getElementById('feedHero')?.dataset.shopMode === '1') {
+    openShop();
+    return;
+  }
   // Trello (29 Apr): "Disable feeding and potion actions after champion
   // reaches max form" — at stage 19 (Legendary, L50) progression is
   // complete; feeding/blessing/potions shouldn't be clickable.

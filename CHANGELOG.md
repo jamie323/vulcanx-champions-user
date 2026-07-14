@@ -3,6 +3,17 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 14 Jul 2026 (later 5)
+**Adventures**
+- **The champion picker is now a proper game dropdown** — styled like the rest
+  of the UI instead of a plain browser select, with each champion's status
+  (⚡energy / on adventure / too tired) shown in the list and free champions
+  sorted first (thanks AweSumOne).
+**Champion page**
+- **Out of potions? The Feed button now takes you to the Shop.** When your
+  potions hit zero it says "🛒 Out of potions — tap to shop" and opens the Shop
+  instead of just going grey (thanks AweSumOne).
+
 ## 14 Jul 2026 (later 4)
 **Equipment**
 - **Starter weapons now match your champion's species.** If your first champion
