@@ -3,6 +3,12 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 14 Jul 2026 (later 7)
+**Shop**
+- **New "Only my species" filter on the Equipment tab** — tick it to hide
+  species-locked gear none of your champions can wear (universal items always
+  show). Your choice is remembered (thanks AweSumOne).
+
 ## 14 Jul 2026 (later 6)
 **Equipment screen — now answers its own questions** (thanks AweSumOne)
 - Renamed **Inventory → Equipment** (button + screen) and the header now lists

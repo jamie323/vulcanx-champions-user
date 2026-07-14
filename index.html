@@ -1036,7 +1036,14 @@
     .shop-item .si-nft-chip { font-size: 7px; padding: 2px 5px; top: 4px; left: 4px; }
 
     /* Shop tabs: ensure all 4 fit on a 360px phone */
-    .shop-tabs { padding: 3px; gap: 2px; }
+    .shop-species-flt {
+    display: inline-flex; align-items: center; gap: 6px; margin-left: auto;
+    padding: 6px 10px; font-size: 11px; color: var(--muted); cursor: pointer;
+    letter-spacing: 0.5px; white-space: nowrap; user-select: none;
+  }
+  .shop-species-flt input { accent-color: var(--accent); cursor: pointer; }
+  .shop-species-flt:hover { color: var(--text); }
+  .shop-tabs { padding: 3px; gap: 2px; }
     .shop-tab  { padding: 7px 2px; font-size: 10px; letter-spacing: 0; }
     .shop-tab .tab-emoji { display: none; }   /* save horizontal room */
 
@@ -5106,6 +5113,13 @@
   .shop-item.tier-epic .si-name { color: #ff9a5a; }
 
   /* ── Shop tabs (potions / equipment / champions / limited) ── */
+  .shop-species-flt {
+    display: inline-flex; align-items: center; gap: 6px; margin-left: auto;
+    padding: 6px 10px; font-size: 11px; color: var(--muted); cursor: pointer;
+    letter-spacing: 0.5px; white-space: nowrap; user-select: none;
+  }
+  .shop-species-flt input { accent-color: var(--accent); cursor: pointer; }
+  .shop-species-flt:hover { color: var(--text); }
   .shop-tabs {
     display: flex; gap: 4px; margin-top: 14px;
     padding: 4px; background: rgba(0,0,0,0.35);
@@ -6562,6 +6576,9 @@
         <button class="shop-tab active" data-tab="potions">🧪 Potions</button>
         <button class="shop-tab" data-tab="equipment">⚔️ Equipment</button>
         <button class="shop-tab" data-tab="limited_potion">✨ Limited Drops</button>
+        <label class="shop-species-flt" id="shopSpeciesFilter" style="display:none;" title="Hide species-locked gear none of your champions can wear">
+          <input type="checkbox" id="shopSpeciesFilterCb" onchange="shopOnlyMySpecies=this.checked; try{localStorage.setItem('vx_shop_myspecies', this.checked?'1':'');}catch(_){}; renderShop();"/> Only my species
+        </label>
       </div>
     </div>
 
@@ -19511,6 +19528,9 @@ const SHOP_CART_KEY = 'vx_shop_cart_v1';
 // Active shop tab — 'potions' (legacy SHOP_ITEMS) | 'equipment' |
 // 'champion' | 'limited_potion' (latter three from nft_supply_get).
 let shopActiveTab = 'potions';
+// "Only my species" equipment filter — persisted (AweSumOne, 14 Jul).
+let shopOnlyMySpecies = false;
+try { shopOnlyMySpecies = localStorage.getItem('vx_shop_myspecies') === '1'; } catch (_) {}
 
 // In-memory cache of the NFT supply state, refreshed on shop open.
 // Shape mirrors the edge fn's response: { items: [{ sku_id, category,
@@ -19646,6 +19666,8 @@ function shopTooltipFor(it) {
 
 function renderShop() {
   const grid = document.getElementById('shopGrid');
+  const cb = document.getElementById('shopSpeciesFilterCb');
+  if (cb) cb.checked = shopOnlyMySpecies;
   if (shopActiveTab === 'potions') {
     grid.innerHTML = SHOP_ITEMS.map(_renderPotionTile).join('');
     renderCart();
@@ -19653,7 +19675,23 @@ function renderShop() {
   }
   // NFT tab — needs the supply data loaded
   const supply = nftSupplyCache?.items || [];
-  const items  = supply.filter(s => s.category === shopActiveTab);
+  let items  = supply.filter(s => s.category === shopActiveTab);
+  // "Only my species" filter (AweSumOne, 14 Jul): hide species-locked gear
+  // none of your champions can wear. Universal items always show.
+  const fltEl = document.getElementById('shopSpeciesFilter');
+  if (fltEl) fltEl.style.display = (shopActiveTab === 'equipment') ? '' : 'none';
+  if (shopOnlyMySpecies && shopActiveTab === 'equipment') {
+    const owned = new Set(myChampions.map(c => c.species_id));
+    items = items.filter(s => {
+      const sp = s.species || s.metadata?.species_lock || null;
+      return !sp || owned.has(sp);
+    });
+    if (!items.length) {
+      grid.innerHTML = `<div style="grid-column:1/-1;padding:30px;text-align:center;color:var(--muted);">No equipment for your species in this tab — untick "Only my species" to browse everything.</div>`;
+      renderCart();
+      return;
+    }
+  }
   if (!supply.length) {
     grid.innerHTML = `<div style="grid-column:1/-1;padding:30px;text-align:center;color:var(--muted);">Loading NFT inventory…</div>`;
     renderCart();
