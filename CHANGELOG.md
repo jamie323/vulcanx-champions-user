@@ -3,6 +3,18 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 14 Jul 2026
+**Shop — weapon & equipment purchases FIXED** ⚔️
+- Buying weapons/equipment **always failed** with a database error (a bug in the
+  purchase function — it had literally never worked). Fixed and verified with a
+  real end-to-end purchase: payment → queued for NFT delivery → stock counts
+  down. If you paid for a weapon before this and got an error, ping us with
+  your tx hash and we'll make it right.
+**Leaderboard**
+- **One entry per player** — the board now shows each wallet's **best champion**
+  only, instead of one row per champion (thanks Day Devil). Applies to both
+  all-time and weekly boards, live now.
+
 ## 13 Jul 2026
 **Adopt — your payment can never be lost again** 🛡️
 - Previously, if the mint failed *after* your 20 PYR payment went through, the
