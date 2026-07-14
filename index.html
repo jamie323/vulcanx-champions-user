@@ -5052,6 +5052,19 @@
     letter-spacing: 1px; text-transform: uppercase;
     margin-bottom: 6px;
   }
+  /* Species/faction lock badge on equipment tiles — testers couldn't tell
+     which race an item belonged to (AngelHorn, 14 Jul). */
+  .shop-item .si-species {
+    display: inline-block; font-size: 9px; font-weight: 800;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 9px; margin-bottom: 6px;
+    background: rgba(255,205,107,0.12); border: 1px solid rgba(255,205,107,0.35);
+    color: #ffd98a;
+  }
+  .shop-item .si-species.any {
+    background: rgba(140,200,255,0.10); border-color: rgba(140,200,255,0.3);
+    color: #a8d4ff;
+  }
   .shop-item .si-price {
     font-size: 12px; font-weight: 800;
     color: var(--accent);
@@ -19581,9 +19594,18 @@ function _renderNftTile(row) {
   const soldOut = row.sold_out || remaining <= 0;
   const rarityCls = row.rarity ? `rarity-${row.rarity.toLowerCase()}` : '';
 
+  // Species/faction lock — testers couldn't tell which race an item was for
+  // (AngelHorn, 14 Jul). Equipment is species-locked via row.species; items
+  // with no species (limited potions etc.) work for any champion.
+  const spKey = row.species || row.metadata?.species_lock || null;
+  const spLabel = spKey ? (SPECIES[spKey]?.label || spKey) : null;
+  const spEmoji = spKey ? (_SPECIES_EMOJI[spKey] || '') : '';
+  const speciesLine = spLabel ? `${spLabel} only` : 'Any species';
+
   // Tooltip aggregates the gameplay description + supply state
   const tip = [
     row.title,
+    spLabel ? `⚔️ Equippable by ${spLabel} champions ONLY` : '✨ Usable by any species',
     row.mechanic || '',
     `Supply: ${remaining.toLocaleString()} of ${total.toLocaleString()} remaining`,
     `Price: ${row.pyr_price} PYR`,
@@ -19607,6 +19629,7 @@ function _renderNftTile(row) {
       ${img}
       <div class="si-name">${esc(row.title)}</div>
       <div class="si-tier">${esc(row.rarity || row.metadata?.tier || row.category.replace('_',' '))}</div>
+      <div class="si-species ${spLabel ? '' : 'any'}">${spEmoji} ${esc(speciesLine)}</div>
       <div class="si-price">${row.pyr_price} <img class="ui-ico sm" src="nft_images/icons/pyr_coin.png" alt="PYR" onerror="this.style.display='none'"/> PYR</div>
       <div class="si-supply ${supplyClass}">
         ${soldOut ? 'Sold out' : `<b>${remaining.toLocaleString()}</b> / ${total.toLocaleString()} left`}

@@ -3,6 +3,13 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 14 Jul 2026 (later)
+**Shop**
+- **Every item now shows who can use it.** Equipment tiles have a clear badge —
+  e.g. **🟢 Orc only**, **🐉 Drakkin only** — and universal items say
+  **✨ Any species**. The tooltip spells it out too ("Equippable by Drakkin
+  champions ONLY"), so no more guessing which race an item belongs to.
+
 ## 14 Jul 2026
 **Shop — weapon & equipment purchases FIXED** ⚔️
 - Buying weapons/equipment **always failed** with a database error (a bug in the
