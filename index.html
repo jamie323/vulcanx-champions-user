@@ -1385,6 +1385,14 @@
   .species-card:hover { transform: translateY(-4px);
     border-color: var(--accent); }
   .species-card .species-emoji { font-size: 48px; margin-bottom: 10px; }
+  /* Painted species emblems (14 Jul — replace the "boring, generic" emoji with
+     WoW-style painted icons; emoji stays as the onerror fallback). */
+  .species-card .species-icon-img {
+    width: 96px; height: 96px; object-fit: contain;
+    filter: drop-shadow(0 6px 14px rgba(0,0,0,0.55));
+    transition: transform 0.2s;
+  }
+  .species-card:hover .species-icon-img { transform: scale(1.08); }
   .species-card h3 { margin: 0; font-size: 20px; letter-spacing: 0.3px; }
   .species-card .arch { color: var(--accent); font-size: 11px;
     letter-spacing: 1.5px; text-transform: uppercase; margin: 6px 0; font-weight: 700; }
@@ -15240,7 +15248,7 @@ function renderSpeciesPicker() {
     return `
       <div class="species-card ${lockedClass}" ${onclick}>
         ${overlay}
-        <div class="species-emoji">${sp.emoji || '⭐'}</div>
+        <div class="species-emoji"><img class="species-icon-img" src="nft_images/icons/species_${id}.png" alt="${esc(sp.label)}" loading="lazy" onerror="this.outerHTML='${sp.emoji || '⭐'}'"/></div>
         <h3>${sp.label}</h3>
         <div class="arch">${sp.archetype}</div>
         <div class="primary-traits">${Object.keys(sp.bloodlines).length} bloodlines</div>

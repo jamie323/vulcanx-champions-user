@@ -3,6 +3,14 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 14 Jul 2026 (later 2)
+**Adopt**
+- **The Choose-Your-Species screen got real artwork.** The eight generic emoji
+  are replaced with **hand-painted fantasy emblems** — a war-scarred orc
+  chieftain, moonlit elf, hooded goblin rogue, blazing flame paladin, drakkin
+  dragon, rune-forged dwarf, feral beastkin and a star-crowned spirit-warrior —
+  in the same painted style as the rest of the game's art.
+
 ## 14 Jul 2026 (later)
 **Shop**
 - **Every item now shows who can use it.** Equipment tiles have a clear badge —
