@@ -7087,7 +7087,7 @@
 
       <div class="howto-tip">
         <span class="ti">🎒</span>
-        <div><b>Starter set:</b> on first boot you get 9 mock items (3 weapons matching your species, 2 armor, 2 trinkets, boots, aura). Real NFT-backed equipment + chest drops from the Vulcan Forged ecosystem launch in production.</div>
+        <div><b>Starter set:</b> on first boot you get 9 free items (3 weapons matching your first champion's species, 2 armor, 2 trinkets, boots, aura) — and <b>every champion automatically receives a free basic weapon of its own species</b> the first time you open it. Stronger NFT gear is in the Shop.</div>
       </div>
     </section>
 
@@ -12861,7 +12861,23 @@ function autoEquipDefaultsForChampion(champ) {
     const cat = Equipment.CATALOG[inst.catalogId];
     return cat?.slot === 'weapon' && cat?.species === sp && inst.equippedOn == null;
   });
-  if (weaponsForSp.length === 0) return;
+  if (weaponsForSp.length === 0) {
+    // No weapon this species can use → CREATE the free basic lore weapon and
+    // equip it (Bergz, 14 Jul: "I was supposed to get a basic one for each
+    // champ" — previously the starter set only covered the FIRST champion's
+    // species, so every other species' champions could never get a weapon).
+    const createId = preferredId
+      || Object.entries(Equipment.CATALOG).find(([_, c]) => c.slot === 'weapon' && c.species === sp)?.[0];
+    if (!createId) return;
+    const inst = {
+      id: 'inv_' + Math.random().toString(36).slice(2, 10),
+      catalogId: createId, rarity: 'common', equippedOn: champ.id,
+    };
+    myInventory.push(inst);
+    persistInventory();
+    console.log('[equip] granted + equipped free basic lore weapon', createId, '→', champ.id);
+    return;
+  }
   let pick = weaponsForSp.find(inst => inst.catalogId === preferredId);
   if (!pick) {
     pick = weaponsForSp.sort((a, b) =>

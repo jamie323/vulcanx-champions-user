@@ -3,6 +3,14 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 14 Jul 2026 (later 9)
+**Equipment**
+- **Every champion now gets a free basic weapon of its species** — automatically
+  created and equipped the first time you open that champion. Previously only
+  your first champion's species got starter weapons, so champions of other
+  species could never equip anything (thanks Bergz). Open each champion once
+  and they'll be armed.
+
 ## 14 Jul 2026 (later 8)
 **Champion page**
 - **Switch champions right from the dashboard.** The champion page (stats,
