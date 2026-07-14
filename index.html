@@ -12727,7 +12727,11 @@ const SPECIES_DEFAULT_WEAPON = {
 // move. Idempotent: if there's already inventory, no-op.
 function grantStarterInventoryIfEmpty() {
   if (myInventory.length > 0) return;
-  const sp = currentSpecies || 'orc';
+  // Use the player's ACTUAL first champion's species — not currentSpecies,
+  // which still holds its 'orc' default at boot (this ran before any champion
+  // was opened, so every non-orc first adopter got 3 unusable orc weapons —
+  // Coin1x1, 14 Jul).
+  const sp = myChampions[0]?.species_id || currentSpecies || 'orc';
   // Find the species' three weapons in the catalog
   const weapons = Object.entries(Equipment.CATALOG)
     .filter(([_, c]) => c.slot === 'weapon' && c.species === sp)
@@ -12749,6 +12753,35 @@ function grantStarterInventoryIfEmpty() {
     ...s,
   }));
   persistInventory();
+}
+
+// Self-heal for players who already got the wrong starter weapons (the grant
+// above used to run with the 'orc' default before any champion loaded —
+// Coin1x1, 14 Jul, got 3 weapons his species can't equip). Any UNEQUIPPED
+// starter-granted weapon ('inv_' prefix — never NFT purchases, which are
+// 'nft_') whose species matches NONE of the player's champions is swapped for
+// the same-slot weapon of the first champion's species, same rarity. Idempotent.
+function fixOrphanStarterWeapons() {
+  if (!window.Equipment || !myChampions.length || !myInventory.length) return;
+  const owned = new Set(myChampions.map(c => c.species_id));
+  const targetSp = myChampions[0]?.species_id;
+  if (!targetSp) return;
+  const targetWeapons = Object.entries(Equipment.CATALOG)
+    .filter(([_, c]) => c.slot === 'weapon' && c.species === targetSp)
+    .map(([id]) => id);
+  if (!targetWeapons.length) return;
+  let swapped = 0;
+  for (const inst of myInventory) {
+    if (!String(inst.id).startsWith('inv_') || inst.equippedOn) continue;
+    const cat = Equipment.CATALOG[inst.catalogId];
+    if (!cat || cat.slot !== 'weapon' || owned.has(cat.species)) continue;
+    inst.catalogId = targetWeapons[swapped % targetWeapons.length];
+    swapped++;
+  }
+  if (swapped) {
+    persistInventory();
+    console.log(`[inventory] swapped ${swapped} orphan starter weapon(s) to ${targetSp}`);
+  }
 }
 
 // Auto-equip the species' canonical lore weapon onto the given champion
@@ -18559,6 +18592,7 @@ async function boot() {
     if (window.Equipment) {
       loadInventory();
       grantStarterInventoryIfEmpty();
+      fixOrphanStarterWeapons();   // swap species-mismatched starter weapons (Coin1x1)
     }
 
     if (window.VxDaily) {

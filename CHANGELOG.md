@@ -3,6 +3,15 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 14 Jul 2026 (later 4)
+**Equipment**
+- **Starter weapons now match your champion's species.** If your first champion
+  wasn't an Orc, your free starter set still contained 3 Orc weapons you could
+  never equip (thanks Coin1x1). Fixed — and if you already have the wrong ones,
+  they're **automatically swapped** for your species' weapons (same rarities)
+  the next time the app loads. Equipped items and purchased NFTs are never
+  touched.
+
 ## 14 Jul 2026 (later 3)
 **Champion page**
 - **Equipment slots got painted icons too** — Weapon, Armor, Trinket, Boots and
