@@ -637,7 +637,13 @@
     overlay.id = 'vx-wc-qr-overlay';
     overlay.style.cssText = 'position:fixed;inset:0;z-index:20000;background:rgba(10,6,2,0.88);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);';
     const qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=' + encodeURIComponent(uri) + '&bgcolor=ffffff&color=000000&qzone=1';
-    const deepLink = String(uri).startsWith('wc:') ? ('https://metamask.app.link/wc?uri=' + encodeURIComponent(uri)) : uri;
+    // DIRECT app scheme, not the metamask.app.link universal link — the
+    // universal (Branch) link was falling back to the APP STORE on phones with
+    // MetaMask installed (Ric, 14 Jul). metamask:// launches the installed app
+    // straight away; the raw wc: link below lets the OS open ANY wallet.
+    const isWc = String(uri).startsWith('wc:');
+    const mmDeepLink = isWc ? ('metamask://wc?uri=' + encodeURIComponent(uri)) : uri;
+    const anyWalletLink = isWc ? uri : null;
     overlay.innerHTML = `
       <div style="width:min(360px,92vw);padding:24px;border-radius:14px;background:linear-gradient(180deg,rgba(46,30,16,0.97),rgba(22,14,10,0.97));border:2px solid rgba(255,205,107,0.5);box-shadow:0 24px 80px rgba(0,0,0,0.6);color:#ffeccd;text-align:center;font-family:inherit;">
         <div style="font-size:15px;letter-spacing:3px;color:#ffcd6b;margin-bottom:8px;font-weight:800;">CONNECT VIA WALLETCONNECT</div>
@@ -645,8 +651,10 @@
         <div style="background:#fff;padding:12px;border-radius:10px;display:inline-block;margin-bottom:14px;">
           <img src="${qrSrc}" alt="WalletConnect QR" style="display:block;width:260px;height:260px;max-width:70vw;max-height:70vw;" />
         </div>
-        <a href="${deepLink}" target="_blank" rel="noopener noreferrer"
+        <a href="${mmDeepLink}"
            style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px;margin-bottom:8px;border-radius:8px;background:linear-gradient(135deg,#3b99fc,#1e5ca8);color:#fff;font-weight:800;letter-spacing:1px;text-decoration:none;font-size:13px;">🦊 OPEN IN METAMASK APP</a>
+        ${anyWalletLink ? `<a href="${anyWalletLink}"
+           style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px;margin-bottom:8px;border-radius:8px;background:rgba(255,205,107,0.12);border:1px solid rgba(255,205,107,0.35);color:#ffd98a;font-weight:700;letter-spacing:1px;text-decoration:none;font-size:12px;">👛 OPEN IN ANOTHER WALLET</a>` : ''}
         <button id="vx-wc-copy" style="width:100%;padding:9px;font-size:11px;letter-spacing:1.5px;margin-bottom:6px;background:none;border:1px solid rgba(255,205,107,0.35);border-radius:8px;color:#ffeccd;cursor:pointer;">📋 COPY PAIRING LINK</button>
         <button id="vx-wc-cancel" style="width:100%;padding:9px;font-size:11px;letter-spacing:2px;opacity:0.7;background:none;border:1px solid rgba(255,205,107,0.25);border-radius:8px;color:#ffeccd;cursor:pointer;">CANCEL</button>
       </div>`;

@@ -3,6 +3,14 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 14 Jul 2026 (later 11)
+**Wallet — mobile**
+- **"Open in MetaMask" now opens the app, not the App Store.** The button used
+  MetaMask's web link, which on phones was bouncing to the App Store even with
+  MetaMask installed (thanks Ric). It now launches the installed app directly —
+  and there's a new **"Open in another wallet"** button that hands the
+  connection to any WalletConnect-compatible wallet on your phone.
+
 ## 14 Jul 2026 (later 10)
 **Adventures** (thanks Coin1x1 — both fixed)
 - **Running adventures no longer vanish when you close the browser.** They were
