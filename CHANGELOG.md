@@ -3,6 +3,13 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 14 Jul 2026 (later 8)
+**Champion page**
+- **Switch champions right from the dashboard.** The champion page (stats,
+  equipment, feeding) now has the same styled champion dropdown as Adventures —
+  no more round-trip through the Stable to jump between champions. Shows each
+  champion's status; appears once you own 2+ (thanks AweSumOne).
+
 ## 14 Jul 2026 (later 7)
 **Shop**
 - **New "Only my species" filter on the Equipment tab** — tick it to hide

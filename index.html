@@ -7860,6 +7860,8 @@
   /* Custom game-styled champion dropdown (AweSumOne, 14 Jul: the native
      select "doesn't feel right" next to the rest of the clickable UI). */
   .vx-dd { position: relative; min-width: 240px; }
+  .cc-champ-dd { margin-bottom: 10px; }
+  .cc-champ-dd .vx-dd-btn { font-size: 12px; padding: 7px 10px; }
   .vx-dd-btn {
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
     width: 100%; padding: 9px 12px; cursor: pointer;
@@ -8826,6 +8828,7 @@
         <img id="ccImg" src="" alt="champion" />
         <div class="cc-aura" id="ccAura"></div>
       </div>
+      <div class="cc-champ-dd" id="ccChampDD" style="display:none;"></div>
       <div class="cc-name" id="ccName">—</div>
       <div class="cc-id">
         <span id="ccSpeciesEmoji">🟢</span>
@@ -11785,41 +11788,13 @@ const VxQuests = (() => {
       if (!_activeChampForBrowse || !myChampions.find(c => c.id === _activeChampForBrowse)) {
         _activeChampForBrowse = myChampions[0]?.id;
       }
-      // Game-styled dropdown (AweSumOne): availability-annotated, free-first
-      // (Bergz). Cheapest adventure = 10 energy.
-      const rows = myChampions
-        .map(c => ({ c, st: champAvailability(c, 10) }))
-        .sort((a, b) => {
-          const rank = s => s.available ? 0 : s.onQuest ? 2 : 1;
-          return rank(a.st) - rank(b.st);
-        });
-      const cur = rows.find(r => r.c.id === _activeChampForBrowse) || rows[0];
-      const optHtml = rows.map(({ c, st }) => `
-        <div class="vx-dd-opt ${c.id === _activeChampForBrowse ? 'selected' : ''} ${st.available ? '' : 'busy'}" data-id="${c.id}">
-          <span>${esc(c.name)} · L${c.level} · ${SPECIES[c.species_id]?.label || c.species_id}</span>
-          <span class="st">${st.tag}</span>
-        </div>`).join('');
-      dd.innerHTML = `
-        <button class="vx-dd-btn" type="button">
-          <span>${cur ? `${esc(cur.c.name)} · L${cur.c.level} · ${SPECIES[cur.c.species_id]?.label || cur.c.species_id}` : '— no champions —'}</span>
-          <span class="chev">▼</span>
-        </button>
-        <div class="vx-dd-list">${optHtml}</div>`;
-      const btn = dd.querySelector('.vx-dd-btn');
-      btn.onclick = (e) => { e.stopPropagation(); dd.classList.toggle('open'); };
-      dd.querySelectorAll('.vx-dd-opt').forEach(opt => {
-        opt.onclick = (e) => {
-          e.stopPropagation();
-          _activeChampForBrowse = opt.dataset.id;
-          dd.classList.remove('open');
-          renderView();   // re-render button label + selection
-          renderGrid(); updateEnergyChip();
-        };
+      // Shared game-styled dropdown (AweSumOne) — availability-annotated,
+      // free-first (Bergz). Cheapest adventure = 10 energy.
+      vxChampionDropdown(dd, {
+        selectedId: _activeChampForBrowse,
+        minEnergy: 10,
+        onPick: (id) => { _activeChampForBrowse = id; renderView(); renderGrid(); updateEnergyChip(); },
       });
-      if (!dd._outsideCloser) {
-        dd._outsideCloser = true;
-        document.addEventListener('click', () => dd.classList.remove('open'));
-      }
     }
     updateEnergyChip();
     // Defensive: renderActive can throw on legacy / malformed localStorage
@@ -14219,6 +14194,46 @@ function championOptionsWithStatus(minEnergy, selectedId) {
     .join('');
 }
 
+// Shared game-styled champion dropdown (.vx-dd) — used by the Adventures
+// picker and the champion dashboard (AweSumOne, 14 Jul). Renders into
+// `container`; calls onPick(championId) when a champion is chosen.
+function vxChampionDropdown(container, { selectedId, minEnergy = 10, onPick }) {
+  if (!container) return;
+  const rows = myChampions
+    .map(c => ({ c, st: champAvailability(c, minEnergy) }))
+    .sort((a, b) => {
+      const rank = s => s.available ? 0 : s.onQuest ? 2 : 1;
+      return rank(a.st) - rank(b.st);
+    });
+  const cur = rows.find(r => r.c.id === selectedId) || rows[0];
+  const title = (r) => `${esc(r.c.name)} · L${r.c.level} · ${SPECIES[r.c.species_id]?.label || r.c.species_id}`;
+  container.classList.add('vx-dd');
+  container.innerHTML = `
+    <button class="vx-dd-btn" type="button">
+      <span>${cur ? title(cur) : '— no champions —'}</span>
+      <span class="chev">▼</span>
+    </button>
+    <div class="vx-dd-list">${rows.map(r => `
+      <div class="vx-dd-opt ${r.c.id === selectedId ? 'selected' : ''} ${r.st.available ? '' : 'busy'}" data-id="${r.c.id}">
+        <span>${title(r)}</span>
+        <span class="st">${r.st.tag}</span>
+      </div>`).join('')}</div>`;
+  container.querySelector('.vx-dd-btn').onclick = (e) => {
+    e.stopPropagation(); container.classList.toggle('open');
+  };
+  container.querySelectorAll('.vx-dd-opt').forEach(opt => {
+    opt.onclick = (e) => {
+      e.stopPropagation();
+      container.classList.remove('open');
+      if (opt.dataset.id !== selectedId) onPick(opt.dataset.id);
+    };
+  });
+  if (!container._outsideCloser) {
+    container._outsideCloser = true;
+    document.addEventListener('click', () => container.classList.remove('open'));
+  }
+}
+
 // QA (11 May, sognoDomhan): defense-in-depth XSS escape for any
 // user-controlled string about to be inserted into innerHTML. Backend
 // sanitizeChampionName() rejects bad input on save, but we also escape
@@ -15096,6 +15111,21 @@ async function renderChampionCard(payload) {
   set('ccStage', stage?.name || `Stage ${champ.stage_idx+1}`);
   set('ccLevel', String(champ.level).padStart(2, '0'));
   set('ccName', champ.name || bl.heroName || 'Nameless');
+  // Champion switcher on the dashboard (AweSumOne, 14 Jul): same dropdown as
+  // Adventures/Arena, shown when the keeper has 2+ champions.
+  const ccDD = document.getElementById('ccChampDD');
+  if (ccDD) {
+    if (myChampions.length > 1) {
+      ccDD.style.display = '';
+      vxChampionDropdown(ccDD, {
+        selectedId: champ.id,
+        minEnergy: 10,
+        onPick: (id) => openChampion(id),
+      });
+    } else {
+      ccDD.style.display = 'none';
+    }
+  }
   set('ccSpeciesEmoji', sp.emoji || '⭐');
   set('ccSpeciesName', sp.label || champ.species_id);
   set('ccBloodlineName', bl.label || champ.bloodline_id);
