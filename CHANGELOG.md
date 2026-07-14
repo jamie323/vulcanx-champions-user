@@ -3,6 +3,17 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 14 Jul 2026 (later 6)
+**Equipment screen — now answers its own questions** (thanks AweSumOne)
+- Renamed **Inventory → Equipment** (button + screen) and the header now lists
+  the **five gear slots** (Weapon · Armor · Trinket · Boots · Aura).
+- Every item shows **where it came from** — 🎁 Free starter gear or 🛒 Shop
+  purchase (NFT) — and its slot.
+- Every equipped item shows **which champion is wearing it** ("equipped on
+  Vesper the Whelp"), not just a vague equipped state.
+- **"+N power" is explained** in the header and on hover: it's the item's boost
+  to a champion's Power Score while equipped.
+
 ## 14 Jul 2026 (later 5)
 **Adventures**
 - **The champion picker is now a proper game dropdown** — styled like the rest

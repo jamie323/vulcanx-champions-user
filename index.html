@@ -2665,6 +2665,7 @@
   .epi-icon { font-size: 24px; align-self: center; text-align: center; }
   .epi-info { min-width: 0; }
   .epi-name { font-weight: 700; color: var(--rarity-color, var(--text)); font-size: 14px; }
+  .epi-src { font-size: 10px; color: var(--muted); margin-top: 3px; letter-spacing: 0.4px; }
   .epi-desc { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
   .epi-pwr { align-self: center; text-align: right;
     font-size: 13px; font-weight: 700; color: var(--accent); }
@@ -7064,7 +7065,7 @@
         <li><b>Open your champion view.</b> Find the <b>Equipment</b> card in the left column with 5 slot squares.</li>
         <li><b>Click any slot.</b> A picker modal opens showing only items that fit (species-locked weapons; cross-species for the rest).</li>
         <li><b>Tap an item to equip.</b> Power Score updates immediately. The slot border tints to its rarity color, with a +N power chip showing the gear's contribution.</li>
-        <li><b>"View Inventory"</b> below the slots opens your full owned set — sortable by rarity, grouped by slot.</li>
+        <li><b>"View Equipment"</b> below the slots opens your full owned set — equipped items first, then by rarity. Each item shows where it came from and which champion wears it.</li>
       </ol>
 
       <div class="howto-tip">
@@ -8896,7 +8897,7 @@
     <div class="cc-card cc-equip-card">
       <div class="cc-card-title">Equipment</div>
       <div class="equip-slots cc-equip-slots" id="equipSlots"></div>
-      <button class="inv-btn cc-inv-btn" id="inventoryBtn">View Inventory</button>
+      <button class="inv-btn cc-inv-btn" id="inventoryBtn">View Equipment</button>
     </div>
 
     <div class="cc-card cc-level-card">
@@ -13063,12 +13064,15 @@ function showFullInventory() {
   // showing items across all slots; click still equips to that slot.
   _activePickerSlot = null;
   const list = document.getElementById('equipPickerList');
-  document.getElementById('equipPickerTitle').textContent = 'Inventory';
-  document.getElementById('equipPickerSub').textContent =
-    `${myInventory.length} item${myInventory.length === 1 ? '' : 's'} owned. Click to equip.`;
+  document.getElementById('equipPickerTitle').textContent = 'Equipment';
+  document.getElementById('equipPickerSub').innerHTML =
+    `Five gear slots: <b>Weapon · Armor · Trinket · Boots · Aura</b> — `
+    + `${myInventory.length} item${myInventory.length === 1 ? '' : 's'} owned. `
+    + `Click to equip to the current champion. <b>+N power</b> = the item's boost `
+    + `to a champion's Power Score while equipped.`;
   list.innerHTML = '';
   if (myInventory.length === 0) {
-    list.insertAdjacentHTML('beforeend', `<div class="equip-empty-msg">Inventory empty. Win arena matches or open chests in the Vulcan Forged ecosystem to earn items.</div>`);
+    list.insertAdjacentHTML('beforeend', `<div class="equip-empty-msg">No equipment yet — you get a free starter set with your first champion, and more gear is in the 🛒 Shop (NFT equipment, delivered to your wallet).</div>`);
   } else {
     // Sort: equipped first, then by rarity desc, then by slot
     const order = ['legendary', 'epic', 'rare', 'common'];
@@ -13084,7 +13088,15 @@ function showFullInventory() {
       const rar = Equipment.RARITY[inst.rarity];
       const slotDef = Equipment.SLOTS[cat.slot];
       const isEquipped = inst.equippedOn === (state.championId || activeChampionId);
+      // Q2 (AweSumOne): say WHICH champion has it, not just 'equipped' — items
+      // worn by OTHER champions previously showed no equipped state at all.
+      const wearer = inst.equippedOn ? myChampions.find(c => c.id === inst.equippedOn) : null;
+      const equipTag = isEquipped ? ' · equipped (this champion)'
+                     : wearer     ? ` · equipped on ${esc(wearer.name)}`
+                     : inst.equippedOn ? ' · equipped' : '';
       const compatible = !slotDef.speciesLocked || cat.species === currentSpecies;
+      // Q1: where the item came from — starter set vs shop NFT purchase.
+      const source = String(inst.id).startsWith('nft_') ? '🛒 Shop purchase (NFT)' : '🎁 Free starter gear';
       const pwr = Equipment.powerValue(inst);
       list.insertAdjacentHTML('beforeend', `
         <div class="equip-picker-item ${isEquipped ? 'equipped' : ''}"
@@ -13092,10 +13104,11 @@ function showFullInventory() {
              style="--rarity-color:${rar.color}; ${!compatible ? 'opacity:0.4;' : ''}">
           <div class="epi-icon">${slotIconHtml(cat.slot, slotDef)}</div>
           <div class="epi-info">
-            <div class="epi-name">${Equipment.itemDisplayName(inst)}${isEquipped ? ' · equipped' : (compatible ? '' : ' · wrong species')}</div>
+            <div class="epi-name">${Equipment.itemDisplayName(inst)}${equipTag}${compatible ? '' : ' · wrong species'}</div>
             <div class="epi-desc">${cat.description}</div>
+            <div class="epi-src">${source} · ${slotDef.label} slot</div>
           </div>
-          <div class="epi-pwr">+${pwr}<small>power</small></div>
+          <div class="epi-pwr" title="Adds +${pwr} to a champion's Power Score while equipped">+${pwr}<small>power</small></div>
         </div>
       `);
     }
