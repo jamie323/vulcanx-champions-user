@@ -12584,8 +12584,18 @@ async function showChestQuests() {
         const gd = await gw.json();
         const claimedBy = {};
         for (const q of (gd.quests || [])) {
-          const key = String(q.slug || '').replace(/^champions-/, '').replace(/-/g, '_');
-          claimedBy[key] = !!q.user_state?.claimed;
+          const claimed = !!q.user_state?.claimed;
+          // Gateway slugs don't map 1:1 to our quest ids (e.g.
+          // 'champions-daily-quest-stamina' -> our 'quest_stamina';
+          // 'champions-adventure-apprentice-5' carries a target suffix).
+          // Key the map by every plausible form + the display name.
+          const base = String(q.slug || '').replace(/^champions-/, '').replace(/-/g, '_');
+          const stripped = base.replace(/_\d+$/, '');
+          for (const k of new Set([base, stripped, base.replace(/^daily_/, ''), stripped.replace(/^daily_/, '')])) {
+            if (k) claimedBy[k] = claimedBy[k] || claimed;
+          }
+          const nm = String(q.name || '').trim().toLowerCase();
+          if (nm) claimedBy['name:' + nm] = claimedBy['name:' + nm] || claimed;
         }
         _cqState.claimed = claimedBy;
       }
@@ -12625,7 +12635,12 @@ function renderChestQuestsList() {
     // VulcanX super-app, not in-game. Add a Claim button on every
     // completed quest row that deep-links into vulcan-x.io chests so
     // testers stop wondering where the reward actually lands.
-    const isClaimed = !!(_cqState.claimed && _cqState.claimed[q.quest_id]);
+    const qid = String(q.id || q.quest_id || '');
+    const isClaimed = !!(_cqState.claimed && (
+      _cqState.claimed[qid] ||
+      _cqState.claimed[qid.replace(/_\d+$/, '')] ||
+      _cqState.claimed['name:' + String(q.name || '').trim().toLowerCase()]
+    ));
     const claimBtn = q.completed
       ? (isClaimed
         ? `<div style="margin-top:8px;width:100%;padding:8px 12px;border-radius:8px;

@@ -3,6 +3,13 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 15 Jul 2026 (later)
+**Chest quests**
+- **"✓ Claimed" now shows reliably** for quests claimed in the VulcanX dApp —
+  the first version of this fix missed most quests because the dApp and the
+  game name them slightly differently; the matching is now robust (verified
+  against real claimed quests).
+
 ## 15 Jul 2026
 **Wallet**
 - **The WalletConnect button now actually shows on desktop** — it existed but
