@@ -11716,7 +11716,7 @@ const VxQuests = (() => {
     const wallet = typeof getWallet === 'function' ? getWallet() : null;
     if (!wallet) return;
     try {
-      const res = await apiFetch(`${FN_BASE}/champion_active_quests?wallet=${encodeURIComponent(wallet)}`);
+      const res = await apiFetch(`${FN_BASE}/champion_active_quests?wallet=${encodeURIComponent(wallet)}`, { headers: AUTH_HEADERS });
       if (!res.ok) return;
       const data = await res.json();
       const all = load();

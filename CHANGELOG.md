@@ -3,6 +3,15 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 15 Jul 2026 (later 2)
+**Adventures**
+- **Adventure recovery actually works now.** The restore-after-browser-close
+  system shipped yesterday was being rejected by the server on every load (an
+  authentication mismatch), so adventures still looked lost — while the "can't
+  start a new adventure" error proved they were running server-side all along
+  (exactly as Coin1x1 described). Fixed on the server — **works immediately,
+  just reload the game** and your running adventures reappear.
+
 ## 15 Jul 2026 (later)
 **Chest quests**
 - **"✓ Claimed" now shows reliably** for quests claimed in the VulcanX dApp —
