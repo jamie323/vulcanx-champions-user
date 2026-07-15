@@ -3,6 +3,26 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 15 Jul 2026
+**Wallet**
+- **The WalletConnect button now actually shows on desktop** — it existed but
+  was permanently hidden, so only MetaMask appeared. Desktop players can now
+  scan the QR with any mobile wallet.
+**Top bar**
+- **Removed the fake G / V / E token counters** — they were placeholder numbers.
+  Your real PYR balance chip stays.
+**Chest quests**
+- **Quests you've already claimed in the VulcanX dApp now show "✓ Claimed"**
+  instead of still offering the Claim button.
+**Equipment**
+- **Every champion is armed automatically at login** — the free basic weapon of
+  its species is granted for all your champions at once (no longer only when
+  you open each one). Fixes "some players did not get basic equipment".
+**Guide**
+- **Equipment sources spelled out**: starter set, free basic per champion, Shop
+  NFTs, and ecosystem chest drops — not just drop rates.
+- Unified naming: "equipment slots" everywhere (was mixed "gear slots").
+
 ## 14 Jul 2026 (later 11)
 **Wallet — mobile**
 - **"Open in MetaMask" now opens the app, not the App Store.** The button used

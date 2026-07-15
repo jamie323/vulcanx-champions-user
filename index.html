@@ -6440,7 +6440,7 @@
       <!-- WalletConnect hidden — Champions now offers MetaMask only.
            The element is kept in DOM (display:none) so existing JS that
            queries connectBtnWC / wcSubLabel doesn't null-deref. -->
-      <button class="wg-btn wg-btn-wc" id="connectBtnWC" style="display:none;" onclick="connectWallet('walletconnect')">
+      <button class="wg-btn wg-btn-wc" id="connectBtnWC" onclick="connectWallet('walletconnect')">
         <span class="wg-btn-ico">📱</span>
         <span class="wg-btn-body">
           <span class="wg-btn-title">WalletConnect</span>
@@ -6711,9 +6711,6 @@
     <span style="color:var(--muted);font-size:10px;margin-left:6px;opacity:0.6;">admin</span>
   </div>
   <div class="currency">
-    <div class="coin gold"><span class="icon">G</span><span id="curGold">1,540</span></div>
-    <div class="coin gem"><span class="icon">V</span><span id="curGem">15,320</span></div>
-    <div class="coin ess"><span class="icon">E</span><span id="curEss">420</span></div>
     <button class="shop-btn" onclick="openShop()"><img class="ui-ico" src="nft_images/icons/shop.png" alt="" decoding="async" onerror="this.style.display='none'"/> Shop</button>
     <button class="streak-pill" id="streakPill" title="Daily login streak — click to claim today's reward" onclick="VxDaily.openModal()" style="display:none;">
       <span class="streak-flame"><img class="ui-ico" src="nft_images/icons/fire.png" alt="" decoding="async" onerror="this.style.display='none'"/></span><b id="streakDay">1</b>
@@ -6920,7 +6917,7 @@
         <div class="howto-feature-card">
           <div class="ic">⚔️</div>
           <h4>4. Equip</h4>
-          <p>5 gear slots: Weapon, Armor, Trinket, Boots, Aura. Rarity tiers boost stats and unlock procs.</p>
+          <p>5 equipment slots: Weapon, Armor, Trinket, Boots, Aura. Rarity tiers boost stats and unlock procs.</p>
         </div>
         <div class="howto-feature-card">
           <div class="ic">🛡️</div>
@@ -7044,7 +7041,7 @@
       <div class="panel-icon">⚔️</div>
       <h2 style="text-align:center;">Equipment system</h2>
       <p class="lead" style="text-align:center;">
-        Five gear slots, four rarity tiers, 24 species-locked weapons + cross-species accessories.
+        Five equipment slots, four rarity tiers, species-locked weapons + cross-species accessories.
         Equipment boosts your Power Score and unlocks signature combat effects.
       </p>
 
@@ -7087,7 +7084,7 @@
 
       <div class="howto-tip">
         <span class="ti">🎒</span>
-        <div><b>Starter set:</b> on first boot you get 9 free items (3 weapons matching your first champion's species, 2 armor, 2 trinkets, boots, aura) — and <b>every champion automatically receives a free basic weapon of its own species</b> the first time you open it. Stronger NFT gear is in the Shop.</div>
+        <div><b>Where equipment comes from:</b> ① a <b>free starter set</b> with your first champion (3 weapons of its species, 2 armor, 2 trinkets, boots, aura); ② <b>every champion automatically gets a free basic weapon of its own species</b>; ③ the <b>🛒 Shop</b> sells NFT equipment (all rarities, PYR, batch-delivered to your wallet); ④ <b>treasure chests</b> earned via weekly quests in the VulcanX Everything dApp can drop gear across the ecosystem.</div>
       </div>
     </section>
 
@@ -12577,6 +12574,22 @@ async function showChestQuests() {
     '<div style="padding:20px;text-align:center;color:var(--muted);">Loading…</div>';
   try {
     _cqState.data = await apiChampionQuestsList(wallet);
+    // Merge the VX gateway's claim state (user_state.claimed) so quests
+    // already claimed in the Everything dApp show "Claimed" instead of a
+    // Claim button (AngelHorn, 15 Jul). Soft-fail: chest list still renders
+    // without claim info if the gateway is unreachable.
+    try {
+      const gw = await apiFetch(`${FN_BASE}/champion_quest_gateway_proxy?wallet=${encodeURIComponent(wallet)}&game=vulcan-champions`);
+      if (gw.ok) {
+        const gd = await gw.json();
+        const claimedBy = {};
+        for (const q of (gd.quests || [])) {
+          const key = String(q.slug || '').replace(/^champions-/, '').replace(/-/g, '_');
+          claimedBy[key] = !!q.user_state?.claimed;
+        }
+        _cqState.claimed = claimedBy;
+      }
+    } catch (_) { _cqState.claimed = null; }
     renderChestQuestsList();
   } catch (e) {
     console.warn('[chest-quests] fetch failed:', e.message);
@@ -12612,13 +12625,18 @@ function renderChestQuestsList() {
     // VulcanX super-app, not in-game. Add a Claim button on every
     // completed quest row that deep-links into vulcan-x.io chests so
     // testers stop wondering where the reward actually lands.
+    const isClaimed = !!(_cqState.claimed && _cqState.claimed[q.quest_id]);
     const claimBtn = q.completed
-      ? `<button class="cq-claim-btn" onclick="openVxChests(); return false;"
+      ? (isClaimed
+        ? `<div style="margin-top:8px;width:100%;padding:8px 12px;border-radius:8px;
+                       background:rgba(126,210,107,0.15);border:1px solid rgba(126,210,107,0.4);
+                       color:#7ed26b;font-weight:700;text-align:center;font-size:13px;">✓ Claimed</div>`
+        : `<button class="cq-claim-btn" onclick="openVxChests(); return false;"
                style="margin-top:8px;width:100%;padding:8px 12px;border-radius:8px;
                       background:var(--legend);color:#000;font-weight:700;
                       border:none;cursor:pointer;font-size:13px;">
            Claim on VulcanX →
-         </button>`
+         </button>`)
       : '';
     return `
       <div class="cq-row ${q.completed ? 'completed' : ''}">
@@ -13109,7 +13127,7 @@ function showFullInventory() {
   const list = document.getElementById('equipPickerList');
   document.getElementById('equipPickerTitle').textContent = 'Equipment';
   document.getElementById('equipPickerSub').innerHTML =
-    `Five gear slots: <b>Weapon · Armor · Trinket · Boots · Aura</b> — `
+    `Equipment slots: <b>Weapon · Armor · Trinket · Boots · Aura</b> — `
     + `${myInventory.length} item${myInventory.length === 1 ? '' : 's'} owned. `
     + `Click to equip to the current champion. <b>+N power</b> = the item's boost `
     + `to a champion's Power Score while equipped.`;
@@ -18776,6 +18794,11 @@ async function boot() {
       loadInventory();
       grantStarterInventoryIfEmpty();
       fixOrphanStarterWeapons();   // swap species-mismatched starter weapons (Coin1x1)
+      // Arm EVERY champion at boot — creates + equips the free basic lore
+      // weapon for any champion without one (AngelHorn #6: "some players did
+      // not get some basic equipments" — previously only granted when each
+      // champion was individually opened).
+      try { myChampions.forEach(c => autoEquipDefaultsForChampion(c)); } catch (_) {}
     }
 
     if (window.VxDaily) {
