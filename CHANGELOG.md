@@ -3,6 +3,19 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 16 Jul 2026 (later)
+**Quest popups**
+- **No more "false joy" replays** (Coin1x1): logging in from a fresh
+  browser/device replayed a big "Quest Complete" celebration for a quest
+  you finished days ago (it showed whichever completed quest happened to
+  be last in the list — e.g. Keeper of Bloodlines). The celebration memory
+  was device-local, so a new device thought everything was new. Now: quests
+  you already claimed on VulcanX never celebrate again anywhere, and a
+  fresh device syncs silently instead of replaying history. No chests were
+  ever duplicated — this was purely a popup bug.
+- Also fixed a related server case where evolving a champion of a bloodline
+  you'd already pioneered re-fired the "Bloodline Pioneer" toast each time.
+
 ## 16 Jul 2026
 **Stats — species now actually matter** (server part is already live)
 - **Champions no longer share one universal stat line.** Base stats at

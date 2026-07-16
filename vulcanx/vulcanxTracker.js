@@ -32,6 +32,14 @@ const LS_PENDING_DELTAS    = 'vc_vulcanx_pending_deltas';
 const LS_FIRED_COMPLETIONS = 'vc_vulcanx_fired_completions';
 const LS_DAILY_CARE_DONE   = 'vc_vulcanx_daily_care_done';   // {wallet}:{YYYY-MM-DD}
 const LS_DEVICE_ID         = 'vc_vulcanx_device_id';
+// Wallet whose completed-quests baseline has been seeded in THIS browser.
+// The fired-completions dedup lives in localStorage, so a fresh browser
+// context (new device, cleared cache, Discord in-app browser) had no
+// marks and replayed a celebration for every historic completion — the
+// modal re-renders per fire, so the player saw the LAST completed quest
+// as a brand-new "Quest Complete" greeting (Coin1x1, 16 Jul: greeted
+// with Keeper of Bloodlines he finished two days prior).
+const LS_CELEBRATION_BASELINE = 'vc_vulcanx_celebration_baseline';
 
 // ── State ─────────────────────────────────────────────────────────────
 
@@ -220,13 +228,31 @@ async function _poll() {
   if (!data || !Array.isArray(data.quests)) return;
   _frenzyPassActive = !!data.frenzy_pass?.active;
 
+  // Fresh browser context for this wallet → seed the dedup map from the
+  // gateway's current state WITHOUT firing, so historic completions
+  // don't replay as new celebrations. Only quests that complete after
+  // this baseline celebrate.
+  let baselineWallet = null;
+  try { baselineWallet = window.localStorage.getItem(LS_CELEBRATION_BASELINE); } catch (_) {}
+  const seeding = baselineWallet !== _wallet;
+
   for (const q of data.quests) {
     if (!q?.id) continue;
     if (!q.user_state?.system_completed) continue;
     const period = q.period_key ?? 'lifetime';
+    if (q.user_state?.claimed) {
+      // Already claimed on VulcanX — definitionally old news, never
+      // celebrate (server truth beats any localStorage state).
+      markCelebrated(q.name, period);
+      continue;
+    }
     if (wasCelebrated(q.name, period)) continue;
     markCelebrated(q.name, period);
+    if (seeding) continue;
     _fireCelebration(q, period);
+  }
+  if (seeding) {
+    try { window.localStorage.setItem(LS_CELEBRATION_BASELINE, _wallet); } catch (_) {}
   }
 }
 
