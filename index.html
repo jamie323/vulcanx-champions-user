@@ -12557,8 +12557,48 @@ function maybeEmitStableVisit() {
   }
 }
 
+function _cqBuildClaimedMap(gd) {
+  const claimedBy = {};
+  for (const q of (gd.quests || [])) {
+    const claimed = !!q.user_state?.claimed;
+    // Gateway slugs don't map 1:1 to our quest ids (e.g.
+    // 'champions-daily-quest-stamina' -> our 'quest_stamina';
+    // 'champions-adventure-apprentice-5' carries a target suffix).
+    // Key the map by every plausible form + the display name.
+    const base = String(q.slug || '').replace(/^champions-/, '').replace(/-/g, '_');
+    const stripped = base.replace(/_\d+$/, '');
+    for (const k of new Set([base, stripped, base.replace(/^daily_/, ''), stripped.replace(/^daily_/, '')])) {
+      if (k) claimedBy[k] = claimedBy[k] || claimed;
+    }
+    const nm = String(q.name || '').trim().toLowerCase();
+    if (nm) claimedBy['name:' + nm] = claimedBy['name:' + nm] || claimed;
+  }
+  return claimedBy;
+}
+
+// Light refresh of just the claim state — used on window focus so a claim
+// made in the VulcanX dApp shows the moment the player tabs back (QA 16
+// Jul: "still showing claim even it is already claimed"). Cache-busted so
+// the proxy's 20s HTTP cache can't serve a pre-claim snapshot.
+async function refreshChestClaims() {
+  try {
+    const modal = document.getElementById('chestQuestsModal');
+    if (!modal || !modal.classList.contains('open')) return;
+    const wallet = (typeof getWallet === 'function') ? getWallet() : null;
+    if (!wallet || !_cqState || !_cqState.data) return;
+    const gw = await apiFetch(`${FN_BASE}/champion_quest_gateway_proxy?wallet=${encodeURIComponent(wallet)}&game=vulcan-champions&_=${Date.now()}`);
+    if (gw.ok) {
+      _cqState.claimed = _cqBuildClaimedMap(await gw.json());
+      renderChestQuestsList();
+    }
+  } catch (_) { /* keep whatever claim state we had */ }
+}
+window.addEventListener('focus', () => { refreshChestClaims(); });
+
 async function showChestQuests() {
-  _cqState = { period: 'daily', data: null };
+  // Carry the last known claim map over — a gateway hiccup on re-open
+  // must not flip already-claimed chests back to a Claim button.
+  _cqState = { period: 'daily', data: null, claimed: (_cqState && _cqState.claimed) || null };
   document.querySelectorAll('.cq-period').forEach(b => {
     b.classList.toggle('active', b.dataset.period === 'daily');
   });
@@ -12579,27 +12619,16 @@ async function showChestQuests() {
     // Claim button (AngelHorn, 15 Jul). Soft-fail: chest list still renders
     // without claim info if the gateway is unreachable.
     try {
-      const gw = await apiFetch(`${FN_BASE}/champion_quest_gateway_proxy?wallet=${encodeURIComponent(wallet)}&game=vulcan-champions`);
+      // Cache-busted: the proxy sets max-age=20, which used to serve a
+      // pre-claim snapshot for up to 20s after claiming in VulcanX.
+      const gw = await apiFetch(`${FN_BASE}/champion_quest_gateway_proxy?wallet=${encodeURIComponent(wallet)}&game=vulcan-champions&_=${Date.now()}`);
       if (gw.ok) {
-        const gd = await gw.json();
-        const claimedBy = {};
-        for (const q of (gd.quests || [])) {
-          const claimed = !!q.user_state?.claimed;
-          // Gateway slugs don't map 1:1 to our quest ids (e.g.
-          // 'champions-daily-quest-stamina' -> our 'quest_stamina';
-          // 'champions-adventure-apprentice-5' carries a target suffix).
-          // Key the map by every plausible form + the display name.
-          const base = String(q.slug || '').replace(/^champions-/, '').replace(/-/g, '_');
-          const stripped = base.replace(/_\d+$/, '');
-          for (const k of new Set([base, stripped, base.replace(/^daily_/, ''), stripped.replace(/^daily_/, '')])) {
-            if (k) claimedBy[k] = claimedBy[k] || claimed;
-          }
-          const nm = String(q.name || '').trim().toLowerCase();
-          if (nm) claimedBy['name:' + nm] = claimedBy['name:' + nm] || claimed;
-        }
-        _cqState.claimed = claimedBy;
+        _cqState.claimed = _cqBuildClaimedMap(await gw.json());
       }
-    } catch (_) { _cqState.claimed = null; }
+      // non-OK / throw: keep the carried-over claim map (see above) —
+      // defaulting to null made every completed quest render a Claim
+      // button whenever the gateway blipped.
+    } catch (_) { /* keep previous claim map */ }
     renderChestQuestsList();
   } catch (e) {
     console.warn('[chest-quests] fetch failed:', e.message);
