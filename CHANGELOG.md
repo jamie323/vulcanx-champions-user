@@ -3,6 +3,23 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 16 Jul 2026
+**Stats — species now actually matter** (server part is already live)
+- **Champions no longer share one universal stat line.** Base stats at
+  adoption and the stat caps at every level are now scaled by your
+  bloodline: an Elf Nightshade caps AGI ~30% higher than baseline, a Dwarf
+  Stonehammer caps VIT ~30% higher but AGI lower, and so on for all 26
+  bloodlines. Before this, every champion pinned at the same numbers
+  (25/30/35/15/20/40 at L1) no matter the species — bloodlines only changed
+  how *fast* you got there, which nobody could see.
+- **Nobody loses stats.** Champions already above a lowered cap keep every
+  point (that trait just won't gain further until the cap catches up at
+  higher levels). Newly adopted champions hatch with visibly different
+  base stats per bloodline.
+- The stat panel (X / cap) shows your champion's own bloodline-weighted
+  caps once this build rolls; server-side caps, feeding, adventure rewards
+  and evolution floors are live now.
+
 ## 15 Jul 2026 (later 2)
 **Adventures**
 - **Adventure recovery actually works now.** The restore-after-browser-close

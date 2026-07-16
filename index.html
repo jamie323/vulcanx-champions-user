@@ -9892,18 +9892,66 @@ const STAGE_FLOORS = [
 //   ...
 //   L50 → STAGE_CAPS[19]
 // Backend mirrors this exactly so client + server caps stay in sync.
-function capAtLevel(level) {
+// 16 Jul: rows are bloodline-weighted (see BLOODLINE_STAT_WEIGHTS);
+// bloodlineId defaults to the open champion's bloodline
+// (currentBloodline) so every dashboard call site shows the weighted
+// caps without churn.
+function capAtLevel(level, bloodlineId) {
+  const bl = bloodlineId !== undefined ? bloodlineId : currentBloodline;
   const lvl = Math.max(1, Math.min(50, Math.round(level || 1)));
   for (let s = 0; s < GATE_LEVELS.length - 1; s++) {
     const a = GATE_LEVELS[s], b = GATE_LEVELS[s + 1];
     if (lvl >= a && lvl <= b) {
-      if (b === a) return STAGE_CAPS[s].slice();
-      const p = (lvl - a) / (b - a);
-      const next = STAGE_CAPS[s + 1] || STAGE_CAPS[s];
-      return STAGE_CAPS[s].map((c, i) => Math.round(c + (next[i] - c) * p));
+      let row = STAGE_CAPS[s].slice();
+      if (b !== a) {
+        const p = (lvl - a) / (b - a);
+        const next = STAGE_CAPS[s + 1] || STAGE_CAPS[s];
+        row = STAGE_CAPS[s].map((c, i) => Math.round(c + (next[i] - c) * p));
+      }
+      return weightStatRowArr(row, bl);
     }
   }
-  return STAGE_CAPS[STAGE_CAPS.length - 1].slice();
+  return weightStatRowArr(STAGE_CAPS[STAGE_CAPS.length - 1], bl);
+}
+
+// Bloodline stat weights, TRAITS order [STR,VIT,AGI,FER,INT,LCK].
+// Must match backend champions_species.ts BLOODLINE_STAT_WEIGHTS exactly.
+// 16 Jul (Jamie: "all champions come with the same base stats"): floors
+// and caps are scaled by these, so an elf's cap line differs from a
+// dwarf's — species identity in the numbers, not just growth speed.
+const BLOODLINE_STAT_WEIGHTS = {
+  ironfang:   [1.1,1.2,0.9,1.1,0.7,0.9],
+  ashclan:    [1.3,0.9,1.0,1.2,0.7,0.9],
+  bloodfang:  [1.1,1.3,0.8,1.2,0.7,0.9],
+  tuskborn:   [1.1,1.3,0.9,1.0,0.7,1.0],
+  dreadclaw:  [1.2,1.0,0.9,1.3,0.7,0.9],
+  moonsong:   [0.9,0.9,1.2,1.0,1.1,1.1],
+  sunweaver:  [0.8,0.9,1.0,1.0,1.3,1.2],
+  nightshade: [1.0,0.8,1.3,1.1,1.0,1.2],
+  irontooth:  [1.0,1.1,1.0,1.2,0.9,1.1],
+  swampskin:  [0.9,1.0,1.2,1.1,0.9,1.2],
+  emberskin:  [0.9,0.7,1.3,1.3,0.9,1.2],
+  infernal:   [0.9,0.9,1.0,1.1,1.2,1.1],
+  voidborn:   [0.8,0.8,1.0,1.2,1.3,1.1],
+  ichorskin:  [0.9,1.2,0.9,1.0,1.2,1.1],
+  emberscale: [1.2,1.0,0.9,1.1,1.2,0.8],
+  frostscale: [1.0,1.3,0.8,1.0,1.2,0.9],
+  stormscale: [1.1,1.1,1.0,1.0,1.1,0.9],
+  ironbeard:  [1.1,1.2,0.8,1.1,0.9,1.0],
+  stonehammer:[1.1,1.3,0.7,1.0,0.9,1.0],
+  goldseeker: [1.0,1.1,0.9,1.1,0.9,1.2],
+  wolfkin:    [1.1,1.0,1.1,1.1,0.8,1.0],
+  pantherkin: [1.0,0.8,1.3,1.2,0.8,1.0],
+  bearkin:    [1.2,1.2,0.9,1.1,0.8,0.9],
+  mourner:    [0.9,1.1,1.0,0.9,1.2,1.1],
+  voidstalker:[0.9,0.8,1.3,1.1,1.0,1.2],
+  sunspire:   [0.9,1.0,1.1,0.9,1.2,1.2],
+};
+
+function weightStatRowArr(row, bloodlineId) {
+  const w = BLOODLINE_STAT_WEIGHTS[bloodlineId];
+  if (!w) return row.slice();
+  return row.map((v, i) => Math.round(v * (w[i] ?? 1.0)));
 }
 
 let state = {
@@ -12068,7 +12116,7 @@ const VxQuests = (() => {
     const advDef = ADVENTURES[_selectedAdventure];
     const champ = myChampions.find(c => c.id === champId);
     if (advDef && champ && typeof capAtLevel === 'function' && champ.stats) {
-      const caps = capAtLevel(champ.level);
+      const caps = capAtLevel(champ.level, champ.bloodline_id);
       const allMaxed = advDef.primaries.every(t => (champ.stats[t] ?? 0) >= (caps[TRAITS.indexOf(t)] ?? Infinity));
       if (allMaxed) {
         const ok = await vxConfirm(
@@ -15254,7 +15302,7 @@ async function renderChampionCard(payload) {
   if (statsBox) {
     statsBox.innerHTML = '';
     TRAITS.forEach((t, i) => {
-      const cap = capAtLevel(champ.level)[i];
+      const cap = capAtLevel(champ.level, champ.bloodline_id)[i];
       const val = champ.stats?.[t] || 0;
       statsBox.insertAdjacentHTML('beforeend',
         `<div class="cc-stat-row" title="${traitTitle(t)}"><span class="lbl">${uiIcon(t, 'ui-ico sm') || TRAIT_EMOJI[t]} ${t}</span><span class="val">${Math.round(val)}<span style="color:var(--muted);"> / ${cap}</span></span></div>`);
