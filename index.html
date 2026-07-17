@@ -698,6 +698,18 @@
     0%,100% { box-shadow: 0 0 14px rgba(255,140,40,0.25); }
     50%     { box-shadow: 0 0 32px rgba(255,140,40,0.55); }
   }
+  /* Acadia (17 Jul): "adventure and blessing buttons should be glowing,
+     like a pulse glow to show me that's where I need to go" — reuse the
+     evo-ready pulse as the universal "this action is ready" affordance. */
+  .cc-blessing-bar.pulse-ready {
+    border-color: var(--legend);
+    animation: evoReadyPulse 2s ease-in-out infinite;
+  }
+  .nav-btn.pulse-ready {
+    border-color: var(--legend);
+    color: var(--legend);
+    animation: evoReadyPulse 2s ease-in-out infinite;
+  }
   .cc-evo-potion-bar.empty,
   .cc-blessing-bar.empty {
     opacity: 0.55;
@@ -13858,6 +13870,7 @@ function render() {
     const usable = owned && (room >= BLESSING_MIN_HEADROOM || room === 0);
     allocRow.classList.toggle('empty', !usable);
     allocRow.classList.toggle('locked', owned && !usable);
+    allocRow.classList.toggle('pulse-ready', usable);
     const hint = allocRow.querySelector('.cep-hint');
     if (hint) {
       hint.textContent = (owned && !usable)
@@ -15170,6 +15183,25 @@ function _ensurePageScrollUnlocked() {
 setInterval(_ensurePageScrollUnlocked, 1500);
 document.addEventListener('visibilitychange', _ensurePageScrollUnlocked);
 
+// Acadia (17 Jul): the Adventures nav button pulse-glows when at least one
+// champion is ready to send (idle + enough energy for the cheapest tier).
+// Refreshed on every navTo() and a 10s tick so it lights up again when a
+// champion returns from an adventure mid-session. Suppressed while the
+// Adventures view is already open — the glow is a "go here" affordance.
+function updateAdventureNavGlow() {
+  const btn = document.querySelector('.nav-btn[data-view="quests"]');
+  if (!btn) return;
+  let ready = false;
+  try {
+    ready = Array.isArray(myChampions) && myChampions.length > 0
+      && typeof VxQuests !== 'undefined'
+      && myChampions.some(c => !VxQuests.getActiveQuest(c.id)
+                            && Math.round(c.energy ?? 100) >= 10);
+  } catch (_) { /* pre-boot — leave unlit */ }
+  btn.classList.toggle('pulse-ready', ready && !btn.classList.contains('active'));
+}
+setInterval(updateAdventureNavGlow, 10_000);
+
 function navTo(viewName, payload) {
   currentView = viewName;
   _ensurePageScrollUnlocked();
@@ -15200,6 +15232,7 @@ function navTo(viewName, payload) {
   if (navBtnView) {
     document.querySelector(`.nav-btn[data-view="${navBtnView}"]`)?.classList.add('active');
   }
+  updateAdventureNavGlow();
   // show/hide the fixed bloodline-bar (only visible in champion view + admin mode)
   const blBar = document.getElementById('bloodlineBar');
   if (blBar) blBar.style.display =
@@ -15489,7 +15522,7 @@ function renderLandingSpecies() {
 
 const FAQ = [
   { q: 'How much does a champion cost?',
-    a: '<b>20 PYR to adopt</b>, paid from your wallet on Elysium and confirmed before it\'s charged. Your <b>first champion also comes with a free starter pack</b>: 10 potions of every trait (60 total) plus 10 Evolution Potions.' },
+    a: '<b>20 PYR to adopt</b>, paid from your wallet on Elysium and confirmed before it\'s charged. Your <b>first champion also comes with a free starter pack</b>: 10 potions of every trait (60 total), 10 Evolution Potions and 10 Blessings.' },
   { q: 'What do potions cost, and what do they do?',
     a: 'Trait potions are <b>3 PYR</b> and give a flat <b>+15</b> to that stat (STR, VIT, AGI, FER, INT or LCK) plus a little Evolution-Bar fill. The <b>Evolution Potion</b> and <b>Blessing</b> (40 stat points you distribute freely) are <b>8 PYR</b> each. Every potion works on <b>any</b> of your champions — nothing is species-locked.' },
   { q: 'How do I level up and evolve?',

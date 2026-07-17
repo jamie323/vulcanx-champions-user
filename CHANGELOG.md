@@ -3,6 +3,15 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 17 Jul 2026 (later)
+**Guidance & starter pack** (Acadia + Ric)
+- **Glowing "go here" buttons**: the Adventures button in the top nav now
+  pulse-glows whenever at least one of your champions is ready to be sent
+  (home + enough energy), and the Blessing bar on the champion page glows
+  when a Blessing is usable. Same gold pulse the Evolve button already uses.
+- **New keepers now start with 10 Blessings** in the free starter pack, on
+  top of the 60 trait potions and 10 Evolution Potions (80 total).
+
 ## 17 Jul 2026
 **Adventure send warning — reworded** (Acadia)
 - The "traits already maxed" pre-send dialog no longer shouts at you: warning
