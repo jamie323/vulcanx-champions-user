@@ -3,6 +3,13 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 17 Jul 2026
+**Adventure send warning — reworded** (Acadia)
+- The "traits already maxed" pre-send dialog no longer shouts at you: warning
+  triangle and exclamation marks gone, STR/VIT spelled out as Strength and
+  Vitality, and the message now reads like a heads-up, not an error. Buttons
+  are "Choose Another" / "Send Anyway".
+
 ## 16 Jul 2026 (later)
 **Quest popups**
 - **No more "false joy" replays** (Coin1x1): logging in from a fresh

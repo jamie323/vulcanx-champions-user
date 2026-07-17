@@ -12119,9 +12119,12 @@ const VxQuests = (() => {
       const caps = capAtLevel(champ.level, champ.bloodline_id);
       const allMaxed = advDef.primaries.every(t => (champ.stats[t] ?? 0) >= (caps[TRAITS.indexOf(t)] ?? Infinity));
       if (allMaxed) {
+        // Copy per Acadia (17 Jul): no ⚠️/exclamation, spell trait names
+        // in full, "Choose another" not "Pick another".
+        const fullNames = advDef.primaries.map(t => TRAIT_NAMES[t] || t);
         const ok = await vxConfirm(
-          `${champ.name}'s ${advDef.primaries.join(' & ')} are already maxed for L${champ.level}, so this adventure won't add stat points — you'd only get Evolution-Bar fill. Send anyway?`,
-          { title: '⚠️ Traits already maxed', icon: '⚠️', okLabel: 'Send anyway', cancelLabel: 'Pick another' });
+          `${champ.name} has already reached the maximum ${fullNames.join(' and ')} for Level ${champ.level}. Sending it on this adventure won't increase its stats — it will only gain Evolution Bar progress. Do you want to send it anyway?`,
+          { title: 'Traits Already Maxed', icon: '🗺️', okLabel: 'Send anyway', cancelLabel: 'Choose another' });
         if (!ok) return;
       }
     }
