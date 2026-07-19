@@ -3,6 +3,14 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 19 Jul 2026
+**Blessings — backfill for existing keepers** (Acadian)
+- The "10 Blessings to start" change (17 Jul) only applied to brand-new
+  wallets — everyone who adopted before it got nothing. Fixed: every
+  existing keeper has been topped up to **at least 10 Blessings**. Already
+  live — just reload the game. (Reminder: Blessings stay locked until your
+  champion has room for the full 40 stat points — level up to unlock them.)
+
 ## 17 Jul 2026 (later)
 **Guidance & starter pack** (Acadia + Ric)
 - **Glowing "go here" buttons**: the Adventures button in the top nav now
