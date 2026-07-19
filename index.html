@@ -19819,11 +19819,80 @@ function _shopCartSave() {
   } catch (e) {}
 }
 
+// Back-fill instant grants for PAID nft_purchase_queue rows that never
+// landed in the local inventory (GaryGnu 19 Jul: 4 paid orders, zero
+// grants — the checkout grant silently skipped on missing supply meta).
+// Equipment + limited potions only; champion eggs stay queue-only by
+// design. Idempotent via the vx_nft_queue_granted ledger + _queueId
+// markers on instances. Runs after auth and on every shop open.
+async function reconcileNftQueueGrants() {
+  try {
+    const wallet = (typeof getWallet === 'function') ? getWallet() : null;
+    if (!wallet) return;
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/nft_purchase_queue?wallet=eq.${encodeURIComponent(wallet.toLowerCase())}` +
+      `&status=in.(pending,sent)&select=id,sku_id,qty,status`,
+      { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` } });
+    if (!res.ok) return;
+    const rows = await res.json();
+    if (!Array.isArray(rows) || !rows.length) return;
+    const ledger = new Set(JSON.parse(localStorage.getItem('vx_nft_queue_granted') || '[]'));
+    let granted = 0;
+    for (const row of rows) {
+      if (ledger.has(row.id)) continue;
+      // instances from this queue row may exist from a successful checkout
+      const already = myInventory.filter(it => it._queueId === row.id).length;
+      const category = row.sku_id.startsWith('lpotion_') ? 'limited_potion'
+        : (/^(champion|egg)/.test(row.sku_id) ? 'champion' : 'equipment');
+      if (category === 'equipment') {
+        const baseItem = row.sku_id.replace(/_(common|rare|epic|legendary)$/i, '');
+        const rarity = (row.sku_id.split('_').pop() || 'common').toLowerCase();
+        for (let i = already; i < (row.qty || 1); i++) {
+          const inst = {
+            id: 'nft_' + Math.random().toString(36).slice(2, 10),
+            catalogId: baseItem,
+            rarity: ['common','rare','epic','legendary'].includes(rarity) ? rarity : 'common',
+            equippedOn: null,
+            _fromNftQueue: true,
+            _queueId: row.id,
+          };
+          if (baseItem === 'power_ring') {
+            const stats = ['STR','VIT','AGI','FER','INT','LCK'];
+            inst.rolledStat = stats[Math.floor(Math.random() * stats.length)];
+          }
+          myInventory.push(inst);
+          granted++;
+        }
+        ledger.add(row.id);
+      } else if (category === 'limited_potion') {
+        const slug = row.sku_id.replace(/^lpotion_/, '');
+        if (state && state.inv && already === 0) {
+          state.inv[slug] = (state.inv[slug] || 0) + (row.qty || 1);
+          granted++;
+        }
+        ledger.add(row.id);
+      }
+      // champion: intentionally not granted here (hatches on-chain)
+    }
+    if (granted) {
+      persistInventory();
+      localStorage.setItem('vx_nft_queue_granted', JSON.stringify([...ledger]));
+      try { render(); } catch (_) {}
+      try {
+        vxAlert(`Restored ${granted} purchased item${granted > 1 ? 's' : ''} to your inventory — a shop hiccup had left ${granted > 1 ? 'them' : 'it'} undelivered. The matching NFTs still arrive with the next batch delivery.`, { title: 'Purchases restored', icon: '🛠️' });
+      } catch (_) {}
+    } else {
+      localStorage.setItem('vx_nft_queue_granted', JSON.stringify([...ledger]));
+    }
+  } catch (_) { /* fail quiet — next open retries */ }
+}
+
 function openShop() {
   if (!isAuthenticated || !isAuthenticated()) {
     vxAlert('Please connect your wallet before using the shop.', {title: 'Wallet required', icon: '🦊'});
     return;
   }
+  reconcileNftQueueGrants();
   // Hydrate cart from sessionStorage so a previous close-and-reopen
   // restores what the user already had in the basket.
   shopCart = _shopCartLoad();
@@ -20212,9 +20281,18 @@ async function checkoutShop() {
       const supply = nftSupplyCache?.items || (await loadNftSupply(true))?.items || [];
       const supplyBySku = new Map(supply.map(s => [s.sku_id, s]));
       for (const line of nftLines) {
-        const meta = supplyBySku.get(line.sku_id);
-        if (!meta) continue;
-        if (meta.category === 'equipment') {
+        // GaryGnu 19 Jul: paid lines were SILENTLY skipped here whenever
+        // the supply refetch was missing the sku (a sold-out item drops
+        // out of supply the moment the purchase decrements it to 0, and
+        // any fetch hiccup returns [] because the cache was just nulled).
+        // The player paid, the queue row exists, and no in-game grant
+        // happened — with a "✅ Done" on top. meta is only needed for the
+        // CATEGORY, which the sku id itself encodes — derive and never skip.
+        const meta = supplyBySku.get(line.sku_id) || null;
+        const category = meta?.category
+          || (line.sku_id.startsWith('lpotion_') ? 'limited_potion'
+            : (/^(champion|egg)/.test(line.sku_id) ? 'champion' : 'equipment'));
+        if (category === 'equipment') {
           // Parse "<base_item>_<rarity>" → e.g. "heavy_axe_common" →
           // catalogId='heavy_axe' rarity='common'
           const baseItem = meta.base_item || line.sku_id.replace(/_(common|rare|epic|legendary)$/i, '');
@@ -20236,7 +20314,7 @@ async function checkoutShop() {
             myInventory.push(inst);
             grantedInstantly.equipment++;
           }
-        } else if (meta.category === 'limited_potion') {
+        } else if (category === 'limited_potion') {
           // Limited potions get added to a parallel state.inv slot
           // keyed by the SKU's slug so the game can fire their effect
           // when the keeper "uses" them. e.g. state.inv.bond_bloom = 2
@@ -20245,7 +20323,7 @@ async function checkoutShop() {
             state.inv[slug] = (state.inv[slug] || 0) + line.qty;
             grantedInstantly.lpotion += line.qty;
           }
-        } else if (meta.category === 'champion') {
+        } else if (category === 'champion') {
           // Champion eggs stay queue-only — minting a baby champion
           // needs a champion_create call against the backend. For
           // now the keeper sees "queued for batch delivery"; once
@@ -20254,6 +20332,16 @@ async function checkoutShop() {
         }
       }
       if (grantedInstantly.equipment) persistInventory();
+      // Ledger the queue ids this checkout granted locally — the boot
+      // reconcile (reconcileNftQueueGrants) uses it to back-fill grants
+      // that older checkouts silently skipped, without double-granting.
+      try {
+        const ledger = new Set(JSON.parse(localStorage.getItem('vx_nft_queue_granted') || '[]'));
+        for (const b of (queueResult?.breakdown || [])) {
+          if (b.queue_id) ledger.add(b.queue_id);
+        }
+        localStorage.setItem('vx_nft_queue_granted', JSON.stringify([...ledger]));
+      } catch (_) {}
     }
 
     // Refresh local state
