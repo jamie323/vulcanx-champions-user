@@ -3,6 +3,21 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 21 Jul 2026
+**Blessings — the real bug this time** (PegaraX: "used it twice and stats didn't move")
+- Blessings were checking your stats against the caps at the *start* of your
+  champion's stage instead of your actual level's caps — so on any champion
+  that had levelled a bit, **all 40 points were silently thrown away** (the
+  bar still filled, hiding it). Fixed server-side, live now. **All 31
+  Blessings wasted this way since 16 Jul have been refunded** to the 12
+  affected keepers — reload and they're in your inventory.
+**Arena — no more first-hit deaths** (PegaraX)
+- Replaying real fights showed bots could win initiative and one-shot a
+  full-HP champion with a single crit — before your first swing, making
+  timing and stats irrelevant. No single hit can now exceed 40% of the
+  defender's max HP, so every fight is a real exchange. (Deeper combat
+  pacing tuning is under review.)
+
 ## 20 Jul 2026 (later 3)
 **Champion NFTs from chests — full pipeline** (404nomA, MidniteCatzlady)
 - Chest-minted champion NFTs now materialise into your stable
