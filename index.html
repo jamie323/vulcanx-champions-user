@@ -18202,14 +18202,36 @@ function handleResolvedMatch(resp, champ, arena) {
     // Trello 2026-05-27 (MkVtzDmO): the local myChampions cache was
     // never refreshed post-fight, so the arena energy chip + vital bar
     // kept showing the pre-fight energy until the player navigated away
-    // and back. Server already deducted 15 energy + applied HP loss;
-    // mirror that locally so the next render() shows the truth.
+    // and back.
+    // 2026-07-20 (MetaCapo "inconsistent health bar" — 70% on Stable,
+    // 23% after refresh): the old mirror GUESSED the HP loss locally
+    // (-15/-25/-40) on top of a cached value, so over several fights the
+    // cache drifted far from the server's current_hp_pct and every view
+    // rendered a different number until a hard refresh. Optimistic guess
+    // stays for instant feedback, but the authoritative refetch below
+    // snaps ALL views to server truth within a second.
     const meLocal = myChampions.find(c => c.id === champ.id);
     if (meLocal) {
       const hpLoss = resp.result === 'win' ? 15 : resp.result === 'draw' ? 25 : 40;
       meLocal.energy   = Math.max(0, (meLocal.energy   ?? 100) - 15);
       meLocal.currentHp = Math.max(0, (meLocal.currentHp ?? 100) - hpLoss);
     }
+    // Authoritative refetch — replaces the guess with the server's
+    // regen-on-read runtime state (energy_now / hp_now).
+    (async () => {
+      try {
+        const fresh = await apiListChampions();
+        if (Array.isArray(fresh) && fresh.length) {
+          myChampions = fresh;
+          if (typeof _activeCh !== 'undefined' && _activeCh) {
+            const upd = fresh.find(c => c.id === _activeCh.id);
+            if (upd) _activeCh = upd;
+          }
+          renderArena();
+          if (typeof render === 'function') render();
+        }
+      } catch (_) { /* keep the optimistic values */ }
+    })();
     if (window.VxBond && resp.result === 'win') {
       const bondResult = VxBond.onArenaWin(champ.id);
       if (bondResult?.tieredUp) VxBond.celebrateTierUp(bondResult.newTier);
