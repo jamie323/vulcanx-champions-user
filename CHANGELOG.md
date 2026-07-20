@@ -3,6 +3,14 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 20 Jul 2026 (later 2)
+**Bond & Mood — cross-device sync** (AngelHorn's #5)
+- Bond and Mood were stored only on each device, so your mobile browser and
+  PC told different stories. They now sync through the server on every load
+  and after every bond change: progress merges across devices (highest bond
+  wins, care timestamps combine — nothing is ever lost), and Mood follows
+  automatically. Feed on your phone, see it on your PC.
+
 ## 20 Jul 2026 (later)
 **All four of AngelHorn's reports**
 - **Campaign hang after fights** — same bug mrMinimal caught; fixed earlier

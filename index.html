@@ -11378,6 +11378,40 @@ const VxBond = (() => {
     const all = load();
     all[championId] = rec;
     save(all);
+    _pushSoon();
+  }
+
+  // ── Cross-device sync (AngelHorn, 20 Jul: "Bond and Mood is not
+  // synced between mobile MM browser and PC browser") ──────────────
+  // Bond lived only in localStorage. champion_bond_sync merges with
+  // grow-only semantics (bond=MAX, timestamps=MAX) so devices can push
+  // in any order without losing progress. Mood derives from these
+  // fields, so it syncs for free.
+  let _pushTimer = null;
+  function _pushSoon() {
+    if (_pushTimer) clearTimeout(_pushTimer);
+    _pushTimer = setTimeout(() => { _pushTimer = null; void syncFromServer(); }, 2500);
+  }
+  async function syncFromServer() {
+    const wallet = (typeof getWallet === 'function') ? getWallet() : null;
+    if (!wallet || typeof apiFetch !== 'function') return;
+    try {
+      const res = await apiFetch(`${FN_BASE}/champion_bond_sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(typeof AUTH_HEADERS !== 'undefined' ? AUTH_HEADERS : {}) },
+        body: JSON.stringify({ wallet, records: load() }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data || typeof data.records !== 'object') return;
+      // Server response is the merged truth — but keep local records for
+      // champions the server didn't return (e.g. request raced an adopt).
+      const merged = { ...load(), ...data.records };
+      save(merged);
+      try {
+        if (typeof state !== 'undefined' && state.championId) renderPanel(state.championId);
+      } catch (_) {}
+    } catch (e) { console.debug('[bond] sync skipped:', e?.message); }
   }
 
   function tierFor(bond) {
@@ -11592,6 +11626,7 @@ const VxBond = (() => {
     get, tierFor, moodFor,
     onFeed, onQuestComplete, onArenaWin, onDailyClaim,
     renderPanel, celebrateTierUp, TIERS,
+    syncFromServer,
   };
 })();
 window.VxBond = VxBond;
@@ -15178,6 +15213,8 @@ async function loadMyChampions() {
   // Recover running adventures from the server (survives browser close /
   // cleared storage / device switch — Coin1x1).
   try { window.VxQuests?.hydrateFromServer?.(); } catch (_) {}
+  // Merge bond/mood state across devices (AngelHorn, 20 Jul).
+  try { window.VxBond?.syncFromServer?.(); } catch (_) {}
   // Warm the chest-quest catalog cache so the quest-completion toast
   // (vxToastQuestCompletions) can show proper names instead of titleized
   // quest_ids. Fire-and-forget; the toast fall-back covers the cold case.
