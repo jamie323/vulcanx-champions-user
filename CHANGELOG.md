@@ -3,6 +3,24 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 20 Jul 2026 (later)
+**All four of AngelHorn's reports**
+- **Campaign hang after fights** — same bug mrMinimal caught; fixed earlier
+  today (result screen + Continue now always appear).
+- **Energy now visible in Campaign** — the champion picker shows each
+  champion's ⚡, and the stats line shows ⚡/100 and ❤️ HP (red when too low
+  to fight) plus the 20⚡ fight cost.
+- **Challenge from the Leaderboard** — every player row now has a ⚔️ Fight
+  button (no more copy-pasting wallet addresses) and there's a search bar to
+  find a champion or player by name. Works even if you haven't opened one of
+  your champions first — the challenge sends with your first champion.
+- **"100% Evolution Bar but no level-up after adventure"** — that champion is
+  parked at a stage gate: the game wants you to EVOLVE before leveling
+  continues. It just never told you. Now the adventure rewards popup says
+  "Evolution Bar full — EVOLVE to keep leveling!", and sending a gate-parked
+  champion on an adventure warns you first so bar rewards aren't silently
+  wasted.
+
 ## 20 Jul 2026
 **Campaign** (mrMinimal)
 - **Fixed the freeze at the end of Active campaign fights.** If the server

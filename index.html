@@ -6423,7 +6423,7 @@
   // Loud version banner in the console so testers (or Jamie) can
   // confirm which bundle is running when debugging. If this doesn't
   // match the latest git SHA, they're on a stale cache.
-  console.log('%c🛡️ VulcanX Champions · v20260509-leaderboard-rank',
+  console.log('%c🛡️ VulcanX Champions · v20260720-campaign-lb-challenge',
     'color:#ffcd6b;font-weight:700;font-size:13px;background:#1a0f05;padding:4px 10px;border-radius:4px;');
 </script>
 
@@ -9567,6 +9567,9 @@ window.VxQuestCelebration = {
       <button class="sp-btn lb-filter" data-sp="goblin" style="flex:1;min-width:100px;">👺 Goblin</button>
     </div>
     <div class="ornate-divider"></div>
+    <!-- AngelHorn (20 Jul): challenge from the leaderboard + name search -->
+    <input type="text" id="lbSearch" class="cm-input" placeholder="🔍 Search champion or player…"
+           autocomplete="off" style="margin-bottom:10px;" />
     <div id="lbList" style="max-height: 380px; overflow-y: auto;
          font-size: 12px; padding: 8px 0;"></div>
     <div id="lbResetTimer" style="font-size:10px;color:var(--muted);
@@ -9620,7 +9623,8 @@ window.VxQuestCelebration = {
 <style>
   .lb-row {
     display: grid;
-    grid-template-columns: 50px 1fr auto;
+    /* rank · species icon · info · score · (optional ⚔️ challenge) */
+    grid-template-columns: 50px auto 1fr auto auto;
     gap: 12px;
     padding: 12px;
     background: rgba(20,12,20,0.85);
@@ -12158,6 +12162,15 @@ const VxQuests = (() => {
         if (!ok) return;
       }
     }
+    // Gate-parked champion: full Evolution Bar at a stage gate — bar fill
+    // from the adventure would be absorbed by the 100% clamp and leveling
+    // is paused until the keeper evolves (AngelHorn, 20 Jul).
+    if (champ && (champ.evo_pct ?? 0) >= 100) {
+      const ok = await vxConfirm(
+        `${champ.name} is ready to EVOLVE — the Evolution Bar is full. Until you evolve, adventures can't level ${champ.name} up and any Evolution Bar rewards are lost (stat gains still apply). Evolve first, or send anyway?`,
+        { title: 'Ready to Evolve', icon: '🌟', okLabel: 'Send anyway', cancelLabel: 'Evolve first' });
+      if (!ok) return;
+    }
     try {
       const resp = await apiQuestStart({
         champion_id: champId,
@@ -12283,11 +12296,17 @@ const VxQuests = (() => {
     for (const [t, v] of Object.entries(rewards.stat_gains || {})) {
       if (v > 0) rows.push(`<div class="qcr-row"><span class="qcr-stat">${t} (${TRAIT_NAMES[t] || t})</span><span class="qcr-val">+${v}</span></div>`);
     }
-    if (rewards.bar_fill > 0) {
+    if (rewards.bar_fill > 0 && !rewards.at_gate) {
       rows.push(`<div class="qcr-row"><span class="qcr-stat">Evolution Bar</span><span class="qcr-val">+${rewards.bar_fill}%</span></div>`);
     }
     if (rewards.level_delta > 0) {
       rows.push(`<div class="qcr-row"><span class="qcr-stat">⭐ Level up!</span><span class="qcr-val">+${rewards.level_delta}</span></div>`);
+    }
+    // Gate-parked champion (AngelHorn, 20 Jul: "at 100% bar it did not
+    // level up") — leveling pauses at a stage gate, so instead of a
+    // +N% that visibly does nothing, tell the keeper what to do next.
+    if (rewards.at_gate) {
+      rows.push(`<div class="qcr-row"><span class="qcr-stat">🌟 Evolution Bar full</span><span class="qcr-val" style="font-size:11px;">EVOLVE to keep leveling!</span></div>`);
     }
     rewardEl.innerHTML = rows.length ? rows.join('') : '<div style="color:var(--muted);">All stats already at cap — nothing applied.</div>';
     document.getElementById('questCompleteModal').classList.add('open');
@@ -12495,10 +12514,12 @@ async function apiLeaderboard({ period = 'all', sort = 'elo', species, bloodline
 
 // In-memory cache of the current modal state so the period/species
 // buttons can re-fire the right query.
-let _lbState = { period: 'all', species: 'all' };
+let _lbState = { period: 'all', species: 'all', search: '', lastResp: null };
 
 async function showLeaderboard() {
-  _lbState = { period: 'all', species: 'all' };
+  _lbState = { period: 'all', species: 'all', search: '', lastResp: null };
+  const lbSearchEl = document.getElementById('lbSearch');
+  if (lbSearchEl) lbSearchEl.value = '';
   // Open the modal FIRST so any stub-render error (or empty state)
   // never blocks the modal from appearing — QA found this regression
   // 8 May when an anonymous visitor clicked the new top-nav Ranks
@@ -12799,6 +12820,7 @@ async function refreshLiveLeaderboard() {
       period,
       species: species === 'all' ? undefined : species,
     });
+    _lbState.lastResp = resp;
     renderLiveLeaderboard(resp);
     updateLeaderboardSubtitle(resp);
   } catch (e) {
@@ -12827,6 +12849,16 @@ function wireLeaderboardButtons() {
       await refreshLiveLeaderboard();
     });
   });
+  // Name/player search — client-side filter over the loaded rows
+  // (AngelHorn, 20 Jul). Re-renders from the cached response.
+  const search = document.getElementById('lbSearch');
+  if (search && !search._wired) {
+    search._wired = true;
+    search.addEventListener('input', () => {
+      _lbState.search = search.value.trim().toLowerCase();
+      if (_lbState.lastResp) renderLiveLeaderboard(_lbState.lastResp);
+    });
+  }
 }
 
 function updateLeaderboardSubtitle(resp) {
@@ -12870,11 +12902,25 @@ function renderLiveLeaderboard(resp) {
     return;
   }
 
-  const rows = resp.leaderboard.map(r => ({ ...r, me: false }));
+  let rows = resp.leaderboard.map(r => ({ ...r, me: false }));
   const meInTop = resp.me ? rows.findIndex(r => r.champion_id === resp.me.champion_id) : -1;
   if (meInTop >= 0) rows[meInTop].me = true;
   const includeMeBelow = resp.me && meInTop === -1 && (resp.me.rank || -1) > 0;
 
+  // Search filter (champion name or owner) — client-side over loaded rows.
+  const q = _lbState.search;
+  if (q) {
+    rows = rows.filter(r =>
+      String(r.name || '').toLowerCase().includes(q)
+      || String(r.owner || '').toLowerCase().includes(q)
+      || String(r.wallet_address || '').toLowerCase().includes(q));
+    if (rows.length === 0) {
+      list.innerHTML = `<div style="padding:24px;text-align:center;color:var(--muted);">No champion or player matches "${esc(q)}".</div>`;
+      return;
+    }
+  }
+
+  const myWallet = (typeof getWallet === 'function' ? getWallet() : '' ) || '';
   rows.forEach((r) => {
     const isTop3 = !r.me && r.rank <= 3;
     const icon = SPECIES_ICON[r.species_id] || '◇';
@@ -12883,6 +12929,14 @@ function renderLiveLeaderboard(resp) {
       : sortedByElo
         ? `${(r.elo ?? 100).toLocaleString()}<span class="e"> ELO</span>`
         : `${(r.power_score || 0).toLocaleString()}<span class="e"> pwr</span>`;
+    // Challenge straight from the row — no wallet copy-pasting
+    // (AngelHorn, 20 Jul). Own rows and rows without a wallet skip it.
+    const canChallenge = r.wallet_address
+      && r.wallet_address.toLowerCase() !== myWallet.toLowerCase();
+    const challengeBtn = canChallenge
+      ? `<button class="sp-btn lb-challenge" data-wallet="${esc(r.wallet_address)}" data-name="${esc(r.name || '')}"
+           title="Challenge ${esc(r.name || 'this player')}" style="padding:4px 9px;font-size:10px;flex:none;white-space:nowrap;">⚔️ Fight</button>`
+      : '';
     list.insertAdjacentHTML('beforeend',
       `<div class="lb-row ${r.me?'me':''}">
         <div class="lb-rank ${isTop3?'top3':''}">${r.me?'YOU':'#'+r.rank}</div>
@@ -12892,7 +12946,14 @@ function renderLiveLeaderboard(resp) {
           <div class="lb-detail">${r.species_id} · L${r.level} · stage ${r.stage_idx + 1} · ${r.owner || ''}</div>
         </div>
         <div class="lb-score">${score}</div>
+        ${challengeBtn}
       </div>`);
+  });
+  list.querySelectorAll('.lb-challenge').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openChallengeFromLeaderboard(btn.dataset.wallet, btn.dataset.name);
+    });
   });
 
   if (includeMeBelow) {
@@ -17506,26 +17567,44 @@ async function handleReclaimWager(idHex, pyr) {
 }
 
 // Send-challenge modal
+// The champion the challenge sends as: the currently open champion, else
+// the wallet's first champion (lets the leaderboard flow work without a
+// champion page visit — AngelHorn, 20 Jul).
+function _challengeChamp() {
+  return myChampions.find(c => c.id === state.championId) || myChampions[0] || null;
+}
 function openChallengeModal() {
-  if (!state.championId) {
-    return vxAlert('Open one of your champions first — the challenge sends with their loadout.',
-      { title: 'Pick a champion', icon: '🎯' });
+  const ch = _challengeChamp();
+  if (!ch) {
+    return vxAlert('Adopt a champion first — the challenge sends with their loadout.',
+      { title: 'No champion', icon: '🎯' });
   }
-  const ch = myChampions.find(c => c.id === state.championId);
   const summary = document.getElementById('cmSummary');
-  if (ch && summary) {
+  if (summary) {
     summary.innerHTML = `Sending as <b>${esc(ch.name)}</b> · L${ch.level} · ${SPECIES[ch.species_id]?.label || ch.species_id} · ${_arenaStance} stance`;
   }
   document.getElementById('cmWallet').value = '';
   document.getElementById('cmMessage').value = '';
   document.getElementById('challengeModal')?.classList.add('open');
 }
+// Leaderboard row ⚔️ → challenge modal with the wallet pre-filled.
+function openChallengeFromLeaderboard(wallet, name) {
+  if (!wallet) return;
+  document.getElementById('leaderboardModal')?.classList.remove('open');
+  openChallengeModal();
+  const walletInput = document.getElementById('cmWallet');
+  if (walletInput) walletInput.value = wallet;
+  const summary = document.getElementById('cmSummary');
+  if (summary && name) {
+    summary.innerHTML += ` &nbsp;→&nbsp; challenging <b>${esc(name)}</b>`;
+  }
+}
 function closeChallengeModal() {
   document.getElementById('challengeModal')?.classList.remove('open');
 }
 
 bindIf('cmSendBtn', 'click', async () => {
-  const ch = myChampions.find(c => c.id === state.championId);
+  const ch = _challengeChamp();
   if (!ch) return;
   const toWallet = document.getElementById('cmWallet').value.trim();
   if (!/^0x[a-fA-F0-9]{40}$/.test(toWallet)) {
@@ -21052,7 +21131,8 @@ const VxCampaign = (() => {
       const bl = sp?.bloodlines?.[c.bloodline_id];
       const st = bl?.stages?.[c.stageIdx];
       const stageLabel = st?.name || `Stage ${c.stage_idx + 1}`;
-      return `<option value="${c.id}">${esc(c.name || bl?.heroName || 'Nameless')} · ${stageLabel} (L${c.level || 1})</option>`;
+      const en = Math.max(0, Math.min(100, Math.round(c.energy ?? 100)));
+      return `<option value="${c.id}">${esc(c.name || bl?.heroName || 'Nameless')} · ${stageLabel} (L${c.level || 1}) · ⚡${en}</option>`;
     }).join('');
     if (!sel._wired) {
       sel.addEventListener('change', () => { renderChapters(); updateChampStats(); });
@@ -21065,7 +21145,15 @@ const VxCampaign = (() => {
     const c = getSelectedChamp();
     if (!c || !stats) { if (stats) stats.textContent = ''; return; }
     const s = statsForChamp(c);
-    stats.textContent = `STR ${s.STR} · VIT ${s.VIT} · AGI ${s.AGI} · FER ${s.FER}`;
+    // Energy + HP next to the stats — campaign fights cost 20⚡ and need
+    // ≥25% HP, but neither was visible here (AngelHorn: "add the energy").
+    const en = Math.max(0, Math.min(100, Math.round(c.energy ?? 100)));
+    const hp = Math.max(0, Math.min(100, Math.round(c.currentHp ?? c.current_hp_pct ?? 100)));
+    const enStyle = en < 20 ? ' style="color:var(--ember);font-weight:700;"' : '';
+    const hpStyle = hp < 25 ? ' style="color:var(--ember);font-weight:700;"' : '';
+    stats.innerHTML = `STR ${s.STR} · VIT ${s.VIT} · AGI ${s.AGI} · FER ${s.FER}`
+      + ` &nbsp;·&nbsp; <span${enStyle}>⚡ ${en}/100</span> · <span${hpStyle}>❤️ ${hp}%</span>`
+      + ` <span style="color:var(--muted);font-size:10px;">(fights cost 20⚡)</span>`;
   }
 
   function renderChapters() {
