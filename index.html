@@ -699,16 +699,21 @@
     50%     { box-shadow: 0 0 32px rgba(255,140,40,0.55); }
   }
   /* Acadia (17 Jul): "adventure and blessing buttons should be glowing,
-     like a pulse glow to show me that's where I need to go" — reuse the
-     evo-ready pulse as the universal "this action is ready" affordance. */
-  .cc-blessing-bar.pulse-ready {
-    border-color: var(--legend);
-    animation: evoReadyPulse 2s ease-in-out infinite;
-  }
+     like a pulse glow to show me that's where I need to go".
+     19 Jul follow-up: "glowing but not enough, we can barely see the
+     glow" — dedicated stronger pulse: wider spread, brighter peak, and
+     a gold tint on the element itself so it reads even on small
+     screens / bright monitors. */
+  .cc-blessing-bar.pulse-ready,
   .nav-btn.pulse-ready {
     border-color: var(--legend);
     color: var(--legend);
-    animation: evoReadyPulse 2s ease-in-out infinite;
+    background: linear-gradient(180deg, rgba(255,170,60,0.16), rgba(255,140,40,0.06));
+    animation: vxReadyPulseStrong 1.6s ease-in-out infinite;
+  }
+  @keyframes vxReadyPulseStrong {
+    0%,100% { box-shadow: 0 0 10px 2px rgba(255,160,50,0.5); }
+    50%     { box-shadow: 0 0 28px 8px rgba(255,195,95,0.95); }
   }
   .cc-evo-potion-bar.empty,
   .cc-blessing-bar.empty {
@@ -11781,7 +11786,9 @@ const VxQuests = (() => {
       const data = await res.json();
       const all = load();
       let added = 0;
+      const serverIds = new Set();
       for (const q of (data.quests || [])) {
+        serverIds.add(q.champion_id);
         if (all[q.champion_id]) continue;   // local record exists — keep it
         if (!q.ends_at || !q.adventure_id) continue;
         all[q.champion_id] = {
@@ -11793,9 +11800,20 @@ const VxQuests = (() => {
         };
         added++;
       }
-      if (added) {
+      // Cross-device prune (Bergz, 19 Jul: "adventures don't auto-update
+      // between my laptop, phone and PC — claim says already completed").
+      // The server list is every running-or-unclaimed quest for this
+      // wallet, so a local entry NOT in it was claimed on another device
+      // (startQuest only writes locally after the server acked, so a
+      // fresh start is never wrongly pruned). Drop it instead of leaving
+      // a dead Claim button.
+      let removed = 0;
+      for (const cid of Object.keys(all)) {
+        if (!serverIds.has(cid)) { delete all[cid]; removed++; }
+      }
+      if (added || removed) {
         save(all);
-        console.log(`[adventures] recovered ${added} running adventure(s) from the server`);
+        console.log(`[adventures] server sync: +${added} recovered, -${removed} claimed elsewhere`);
         try { renderActive(); renderGrid(); } catch (_) {}
         try { if (typeof render === 'function') render(); } catch (_) {}
       }
@@ -21505,6 +21523,24 @@ const VxCampaign = (() => {
     const isBoss = fightKey === 'boss';
     const champ = getSelectedChamp();
 
+    // Show the result panel + wire Continue BEFORE the server round-trip.
+    // The server-deny and energy-gate paths below return early — they used
+    // to return before the panel was ever displayed, leaving the battle
+    // modal stuck on the combat log with no banner and no Continue button
+    // (mrMinimal, 20 Jul: "the game froze here" after finishing an active
+    // campaign fight).
+    rEl.style.display = '';
+    continueBtn.onclick = () => {
+      document.getElementById('cmpBattleModal').classList.remove('open');
+      renderChapters();
+      if (result.won) {
+        setTimeout(() => {
+          if (isBoss) return; // boss done — back to chapter list
+          openChapterModal(chapId);
+        }, 200);
+      }
+    };
+
     if (result.won) {
       banner.textContent = 'VICTORY';
       banner.classList.remove('defeat');
@@ -21586,6 +21622,7 @@ const VxCampaign = (() => {
               <div>Your champion fell.</div>
               <div style="font-size:11px;color:var(--muted);margin-top:6px;">${why}</div>
             `;
+            result.won = false;   // Continue must not re-open the chapter as a win
             return;
           }
           const status = document.getElementById('cmpBmServerStatus');
@@ -21606,6 +21643,17 @@ const VxCampaign = (() => {
             if (isBoss) { localProg.boss_cleared = false; localProg.completed_at = null; }
             else        { localProg.mobs_cleared[Number(fightKey)] = false; }
             try { localStorage.setItem(LS_KEY, JSON.stringify(getProgress())); } catch(_) {}
+            // Reflect the not-recorded state in the battle modal too —
+            // otherwise it still says VICTORY for a fight the server
+            // refused, and the keeper wonders where the progress went.
+            banner.textContent = 'NOT RECORDED';
+            banner.classList.add('defeat');
+            rewards.innerHTML = `
+              <div style="font-size:32px;margin-bottom:6px;">🩹</div>
+              <div>Your champion was too exhausted or hurt — the fight wasn't recorded.</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:6px;">Heal up or rest, then try again.</div>
+            `;
+            result.won = false;
             return;
           }
           const status = document.getElementById('cmpBmServerStatus');
@@ -21624,19 +21672,8 @@ const VxCampaign = (() => {
         <div style="font-size:11px;color:var(--muted);margin-top:6px;">No penalty — heal up, maybe equip better gear, and try again.</div>
       `;
     }
-    rEl.style.display = '';
-    continueBtn.onclick = () => {
-      document.getElementById('cmpBattleModal').classList.remove('open');
-      // Re-render the chapters and re-open chapter modal if won + still chapters left
-      renderChapters();
-      if (result.won) {
-        // Brief delay so progress bar repaints, then re-open chapter detail
-        setTimeout(() => {
-          if (isBoss) return; // boss done — back to chapter list
-          openChapterModal(chapId);
-        }, 200);
-      }
-    };
+    // (result panel + Continue are shown/wired at the top of this function
+    // so every early-return path above still leaves a usable modal.)
   }
 
   return {

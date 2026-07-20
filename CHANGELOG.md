@@ -3,6 +3,22 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 20 Jul 2026
+**Campaign** (mrMinimal)
+- **Fixed the freeze at the end of Active campaign fights.** If the server
+  rejected the result (or your champion was too exhausted for it to count),
+  the battle screen got stuck on the combat log with no buttons. The result
+  panel and Continue button now always appear — including a new clear
+  "NOT RECORDED" outcome when the fight didn't count (heal up and retry).
+**Adventures** (Bergz)
+- **Cross-device sync**: adventures claimed on one device no longer linger
+  on your other devices with a dead Claim button ("already completed").
+  Each device now reconciles with the server on load — claimed adventures
+  disappear everywhere, running ones appear everywhere.
+**Blessing/Adventure glow** (Acadian)
+- **The ready-glow is now much stronger** — wider, brighter pulse plus a
+  gold tint on the button itself, so it's visible at a glance.
+
 ## 19 Jul 2026
 **Blessings — backfill for existing keepers** (Acadian)
 - The "10 Blessings to start" change (17 Jul) only applied to brand-new
