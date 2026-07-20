@@ -3,6 +3,17 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 20 Jul 2026 (later 3)
+**Champion NFTs from chests — full pipeline** (404nomA, MidniteCatzlady)
+- Chest-minted champion NFTs now materialise into your stable
+  automatically: the game checks your wallet's champion NFTs on the VX
+  marketplace at every login and creates any champion you own but don't
+  have yet (bound to the NFT, no duplicates, works for marketplace buys
+  and transfers too). You'll get an arrival popup when one lands.
+  *(Waiting on one VX-side switch to go fully live — new chest drops are
+  already delivered instantly via the chest pipeline meanwhile.)*
+- 404nomA's Frostscale (Rimeclaw the Whelp) was delivered manually today.
+
 ## 20 Jul 2026 (later 2)
 **Bond & Mood — cross-device sync** (AngelHorn's #5)
 - Bond and Mood were stored only on each device, so your mobile browser and

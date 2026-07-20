@@ -15215,6 +15215,29 @@ async function loadMyChampions() {
   try { window.VxQuests?.hydrateFromServer?.(); } catch (_) {}
   // Merge bond/mood state across devices (AngelHorn, 20 Jul).
   try { window.VxBond?.syncFromServer?.(); } catch (_) {}
+  // Materialise chest-minted champion NFTs into the stable (20 Jul).
+  // Fire-and-forget: if anything new lands, refresh the champion list.
+  try {
+    (async () => {
+      const res = await apiFetch(`${FN_BASE}/champion_nft_sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...AUTH_HEADERS },
+        body: JSON.stringify({ wallet: getWallet() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data?.materialized?.length) {
+        console.log('[nft-sync] materialized', data.materialized);
+        const fresh = await apiListChampions();
+        if (Array.isArray(fresh) && fresh.length) {
+          myChampions.length = 0; myChampions.push(...fresh);
+          if (typeof render === 'function') try { render(); } catch (_) {}
+          const names = data.materialized.map(m => m.name).join(', ');
+          vxAlert(`Your chest champion${data.materialized.length > 1 ? 's have' : ' has'} arrived: ${names}. Welcome to the stable!`,
+            { title: '🥚 Champion NFT delivered', icon: '🎉' });
+        }
+      }
+    })().catch((e) => console.debug('[nft-sync] skipped:', e?.message));
+  } catch (_) {}
   // Warm the chest-quest catalog cache so the quest-completion toast
   // (vxToastQuestCompletions) can show proper names instead of titleized
   // quest_ids. Fire-and-forget; the toast fall-back covers the cold case.
