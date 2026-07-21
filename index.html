@@ -8717,8 +8717,14 @@
 <div class="modal-backdrop" id="challengeModal">
   <div class="modal" style="width: 460px;">
     <h3>🎯 Challenge a Player</h3>
-    <p class="sub">Enter the opponent's wallet. They'll get the challenge in their inbox and pick their own loadout.</p>
-    <label class="cm-label">Opponent wallet (0x…)</label>
+    <p class="sub">Search any player by name — or paste their wallet. They'll get the challenge in their inbox and pick their own loadout.</p>
+    <!-- AngelHorn (21 Jul, 3rd ask): the leaderboard ⚔️ buttons existed but
+         nobody starting from the ARENA found them — put the player search
+         right here in the challenge modal. -->
+    <label class="cm-label">Find opponent</label>
+    <input type="text" id="cmPlayerSearch" class="cm-input" placeholder="🔍 Type a champion or player name…" autocomplete="off" />
+    <div id="cmPlayerResults" style="max-height:170px;overflow-y:auto;margin-top:4px;"></div>
+    <label class="cm-label" style="margin-top:10px;">Or opponent wallet (0x…)</label>
     <input type="text" id="cmWallet" class="cm-input" placeholder="0x1234…abcd" autocomplete="off" />
     <label class="cm-label" style="margin-top:12px;">Message (optional, ≤120 chars)</label>
     <input type="text" id="cmMessage" class="cm-input" placeholder="See you in the arena!" maxlength="120" />
@@ -12533,10 +12539,11 @@ async function refreshChampionGlobalRank(championId) {
 // reflects actual skill at arena, not raw stat power. Default sort
 // flipped from 'power_score' to 'elo'. Weekly board already sorted by
 // elo_gained, unchanged.
-async function apiLeaderboard({ period = 'all', sort = 'elo', species, bloodline } = {}) {
+async function apiLeaderboard({ period = 'all', sort = 'elo', species, bloodline, limit } = {}) {
   const params = new URLSearchParams({ period, sort });
   if (species)   params.set('species', species);
   if (bloodline) params.set('bloodline', bloodline);
+  if (limit)     params.set('limit', String(limit));
   const wallet = (typeof getWallet === 'function') ? getWallet() : null;
   if (wallet) params.set('include_me', wallet);
   const res = await apiFetch(`${FN_BASE}/leaderboard?${params}`);
@@ -17642,6 +17649,39 @@ async function handleReclaimWager(idHex, pyr) {
 function _challengeChamp() {
   return myChampions.find(c => c.id === state.championId) || myChampions[0] || null;
 }
+// Opponent roster for the in-modal search (AngelHorn, 21 Jul). Fetched
+// lazily on modal open, cached 60s. Uses the leaderboard's ?limit=100
+// widening so every active player is searchable, not just the top 20.
+let _cmRoster = { rows: [], at: 0 };
+async function _cmLoadRoster() {
+  if (Date.now() - _cmRoster.at < 60_000 && _cmRoster.rows.length) return _cmRoster.rows;
+  try {
+    const resp = await apiLeaderboard({ limit: 100 });
+    _cmRoster = { rows: resp.leaderboard || [], at: Date.now() };
+  } catch (e) { console.debug('[challenge] roster fetch skipped:', e?.message); }
+  return _cmRoster.rows;
+}
+function _cmRenderResults(rows) {
+  const box = document.getElementById('cmPlayerResults');
+  if (!box) return;
+  const myWallet = ((typeof getWallet === 'function' ? getWallet() : '') || '').toLowerCase();
+  const list = rows.filter(r => r.wallet_address && r.wallet_address.toLowerCase() !== myWallet).slice(0, 6);
+  box.innerHTML = list.map(r => `
+    <div class="cm-player-row" data-wallet="${esc(r.wallet_address)}" data-name="${esc(r.name || '')}"
+         style="display:flex;justify-content:space-between;gap:8px;padding:7px 10px;cursor:pointer;
+                border:1px solid var(--border);border-radius:6px;margin-bottom:4px;font-size:12px;">
+      <span><b>${esc(r.name || '(unnamed)')}</b> <span style="color:var(--muted);">· ${esc(r.species_id)} · L${r.level}</span></span>
+      <span style="color:var(--accent);">${(r.elo ?? 100)} ELO</span>
+    </div>`).join('');
+  box.querySelectorAll('.cm-player-row').forEach(el => {
+    el.addEventListener('click', () => {
+      document.getElementById('cmWallet').value = el.dataset.wallet;
+      box.innerHTML = `<div style="padding:6px 10px;font-size:12px;color:var(--legend);">⚔️ Challenging <b>${esc(el.dataset.name || 'player')}</b></div>`;
+      const search = document.getElementById('cmPlayerSearch');
+      if (search) search.value = el.dataset.name || '';
+    });
+  });
+}
 function openChallengeModal() {
   const ch = _challengeChamp();
   if (!ch) {
@@ -17654,6 +17694,25 @@ function openChallengeModal() {
   }
   document.getElementById('cmWallet').value = '';
   document.getElementById('cmMessage').value = '';
+  const search = document.getElementById('cmPlayerSearch');
+  const results = document.getElementById('cmPlayerResults');
+  if (search) {
+    search.value = '';
+    if (results) results.innerHTML = '';
+    if (!search._wired) {
+      search._wired = true;
+      search.addEventListener('input', async () => {
+        const q = search.value.trim().toLowerCase();
+        if (!q) { if (results) results.innerHTML = ''; return; }
+        const rows = await _cmLoadRoster();
+        _cmRenderResults(rows.filter(r =>
+          String(r.name || '').toLowerCase().includes(q)
+          || String(r.owner || '').toLowerCase().includes(q)
+          || String(r.wallet_address || '').toLowerCase().includes(q)));
+      });
+    }
+  }
+  _cmLoadRoster();   // warm the cache while the keeper types
   document.getElementById('challengeModal')?.classList.add('open');
 }
 // Leaderboard row ⚔️ → challenge modal with the wallet pre-filled.

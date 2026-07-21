@@ -3,6 +3,13 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 21 Jul 2026 (later 3)
+**Challenge a player — now built into the Arena** (AngelHorn, 3rd ask — heard!)
+- The Challenge modal itself now has a **player search**: type any name from
+  the leaderboard, click the player, done — no wallet addresses, no detour
+  through the Ranks screen. (The Ranks ⚔️ Fight buttons stay too.) The
+  search covers every ranked player, not just the top 20.
+
 ## 21 Jul 2026 (later 2)
 **Chest champion NFTs — both reported cases delivered** (MidniteCatzlady, 404nomA)
 - MidniteCatzlady's Iron-Tooth champion (Gribnit the Whelp) is now in their
