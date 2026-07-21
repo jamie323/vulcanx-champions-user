@@ -3,6 +3,15 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 21 Jul 2026 (later 2)
+**Chest champion NFTs — both reported cases delivered** (MidniteCatzlady, 404nomA)
+- MidniteCatzlady's Iron-Tooth champion (Gribnit the Whelp) is now in their
+  stable — verified on-chain (chest NFT token 427641) and delivered manually,
+  like 404nomA's Frostscale yesterday. Both champions are bound to their
+  NFTs so the automatic pipeline can't ever duplicate them.
+- The automatic materialisation for everyone else still awaits one VX-side
+  API switch; new chest drops are covered by the chest pipeline meanwhile.
+
 ## 21 Jul 2026 (later)
 **AngelHorn's three**
 - **Stable now shows ⚡ energy and ❤️ HP** on every champion card, with
