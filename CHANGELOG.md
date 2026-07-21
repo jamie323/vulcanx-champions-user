@@ -3,6 +3,21 @@
 _Changes go live a little after merge (the site rebuilds on a short delay) —
 if you don't see something yet, hard-refresh (Cmd/Ctrl+Shift+R)._
 
+## 21 Jul 2026 (later)
+**AngelHorn's three**
+- **Stable now shows ⚡ energy and ❤️ HP** on every champion card, with
+  low values highlighted red — no more opening each champion to check who's
+  ready.
+- **Challenge via leaderboard + search** — already live since yesterday's
+  build (⚔️ Fight button on every row + name search). Hard-refresh
+  (Cmd/Ctrl+Shift+R) if you don't see it.
+- **Arena bots rebalanced** — Active-mode bots were triple-stacked (+20%
+  attack, +40% HP, guaranteed Rare+ weapon), a tuning left over from before
+  the one-shot fix: simulations showed them winning ~62–72% even against
+  good mini-game timing. Toned to +5% attack / +15% HP / normal weapons.
+  Now: sloppy timing ~38% win, decent ~43%, good timing ~52% — your
+  reactions actually decide the fight. Live now, no update needed.
+
 ## 21 Jul 2026
 **Blessings — the real bug this time** (PegaraX: "used it twice and stats didn't move")
 - Blessings were checking your stats against the caps at the *start* of your

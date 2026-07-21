@@ -15738,6 +15738,15 @@ function renderStable() {
           <div class="meta">
             <div class="name">${esc(c.name)} ${affinityBadgeHtml(c.species_id, { compact: true })}</div>
             <div class="subname">${sp.label} · ${bl.label}</div>
+            ${(() => {
+              // AngelHorn (21 Jul): energy + HP visible right in the stable.
+              const en = Math.max(0, Math.min(100, Math.round(c.energy ?? 100)));
+              const hp = Math.max(0, Math.min(100, Math.round(c.currentHp ?? c.current_hp_pct ?? 100)));
+              const enS = en < 20 ? 'color:var(--ember);font-weight:700;' : '';
+              const hpS = hp < 25 ? 'color:var(--ember);font-weight:700;' : '';
+              return `<div class="vitals" style="font-size:11px;margin-top:4px;display:flex;gap:10px;justify-content:center;">
+                <span style="${enS}">⚡ ${en}/100</span><span style="${hpS}">❤️ ${hp}%</span></div>`;
+            })()}
           </div>
         </div>`;
     }).join('') +
